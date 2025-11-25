@@ -1,0 +1,16 @@
+[project]
+name = "binny"
+version = "0.1.0"
+description = "Flexible tomographic binning algorithms for cosmology."
+readme = "README.md"
+requires-python = ">=3.10"
+authors = [{ name = "Nikolina Sarcevic", email = "nikolina.sarcevic@gmail.com" }]
+license = { text = "MIT" }
+
+[project.dependencies]
+numpy = "*"
+scipy = "*"
+
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
