@@ -7,7 +7,7 @@ from numpy.typing import ArrayLike
 from collections.abc import Sequence, Mapping
 from typing import Any
 
-from src.binny.utils.validation import (
+from src.binny.core.validation import (
     validate_n_bins,
     validate_interval,
     validate_axis_and_weights,

@@ -7,7 +7,7 @@ from collections.abc import Mapping, Sequence
 import numpy as np
 from numpy.typing import ArrayLike
 
-from src.binny.utils.validation import validate_axis_and_weights
+from src.binny.core.validation import validate_axis_and_weights
 
 __all__ = [
     "bin_moments",

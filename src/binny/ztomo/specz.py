@@ -9,7 +9,7 @@ from numpy.typing import ArrayLike
 
 from src.binny.utils.normalization import normalize_1d
 from src.binny.utils.broadcasting import as_per_bin
-from src.binny.utils.validation import (
+from src.binny.core.validation import (
     validate_axis_and_weights,
     validate_n_bins,
 )

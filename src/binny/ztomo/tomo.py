@@ -6,10 +6,10 @@ from typing import Any
 import numpy as np
 from numpy.typing import ArrayLike
 
-from src.binny.utils.validation import validate_axis_and_weights
-from src.binny.binning import mixed_edges
-from src.binny.photoz import build_photoz_bins
-from src.binny.specz import build_specz_bins
+from src.binny.core.validation import validate_axis_and_weights
+from src.binny.axes.edges import mixed_edges
+from src.binny.ztomo.photoz import build_photoz_bins
+from src.binny.ztomo.specz import build_specz_bins
 
 
 __all__ = ["TomographicBinner"]

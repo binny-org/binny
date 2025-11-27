@@ -9,7 +9,7 @@ import numpy as np
 import yaml
 from collections.abc import Mapping, Sequence
 
-from src.binny.utils.validation import validate_mixed_segments
+from src.binny.core.validation import validate_mixed_segments
 
 __all__ = [
     "load_nz",
