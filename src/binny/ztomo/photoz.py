@@ -8,7 +8,7 @@ import numpy as np
 from numpy.typing import ArrayLike
 from scipy.special import erf
 
-from src.binny.utils.validation import validate_axis_and_weights, validate_n_bins
+from src.binny.core.validation import validate_axis_and_weights, validate_n_bins
 from src.binny.utils.normalization import normalize_1d
 from src.binny.utils.broadcasting import as_per_bin
 
