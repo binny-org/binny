@@ -34,7 +34,7 @@ def _trapz_integral_between(x: np.ndarray, w: np.ndarray, a: float, b: float) ->
 
 def test_equidistant_edges_shape_endpoints_and_spacing():
     """Tests that equidistant_edges returns correct shape,
-     endpoints, and uniform spacing."""
+    endpoints, and uniform spacing."""
     edges = equidistant_edges(0.0, 10.0, 5)
 
     assert edges.shape == (6,)
@@ -111,7 +111,7 @@ def test_cumulative_trapz_constant_weights_linear_x():
 
 def test_cumulative_trapz_linear_weights_linear_x():
     """Tests that _cumulative_trapz computes correct integral
-     for linear weights and linear x."""
+    for linear weights and linear x."""
     x = np.array([0.0, 1.0, 2.0])
     w = np.array([0.0, 1.0, 2.0])  # w=x
     cumul = _cumulative_trapz(x, w)
@@ -121,7 +121,7 @@ def test_cumulative_trapz_linear_weights_linear_x():
 
 def test_equal_weight_edges_constant_weights_reduces_to_equidistant():
     """Tests that _equal_weight_edges with constant weights reduces
-     to equidistant edges."""
+    to equidistant edges."""
     x = np.linspace(0.0, 10.0, 501)
     w = np.ones_like(x)
     edges = _equal_weight_edges(x, w, 5)
@@ -165,7 +165,7 @@ def test_equal_information_edges_behaves_same_as_equal_number_edges():
 
 def test_equal_weight_edges_equalizes_integrated_weight_approximately():
     """Tests that _equal_weight_edges approximately equalizes
-     integrated weight per bin."""
+    integrated weight per bin."""
     x = np.linspace(0.0, 10.0, 2001)
     w = 1.0 + x
 
@@ -189,7 +189,7 @@ def test_equal_weight_edges_equalizes_integrated_weight_approximately():
 
 def test_equal_weight_edges_total_weight_nonpositive_raises():
     """Tests that _equal_weight_edges raises ValueError for
-     non-positive total weight."""
+    non-positive total weight."""
     x = np.linspace(0.0, 1.0, 11)
 
     w0 = np.zeros_like(x)

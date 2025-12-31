@@ -39,13 +39,17 @@ def _get(seg_i: int, params: Mapping[str, Any], key: str, fallback: Any) -> Any:
 
     return val
 
+
 _MIXED_SPEC: dict[str, dict[str, Any]] = {
-    "equidistant": {"required": ("x_min", "x_max"),
-                    "casts": {"x_min": float, "x_max": float}},
-    "log": {"required": ("x_min", "x_max"),
-            "casts": {"x_min": float, "x_max": float}},
-    "geometric": {"required": ("x_min", "x_max"),
-                  "casts": {"x_min": float, "x_max": float}},
+    "equidistant": {
+        "required": ("x_min", "x_max"),
+        "casts": {"x_min": float, "x_max": float},
+    },
+    "log": {"required": ("x_min", "x_max"), "casts": {"x_min": float, "x_max": float}},
+    "geometric": {
+        "required": ("x_min", "x_max"),
+        "casts": {"x_min": float, "x_max": float},
+    },
     "equal_number": {"required": ("x", "weights")},
     "equal_information": {"required": ("x", "info_density")},
     "equidistant_chi": {"required": ("z", "chi")},
@@ -59,6 +63,7 @@ _FUNCS: dict[str, Callable[..., np.ndarray]] = {
     "equal_information": equal_information_edges,
     "equidistant_chi": equidistant_chi_edges,
 }
+
 
 def _call_with(
     seg_i: int,

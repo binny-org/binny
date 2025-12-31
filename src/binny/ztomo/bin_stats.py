@@ -235,8 +235,7 @@ def n_eff_per_bin(
 
     if expect_unnormalized:
         if all(
-                np.isclose(val, 1.0, rtol=rtol, atol=atol)
-                for val in integrals.values()
+            np.isclose(val, 1.0, rtol=rtol, atol=atol) for val in integrals.values()
         ):
             raise ValueError(
                 "All bins appear normalized (integral n_i(z) dz approx 1). "
@@ -461,7 +460,7 @@ def overlapping_bin_pairs(
     indices = sorted(pct.keys())
 
     for a, i in enumerate(indices):
-        for j in indices[a + 1:]:
+        for j in indices[a + 1 :]:
             val = float(pct[i][j])
             if val >= threshold_percent:
                 out.append((i, j, val))

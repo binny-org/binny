@@ -85,11 +85,12 @@ def test_mixed_edges_equal_number_then_equidistant():
     w = 1.0 + x
 
     segments = [
-        {"method": "equal_number",
-         "n_bins": 3},
-        {"method": "equidistant",
-         "n_bins": 2,
-         "params": {"x_min": 10.0, "x_max": 12.0}},
+        {"method": "equal_number", "n_bins": 3},
+        {
+            "method": "equidistant",
+            "n_bins": 2,
+            "params": {"x_min": 10.0, "x_max": 12.0},
+        },
     ]
     edges = mixed_edges(segments, x=x, weights=w)
 
@@ -131,12 +132,12 @@ def test_mixed_edges_raises_when_required_global_missing():
 def test_mixed_edges_log_and_geometric_are_monotonic():
     """Tests that log and geometric segments produce monotonic increasing edges."""
     segments = [
-        {"method": "log",
-         "n_bins": 3,
-         "params": {"x_min": 1.0, "x_max": 100.0}},
-        {"method": "geometric",
-         "n_bins": 2,
-         "params": {"x_min": 100.0, "x_max": 400.0}},
+        {"method": "log", "n_bins": 3, "params": {"x_min": 1.0, "x_max": 100.0}},
+        {
+            "method": "geometric",
+            "n_bins": 2,
+            "params": {"x_min": 100.0, "x_max": 400.0},
+        },
     ]
     edges = mixed_edges(segments)
 
@@ -148,7 +149,7 @@ def test_mixed_edges_log_and_geometric_are_monotonic():
 
 def test_mixed_edges_runtimeerror_if_method_not_in_dispatch(monkeypatch):
     """Tests RuntimeError when a resolved method is not
-     handled by mixed_edges dispatch."""
+    handled by mixed_edges dispatch."""
     import binny.axes.mixed_edges as mm
 
     monkeypatch.setattr(mm, "validate_mixed_segments", lambda *args, **kwargs: None)

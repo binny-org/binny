@@ -222,9 +222,7 @@ def validate_mixed_segments(
 
         params = seg.get("params", None)
         if params is not None and not isinstance(params, Mapping):
-            raise TypeError(
-                f"Segment {i}: 'params' must be a mapping when provided."
-            )
+            raise TypeError(f"Segment {i}: 'params' must be a mapping when provided.")
 
         n_sum += n_bins
 
@@ -232,4 +230,3 @@ def validate_mixed_segments(
             raise ValueError(
                 f"Sum of segment n_bins is {n_sum}, but total_n_bins is {total_n_bins}."
             )
-
