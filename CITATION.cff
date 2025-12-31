@@ -1,0 +1,27 @@
+cff-version: 1.2.0
+message: >
+  If you use this software in your research, please cite it using the
+  metadata below.
+
+title: "binny: Flexible binning algorithms for cosmology"
+version: 0.1.0
+date-released: 2026-01-01
+
+authors:
+  - family-names: "Sarcevic"
+    given-names: "Nikolina"
+    email: "nikolina.sarcevic@gmail.com"
+    orcid: "https://orcid.org/0000-0001-7301-6415"
+
+repository-code: "https://github.com/binny-org/binny"
+url: "https://github.com/binny-org/binny"
+
+license: MIT
+
+keywords:
+  - cosmology
+  - tomography
+  - binning
+  - large-scale-structure
+  - weak-lensing
+  - scientific-python
