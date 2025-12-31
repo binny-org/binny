@@ -32,8 +32,6 @@ from binny.core.validators import (
         ("geometric_edges_n", "geometric"),
     ],
 )
-
-
 def test_resolve_binning_method_aliases(name, expected):
     """Tests that various binning method names and aliases resolve correctly."""
     assert resolve_binning_method(name) == expected
@@ -87,11 +85,7 @@ def test_validate_interval_accepts_log_interval_positive():
     validate_interval(0.1, 10.0, 4, log=True)
 
 
-@pytest.mark.parametrize(
-    "x_min, x_max",
-    [(np.nan, 1.0),
-     (0.0, np.inf),
-     (-np.inf, 1.0)])
+@pytest.mark.parametrize("x_min, x_max", [(np.nan, 1.0), (0.0, np.inf), (-np.inf, 1.0)])
 def test_validate_interval_rejects_non_finite(x_min, x_max):
     """Tests that validate_interval rejects non-finite bounds."""
     with pytest.raises(ValueError, match=r"must be finite"):
@@ -134,7 +128,7 @@ def test_validate_axis_and_weights_happy_path_returns_float_arrays():
 
 def test_validate_axis_and_weights_requires_same_shape():
     """Tests that validate_axis_and_weights requires x and weights
-     to have the same shape."""
+    to have the same shape."""
     x = [0, 1, 2]
     w = [1, 2]
     with pytest.raises(ValueError, match=r"same shape"):
@@ -198,7 +192,7 @@ def test_validate_axis_and_weights_requires_strictly_increasing_x(x):
 
 def test_validate_mixed_segments_happy_path_no_total():
     """Tests that validate_mixed_segments accepts valid segments
-     without total_n_bins."""
+    without total_n_bins."""
     segments = [
         {"method": "eq", "n_bins": 3},
         {"method": "log", "n_bins": 2, "params": {"base": 10}},
@@ -232,8 +226,8 @@ def test_validate_mixed_segments_requires_method_and_n_bins_keys():
     """Tests that validate_mixed_segments requires 'method' and 'n_bins' keys."""
     segments = [{"method": "eq"}]
     with pytest.raises(
-            ValueError,
-            match=r"must contain at least 'method' and 'n_bins'"):
+        ValueError, match=r"must contain at least 'method' and 'n_bins'"
+    ):
         validate_mixed_segments(segments)
 
 
@@ -274,11 +268,9 @@ def test_validate_mixed_segments_params_must_be_mapping_if_provided():
 
 def test_validate_mixed_segments_total_n_bins_mismatch_raises():
     """Tests that validate_mixed_segments raises when sum of n_bins
-     does not match total_n_bins."""
-    segments = [
-        {"method": "eq", "n_bins": 2},
-        {"method": "log", "n_bins": 3}]
+    does not match total_n_bins."""
+    segments = [{"method": "eq", "n_bins": 2}, {"method": "log", "n_bins": 3}]
     with pytest.raises(
-            ValueError,
-            match=r"Sum of segment n_bins = 5, but total_n_bins=6"):
+        ValueError, match=r"Sum of segment n_bins = 5, but total_n_bins=6"
+    ):
         validate_mixed_segments(segments, total_n_bins=6)
