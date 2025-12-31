@@ -202,9 +202,7 @@ def validate_mixed_segments(
     n_sum = 0
     for i, seg in enumerate(segments):
         if not isinstance(seg, Mapping):
-            raise TypeError(
-                f"Segment {i} must be a mapping, got {type(seg).__name__}."
-            )
+            raise TypeError(f"Segment {i} must be a mapping, got {type(seg).__name__}.")
 
         if "method" not in seg or "n_bins" not in seg:
             raise ValueError(
@@ -224,9 +222,7 @@ def validate_mixed_segments(
 
         params = seg.get("params", None)
         if params is not None and not isinstance(params, Mapping):
-            raise TypeError(
-                f"Segment {i}: 'params' must be a mapping when provided."
-            )
+            raise TypeError(f"Segment {i}: 'params' must be a mapping when provided.")
 
         n_sum += n_bins
 
