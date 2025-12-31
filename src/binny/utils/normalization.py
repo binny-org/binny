@@ -12,7 +12,7 @@ __all__ = ["normalize_1d"]
 def normalize_1d(
     x: ArrayLike,
     y: ArrayLike,
-    method: str = "trapz",
+    method: str = "trapezoid",
 ) -> np.ndarray:
     """Return y normalized so that ∫ y(x) dx = 1."""
     x_arr = np.asarray(x, dtype=float)
@@ -20,10 +20,10 @@ def normalize_1d(
 
     if method == "simpson":
         norm = simpson(y_arr, x=x_arr)
-    elif method == "trapz":
+    elif method == "trapezoid":
         norm = np.trapezoid(y_arr, x_arr)
     else:
-        raise ValueError("method must be 'trapz' or 'simpson'.")
+        raise ValueError("method must be 'trapezoid' or 'simpson'.")
 
     if np.isclose(norm, 0.0, atol=1e-10):
         raise ValueError("Normalization factor too small / zero.")

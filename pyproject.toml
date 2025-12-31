@@ -23,6 +23,12 @@ dev = [
 [tool.ruff]
 line-length = 88
 target-version = "py310"
+exclude = [
+  "lsst_galaxy_sample.py",
+  "presets.py",
+  "LSST_SRD_Redshift_Distributions_and_Binning.ipynb",
+  "updated_lsst_desc_parameters.yaml",
+]
 
 [tool.ruff.lint]
 select = ["E", "F", "I", "B", "UP"]
@@ -30,6 +36,7 @@ select = ["E", "F", "I", "B", "UP"]
 [tool.ruff.format]
 quote-style = "double"
 indent-style = "space"
+
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

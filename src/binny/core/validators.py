@@ -2,11 +2,10 @@
 
 from __future__ import annotations
 
-import numpy as np
-from numpy.typing import ArrayLike
 from collections.abc import Mapping, Sequence
 from typing import Any
 
+import numpy as np
 
 __all__ = [
     "validate_interval",
@@ -22,24 +21,19 @@ _BIN_METHOD_ALIASES: dict[str, str] = {
     "equidistant": "equidistant",
     "eq": "equidistant",
     "linear": "equidistant",
-
     # log-spaced
     "log": "log",
     "log_edges": "log",
-
     # equal-number / equipopulated
     "equal_number": "equal_number",
     "equipop": "equal_number",
     "en": "equal_number",
-
     # equal-information
     "equal_information": "equal_information",
     "info": "equal_information",
-
     # chi-spaced in comoving distance
     "equidistant_chi": "equidistant_chi",
     "chi": "equidistant_chi",
-
     # geometric in x
     "geometric": "geometric",
     "geom": "geometric",
@@ -48,8 +42,19 @@ _BIN_METHOD_ALIASES: dict[str, str] = {
 
 
 def resolve_binning_method(name: str) -> str:
-    """Resolve a user-facing binning method name (with aliases) to a canonical key."""
-    key = str(name).lower()
+    """Resolves a binning method name or alias to its canonical name.
+
+    Args:
+        name: Binning method name or alias.
+
+    Returns:
+        Canonical binning method name.
+
+    Raises:
+        ValueError: If the method name is unknown.
+    """
+    key = str(name).strip().lower()
+
     if key not in _BIN_METHOD_ALIASES:
         raise ValueError(
             f"Unknown binning method {name!r}. "
@@ -64,18 +69,26 @@ def validate_n_bins(
     allow_one: bool = True,
     max_bins: int = 1_000_000,
 ) -> None:
-    """Validate the number of bins."""
+    """Validates the number of bins.
+
+    Args:
+        n_bins: Number of bins to validate.
+        allow_one: Whether to allow n_bins == 1.
+        max_bins: Maximum allowed number of bins to prevent memory issues.
+
+    Raises:
+        TypeError: If n_bins is not an integer.
+        ValueError: If n_bins is not positive, or if n_bins == 1 when
+            allow_one is False, or if n_bins exceeds max_bins.
+    """
     if not isinstance(n_bins, int):
         raise TypeError("n_bins must be an integer.")
 
-    if n_bins < 0:
-        raise ValueError("n_bins must be non-negative.")
+    if n_bins <= 0:
+        raise ValueError("n_bins must be positive.")
 
     if not allow_one and n_bins == 1:
         raise ValueError("n_bins must be greater than 1.")
-
-    if n_bins == 0:
-        raise ValueError("n_bins must be positive.")
 
     if n_bins > max_bins:
         raise ValueError(
@@ -91,11 +104,19 @@ def validate_interval(
     *,
     log: bool = False,
 ) -> None:
-    """Validate scalar interval [x_min, x_max] + n_bins."""
-    validate_n_bins(n_bins)
+    """Validates the interval ``[x_min, x_max]`` and number of bins.
 
-    if np.isnan(x_min) or np.isnan(x_max):
-        raise ValueError("x_min and x_max must be valid finite numbers.")
+    Args:
+        x_min: Minimum value of the axis.
+        x_max: Maximum value of the axis.
+        n_bins: Number of bins.
+        log: Whether the bins are logarithmically spaced.
+
+    Raises:
+        ValueError: If ``x_min`` or ``x_max`` are not finite, if ``x_max <= x_min``,
+                    or if ``log`` is ``True`` and ``x_min <= 0`` or ``x_max <= 0``.
+    """
+    validate_n_bins(n_bins)
 
     if not np.isfinite(x_min) or not np.isfinite(x_max):
         raise ValueError("x_min and x_max must be finite numbers.")
@@ -103,16 +124,28 @@ def validate_interval(
     if x_max <= x_min:
         raise ValueError("x_max must be greater than x_min.")
 
-    if log:
-        if x_min <= 0 or x_max <= 0:
-            raise ValueError("log-/geometric-spaced bins require x_min > 0 and x_max > 0.")
+    if log and (x_min <= 0 or x_max <= 0):
+        raise ValueError("log-/geometric-spaced bins require x_min > 0 and x_max > 0.")
 
 
 def validate_axis_and_weights(
-    x: ArrayLike,
-    weights: ArrayLike,
+    x: Any,
+    weights: Any,
 ) -> tuple[np.ndarray, np.ndarray]:
-    """Validate 1D axis and weights arrays and return them as float ndarrays."""
+    """Validates axis values and weights for binning.
+
+    Args:
+        x: 1D array-like of axis values.
+        weights: 1D array-like of weights corresponding to ``x``.
+
+    Returns:
+        Tuple of validated numpy arrays: ``(x, weights)``.
+
+    Raises:
+        ValueError: If ``x`` and ``weights`` do not have the same shape, are not 1D,
+                    contain non-finite values, have less than two points,
+                    or if ``x`` is not strictly increasing.
+    """
     x_arr = np.asarray(x, dtype=float)
     w_arr = np.asarray(weights, dtype=float)
 
@@ -139,18 +172,29 @@ def validate_axis_and_weights(
 
     return x_arr, w_arr
 
+
 def validate_mixed_segments(
     segments: Sequence[Mapping[str, Any]],
     *,
     total_n_bins: int | None = None,
 ) -> None:
-    """Validate a list of mixed-binning segments.
+    """Validates mixed binning segments.
 
-    Each segment must have at least:
-      - 'method': str   (e.g. 'equidistant', 'eq', 'equal_number', 'chi', ...)
-      - 'n_bins': int > 0
+    Args:
+        segments: Sequence of segment specifications. Each segment is a mapping
+        with keys:
+            - ``"method"``: Binning method name (e.g., ``"equidistant"``, ``"log"``,
+              ``"equal_number"``, ``"equidistant_chi"``, etc.).
+            - ``"n_bins"``: Number of bins for the segment.
+            - ``"params"``: Optional mapping of parameters specific to the segment.
+        total_n_bins: Optional total number of bins across all segments. If provided,
+            the sum of segment ``"n_bins"`` values must match this number.
 
-    If total_n_bins is given, the sum over all segments must match it.
+    Raises:
+        ValueError: If ``segments`` is empty, required keys are missing,
+            ``"n_bins"`` values are invalid, or the sum of ``"n_bins"`` does not
+            match ``total_n_bins``.
+        TypeError: If segment specifications or their fields are of incorrect types.
     """
     if not segments:
         raise ValueError("segments must be a non-empty sequence.")
@@ -165,17 +209,27 @@ def validate_mixed_segments(
                 f"Segment {i} must contain at least 'method' and 'n_bins' keys."
             )
 
-        method = resolve_binning_method(seg["method"])
-        n_bins = int(seg["n_bins"])
+        if not isinstance(seg["method"], str):
+            raise TypeError(f"Segment {i}: 'method' must be a string.")
 
-        if n_bins <= 0:
-            raise ValueError(f"Segment {i}: n_bins must be positive, got {n_bins}.")
+        if not isinstance(seg["n_bins"], int):
+            raise TypeError(f"Segment {i}: 'n_bins' must be an int.")
 
-        # This will raise if the method name is not known
-        _ = method
+        resolve_binning_method(seg["method"])
+
+        n_bins = seg["n_bins"]
+        validate_n_bins(n_bins)
+
+        params = seg.get("params", None)
+        if params is not None and not isinstance(params, Mapping):
+            raise TypeError(
+                f"Segment {i}: 'params' must be a mapping when provided."
+            )
+
         n_sum += n_bins
 
-    if total_n_bins is not None and n_sum != total_n_bins:
-        raise ValueError(
-            f"Sum of segment n_bins = {n_sum}, but total_n_bins={total_n_bins}."
-        )
+        if total_n_bins is not None and n_sum != total_n_bins:
+            raise ValueError(
+                f"Sum of segment n_bins is {n_sum}, but total_n_bins is {total_n_bins}."
+            )
+
