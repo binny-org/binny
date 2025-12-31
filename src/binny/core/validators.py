@@ -149,14 +149,14 @@ def validate_axis_and_weights(
     x_arr = np.asarray(x, dtype=float)
     w_arr = np.asarray(weights, dtype=float)
 
-    if x_arr.shape != w_arr.shape:
-        raise ValueError("x and weights must have the same shape.")
-
     if x_arr.ndim != 1:
         raise ValueError("x must be 1D.")
 
     if w_arr.ndim != 1:
         raise ValueError("weights must be 1D.")
+
+    if x_arr.shape != w_arr.shape:
+        raise ValueError("x and weights must have the same shape.")
 
     if not np.all(np.isfinite(x_arr)):
         raise ValueError("x must contain only finite values.")
@@ -202,7 +202,9 @@ def validate_mixed_segments(
     n_sum = 0
     for i, seg in enumerate(segments):
         if not isinstance(seg, Mapping):
-            raise TypeError(f"Segment {i} must be a mapping, got {type(seg).__name__}.")
+            raise TypeError(
+                f"Segment {i} must be a mapping, got {type(seg).__name__}."
+            )
 
         if "method" not in seg or "n_bins" not in seg:
             raise ValueError(
@@ -222,11 +224,13 @@ def validate_mixed_segments(
 
         params = seg.get("params", None)
         if params is not None and not isinstance(params, Mapping):
-            raise TypeError(f"Segment {i}: 'params' must be a mapping when provided.")
+            raise TypeError(
+                f"Segment {i}: 'params' must be a mapping when provided."
+            )
 
         n_sum += n_bins
 
-        if total_n_bins is not None and n_sum != total_n_bins:
-            raise ValueError(
-                f"Sum of segment n_bins is {n_sum}, but total_n_bins is {total_n_bins}."
-            )
+    if total_n_bins is not None and n_sum != total_n_bins:
+        raise ValueError(
+            f"Sum of segment n_bins is {n_sum}, but total_n_bins is {total_n_bins}."
+        )
