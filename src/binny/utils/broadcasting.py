@@ -30,7 +30,7 @@ def as_per_bin(x: float | int | Sequence | None, n_bins: int, name: str):
         return [None] * n_bins
 
     # Case 2: scalar → broadcast
-    if isinstance(x, (float, int)):
+    if isinstance(x, float | int):
         return [float(x)] * n_bins
 
     # Case 3: sequence → check length
