@@ -92,7 +92,7 @@ def summarize_bins(
 
     sigma_mean_dict: dict[int, float] | None = None
     if sigma_mean is not None:
-        if isinstance(sigma_mean, (float, int)):
+        if isinstance(sigma_mean, float | int):
             sigma_mean_dict = {idx: float(sigma_mean) for idx in bin_indices}
         elif isinstance(sigma_mean, Mapping):
             sigma_mean_dict = {idx: float(sigma_mean[idx]) for idx in bin_indices}
