@@ -1,0 +1,56 @@
+name: Release (bump version)
+
+on:
+  workflow_dispatch:
+    inputs:
+      bump:
+        description: "Which SemVer part to bump?"
+        required: true
+        default: "patch"
+        type: choice
+        options:
+          - patch
+          - minor
+          - major
+
+jobs:
+  bump:
+    runs-on: ubuntu-latest
+
+    # Needed so the workflow can push commits + tags
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout (with tags)
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.10"
+
+      - name: Install package + dev deps
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -e ".[dev]"
+
+      - name: Run tests
+        run: |
+          pytest
+
+      - name: Configure git identity
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Bump version (commit + tag)
+        run: |
+          python -m bumpversion ${{ inputs.bump }}
+
+      - name: Push commit + tags
+        run: |
+          git push
+          git push --tags
