@@ -7,9 +7,48 @@ requires-python = ">=3.10"
 authors = [{ name = "Nikolina Sarcevic", email = "nikolina.sarcevic@gmail.com" }]
 license = { text = "MIT" }
 
-[project.dependencies]
-numpy = "*"
-scipy = "*"
+dependencies = [
+  "numpy",
+  "scipy",
+]
+
+[project.optional-dependencies]
+dev = [
+  "ruff>=0.6",
+  "pytest>=8",
+  "pytest-cov>=5",
+  "bump-my-version>=0.26",
+]
+
+[tool.ruff]
+line-length = 88
+target-version = "py310"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "UP"]
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+
+[tool.setuptools]
+package-dir = { "" = "src" }
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.bumpversion]
+current_version = "0.1.0"
+commit = true
+tag = true
+
+[tool.bumpversion.files."pyproject.toml"]
+search = 'version = "{current_version}"'
+replace = 'version = "{new_version}"'
+
 
 [build-system]
 requires = ["setuptools>=61"]
