@@ -1,6 +1,7 @@
-# src/binny/utils/broadcasting.py
+"""Utility to broadcast parameters to per-bin lists."""
 
 from __future__ import annotations
+
 from collections.abc import Sequence
 
 __all__ = ["as_per_bin"]
@@ -35,8 +36,8 @@ def as_per_bin(x: float | int | Sequence | None, n_bins: int, name: str):
     # Case 3: sequence → check length
     try:
         seq = list(x)
-    except TypeError:
-        raise TypeError(f"{name} must be scalar, None, or a sequence.")
+    except TypeError as err:
+        raise TypeError(f"{name} must be scalar, None, or a sequence.") from err
 
     if len(seq) != n_bins:
         raise ValueError(f"{name} must have length {n_bins}, got {len(seq)}.")

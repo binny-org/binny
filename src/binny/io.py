@@ -2,14 +2,14 @@
 
 from __future__ import annotations
 
+from collections.abc import Mapping, Sequence
 from pathlib import Path
 from typing import Any
 
 import numpy as np
 import yaml
-from collections.abc import Mapping, Sequence
 
-from src.binny.core.validation import validate_mixed_segments
+from binny.core.validators import validate_mixed_segments
 
 __all__ = [
     "load_nz",
@@ -82,7 +82,8 @@ def load_nz(
                 ) from exc
         else:
             raise ValueError(
-                f"Unsupported .npy structure in {path!s}; expected (N,2) array or a dict-like with 'z'/'nz'."
+                f"Unsupported .npy structure in {path!s}; expected an (N, 2) array "
+                "or a dict-like with 'z'/'nz'."
             )
 
     elif ext == ".npz":
@@ -94,7 +95,8 @@ def load_nz(
             arr = np.asarray(data[key])
             if arr.ndim != 2 or arr.shape[1] < 2:
                 raise ValueError(
-                    f"Array under key {key!r} in {path!s} must have shape (N, 2) or more columns."
+                    f"Array under key {key!r} in {path!s} must have shape (N, 2) "
+                    "or have more columns."
                 )
             z = arr[:, x_col]
             nz = arr[:, nz_col]
@@ -179,7 +181,7 @@ def load_binning_recipe(path: str) -> list[dict[str, Any]]:
     Arrays like x, weights, z, chi are NOT stored in YAML; they are provided
     at runtime to `mixed_edges`.
     """
-    with open(path, "r", encoding="utf-8") as f:
+    with open(path, encoding="utf-8") as f:
         data = yaml.safe_load(f)
 
     if not isinstance(data, Mapping):
