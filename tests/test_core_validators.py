@@ -271,7 +271,7 @@ def test_validate_mixed_segments_total_n_bins_mismatch_raises():
     does not match total_n_bins."""
     segments = [{"method": "eq", "n_bins": 2}, {"method": "log", "n_bins": 3}]
     with pytest.raises(
-            ValueError,
-            match=r"Sum of segment n_bins is .*total_n_bins is 6",
+        ValueError,
+        match=r"Sum of segment n_bins is .*total_n_bins is 6",
     ):
         validate_mixed_segments(segments, total_n_bins=6)
