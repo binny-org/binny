@@ -22,7 +22,7 @@ def build_specz_bins(
     nz: Any,
     bin_edges: Any,
     *,
-    completeness_per_bin: Sequence[float] | float = 1.0,
+    completeness: Sequence[float] | float = 1.0,
     normalize_input: bool = True,
     normalize_bins: bool = True,
     norm_method: str = "trapz",
@@ -39,7 +39,7 @@ def build_specz_bins(
         nz: Parent redshift distribution evaluated on ``z``.
         bin_edges: One-dimensional array of bin edges in true redshift. Must have
             length ``n_bins + 1`` and lie within the range spanned by ``z``.
-        completeness_per_bin: Per-bin completeness factors in ``[0, 1]``. May be
+        completeness: Per-bin completeness factors in ``[0, 1]``. May be
             a scalar (applied to all bins) or a sequence of length ``n_bins``.
         normalize_input: Whether to normalize the input ``nz`` before binning.
         normalize_bins: Whether to normalize each output bin distribution.
@@ -77,7 +77,7 @@ def build_specz_bins(
             )
         n_arr = normalize_1d(z_arr, n_arr, method=norm_method)
 
-    completeness = as_per_bin(completeness_per_bin, n_bins, "completeness_per_bin")
+    completeness = as_per_bin(completeness, n_bins, "completeness")
 
     bins: dict[int, np.ndarray] = {}
 
@@ -108,7 +108,7 @@ def specz_selection_in_bin(
     *,
     inclusive_right: bool = False,
 ) -> np.ndarray:
-    """Compute a top-hat selection function for a spectroscopic bin.
+    """Computes a top-hat selection function for a spectroscopic bin.
 
     The selection is defined on a redshift grid ``z`` as an indicator function
     for the interval ``[bin_min, bin_max)`` by default, optionally including the
