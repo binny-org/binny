@@ -55,7 +55,7 @@ def bin_moments(
 
 def summarize_bins(
     z: Any,
-    bins: dict[int, np.ndarray],
+    bins: Mapping[int, Any],
     neff_per_bin: Mapping[int, float] | None = None,
     sigma_mean: float | Sequence[float] | Mapping[int, float] | None = None,
 ) -> dict[int, dict[str, float]]:
@@ -83,9 +83,8 @@ def summarize_bins(
         ``sigma_mean`` or ``n_eff_per_bin``.
 
     Raises:
-        ValueError: If ``sigma_mean`` is provided as a sequence with length not
-            equal to the number of bins.
-        ValueError: If ``neff_per_bin[idx]`` is non-positive for any bin.
+        ValueError: If ``sigma_mean`` is a mapping missing any bin index.
+        ValueError: If ``neff_per_bin`` is missing any bin index.
     """
     stats: dict[int, dict[str, float]] = {}
     bin_indices = sorted(bins.keys())
@@ -95,7 +94,10 @@ def summarize_bins(
         if isinstance(sigma_mean, float | int):
             sigma_mean_dict = {idx: float(sigma_mean) for idx in bin_indices}
         elif isinstance(sigma_mean, Mapping):
-            sigma_mean_dict = {idx: float(sigma_mean[idx]) for idx in bin_indices}
+            try:
+                sigma_mean_dict = {idx: float(sigma_mean[idx]) for idx in bin_indices}
+            except KeyError as e:
+                raise ValueError(f"sigma_mean is missing bin index {e.args[0]}.") from e
         else:
             arr = np.asarray(sigma_mean, dtype=float)
             if arr.shape[0] != len(bin_indices):
@@ -103,7 +105,7 @@ def summarize_bins(
                     "sigma_mean sequence must have length equal to number of bins."
                 )
             sigma_mean_dict = {
-                idx: float(val) for idx, val in zip(bin_indices, arr, strict=False)
+                idx: float(val) for idx, val in zip(bin_indices, arr, strict=True)
             }
 
     for idx in bin_indices:
@@ -114,7 +116,12 @@ def summarize_bins(
         if sigma_mean_dict is not None:
             entry["sigma_mean"] = sigma_mean_dict[idx]
         elif neff_per_bin is not None:
-            num = neff_per_bin[idx]  # effective number of galaxies in this bin
+            try:
+                num = neff_per_bin[idx]  # effective number of galaxies in this bin
+            except KeyError as e:
+                raise ValueError(
+                    f"neff_per_bin is missing bin index {e.args[0]}."
+                ) from e
             if num <= 0:
                 raise ValueError(f"neff_per_bin[{idx}] must be positive.")
             entry["sigma_mean"] = std / np.sqrt(num)
@@ -126,7 +133,7 @@ def summarize_bins(
 
 def bin_integrals(
     z: Any,
-    bins: dict[int, np.ndarray],
+    bins: Mapping[int, Any],
 ) -> dict[int, float]:
     """Computes the integral of ``n_i(z)`` over ``z`` for each bin.
 
@@ -153,7 +160,7 @@ def bin_integrals(
 
 def bin_fractions(
     z: Any,
-    bins: dict[int, np.ndarray],
+    bins: Mapping[int, Any],
 ) -> dict[int, float]:
     """Computes fractional bin weights from integrated ``n_i(z)``.
 
@@ -380,7 +387,7 @@ def bin_overlap_percent(
     rtol: float = 1e-3,
     atol: float = 1e-6,
 ) -> dict[int, dict[int, float]]:
-    """Compute pairwise bin overlap as a percentage.
+    """Computes pairwise bin overlap as a percentage.
 
     This returns ``100 * integral min(p_i(z), p_j(z)) dz`` for all bin pairs. When
     each ``p_i`` is normalized to unit integral, the result lies in ``[0, 100]``
