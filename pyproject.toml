@@ -10,6 +10,7 @@ license = { text = "MIT" }
 dependencies = [
   "numpy",
   "scipy",
+  "pyyaml",
 ]
 
 [project.optional-dependencies]
