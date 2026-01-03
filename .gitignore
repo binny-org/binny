@@ -7,3 +7,4 @@ updated_lsst_desc_parameters.yaml
 *.egg-info
 build
 *__pycache__
+*_build
