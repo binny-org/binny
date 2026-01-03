@@ -8,3 +8,4 @@ updated_lsst_desc_parameters.yaml
 build
 *__pycache__
 *_build
+.cache
