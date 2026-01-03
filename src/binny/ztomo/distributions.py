@@ -30,8 +30,9 @@ def smail_like_distribution(
 
     This function defines an unnormalized Smail distribution for redshift
     distributions, often used to model galaxy redshift distributions in weak
-    lensing studies. The form is given by:
-        ``n(z) = (z / z0)^alpha * exp[-(z / z0)^beta]``
+    lensing studies. The form is given by::
+
+        n(z) = (z / z0)^alpha * exp[-(z / z0)^beta]
 
     Args:
         z: Redshift or array of redshifts.
@@ -55,8 +56,10 @@ def gaussian_distribution(
     """Returns a Gaussian redshift distribution.
 
     This function defines an unnormalized Gaussian distribution for redshift
-    distributions, given by the form:
-        ``n(z) = exp[-0.5 * ((z - mu) / sigma)^2]``,
+    distributions, given by the form::
+
+        n(z) = exp[-0.5 * ((z - mu) / sigma)^2]
+
     with ``mu`` as the mean redshift and ``sigma`` as the standard deviation.
 
     Args:
@@ -85,8 +88,10 @@ def gaussian_mixture_distribution(
     """Returns a Gaussian mixture redshift distribution.
 
     This function defines an unnormalized Gaussian mixture distribution for redshift
-    distributions, given by the form:
-        ``n(z) = sum_{i=1}^K w_i * exp[-0.5 * ((z - mu_i) / sigma_i)^2]``,
+    distributions, given by the form::
+
+        n(z) = sum_{i=1}^K w_i * exp[-0.5 * ((z - mu_i) / sigma_i)^2]
+
     where ``K`` is the number of components, ``mu_i`` and ``sigma_i`` are the
     mean and standard deviation of the i-th Gaussian component, and ``w_i``
     are the nonnegative weights for each component. If no weights are provided,
@@ -96,8 +101,8 @@ def gaussian_mixture_distribution(
         z: Redshift or array of redshifts.
         mus: Array of component means, shape ``(K,)``.
         sigmas: Array of component std devs, shape ``(K,)``. Must be positive.
-        weights: Optional nonnegative weights, shape ``(K,)``. If None, equal weights
-            are used. Weights do not need to sum to 1.
+        weights: Optional nonnegative weights, shape ``(K,)``. If ``None``,
+            equal weights are used. Weights do not need to sum to ``1``.
 
     Returns:
         Unnormalized Gaussian mixture evaluated at ``z``.
@@ -139,9 +144,12 @@ def gamma_distribution(
     """Returns a gamma-shaped redshift distribution.
 
     This function defines an unnormalized gamma-shaped distribution for redshift
-    distributions, given by the form:
-        ``n(z) = z^(k-1) * exp(-z/theta)``  for ``z >= 0``
-    with ``n(z) = 0`` for ``z < 0`` and parameters ``k > 0``, ``theta > 0``.
+    distributions, given by the form::
+
+        n(z) = z^(k-1) * exp(-z/theta)
+
+    for ``z >= 0``, with ``n(z) = 0`` for ``z < 0`` and parameters ``k > 0``,
+    ``theta > 0``.
 
     Args:
         z: Redshift or array of redshifts.
@@ -173,8 +181,9 @@ def schechter_like_distribution(
     """Returns a Schechter-like redshift distribution.
 
     This function defines an unnormalized Schechter-like distribution for
-    redshift distributions, given by the form:
-        ``n(z) = (z / z0)^alpha * exp(-(z / z0))``.
+    redshift distributions, given by the form::
+
+        n(z) = (z / z0)^alpha * exp(-(z / z0))
 
     It is similar to the Schechter function commonly used in luminosity functions.
     It also reducses to Smail form with ``beta=1``.
@@ -204,18 +213,20 @@ def lognormal_distribution(
     """Returns a lognormal redshift distribution.
 
     This function defines an unnormalized lognormal distribution for redshift
-    distributions, given by the form:
-        ``n(z) approx (1/z) * exp(- (ln z - mu_ln)^2 / (2 sigma_ln^2))``,
+    distributions, given by the form::
+
+        n(z) approx (1/z) * exp(- (ln z - mu_ln)^2 / (2 sigma_ln^2))
+
     with ``n(z) = 0`` for ``z <= 0``. Parameters ``mu_ln`` and ``sigma_ln`` are the
     mean and standard deviation of ``ln(z)``.
 
     Args:
         z: Redshift or array of redshifts.
-        mu_ln: Mean of ln(z).
-        sigma_ln: Std dev of ln(z) (must be positive).
+        mu_ln: Mean of ``ln(z)``.
+        sigma_ln: Std dev of ``ln(z)`` (must be positive).
 
     Returns:
-        Unnormalized lognormal shape evaluated at ``z`` (0 for z <= 0).
+        Unnormalized lognormal shape evaluated at ``z`` (``0`` for ``z <= 0``).
 
     Raises:
         ValueError: If ``sigma_ln`` is not positive.
@@ -238,14 +249,16 @@ def tophat_distribution(
     """Returns a tophat (uniform) redshift distribution.
 
     This function defines a top-hat (uniform) distribution for redshift
-    distributions, given by:
-        ``n(z) = 1`` for ``zmin <= z <= zmax``
+    distributions, given by::
+
+        n(z) = 1`` for ``zmin <= z <= zmax
+
     and ``n(z) = 0`` elsewhere.
 
     Args:
         z: Redshift or array of redshifts.
         zmin: Lower edge.
-        zmax: Upper edge (must be > zmin).
+        zmax: Upper edge (must be greater than ``zmin``).
 
     Returns:
         Array equal to 1 where ``zmin <= z <= zmax`` and 0 elsewhere.
@@ -268,8 +281,11 @@ def shifted_smail_distribution(
 ) -> NDArray[np.floating]:
     """Returns a shifted Smail-type redshift distribution.
 
-    This function defines a shifted version of the Smail distribution, given by:
-        ``n(z) = ((z - z_shift)/z0)^alpha * exp(-((z - z_shift)/z0)^beta)``
+    This function defines a shifted version of the Smail distribution,
+    given by::
+
+        n(z) = ((z - z_shift)/z0)^alpha * exp(-((z - z_shift)/z0)^beta)
+
     with ``n(z)=0`` for ``z < z_shift``.
 
     Args:
@@ -304,8 +320,10 @@ def skew_normal_distribution(
     """Returns a skew-normal-like redshift distribution.
 
     This function defines an unnormalized skew-normal-like distribution for redshift
-    distributions, given by the form:
-        ``n(z) = exp[-0.5 * ((z - xi) / omega)^2] * Phi(alpha * (z - xi) / omega)``,
+    distributions, given by the form::
+
+        n(z) = exp[-0.5 * ((z - xi) / omega)^2] * Phi(alpha * (z - xi) / omega)
+
     where ``Phi`` is the standard normal CDF approximated via tanh. Parameters
     are ``xi`` (location), ``omega > 0`` (scale), and ``alpha`` (shape/skewness).
 
@@ -339,8 +357,10 @@ def student_t_distribution(
     """Returns a Student-t redshift distribution.
 
     This function defines an unnormalized Student-t distribution for redshift
-    distributions, given by the form:
-        ``n(z) = [1 + ((z - mu) / sigma)^2 / nu]^(-(nu + 1) / 2)``,
+    distributions, given by the form::
+
+        n(z) = [1 + ((z - mu) / sigma)^2 / nu]^(-(nu + 1) / 2)
+
     with parameters ``mu`` (location), ``sigma > 0`` (scale), and ``nu > 0``
     (degrees of freedom).
 

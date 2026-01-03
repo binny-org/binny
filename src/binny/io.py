@@ -164,7 +164,7 @@ def load_nz(
 def load_binning_recipe(path: str) -> list[dict[str, Any]]:
     """Load a mixed-binning recipe from a YAML file.
 
-    Expected YAML structure:
+    Expected YAML structure::
 
         name: "y10_mixed_scheme"
         n_bins: 5
@@ -177,9 +177,9 @@ def load_binning_recipe(path: str) -> list[dict[str, Any]]:
           - method: "equal_number"
             n_bins: 2
 
-    `params` is optional; any keys in params are passed through to mixed_edges.
+    ``params`` is optional; any keys in params are passed through to mixed_edges.
     Arrays like x, weights, z, chi are NOT stored in YAML; they are provided
-    at runtime to `mixed_edges`.
+    at runtime to ``mixed_edges``.
     """
     with open(path, encoding="utf-8") as f:
         data = yaml.safe_load(f)
