@@ -112,15 +112,17 @@ def mixed_edges(
     """Computes bin edges for a mixed binning strategy across multiple segments.
 
     Each segment can use a different binning method, specified in
-    the ``segments` argument.
+    the ``segments`` argument.
 
     Args:
         segments: Sequence of segment specifications. Each segment is
             a mapping with keys:
+
             - "method": Binning method name
                 (e.g., ``"equidistant"``, ``"log"``, ``"equal_number"``, etc.).
             - "n_bins": Number of bins for the segment.
             - "params": Optional mapping of parameters specific to the segment.
+
         x: 1D array of axis values (required for some methods).
         weights: 1D array of weights corresponding to ``x``
             (required for "equal_number").

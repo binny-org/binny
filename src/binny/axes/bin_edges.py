@@ -76,7 +76,7 @@ def equal_number_edges(x: Any, weights: Any, n_bins: int) -> np.ndarray:
         n_bins: Number of bins.
 
     Returns:
-        Array of bin edges of shape (n_bins + 1,).
+        Array of bin edges of shape ``(n_bins + 1,)``.
     """
     validate_n_bins(n_bins)
     return _equal_weight_edges(x, weights, n_bins)
@@ -97,7 +97,7 @@ def equal_information_edges(
 
     Args:
         x: 1D array of axis values.
-        info_density: 1D array of information density corresponding to ``x`.
+        info_density: 1D array of information density corresponding to ``x``.
         n_bins: Number of bins.
 
     Returns:
@@ -120,7 +120,7 @@ def equidistant_chi_edges(
 
     Args:
         z: 1D array of redshift values.
-        chi: 1D array of comoving distance values corresponding to ``z`.
+        chi: 1D array of comoving distance values corresponding to ``z``.
         n_bins: Number of bins.
 
     Returns:
