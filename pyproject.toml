@@ -66,7 +66,7 @@ commands = [
   [
     "sphinx-apidoc",
     "-o", "{tox_root}/docs",
-    "{tox_root}/src/derivkit",
+    "{tox_root}/src/binny",
     "--separate",
     "-f",
   ],
@@ -79,14 +79,14 @@ commands = [
 ]
 
 [tool.tox.env.docs-releases]
-description = "Build the documentation for derivkit releases using Sphinx"
+description = "Build the documentation for binny releases using Sphinx"
 extras = ["docs"]
 allowlist_externals = ["cp"]
 commands = [
   [
     "sphinx-apidoc",
     "-o", "{tox_root}/docs",
-    "{tox_root}/src/derivkit",
+    "{tox_root}/src/binny",
     "--separate",
     "-f",
   ],
