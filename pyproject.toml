@@ -26,7 +26,7 @@ dev = [
     "sphinx",
     "sphinx-design",
     "sphinx-multiversion",
-    "furo",
+    "sphinxawesome-theme",
 ]
 
 [tool.ruff]
