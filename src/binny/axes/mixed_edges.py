@@ -1,4 +1,4 @@
-"""Module to compute mixed bin edges based on different strategies for each segment."""
+"""Computes bin edges using different binning strategies per segment."""
 
 from __future__ import annotations
 
@@ -12,31 +12,39 @@ from binny.axes.bin_edges import (
     equal_number_edges,
     equidistant_chi_edges,
     equidistant_edges,
-    geometric_edges_n,
+    geometric_edges,
     log_edges,
 )
-from binny.core.validators import resolve_binning_method, validate_mixed_segments
+from binny.core.validators import (
+    resolve_binning_method,
+    validate_mixed_segments,
+)
+
+CastFunc = Callable[[Any], Any]
+EdgeFunc = Callable[..., np.ndarray]
 
 
 def _get(seg_i: int, params: Mapping[str, Any], key: str, fallback: Any) -> Any:
-    """Gets a parameter value from params or fallback, raising an error if not found.
+    """Resolve a parameter value from segment params or global fallback.
 
     Args:
-        seg_i: Index of the current segment.
-        params: Parameters dictionary for the segment.
-        key: Key to look for in params.
-        fallback: Fallback value if key is not in params.
+        seg_i: Segment index (used for error messages).
+        params: Segment-level parameter mapping.
+        key: Parameter name to resolve.
+        fallback: Value from global arguments.
 
     Returns:
-        The value associated with key in params or the fallback value.
+        The resolved value.
+
+    Raises:
+        ValueError: If neither the segment params nor the global fallback
+            provides a value for ``key``.
     """
     val = params.get(key, fallback)
-
     if val is None:
         raise ValueError(
-            f"Segment {seg_i} requires {key!r} in params or as a global argument."
+            f"Segment {seg_i} requires {key!r} in params or" f" as a global argument."
         )
-
     return val
 
 
@@ -45,7 +53,10 @@ _MIXED_SPEC: dict[str, dict[str, Any]] = {
         "required": ("x_min", "x_max"),
         "casts": {"x_min": float, "x_max": float},
     },
-    "log": {"required": ("x_min", "x_max"), "casts": {"x_min": float, "x_max": float}},
+    "log": {
+        "required": ("x_min", "x_max"),
+        "casts": {"x_min": float, "x_max": float},
+    },
     "geometric": {
         "required": ("x_min", "x_max"),
         "casts": {"x_min": float, "x_max": float},
@@ -55,10 +66,10 @@ _MIXED_SPEC: dict[str, dict[str, Any]] = {
     "equidistant_chi": {"required": ("z", "chi")},
 }
 
-_FUNCS: dict[str, Callable[..., np.ndarray]] = {
+_FUNCS: dict[str, EdgeFunc] = {
     "equidistant": equidistant_edges,
     "log": log_edges,
-    "geometric": geometric_edges_n,
+    "geometric": geometric_edges,
     "equal_number": equal_number_edges,
     "equal_information": equal_information_edges,
     "equidistant_chi": equidistant_chi_edges,
@@ -71,23 +82,23 @@ def _call_with(
     n_bins: int,
     g: Mapping[str, Any],
     *,
-    func: Callable[..., np.ndarray],
+    func: EdgeFunc,
     required: tuple[str, ...],
-    casts: Mapping[str, Any] | None = None,
+    casts: Mapping[str, CastFunc] | None = None,
 ) -> np.ndarray:
-    """Calls a bin edge function with parameters from params or global arguments.
+    """Call a bin-edge function using segment params with global fallbacks.
 
     Args:
-        seg_i: Index of the current segment.
-        params: Parameters dictionary for the segment.
+        seg_i: Segment index (used for error messages).
+        params: Segment-level parameter mapping.
         n_bins: Number of bins for the segment.
         g: Global arguments mapping.
-        func: Bin edge function to call.
-        required: Tuple of required parameter names.
-        casts: Optional mapping of parameter names to casting functions.
+        func: Bin-edge function to call.
+        required: Required parameter names to pass to ``func``.
+        casts: Optional mapping from parameter name to a cast/convert function.
 
     Returns:
-        Array of bin edges.
+        1D array of bin edges produced by ``func``.
     """
     casts = casts or {}
     kwargs: dict[str, Any] = {}
@@ -97,6 +108,45 @@ def _call_with(
             v = casts[k](v)
         kwargs[k] = v
     return func(**kwargs, n_bins=n_bins)
+
+
+def _validate_segment_edges(
+    seg_i: int,
+    edges: np.ndarray,
+    *,
+    n_bins: int,
+    prev_right: float | None,
+    atol: float = 1e-12,
+) -> float:
+    """Validate segment edges and return the segment's right endpoint."""
+    edges = np.asarray(edges, dtype=float)
+
+    if edges.ndim != 1:
+        raise ValueError(
+            f"Segment {seg_i}: edges must be 1D," f" got shape {edges.shape}."
+        )
+
+    if edges.size != n_bins + 1:
+        raise ValueError(
+            f"Segment {seg_i}: expected {n_bins + 1} edges, got {edges.size}."
+        )
+
+    if not np.all(np.isfinite(edges)):
+        raise ValueError(f"Segment {seg_i}: edges must be finite.")
+
+    if not np.all(np.diff(edges) > 0):
+        raise ValueError(f"Segment {seg_i}:" f" edges must be strictly increasing.")
+
+    mismatch = prev_right is not None and not np.isclose(
+        edges[0], prev_right, rtol=0, atol=atol
+    )
+    if mismatch:
+        raise ValueError(
+            f"Segment {seg_i}: left edge {edges[0]} does not match previous "
+            f"right edge {prev_right}."
+        )
+
+    return float(edges[-1])
 
 
 def mixed_edges(
@@ -109,39 +159,53 @@ def mixed_edges(
     chi: Any | None = None,
     total_n_bins: int | None = None,
 ) -> np.ndarray:
-    """Computes bin edges for a mixed binning strategy across multiple segments.
+    """Compute bin edges for a mixed binning strategy across multiple segments.
 
-    Each segment can use a different binning method, specified in
-    the ``segments` argument.
+    Each segment specifies a binning method and a number of bins. Segment edge
+    arrays are concatenated in order; shared boundaries are de-duplicated (the
+    first edge of each subsequent segment is dropped) so the output is a single
+    increasing edge array.
+
+    Segment specification
+        Each element of ``segments`` is a mapping with keys:
+        - ``"method"``: Binning method name or alias (resolved via
+          :func:`binny.core.validators.resolve_binning_method`).
+        - ``"n_bins"``: Number of bins in this segment (integer).
+        - ``"params"``: Optional mapping of method-specific parameters.
+          Any missing required parameter may be provided as a global keyword
+          argument to :func:`mixed_edges`.
+
+    Global inputs
+        Some methods require arrays (e.g. ``x``/``weights``). You can provide
+        them globally, or per-segment via ``params``. If a required input is
+        missing, a ``ValueError`` is raised.
 
     Args:
-        segments: Sequence of segment specifications. Each segment is
-            a mapping with keys:
-            - "method": Binning method name
-                (e.g., ``"equidistant"``, ``"log"``, ``"equal_number"``, etc.).
-            - "n_bins": Number of bins for the segment.
-            - "params": Optional mapping of parameters specific to the segment.
-        x: 1D array of axis values (required for some methods).
-        weights: 1D array of weights corresponding to ``x``
-            (required for "equal_number").
-        info_density: 1D array of information density corresponding to ``x``
-            (required for ``"equal_information"``).
-        z: 1D array of redshift values (required for ``"equidistant_chi"``).
-        chi: 1D array of comoving distances corresponding to ``z``
-            (required for "equidistant_chi").
-        total_n_bins: Optional total number of bins across all segments for validation.
+        segments: Sequence of segment specifications.
+        x: 1D axis values (used by equal-number / equal-information methods).
+        weights: 1D weights on ``x`` (used by ``"equal_number"``).
+        info_density: 1D information density on ``x``
+            (used by ``"equal_information"``).
+        z: 1D redshift grid (used by ``"equidistant_chi"``).
+        chi: 1D comoving distance grid corresponding to ``z``
+            (used by ``"equidistant_chi"``).
+        total_n_bins: Optional total number of bins for validation
+            (sum of segment ``n_bins``).
 
     Returns:
-        Array of bin edges combining all segments.
+        1D array of combined bin edges with shape ``(sum(n_bins) + 1,)``.
 
     Raises:
-        RuntimeError: If an unhandled binning method is specified.
+        ValueError: If segment specs are invalid, a required input is missing,
+            a method is unknown, or segment edges are invalid/incompatible.
     """
     validate_mixed_segments(segments, total_n_bins=total_n_bins)
 
     g = {"x": x, "weights": weights, "info_density": info_density, "z": z, "chi": chi}
 
     all_edges: list[np.ndarray] = []
+    prev_right: float | None = None
+
     for i, seg in enumerate(segments):
         method = resolve_binning_method(seg["method"])
         n_bins = int(seg["n_bins"])
@@ -150,7 +214,7 @@ def mixed_edges(
         spec = _MIXED_SPEC.get(method)
         func = _FUNCS.get(method)
         if spec is None or func is None:
-            raise RuntimeError(f"Unhandled binning method {method!r} in mixed_edges.")
+            raise ValueError(f"Unknown binning method {method!r}" f" in mixed_edges.")
 
         edges = _call_with(
             i,
@@ -162,6 +226,15 @@ def mixed_edges(
             casts=spec.get("casts"),
         )
 
+        prev_right = _validate_segment_edges(
+            i, edges, n_bins=n_bins, prev_right=prev_right
+        )
+
+        edges = np.asarray(edges, dtype=float)
         all_edges.append(edges if i == 0 else edges[1:])
 
-    return np.concatenate(all_edges, axis=0)
+    out = np.concatenate(all_edges, axis=0)
+    # Final sanity check: strictly increasing combined edges
+    if out.ndim != 1 or not np.all(np.diff(out) > 0):
+        raise ValueError("Combined mixed edges are not strictly increasing.")
+    return out
