@@ -23,7 +23,7 @@ def normalize_1d(
     if method == "simpson":
         norm = simpson(y_arr, x=x_arr)
     elif method == "trapezoid":
-        norm = np.trapezoid(y_arr, x_arr)
+        norm = np.trapezoid(y_arr, x=x_arr)
     else:
         raise ValueError("method must be 'trapezoid' or 'simpson'.")
 
