@@ -15,7 +15,7 @@ build/
 dist/
 *_build/
 
-# your local-only files
+# my local-only files
 lsst_galaxy_sample.py
 presets.py
 LSST_SRD_Redshift_Distributions_and_Binning.ipynb
