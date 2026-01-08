@@ -7,7 +7,7 @@ from typing import Any
 
 import numpy as np
 
-from binny.core.validators import validate_axis_and_weights
+from binny.utils.validators import validate_axis_and_weights
 
 __all__ = [
     "bin_moments",
