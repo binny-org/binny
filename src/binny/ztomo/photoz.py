@@ -99,7 +99,8 @@ def build_photoz_bins(
     normalize_bins: bool = True,
     norm_method: str = "trapezoid",
 ) -> dict[int, np.ndarray]:
-    """Builds photo-z-smeared redshift distributions per tomographic bin.
+    """Constructs photometric tomographic redshift bins from a parent
+     true-redshift distribution.
 
     This function constructs one true-redshift distribution per observed-redshift
     (photo-z) bin defined by ``bin_edges``. It combines a parent true-redshift
