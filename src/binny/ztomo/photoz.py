@@ -1,4 +1,4 @@
-"""Functions to build photometric-redshift–smeared n(z) distributions.
+"""Functions to build photometric-redshift–smeared tomographic bins.
 
 This module provides helpers to construct true-redshift distributions selected
 by observed-redshift (photo-z) tomographic bins. The main entry point is
@@ -68,14 +68,17 @@ Notes
 from __future__ import annotations
 
 from collections.abc import Sequence
-from typing import Any
+from typing import Literal, TypeAlias
 
 import numpy as np
+from numpy.typing import ArrayLike, NDArray
 from scipy.special import erf
 
 from binny.core.validators import validate_axis_and_weights, validate_n_bins
 from binny.utils.broadcasting import as_per_bin
 from binny.utils.normalization import normalize_1d
+
+FloatArray: TypeAlias = NDArray[np.float64]
 
 __all__ = [
     "build_photoz_bins",
@@ -84,9 +87,9 @@ __all__ = [
 
 
 def build_photoz_bins(
-    z: Any,
-    nz: Any,
-    bin_edges: Any,
+    z: ArrayLike,
+    nz: ArrayLike,
+    bin_edges: ArrayLike,
     scatter_scale: Sequence[float] | float,
     mean_offset: Sequence[float] | float,
     *,
@@ -97,8 +100,8 @@ def build_photoz_bins(
     outlier_mean_scale: Sequence[float] | float = 1.0,
     normalize_input: bool = True,
     normalize_bins: bool = True,
-    norm_method: str = "trapezoid",
-) -> dict[int, np.ndarray]:
+    norm_method: Literal["trapezoid", "simpson"] = "trapezoid",
+) -> dict[int, FloatArray]:
     """Builds photo-z-smeared redshift distributions per tomographic bin.
 
     This function constructs one true-redshift distribution per observed-redshift
@@ -183,7 +186,7 @@ def build_photoz_bins(
 
                 mu(z) = mean_scale * z - mean_offset
 
-            With ``mean_scale = 1``.
+            with ``mean_scale = 1``.
             A positive ``mean_offset`` shifts the mean observed redshift downward by
             that amount. May be a scalar (applied to all bins) or a sequence of length
             ``n_bins``.
@@ -235,33 +238,40 @@ def build_photoz_bins(
         ValueError: If ``bin_edges`` does not define a valid number of bins.
         ValueError: If any scalar-or-sequence parameter cannot be broadcast to length
             ``n_bins`` (e.g. wrong-length sequence).
-        ValueError: If ``normalize_input`` is True and the input ``nz`` already appears
-            normalized.
     """
     z_arr, n_arr = validate_axis_and_weights(z, nz)
 
     bin_edges_arr = np.asarray(bin_edges, dtype=float)
+
+    if bin_edges_arr.ndim != 1:
+        raise ValueError("bin_edges must be 1D.")
+    if bin_edges_arr.size < 2:
+        raise ValueError("bin_edges must have at least two entries.")
+    if not np.all(np.isfinite(bin_edges_arr)):
+        raise ValueError("bin_edges must contain only finite values.")
+    if not np.all(np.diff(bin_edges_arr) > 0):
+        raise ValueError("bin_edges must be strictly increasing.")
+
     n_bins = bin_edges_arr.size - 1
     validate_n_bins(n_bins)
 
     if normalize_input:
-        total = np.trapezoid(n_arr, z_arr)
-        if np.isclose(total, 1.0, rtol=1e-3, atol=1e-4):
-            raise ValueError(
-                "build_photoz_bins: normalize_input=True but intrinsic nz already "
-                f"looks normalised (integral n(z) dz approx {total:.4f}). "
-                "Set normalize_input=False if nz is already normalised."
-            )
-        n_arr = normalize_1d(z_arr, n_arr, method=norm_method)
+        total = np.trapezoid(n_arr, x=z_arr)
+        if not np.isclose(total, 1.0, rtol=1e-3, atol=1e-4):
+            n_arr = normalize_1d(z_arr, n_arr, method=norm_method)
 
     scatter_scale_arr = as_per_bin(scatter_scale, n_bins, "scatter_scale")
     mean_offset_arr = as_per_bin(mean_offset, n_bins, "mean_offset")
-
     mean_scale_arr = as_per_bin(mean_scale, n_bins, "mean_scale")
     outlier_frac_arr = as_per_bin(outlier_frac, n_bins, "outlier_frac")
-    outlier_scatter_arr = as_per_bin(
-        outlier_scatter_scale, n_bins, "outlier_scatter_scale"
-    )
+
+    if outlier_scatter_scale is None:
+        outlier_scatter_arr = np.array([None] * n_bins, dtype=object)
+    else:
+        outlier_scatter_arr = as_per_bin(
+            outlier_scatter_scale, n_bins, "outlier_scatter_scale"
+        )
+
     outlier_mean_offset_arr = as_per_bin(
         outlier_mean_offset, n_bins, "outlier_mean_offset"
     )
@@ -269,7 +279,7 @@ def build_photoz_bins(
         outlier_mean_scale, n_bins, "outlier_mean_scale"
     )
 
-    bins: dict[int, np.ndarray] = {}
+    bins: dict[int, FloatArray] = {}
 
     for i, (z_min, z_max) in enumerate(
         zip(bin_edges_arr[:-1], bin_edges_arr[1:], strict=False)
@@ -300,8 +310,8 @@ def build_photoz_bins(
 
 
 def true_redshift_distribution(
-    z: Any,
-    nz: Any,
+    z: FloatArray,
+    nz: FloatArray,
     bin_min: float,
     bin_max: float,
     scatter_scale: float,
@@ -312,7 +322,7 @@ def true_redshift_distribution(
     outlier_scatter_scale: float | None = None,
     outlier_mean_offset: float = 0.0,
     outlier_mean_scale: float = 1.0,
-) -> np.ndarray:
+) -> FloatArray:
     """Computes the true-redshift distribution for a single photo-z bin.
 
     The output distribution is computed as ``n(z) * P(bin | z)``, where
@@ -382,7 +392,8 @@ def true_redshift_distribution(
         at the survey/tracer level (or set ``normalize_bins=False`` upstream and
         scale there).
     """
-    z_arr, n_arr = validate_axis_and_weights(z, nz)
+    z_arr = np.asarray(z, dtype=float)
+    n_arr = np.asarray(nz, dtype=float)
 
     if not (0.0 <= outlier_frac <= 1.0):
         raise ValueError("outlier_frac must lie in [0, 1].")

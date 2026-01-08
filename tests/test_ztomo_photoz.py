@@ -163,23 +163,27 @@ def test_build_photoz_bins_normalize_bins_integrates_to_one(z_nz):
         assert np.isclose(integral, 1.0, rtol=1e-6, atol=1e-8)
 
 
-def test_build_photoz_bins_normalize_input_raises_if_already_normalized():
-    """Tests that build_photoz_bins raises ValueError if normalize_input=True."""
+def test_build_photoz_bins_normalize_input_allows_already_normalized():
+    """Tests that build_photoz_bins with normalize_input=True
+    accepts already-normalized input n(z)."""
     z = np.linspace(0.0, 3.0, 501)
     nz = np.ones_like(z)
     nz = nz / np.trapezoid(nz, z)  # explicitly normalized
 
-    with pytest.raises(
-        ValueError, match=r"normalize_input=True but intrinsic nz already"
-    ):
-        build_photoz_bins(
-            z,
-            nz,
-            bin_edges=[0.0, 0.5, 1.0],
-            scatter_scale=0.05,
-            mean_offset=0.01,
-            normalize_input=True,
-        )
+    bins = build_photoz_bins(
+        z,
+        nz,
+        bin_edges=[0.0, 0.5, 1.0],
+        scatter_scale=0.05,
+        mean_offset=0.01,
+        normalize_input=True,
+        normalize_bins=False,
+    )
+
+    assert list(bins.keys()) == [0, 1]
+    for arr in bins.values():
+        assert arr.shape == z.shape
+        assert np.all(np.isfinite(arr))
 
 
 def test_build_photoz_bins_per_bin_parameters(z_nz):
@@ -224,12 +228,13 @@ def test_build_photoz_bins_broadcasting_wrong_length_raises(z_nz):
 
 
 def test_build_photoz_bins_no_normalize_bins_sums_to_parent_when_bins_cover_range(z_nz):
-    """Test that build_photoz_bins with normalize_bins=False and wide bin coverage
-    sums to the normalized parent n(z)."""
+    """Test that build_photoz_bins with normalize_bins=False and
+    wide bin coverage sums to the normalized parent n(z)."""
     z, nz = z_nz
 
     # Use wide bin coverage so the selection partitions observed-z space well.
-    # This makes sum over bins approximate the parent distribution (up to edge effects).
+    # This makes sum over bins approximate the parent distribution
+    # (up to edge effects).
     edges = [-5.0, -1.0, 0.0, 1.0, 2.0, 5.0]
 
     bins = build_photoz_bins(
@@ -263,3 +268,81 @@ def test_build_photoz_bins_no_normalize_bins_sums_to_parent_when_bins_cover_rang
 
     rel_err = np.max(np.abs(summed - nz_norm) / np.maximum(nz_norm, 1e-12))
     assert rel_err < 5e-2
+
+
+def test_build_photoz_bins_accepts_lists():
+    """Tests that build_photoz_bins accepts list inputs."""
+    z = [0.0, 0.5, 1.0, 1.5]
+    nz = [1.0, 2.0, 1.0, 0.5]
+    bin_edges = [0.0, 0.75, 1.5]
+
+    bins = build_photoz_bins(
+        z,
+        nz,
+        bin_edges,
+        scatter_scale=0.05,
+        mean_offset=0.01,
+    )
+
+    assert list(bins.keys()) == [0, 1]
+    assert bins[0].shape == (len(z),)
+    assert np.all(np.isfinite(bins[0]))
+
+
+def test_build_photoz_bins_list_vs_array_same():
+    """Tests that build_photoz_bins gives same result for list vs. array inputs."""
+    z_list = [0.0, 0.5, 1.0, 1.5]
+    nz_list = [1.0, 2.0, 1.0, 0.5]
+    edges_list = [0.0, 0.75, 1.5]
+
+    z = np.asarray(z_list)
+    nz = np.asarray(nz_list)
+    edges = np.asarray(edges_list)
+
+    bins_list = build_photoz_bins(
+        z_list, nz_list, edges_list, scatter_scale=0.05, mean_offset=0.01
+    )
+    bins_arr = build_photoz_bins(z, nz, edges, scatter_scale=0.05, mean_offset=0.01)
+
+    assert np.allclose(bins_list[0], bins_arr[0])
+    assert np.allclose(bins_list[1], bins_arr[1])
+
+
+def test_build_photoz_bins_invalid_bin_edges_raises(z_nz):
+    """Tests that build_photoz_bins raises ValueError for invalid bin_edges."""
+    z, nz = z_nz
+
+    # Not enough edges
+    with pytest.raises(ValueError, match=r"at least two entries"):
+        build_photoz_bins(
+            z,
+            nz,
+            bin_edges=[0.0],
+            scatter_scale=0.05,
+            mean_offset=0.0,
+        )
+
+    # Edges outside z range
+    with pytest.raises(ValueError, match=r"strictly increasing"):
+        build_photoz_bins(
+            z,
+            nz,
+            bin_edges=[0.0, 1.0, 1.0],
+            scatter_scale=0.05,
+            mean_offset=0.0,
+        )
+
+
+def test_true_redshift_distribution_accepts_lists():
+    z = [0.0, 0.5, 1.0]
+    nz = [1.0, 2.0, 1.0]
+    out = true_redshift_distribution(
+        z,
+        nz,
+        bin_min=0.0,
+        bin_max=1.0,
+        scatter_scale=0.05,
+        mean_offset=0.0,
+    )
+    assert out.shape == (3,)
+    assert np.all(np.isfinite(out))

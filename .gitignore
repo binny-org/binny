@@ -1,11 +1,22 @@
+# Python bytecode / caches
+__pycache__/
+*.py[cod]
 
-# Local-only files
+# tool caches
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+.cache/
+.ipynb_checkpoints/
+
+# build / packaging
+*.egg-info/
+build/
+dist/
+*_build/
+
+# your local-only files
 lsst_galaxy_sample.py
 presets.py
 LSST_SRD_Redshift_Distributions_and_Binning.ipynb
 updated_lsst_desc_parameters.yaml
-*.egg-info
-build
-*__pycache__
-*_build
-.cache
