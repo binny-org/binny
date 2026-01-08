@@ -42,16 +42,21 @@ _BIN_METHOD_ALIASES: dict[str, str] = {
 
 
 def resolve_binning_method(name: str) -> str:
-    """Resolves a binning method name or alias to its canonical name.
+    """Resolve a user-supplied binning method name to a canonical identifier.
+
+    This is a small normalization layer for user input. It accepts common aliases
+    (e.g. ``"eq"``, ``"linear"``, ``"geom"``) and returns the internal method name
+    used throughout the package.
 
     Args:
-        name: Binning method name or alias.
+        name: Binning method name or alias (case-insensitive).
 
     Returns:
-        Canonical binning method name.
+        Canonical method name (one of: ``"equidistant"``, ``"log"``, ``"equal_number"``,
+        ``"equal_information"``, ``"equidistant_chi"``, ``"geometric"``).
 
     Raises:
-        ValueError: If the method name is unknown.
+        ValueError: If ``name`` is not a recognized method name or alias.
     """
     key = str(name).strip().lower()
 
@@ -69,17 +74,24 @@ def validate_n_bins(
     allow_one: bool = True,
     max_bins: int = 1_000_000,
 ) -> None:
-    """Validates the number of bins.
+    """Validates a mixed (piecewise) binning specification.
+
+    A mixed binning specification describes binning in multiple segments, where each
+    segment declares a binning method and how many bins to allocate to that segment.
+    This function checks that the specification is well-formed and self-consistent.
 
     Args:
-        n_bins: Number of bins to validate.
-        allow_one: Whether to allow n_bins == 1.
-        max_bins: Maximum allowed number of bins to prevent memory issues.
+        segments: Sequence of segment mappings. Each segment must include:
+            - ``"method"``: Method name or alias.
+            - ``"n_bins"``: Number of bins in that segment.
+            - ``"params"`` (optional): Method-specific parameters.
+        total_n_bins: Optional expected total number of bins across all segments.
 
     Raises:
-        TypeError: If n_bins is not an integer.
-        ValueError: If n_bins is not positive, or if n_bins == 1 when
-            allow_one is False, or if n_bins exceeds max_bins.
+        TypeError: If a segment is not a mapping, or if fields have the wrong type.
+        ValueError: If ``segments`` is empty, required keys are missing, a method is
+            unknown, any ``n_bins`` is invalid, or the segment bin counts do not sum
+            to ``total_n_bins`` when provided.
     """
     if not isinstance(n_bins, int):
         raise TypeError("n_bins must be an integer.")

@@ -10,7 +10,7 @@ from binny.axes.bin_edges import (
     equal_number_edges,
     equidistant_chi_edges,
     equidistant_edges,
-    geometric_edges_n,
+    geometric_edges,
     log_edges,
 )
 
@@ -93,7 +93,7 @@ def test_log_edges_invalid_min_raises():
 
 def test_geometric_edges_n_matches_geomspace_behavior():
     """Tests that geometric_edges_n matches numpy.geomspace behavior."""
-    edges = geometric_edges_n(1.0, 1000.0, 3)
+    edges = geometric_edges(1.0, 1000.0, 3)
     ref = np.geomspace(1.0, 1000.0, 4, dtype=float)
 
     assert np.allclose(edges, ref)
@@ -242,3 +242,12 @@ def test_equidistant_chi_edges_invalid_n_bins_raises():
     chi = np.linspace(0.0, 10.0, 11)
     with pytest.raises(ValueError):
         equidistant_chi_edges(z, chi, 0)
+
+
+def test_equal_weight_edges_nonfinite_total_raises():
+    """Tests that _equal_weight_edges raises ValueError
+    for non-finite total weight."""
+    x = np.linspace(0.0, 1.0, 11)
+    w = np.full_like(x, np.inf)
+    with pytest.raises(ValueError):
+        _equal_weight_edges(x, w, 3)

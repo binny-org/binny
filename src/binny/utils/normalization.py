@@ -2,19 +2,21 @@
 
 from __future__ import annotations
 
+from typing import Any, Literal
+
 import numpy as np
-from numpy.typing import ArrayLike
+from numpy.typing import NDArray
 from scipy.integrate import simpson
 
 __all__ = ["normalize_1d"]
 
 
 def normalize_1d(
-    x: ArrayLike,
-    y: ArrayLike,
-    method: str = "trapezoid",
-) -> np.ndarray:
-    """Return y normalized so that ∫ y(x) dx = 1."""
+    x: Any,
+    y: Any,
+    method: Literal["trapezoid", "simpson"] = "trapezoid",
+) -> NDArray[np.float64]:
+    """Returns y normalized so that the integral over x is 1."""
     x_arr = np.asarray(x, dtype=float)
     y_arr = np.asarray(y, dtype=float)
 
