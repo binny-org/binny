@@ -74,9 +74,9 @@ import numpy as np
 from numpy.typing import ArrayLike, NDArray
 from scipy.special import erf
 
-from binny.core.validators import validate_axis_and_weights, validate_n_bins
 from binny.utils.broadcasting import as_per_bin
 from binny.utils.normalization import normalize_1d
+from binny.utils.validators import validate_axis_and_weights, validate_n_bins
 
 FloatArray: TypeAlias = NDArray[np.float64]
 

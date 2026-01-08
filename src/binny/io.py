@@ -9,7 +9,7 @@ from typing import Any
 import numpy as np
 import yaml
 
-from binny.core.validators import validate_mixed_segments
+from binny.utils.validators import validate_mixed_segments
 
 __all__ = [
     "load_nz",
