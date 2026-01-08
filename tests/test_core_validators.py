@@ -3,7 +3,7 @@
 import numpy as np
 import pytest
 
-from binny.core.validators import (
+from binny.utils.validators import (
     resolve_binning_method,
     validate_axis_and_weights,
     validate_interval,
