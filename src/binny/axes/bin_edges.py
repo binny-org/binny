@@ -6,7 +6,7 @@ from typing import Any
 
 import numpy as np
 
-from binny.core.validators import (
+from binny.utils.validators import (
     validate_axis_and_weights,
     validate_interval,
     validate_n_bins,

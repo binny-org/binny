@@ -15,7 +15,7 @@ from binny.axes.bin_edges import (
     geometric_edges,
     log_edges,
 )
-from binny.core.validators import (
+from binny.utils.validators import (
     resolve_binning_method,
     validate_mixed_segments,
 )

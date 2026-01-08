@@ -149,13 +149,13 @@ import numpy as np
 from numpy.typing import ArrayLike, NDArray
 from scipy.special import erf
 
-from binny.core.validators import (
+from binny.utils.broadcasting import as_per_bin
+from binny.utils.normalization import normalize_1d
+from binny.utils.validators import (
     validate_axis_and_weights,
     validate_n_bins,
     validate_response_matrix,
 )
-from binny.utils.broadcasting import as_per_bin
-from binny.utils.normalization import normalize_1d
 
 __all__ = [
     "build_specz_bins",
