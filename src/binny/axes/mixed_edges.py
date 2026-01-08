@@ -43,7 +43,7 @@ def _get(seg_i: int, params: Mapping[str, Any], key: str, fallback: Any) -> Any:
     val = params.get(key, fallback)
     if val is None:
         raise ValueError(
-            f"Segment {seg_i} requires {key!r} in params or" f" as a global argument."
+            f"Segment {seg_i} requires {key!r} in params or as a global argument."
         )
     return val
 
@@ -122,9 +122,7 @@ def _validate_segment_edges(
     edges = np.asarray(edges, dtype=float)
 
     if edges.ndim != 1:
-        raise ValueError(
-            f"Segment {seg_i}: edges must be 1D," f" got shape {edges.shape}."
-        )
+        raise ValueError(f"Segment {seg_i}: edges must be 1D, got shape {edges.shape}.")
 
     if edges.size != n_bins + 1:
         raise ValueError(
@@ -135,7 +133,7 @@ def _validate_segment_edges(
         raise ValueError(f"Segment {seg_i}: edges must be finite.")
 
     if not np.all(np.diff(edges) > 0):
-        raise ValueError(f"Segment {seg_i}:" f" edges must be strictly increasing.")
+        raise ValueError(f"Segment {seg_i}: edges must be strictly increasing.")
 
     mismatch = prev_right is not None and not np.isclose(
         edges[0], prev_right, rtol=0, atol=atol
@@ -214,7 +212,7 @@ def mixed_edges(
         spec = _MIXED_SPEC.get(method)
         func = _FUNCS.get(method)
         if spec is None or func is None:
-            raise ValueError(f"Unknown binning method {method!r}" f" in mixed_edges.")
+            raise ValueError(f"Unknown binning method {method!r} in mixed_edges.")
 
         edges = _call_with(
             i,
