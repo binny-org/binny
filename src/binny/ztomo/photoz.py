@@ -112,57 +112,57 @@ def build_photoz_bins(
     inferred from ``bin_edges`` as ``len(bin_edges) - 1``.
 
     For a galaxy at true redshift ``z``, the probability of being assigned to a
-    photo-z bin ``[z_ph_min, z_ph_max]`` is
+    photo-z bin ``[z_ph_min, z_ph_max]`` is::
 
-        ``P(bin | z) = (1 - outlier_frac) * P_ph(bin | z)
-                       + outlier_frac * P_out(bin | z)``,
+        P(bin | z) = (1 - outlier_frac) * P_ph(bin | z)
+            + outlier_frac * P_out(bin | z)
 
     where the core and outlier terms are Gaussian integrals over the photo-z bin
-    edges,
+    edges::
 
-        ``P_core(bin | z) =
+        P_core(bin | z) =
             integral_{z_ph_min}^{z_ph_max}
-            N(z_ph | mu_ph(z), sigma_ph(z)) dz_ph``,
-
-        ``P_out(bin | z) =
+            N(z_ph | mu_ph(z), sigma_ph(z)) dz_ph,
+        <BLANKLINE>
+        P_out(bin | z) =
             integral_{z_ph_min}^{z_ph_max}
-            N(z_ph | mu_out(z), sigma_out(z)) dz_ph``.
+            N(z_ph | mu_out(z), sigma_out(z)) dz_ph.
 
     The core photo-z model is a Gaussian conditional distribution for the observed
-    redshift ``z_ph`` at fixed true redshift ``z``:
+    redshift ``z_ph`` at fixed true redshift ``z``::
 
-        ``z_ph approx N(mu_ph(z), sigma_ph(z))``
+        z_ph approx N(mu_ph(z), sigma_ph(z))
 
-    with
+    with::
 
-        ``mu_ph(z) = mean_scale * z - mean_offset``
+        mu_ph(z) = mean_scale * z - mean_offset
 
-    and
+    and::
 
-        ``sigma_ph(z) = scatter_scale * (1 + z) * mean_scale``.
+        sigma_ph(z) = scatter_scale * (1 + z) * mean_scale
 
     (Equivalently: write the Gaussian in terms of ``(z - c z_ph - z0)`` with
     ``c = 1 / mean_scale`` and ``z0 = mean_offset / mean_scale``. Integrating over
     ``z_ph`` introduces a Jacobian factor ``1 / c`` in the bin probability.)
 
     The outlier component is an optional second Gaussian with its own mean and
-    scatter:
+    scatter::
 
-        ``z_ph approx N(mu_out(z), sigma_out(z))``
+        z_ph approx N(mu_out(z), sigma_out(z))
 
-    where
+    where::
 
-        ``mu_out(z) = outlier_mean_scale * z - outlier_mean_offset``
+        mu_out(z) = outlier_mean_scale * z - outlier_mean_offset
 
-    and
+    and::
 
-        ``sigma_out(z) = outlier_scatter_scale * (1 + z) * outlier_mean_scale``
+        sigma_out(z) = outlier_scatter_scale * (1 + z) * outlier_mean_scale
 
     when enabled (and it contributes with mixture weight ``outlier_frac``).
 
-    The final true-redshift distribution for a given photo-z bin is
+    The final true-redshift distribution for a given photo-z bin is::
 
-        ``n_bin(z) = n(z) * P(bin | z)``.
+        n_bin(z) = n(z) * P(bin | z)
 
     Args:
         z: One-dimensional grid of true-redshift values where inputs are defined and
@@ -172,16 +172,19 @@ def build_photoz_bins(
         bin_edges: One-dimensional array of tomographic bin edges in observed
             redshift (photo-z) space. Adjacent entries define a bin
             ``[bin_edges[i], bin_edges[i+1]]``. Must have length ``n_bins + 1``.
-        scatter_scale: Random photo-z scatter (the “noise” or uncertainty). This
+        scatter_scale: Random photo-z scatter (the "noise" or uncertainty). This
             controls the standard deviation of the core photo-z error distribution
             via ``sigma_ph(z) = scatter_scale * (1 + z) * mean_scale``.
             Larger values correspond to broader photo-z errors and increased leakage
             between tomographic bins. May be a scalar (applied to all bins) or
             a sequence of length ``n_bins``.
         mean_offset: Systematic photo-z bias in the mean relation (an additive
-            shift). This shifts the center of the core photo-z Gaussian according to
-            ``mu(z) = mean_scale * z - mean_offset``. With ``mean_scale = 1``, a
-            positive ``mean_offset`` shifts the mean observed redshift downward by
+            shift). This shifts the center of the core photo-z Gaussian according to::
+
+                mu(z) = mean_scale * z - mean_offset
+
+            With ``mean_scale = 1``.
+            A positive ``mean_offset`` shifts the mean observed redshift downward by
             that amount. May be a scalar (applied to all bins) or a sequence of length
             ``n_bins``.
         mean_scale: Systematic calibration error in the mean relation (a
@@ -190,18 +193,22 @@ def build_photoz_bins(
             ``mu(z) = mean_scale * z - mean_offset``. Values greater than 1 stretch
             the mapping, while values less than 1 compress it. May be a scalar
             (applied to all bins) or a sequence of length ``n_bins``.
-        outlier_frac: Fraction of objects treated as “outliers” in the photo-z error
+        outlier_frac: Fraction of objects treated as "outliers" in the photo-z error
             model. Must lie in the interval ``[0, 1]`` and represents the mixture
-            weight in a two-component model:
-            ``P(bin | z) = (1 - outlier_frac) * P_core(bin | z)
-            + outlier_frac * P_out(bin | z)``. It controls how many
-            galaxies have catastrophic photo-z errors. May be a scalar (applied to all
-            bins) or a sequence of length ``n_bins``.
+            weight in a two-component model::
+
+                P(bin | z) = (1 - outlier_frac) * P_core(bin | z)
+                    + outlier_frac * P_out(bin | z)
+
+            It controls how many galaxies have catastrophic photo-z errors. May be
+            a scalar (applied to all bins) or a sequence of length ``n_bins``.
         outlier_scatter_scale: Random scatter (standard deviation) of the outlier
-            component. This is the “error on the observed photo-z” for the outlier
-            population, i.e. the width of the outlier Gaussian via
-            ``sigma_out(z) = outlier_scatter_scale * (1 + z) * outlier_mean_scale``.
-             Set to ``None`` to disable the outlier component entirely
+            component. This is the "error on the observed photo-z" for the outlier
+            population, i.e. the width of the outlier Gaussian via::
+
+                sigma_out(z) = outlier_scatter_scale * (1 + z) * outlier_mean_scale
+
+            Set to ``None`` to disable the outlier component entirely
             (even if ``outlier_frac > 0``).
             May be a scalar or a sequence of length ``n_bins``.
         outlier_mean_offset: Systematic bias in the mean relation for the outlier
@@ -318,22 +325,24 @@ def true_redshift_distribution(
     "mean_scale/mean_offset/scatter_scale" form and mapped internally.
 
     Core component:
-      - ``c_b = 1 / mean_scale``
-      - ``z_b = mean_offset / mean_scale``
-      - ``sigma_b = scatter_scale``
+
+    - ``c_b = 1 / mean_scale``
+    - ``z_b = mean_offset / mean_scale``
+    - ``sigma_b = scatter_scale``
 
     Outlier component:
-      - ``c_o = 1 / outlier_mean_scale``
-      - ``z_o = outlier_mean_offset / outlier_mean_scale``
-      - ``sigma_o = outlier_scatter_scale``
+
+    - ``c_o = 1 / outlier_mean_scale``
+    - ``z_o = outlier_mean_offset / outlier_mean_scale``
+    - ``sigma_o = outlier_scatter_scale``
 
     The bin probability is computed by analytically integrating the Gaussian
     selection model over observed redshift ``z_ph`` in ``[bin_min, bin_max]`` using
     the error function. Because the Gaussian is expressed in terms of
     ``(z - c z_ph - z0)``, the closed form includes a Jacobian factor ``1 / c``.
     If the bins cover the full observed-redshift range
-    ``z_ph`` (effectively ``(-inf, +inf)``) then for fixed ``z` the sum over bins is
-     approx 1 (up to numerical edge effects).
+    ``z_ph`` (effectively ``(-inf, +inf)``) then for fixed ``z`` the sum over bins is
+    approximately 1 (up to numerical edge effects).
 
     Args:
         z: One-dimensional redshift grid.
@@ -348,8 +357,11 @@ def true_redshift_distribution(
             mapped to ``c_b`` via ``c_b = 1 / mean_scale``.
         outlier_frac: Outlier mixture fraction in ``[0, 1]``.
         outlier_scatter_scale: Outlier scatter amplitude.
-            The scatter in observed redshift is
-            ``sigma_out(z) = outlier_scatter_scale * (1 + z) * outlier_mean_scale``.
+            The scatter in observed redshift is::
+
+                sigma_out(z) = outlier_scatter_scale
+                            * (1 + z) * outlier_mean_scale
+
         outlier_mean_offset: Additive mean offset in the outlier mapping.
             Internally mapped to ``z_o`` via
             ``z_o = outlier_mean_offset / outlier_mean_scale``.
