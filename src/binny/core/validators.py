@@ -3,9 +3,10 @@
 from __future__ import annotations
 
 from collections.abc import Mapping, Sequence
-from typing import Any
+from typing import Any, TypeAlias
 
 import numpy as np
+from numpy.typing import NDArray
 
 __all__ = [
     "validate_interval",
@@ -13,7 +14,10 @@ __all__ = [
     "validate_n_bins",
     "validate_mixed_segments",
     "resolve_binning_method",
+    "validate_response_matrix",
 ]
+
+FloatArray2D: TypeAlias = NDArray[np.float64]
 
 # Normalised names for binning methods and short aliases
 _BIN_METHOD_ALIASES: dict[str, str] = {
@@ -241,4 +245,29 @@ def validate_mixed_segments(
     if total_n_bins is not None and n_sum != total_n_bins:
         raise ValueError(
             f"Sum of segment n_bins is {n_sum}, but total_n_bins is {total_n_bins}."
+        )
+
+
+def validate_response_matrix(matrix: FloatArray2D, n_bins: int) -> None:
+    """Validates a misassignment (response) matrix for binning.
+
+    Args:
+        matrix: 2D numpy array representing the misassignment matrix.
+        n_bins: Expected number of bins (matrix shape should be (n_bins, n_bins
+
+    Raises:
+        ValueError: If the matrix shape is incorrect, contains non-finite values,
+                    has negative entries, or if columns do not sum to 1.
+    """
+    if matrix.shape != (n_bins, n_bins):
+        raise ValueError(f"misassignment_matrix must have shape ({n_bins}, {n_bins}).")
+    if not np.all(np.isfinite(matrix)):
+        raise ValueError("misassignment_matrix must be finite.")
+    if np.any(matrix < -1e-15):
+        raise ValueError("misassignment_matrix must be non-negative.")
+    matrix = np.maximum(matrix, 0.0)
+    col_sums = matrix.sum(axis=0)
+    if not np.allclose(col_sums, 1.0, rtol=1e-6, atol=1e-10):
+        raise ValueError(
+            "Each column of misassignment_matrix must sum to 1 (column-stochastic)."
         )
