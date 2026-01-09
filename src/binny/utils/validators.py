@@ -6,7 +6,9 @@ from collections.abc import Mapping, Sequence
 from typing import Any, TypeAlias
 
 import numpy as np
-from numpy.typing import NDArray
+from numpy.typing import ArrayLike, NDArray
+
+FloatArray = NDArray[np.float64]
 
 __all__ = [
     "validate_interval",
@@ -15,6 +17,9 @@ __all__ = [
     "validate_mixed_segments",
     "resolve_binning_method",
     "validate_response_matrix",
+    "validated_float_arrays",
+    "validate_probability_vector",
+    "validate_same_shape",
 ]
 
 FloatArray2D: TypeAlias = NDArray[np.float64]
@@ -46,18 +51,19 @@ _BIN_METHOD_ALIASES: dict[str, str] = {
 
 
 def resolve_binning_method(name: str) -> str:
-    """Resolve a user-supplied binning method name to a canonical identifier.
+    """Returns the canonical binning method identifier for a user-supplied name.
 
-    This is a small normalization layer for user input. It accepts common aliases
-    (e.g. ``"eq"``, ``"linear"``, ``"geom"``) and returns the internal method name
-    used throughout the package.
+    This provides a small normalization layer for user input by accepting common
+    aliases (case-insensitive) and mapping them to the internal method names used
+    throughout the package. Normalizing method names early makes downstream binning
+    code simpler and ensures consistent behavior across APIs.
 
     Args:
         name: Binning method name or alias (case-insensitive).
 
     Returns:
-        Canonical method name (one of: ``"equidistant"``, ``"log"``, ``"equal_number"``,
-        ``"equal_information"``, ``"equidistant_chi"``, ``"geometric"``).
+        Canonical method name: one of ``"equidistant"``, ``"log"``, ``"equal_number"``,
+        ``"equal_information"``, ``"equidistant_chi"``, or ``"geometric"``.
 
     Raises:
         ValueError: If ``name`` is not a recognized method name or alias.
@@ -78,24 +84,22 @@ def validate_n_bins(
     allow_one: bool = True,
     max_bins: int = 1_000_000,
 ) -> None:
-    """Validates a mixed (piecewise) binning specification.
+    """Validates a requested number of bins.
 
-    A mixed binning specification describes binning in multiple segments, where each
-    segment declares a binning method and how many bins to allocate to that segment.
-    This function checks that the specification is well-formed and self-consistent.
+    This guards against invalid bin counts and accidental huge allocations by
+    enforcing positivity, optional constraints on allowing a single bin, and an
+    upper bound. It is typically used at API boundaries before constructing bin
+    edges or allocating arrays that scale with ``n_bins``.
 
     Args:
-        segments: Sequence of segment mappings. Each segment must include:
-            - ``"method"``: Method name or alias.
-            - ``"n_bins"``: Number of bins in that segment.
-            - ``"params"`` (optional): Method-specific parameters.
-        total_n_bins: Optional expected total number of bins across all segments.
+        n_bins: Number of bins.
+        allow_one: If False, requires ``n_bins > 1``.
+        max_bins: Upper bound to guard against accidental huge allocations.
 
     Raises:
-        TypeError: If a segment is not a mapping, or if fields have the wrong type.
-        ValueError: If ``segments`` is empty, required keys are missing, a method is
-            unknown, any ``n_bins`` is invalid, or the segment bin counts do not sum
-            to ``total_n_bins`` when provided.
+        TypeError: If ``n_bins`` is not an integer.
+        ValueError: If ``n_bins <= 0``, if ``allow_one`` is False and ``n_bins == 1``,
+            or if ``n_bins > max_bins``.
     """
     if not isinstance(n_bins, int):
         raise TypeError("n_bins must be an integer.")
@@ -120,17 +124,24 @@ def validate_interval(
     *,
     log: bool = False,
 ) -> None:
-    """Validates the interval ``[x_min, x_max]`` and number of bins.
+    """Validates an axis interval and binning mode for edge construction.
+
+    This checks that the interval endpoints are finite and ordered, and that the
+    interval is compatible with the requested spacing mode. It is useful for
+    bin-edge builders that assume a well-defined interval (and for log/geometric
+    spacing, strictly positive bounds).
 
     Args:
         x_min: Minimum value of the axis.
         x_max: Maximum value of the axis.
         n_bins: Number of bins.
-        log: Whether the bins are logarithmically spaced.
+        log: Whether the bins are logarithmically (or geometric) spaced.
 
     Raises:
-        ValueError: If ``x_min`` or ``x_max`` are not finite, if ``x_max <= x_min``,
-                    or if ``log`` is ``True`` and ``x_min <= 0`` or ``x_max <= 0``.
+        TypeError: If ``n_bins`` is not an integer (via ``validate_n_bins``).
+        ValueError: If ``n_bins`` is not positive (via ``validate_n_bins``), if
+            ``x_min`` or ``x_max`` are not finite, if ``x_max <= x_min``, or if
+            ``log`` is True and either bound is non-positive.
     """
     validate_n_bins(n_bins)
 
@@ -145,25 +156,30 @@ def validate_interval(
 
 
 def validate_axis_and_weights(
-    x: Any,
-    weights: Any,
-) -> tuple[np.ndarray, np.ndarray]:
-    """Validates axis values and weights for binning.
+    x: ArrayLike,
+    weights: ArrayLike,
+) -> tuple[FloatArray, FloatArray]:
+    """Returns validated 1D axis values and weights as float64 arrays.
+
+    This validates a sampling axis and a corresponding weight array for use in
+    binning routines (e.g., equal-number or equal-information edges). It ensures
+    both inputs are 1D, aligned in length, finite, and suitable for algorithms
+    that assume a strictly increasing axis.
 
     Args:
         x: 1D array-like of axis values.
         weights: 1D array-like of weights corresponding to ``x``.
 
     Returns:
-        Tuple of validated numpy arrays: ``(x, weights)``.
+        Tuple ``(x_arr, w_arr)`` as 1D ``float64`` NumPy arrays.
 
     Raises:
-        ValueError: If ``x`` and ``weights`` do not have the same shape, are not 1D,
-                    contain non-finite values, have less than two points,
-                    or if ``x`` is not strictly increasing.
+        ValueError: If ``x`` is not 1D, if ``weights`` is not 1D, if they have
+            different shapes, if either contains non-finite values, if ``x`` has
+            fewer than two points, or if ``x`` is not strictly increasing.
     """
-    x_arr = np.asarray(x, dtype=float)
-    w_arr = np.asarray(weights, dtype=float)
+    x_arr = np.asarray(x, dtype=np.float64)
+    w_arr = np.asarray(weights, dtype=np.float64)
 
     if x_arr.ndim != 1:
         raise ValueError("x must be 1D.")
@@ -194,23 +210,33 @@ def validate_mixed_segments(
     *,
     total_n_bins: int | None = None,
 ) -> None:
-    """Validates mixed binning segments.
+    """Validates a mixed-binning segment specification.
+
+    This checks that a sequence of segment dictionaries is well-formed for mixed
+    binning workflows, where different binning methods are applied over different
+    regions. It verifies required fields, validates each segment bin count, ensures
+    each method name is recognized, and optionally enforces that segment bin counts
+    sum to an expected total.
 
     Args:
-        segments: Sequence of segment specifications. Each segment is a mapping
-        with keys:
-            - ``"method"``: Binning method name (e.g., ``"equidistant"``, ``"log"``,
-              ``"equal_number"``, ``"equidistant_chi"``, etc.).
-            - ``"n_bins"``: Number of bins for the segment.
-            - ``"params"``: Optional mapping of parameters specific to the segment.
-        total_n_bins: Optional total number of bins across all segments. If provided,
-            the sum of segment ``"n_bins"`` values must match this number.
+        segments: Sequence of segment specifications. Each segment must be a mapping
+            containing:
+            - ``"method"``: Binning method name or alias.
+            - ``"n_bins"``: Number of bins in the segment.
+            Optionally, a segment may include:
+            - ``"params"``: Mapping of method-specific parameters.
+        total_n_bins: Optional expected total number of bins across all segments.
 
     Raises:
-        ValueError: If ``segments`` is empty, required keys are missing,
-            ``"n_bins"`` values are invalid, or the sum of ``"n_bins"`` does not
-            match ``total_n_bins``.
-        TypeError: If segment specifications or their fields are of incorrect types.
+        ValueError: If ``segments`` is empty, if a segment is missing required keys,
+            or if ``total_n_bins`` is provided and the sum of segment ``"n_bins"``
+            does not match it.
+        TypeError: If ``segments`` is not a sequence of mappings, if a segment
+            ``"method"`` is not a string, if a segment ``"n_bins"`` is not an int,
+            or if a provided ``"params"`` is not a mapping.
+        ValueError: If any segment ``"method"`` is not recognized (via
+            ``resolve_binning_method``), or if any segment ``"n_bins"`` is invalid
+            (via ``validate_n_bins``).
     """
     if not segments:
         raise ValueError("segments must be a non-empty sequence.")
@@ -249,25 +275,122 @@ def validate_mixed_segments(
 
 
 def validate_response_matrix(matrix: FloatArray2D, n_bins: int) -> None:
-    """Validates a misassignment (response) matrix for binning.
+    """Validates a bin-to-bin misassignment (response) matrix.
+
+    This checks that a response matrix used to model bin misassignment is compatible
+    with a given number of bins and behaves like a column-stochastic mapping. It is
+    commonly used for photo-z or classification confusion matrices where each column
+    represents the distribution of assigned bins for a true bin.
 
     Args:
-        matrix: 2D numpy array representing the misassignment matrix.
-        n_bins: Expected number of bins (matrix shape should be (n_bins, n_bins
+        matrix: 2D NumPy array representing the response/misassignment matrix.
+        n_bins: Expected number of bins; ``matrix`` must have shape
+            ``(n_bins, n_bins)``.
 
     Raises:
-        ValueError: If the matrix shape is incorrect, contains non-finite values,
-                    has negative entries, or if columns do not sum to 1.
+        TypeError: If ``n_bins`` is not an integer (via ``validate_n_bins``).
+        ValueError: If ``n_bins`` is not positive (via ``validate_n_bins``), if
+            ``matrix`` does not have shape ``(n_bins, n_bins)``, if ``matrix`` contains
+            non-finite values, if it contains entries less than ``-1e-15``, or if the
+            (clipped) column sums are not close to 1 within tolerance.
     """
+    validate_n_bins(n_bins)
     if matrix.shape != (n_bins, n_bins):
         raise ValueError(f"misassignment_matrix must have shape ({n_bins}, {n_bins}).")
     if not np.all(np.isfinite(matrix)):
         raise ValueError("misassignment_matrix must be finite.")
     if np.any(matrix < -1e-15):
         raise ValueError("misassignment_matrix must be non-negative.")
-    matrix = np.maximum(matrix, 0.0)
-    col_sums = matrix.sum(axis=0)
+    matrix_clip = np.maximum(matrix, 0.0)
+    col_sums = matrix_clip.sum(axis=0)
     if not np.allclose(col_sums, 1.0, rtol=1e-6, atol=1e-10):
         raise ValueError(
             "Each column of misassignment_matrix must sum to 1 (column-stochastic)."
         )
+
+
+def validated_float_arrays(x: ArrayLike, y: ArrayLike) -> tuple[FloatArray, FloatArray]:
+    """Returns two validated 1D float64 arrays with matched shape and finite values.
+
+    This is a convenience wrapper for workflows that take paired 1D arrays and need
+    them validated and converted to ``float64`` consistently. It is commonly used
+    before numerical operations that assume aligned samples (e.g., an axis and an
+    associated function evaluated on that axis).
+
+    Args:
+        x: First array-like input.
+        y: Second array-like input.
+
+    Returns:
+        Tuple ``(x_arr, y_arr)`` as 1D ``float64`` NumPy arrays.
+
+    Raises:
+        ValueError: If either input is not 1D, if the shapes differ, if either contains
+            non-finite values, if the first input has fewer than two points, or if the
+            first input is not strictly increasing.
+    """
+    x_arr, y_arr = validate_axis_and_weights(x, y)
+    return x_arr, y_arr
+
+
+def validate_probability_vector(
+    p: ArrayLike,
+    *,
+    name: str = "p",
+    rtol: float = 1e-6,
+    atol: float = 1e-12,
+    allow_empty: bool = False,
+) -> FloatArray:
+    """Returns a validated 1D probability vector as float64.
+
+    Checks:
+    - 1D (and non-empty unless allow_empty=True)
+    - finite
+    - nonnegative
+    - sums to 1 within tolerance
+
+    Args:
+        p: Array-like probability vector.
+        name: Name used in error messages.
+        rtol: Relative tolerance for the sum-to-one check.
+        atol: Absolute tolerance for the sum-to-one check.
+        allow_empty: If True, allows empty vectors (returns empty float64 array).
+
+    Returns:
+        1D float64 NumPy array.
+
+    Raises:
+        ValueError: If the input is not a valid probability vector.
+    """
+    arr = np.asarray(p, dtype=np.float64)
+
+    if arr.ndim != 1:
+        raise ValueError(f"{name} must be 1D.")
+    if arr.size == 0:
+        if allow_empty:
+            return arr
+        raise ValueError(f"{name} must be non-empty.")
+    if not np.all(np.isfinite(arr)):
+        raise ValueError(f"{name} must be finite.")
+    if np.any(arr < 0.0):
+        raise ValueError(f"{name} must be nonnegative.")
+
+    s = float(np.sum(arr))
+    if not np.isclose(s, 1.0, rtol=rtol, atol=atol):
+        raise ValueError(f"{name} must sum to 1 within tolerance (got {s}).")
+
+    return arr
+
+
+def validate_same_shape(
+    a: ArrayLike,
+    b: ArrayLike,
+    *,
+    name_a: str = "a",
+    name_b: str = "b",
+) -> None:
+    """Validates that two array-likes have the same shape."""
+    a_arr = np.asarray(a)
+    b_arr = np.asarray(b)
+    if a_arr.shape != b_arr.shape:
+        raise ValueError(f"{name_a} and {name_b} must have the same shape.")
