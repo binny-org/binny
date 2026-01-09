@@ -8,7 +8,6 @@ Subpackages
    :maxdepth: 4
 
    binny.axes
-   binny.core
    binny.samples
    binny.scales
    binny.surveys

@@ -8,55 +8,20 @@ true-z grid.
 
 Examples
 --------
-Build photo-z bins with *constant* photo-z model parameters (applied to all bins):
-
 >>> import numpy as np
->>> from binny.photoz import build_photoz_bins
+>>> from binny.ztomo.photoz import build_photoz_bins
 >>> z = np.linspace(0.0, 3.0, 501)
->>> nz = z**2 * np.exp(-z)  # any parent n(z) defined on z
->>> bin_edges = [0.0, 0.5, 1.0, 1.5]  # 3 photo-z bins
+>>> nz = z**2 * np.exp(-z)
+>>> bin_edges = [0.0, 0.5, 1.0, 1.5]
 >>> bins = build_photoz_bins(
-...     z,
-...     nz,
-...     bin_edges,
+...     z, nz, bin_edges,
 ...     scatter_scale=0.05,
 ...     mean_offset=0.01,
-...     mean_scale=1.0,
-...     outlier_frac=0.02,
-...     outlier_scatter_scale=0.15,
 ... )
+>>> sorted(bins)
+[0, 1, 2]
 >>> bins[0].shape
 (501,)
-
-Use *per-bin* parameters (one value per photo-z bin). Here we have 4 bins, so
-each sequence has length 4:
-
->>> bin_edges = [0.0, 0.4, 0.8, 1.2, 1.6]  # 4 photo-z bins
->>> bins = build_photoz_bins(
-...     z,
-...     nz,
-...     bin_edges,
-...     scatter_scale=[0.04, 0.05, 0.06, 0.05],
-...     mean_offset=[0.00, 0.01, 0.02, 0.02],
-...     mean_scale=[1.00, 1.00, 0.98, 0.98],
-...     outlier_frac=[0.00, 0.01, 0.02, 0.01],
-...     outlier_scatter_scale=[None, 0.20, 0.20, 0.15],
-... )
->>> list(bins.keys())
-[0, 1, 2, 3]
-
-Disable the outlier component entirely (the default) by leaving
-``outlier_scatter_scale=None``:
-
->>> bins = build_photoz_bins(
-...     z,
-...     nz,
-...     bin_edges,
-...     scatter_scale=0.05,
-...     mean_offset=0.01,
-...     outlier_frac=0.0,
-...     outlier_scatter_scale=None,
-... )
 
 Notes
 -----
