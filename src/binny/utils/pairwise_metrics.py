@@ -1,0 +1,430 @@
+"""Pairwise distance/similarity metrics for curves or segment-mass vectors."""
+
+from __future__ import annotations
+
+from collections.abc import Callable, Mapping
+from functools import partial
+from typing import Literal, TypeAlias
+
+import numpy as np
+
+from binny.utils.normalization import mass_per_segment, prepare_metric_inputs
+from binny.utils.validators import (
+    validate_probability_vector,
+    validate_same_shape,
+)
+
+__all__ = [
+    "pair_min",
+    "pair_cosine",
+    "pair_js",
+    "pair_hellinger",
+    "pair_tv",
+    "fill_symmetric",
+    "segment_mass_probs",
+    "apply_unit",
+]
+
+MetricUnit: TypeAlias = Literal["fraction", "percent"]
+
+
+def _pair_min_kernel(
+    z: np.ndarray, curves: Mapping[int, np.ndarray], i: int, j: int
+) -> float:
+    """Computes overlap as the integral of the pointwise minimum.
+
+    This overlap score integrates ``min(p_i(z), p_j(z))`` over a shared grid
+    using the trapezoid rule. It is commonly used to quantify how strongly
+    two nonnegative distributions overlap (e.g., tomographic ``n_i(z)``
+    curves), with larger values indicating more shared support.
+
+    Args:
+        z: 1D grid of nodes used for trapezoid integration.
+        curves: Mapping from bin id to curve values evaluated on ``z``.
+        i: First bin id.
+        j: Second bin id.
+
+    Returns:
+        The overlap integral for bins ``i`` and ``j``.
+    """
+    return float(np.trapezoid(np.minimum(curves[i], curves[j]), x=z))
+
+
+def _pair_cosine_kernel(
+    z: np.ndarray,
+    curves: Mapping[int, np.ndarray],
+    norms: Mapping[int, float],
+    i: int,
+    j: int,
+) -> float:
+    """Computes cosine similarity under a trapezoid inner product.
+
+    This similarity treats curves as functions on a shared grid and computes a
+    cosine-like similarity using trapezoid integration to define the inner
+    product and L2 norms, with L2 normrs being the square root of the
+    integral of the squared curve. This is useful for comparing curve shapes
+    while reducing sensitivity to overall scale; values near 1 indicate similar
+    shapes, and values near 0 indicate near-orthogonality under the chosen
+    inner product.
+
+    Args:
+        z: 1D grid of nodes used for trapezoid integration.
+        curves: Mapping from bin id to curve values evaluated on ``z``.
+        norms: Mapping from bin id to precomputed L2 norms under the trapezoid
+            inner product.
+        i: First bin id.
+        j: Second bin id.
+
+    Returns:
+        Cosine similarity for bins ``i`` and ``j``. If either curve has zero
+        norm under the trapezoid inner product, the similarity is defined to be
+        zero.
+    """
+    denom = float(norms[i]) * float(norms[j])
+    if denom == 0.0:
+        return 0.0
+    num = float(np.trapezoid(curves[i] * curves[j], x=z))
+    return float(num / denom)
+
+
+def _kl_base2(a: np.ndarray, b: np.ndarray) -> float:
+    """Kullback–Leibler divergence D_KL(a || b) with base-2 logarithm.
+
+    This computes the KL divergence from ``a`` to ``b`` using base-2 logarithms.
+    It is a useful measure of how much information is lost when ``b`` is used
+    to approximate ``a``. The function raises a ValueError if ``b`` has  zeros
+    where ``a`` is positive, as the KL divergence is undefined in that case.
+
+    Args:
+        a: First probability vector.
+        b: Second probability vector.
+
+    Returns:
+        The KL divergence D_KL(a || b) using base-2 logarithms.
+
+    Raises:
+        ValueError: If ``b`` has zeros where ``a`` is positive.
+    """
+    mask = a > 0.0
+    if not np.all(b[mask] > 0.0):
+        raise ValueError(
+            "KL divergence is undefined when b has zeros where a is positive."
+        )
+    return float(np.sum(a[mask] * np.log2(a[mask] / b[mask])))
+
+
+def _pair_js_kernel(masses: Mapping[int, np.ndarray], i: int, j: int) -> float:
+    """Computes Jensen–Shannon distance between probability vectors.
+
+    This distance compares two discrete probability vectors (e.g., per-segment
+    mass probabilities) using Jensen–Shannon divergence and returns its
+    square root. With base-2 logarithms, the resulting distance is bounded
+    in ``[0, 1]`` and is symmetric.
+
+    Args:
+        masses: Mapping from bin id to 1D probability vectors.
+        i: First bin id.
+        j: Second bin id.
+
+    Returns:
+        Jensen–Shannon distance for bins ``i`` and ``j``.
+    """
+    a = validate_probability_vector(masses[i], name=f"masses[{i}]")
+    b = validate_probability_vector(masses[j], name=f"masses[{j}]")
+    validate_same_shape(a, b, name_a=f"masses[{i}]", name_b=f"masses[{j}]")
+
+    m = 0.5 * (a + b)
+    js_div = 0.5 * _kl_base2(a, m) + 0.5 * _kl_base2(b, m)
+    return float(np.sqrt(max(js_div, 0.0)))  # in [0, 1] for log base 2
+
+
+def _pair_hellinger_kernel(masses: Mapping[int, np.ndarray], i: int, j: int) -> float:
+    """Computes Hellinger distance between probability vectors.
+
+    Hellinger distance is a bounded, symmetric distance on discrete probability
+    vectors. It is often used for stable comparisons of distributions
+    represented on a fixed set of bins or segments.
+
+    Args:
+        masses: Mapping from bin id to 1D probability vectors.
+        i: First bin id.
+        j: Second bin id.
+
+    Returns:
+        Hellinger distance for bins ``i`` and ``j``.
+    """
+    a = validate_probability_vector(masses[i], name=f"masses[{i}]")
+    b = validate_probability_vector(masses[j], name=f"masses[{j}]")
+    validate_same_shape(a, b, name_a=f"masses[{i}]", name_b=f"masses[{j}]")
+
+    diff = np.sqrt(a) - np.sqrt(b)
+    h2 = 0.5 * float(np.sum(diff * diff))
+    return float(np.sqrt(max(h2, 0.0)))  # in [0, 1]
+
+
+def _pair_tv_kernel(masses: Mapping[int, np.ndarray], i: int, j: int) -> float:
+    """Computes total variation distance between probability vectors.
+
+    Total variation distance is half the L1 distance between two discrete
+    probability vectors. L1 refers to the sum of absolute differences.
+    For valid probability vectors, it is bounded in ``[0, 1]`` and gives an
+    interpretable notion of distributional difference.
+
+    Args:
+        masses: Mapping from bin id to 1D probability vectors.
+        i: First bin id.
+        j: Second bin id.
+
+    Returns:
+        Total variation distance for bins ``i`` and ``j``.
+    """
+    a = validate_probability_vector(masses[i], name=f"masses[{i}]")
+    b = validate_probability_vector(masses[j], name=f"masses[{j}]")
+    validate_same_shape(a, b, name_a=f"masses[{i}]", name_b=f"masses[{j}]")
+    return float(0.5 * np.sum(np.abs(a - b)))  # in [0, 1]
+
+
+def pair_min(
+    z_arr: np.ndarray, p: Mapping[int, np.ndarray]
+) -> Callable[[int, int], float]:
+    """Computes overlap as the integral of the pointwise minimum.
+
+    This overlap score integrates ``min(p_i(z), p_j(z))`` over a shared grid
+    using the trapezoid rule. It is commonly used to quantify how strongly
+    two nonnegative  distributions overlap (e.g., tomographic ``n_i(z)``
+    bins), with larger values indicating more shared support.
+
+    This function validates and caches the input curves once, and returns
+    a callable suitable for repeated pairwise evaluation.
+
+    Args:
+        z_arr: 1D grid of nodes used for trapezoid integration.
+        p: Mapping from bin id to curve values evaluated on ``z_arr``.
+
+    Returns:
+        A function ``f(i, j)`` that returns the overlap integral for bins
+        ``i`` and ``j``.
+
+    Raises:
+        ValueError: If ``z_arr`` is not a valid strictly increasing 1D grid,
+        or any curve is invalid on that grid.
+        KeyError: If ``i`` or ``j`` is not present in ``p`` when evaluating
+            the callable.
+    """
+    z, curves = prepare_metric_inputs(z_arr, p, mode="curves")
+    return partial(_pair_min_kernel, z, curves)
+
+
+def pair_cosine(
+    z_arr: np.ndarray, p: Mapping[int, np.ndarray]
+) -> Callable[[int, int], float]:
+    """Computes cosine similarity under a trapezoid inner product.
+
+    This similarity treats curves as functions on a shared grid and computes
+    a cosine-like similarity using trapezoid integration to define the inner
+    product and L2 norms. It is useful for comparing curve shapes while
+    reducing sensitivity to overall scale; values near 1 indicate similar
+    shapes, and values near 0 indicate near-orthogonality under the chosen
+    inner product.
+
+    This function validates and caches the input curves once, precomputes
+    per-curve norms, and returns a callable suitable for repeated pairwise
+    evaluation.
+
+    Args:
+        z_arr: 1D grid of nodes used for trapezoid integration.
+        p: Mapping from bin id to curve values evaluated on ``z_arr``.
+
+    Returns:
+        A function ``f(i, j)`` that returns cosine similarity for bins
+        ``i`` and ``j``. If either curve has zero norm under the trapezoid
+        inner product, the similarity is defined to be 0.
+
+    Raises:
+        ValueError: If ``z_arr`` is not a valid strictly increasing 1D grid,
+            or any curve is invalid on that grid.
+        KeyError: If ``i`` or ``j`` is not present in ``p`` when evaluating
+            the callable.
+    """
+    z, curves = prepare_metric_inputs(z_arr, p, mode="curves")
+
+    norms: dict[int, float] = {}
+    for i, c in curves.items():
+        n2 = float(np.trapezoid(c * c, x=z))
+        norms[int(i)] = float(np.sqrt(max(n2, 0.0)))
+
+    return partial(_pair_cosine_kernel, z, curves, norms)
+
+
+def pair_js(masses: Mapping[int, np.ndarray]) -> Callable[[int, int], float]:
+    """Computes Jensen–Shannon distance between probability vectors.
+
+    This distance compares two discrete probability vectors (e.g., per-segment
+    mass probabilities) using Jensen–Shannon divergence and returns its square
+    root. With base-2 logarithms, the resulting distance is bounded in
+    ``[0, 1]`` and is symmetric. The returned callable validates inputs on
+    each evaluation (shape/probability checks) using
+    :func:`binny.utils.validators.validate_probability_vector`.
+
+    Args:
+        masses: Mapping from bin id to 1D probability vectors.
+
+    Returns:
+        A function ``f(i, j)`` that returns Jensen–Shannon distance for
+        bins ``i`` and ``j``.
+
+    Raises:
+        KeyError: If ``i`` or ``j`` is not present in ``masses`` when
+            evaluating the callable.
+        ValueError: If either vector is not a valid probability vector,
+            or shapes differ.
+    """
+    return partial(_pair_js_kernel, masses)
+
+
+def pair_hellinger(masses: Mapping[int, np.ndarray]) -> Callable[[int, int], float]:
+    """Computes Hellinger distance between probability vectors.
+
+    Hellinger distance is a bounded, symmetric distance on discrete probability
+    vectors. It is often used for stable comparisons of distributions
+    represented on a fixed set of bins or segments. The returned callable
+    validates inputs on each evaluation (shape/probability checks) using
+    :func:`binny.utils.validators.validate_probability_vector`.
+
+    Args:
+        masses: Mapping from bin id to 1D probability vectors.
+
+    Returns:
+        A function ``f(i, j)`` that returns Hellinger distance for bins
+        ``i`` and ``j``.
+
+    Raises:
+        KeyError: If ``i`` or ``j`` is not present in ``masses`` when
+            evaluating the callable.
+        ValueError: If either vector is not a valid probability vector,
+            or shapes differ.
+    """
+    return partial(_pair_hellinger_kernel, masses)
+
+
+def pair_tv(masses: Mapping[int, np.ndarray]) -> Callable[[int, int], float]:
+    """Computes total variation distance between probability vectors.
+
+    Total variation distance is half the L1 distance between two discrete
+    probability vectors. For valid probability vectors, it is bounded in
+    ``[0, 1]`` and gives an  interpretable notion of distributional difference.
+    The returned callable validates inputs on each evaluation
+    (shape/probability checks) using
+    :func:`binny.utils.validators.validate_probability_vector`.
+
+    Args:
+        masses: Mapping from bin id to 1D probability vectors.
+
+    Returns:
+        A function ``f(i, j)`` that returns total variation distance for
+            bins ``i`` and ``j``.
+
+    Raises:
+        KeyError: If ``i`` or ``j`` is not present in ``masses`` when
+            evaluating the callable.
+        ValueError: If either vector is not a valid probability vector,
+            or shapes differ.
+    """
+    return partial(_pair_tv_kernel, masses)
+
+
+def fill_symmetric(
+    bin_indices: list[int],
+    pair_value: Callable[[int, int], float],
+) -> dict[int, dict[int, float]]:
+    """Returns a symmetric nested-dict matrix from a pairwise value function.
+
+    This helper evaluates a pairwise metric on a set of bin indices and stores
+    the results in a symmetric nested dictionary. It computes the upper
+    triangle (including the diagonal) and mirrors values to fill the lower
+    triangle.
+
+    Args:
+        bin_indices: Bin ids to include in the output matrix.
+        pair_value: Callable returning the metric value for a pair of bin ids.
+
+    Returns:
+        A nested dictionary ``out[i][j]`` containing the metric for each pair
+        of bin ids.
+
+    Raises:
+        Exception: Propagates any exception raised by ``pair_value``
+            during evaluation.
+    """
+    out: dict[int, dict[int, float]] = {i: {} for i in bin_indices}
+
+    for i in bin_indices:
+        for j in bin_indices:
+            if j < i:
+                continue
+            v = float(pair_value(i, j))
+            out[i][j] = v
+            out[j][i] = v
+
+    return out
+
+
+def segment_mass_probs(
+    z_arr: np.ndarray,
+    p: Mapping[int, np.ndarray],
+) -> dict[int, np.ndarray]:
+    """Returns per-segment mass probability vectors derived from sampled curves.
+
+    This converts each curve into trapezoid masses per segment using
+    :func:`binny.utils.normalization.mass_per_segment`, then normalizes the
+    segment masses to a probability vector. The output is suitable for
+    discrete probability-vector metrics such as Jensen–Shannon, Hellinger,
+    and total variation distances.
+
+    Args:
+        z_arr: 1D grid of nodes used to define the trapezoid segments.
+        p: Mapping from bin id to curve values evaluated on ``z_arr``.
+
+    Returns:
+        Mapping from bin id to 1D ``float64`` probability vectors over segments.
+
+    Raises:
+        ValueError: If ``z_arr`` or any curve is invalid.
+        ValueError: If any curve yields non-positive total segment mass.
+    """
+    z, curves = prepare_metric_inputs(z_arr, p, mode="curves")
+
+    masses: dict[int, np.ndarray] = {}
+    for i, curve in curves.items():
+        m = mass_per_segment(z, curve)
+        s = float(np.sum(m))
+        if s <= 0.0:
+            raise ValueError(f"bin {i} has non-positive mass on segments.")
+        masses[int(i)] = (m / s).astype(np.float64, copy=False)
+    return masses
+
+
+def apply_unit(
+    mat: dict[int, dict[int, float]],
+    unit: MetricUnit,
+) -> dict[int, dict[int, float]]:
+    """Returns a unit-converted copy of a nested-dict metric matrix.
+
+    This helper converts matrices expressed as fractions to percentages
+    when requested, while preserving the nested-dict structure.
+
+    Args:
+        mat: Nested dictionary ``mat[i][j]`` of metric values.
+        unit: Output unit, either ``"fraction"`` or ``"percent"``.
+
+    Returns:
+        A nested dictionary in the requested unit.
+
+    Raises:
+        ValueError: If ``unit`` is not ``"fraction"`` or ``"percent"``.
+    """
+    if unit == "fraction":
+        return mat
+    if unit == "percent":
+        return {i: {j: 100.0 * v for j, v in row.items()} for i, row in mat.items()}
+    raise ValueError('unit must be "fraction" or "percent".')
