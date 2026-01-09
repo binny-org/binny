@@ -113,7 +113,8 @@ def test_validate_interval_uses_validate_n_bins():
 
 
 def test_validate_axis_and_weights_happy_path_returns_float_arrays():
-    """Tests that validate_axis_and_weights returns float np.arrays on valid input."""
+    """Tests that validate_axis_and_weights returns float np.arrays
+    on valid input."""
     x = [0, 1, 2, 3]
     w = [1, 2, 3, 4]
     x_out, w_out = validate_axis_and_weights(x, w)
@@ -201,7 +202,8 @@ def test_validate_mixed_segments_happy_path_no_total():
 
 
 def test_validate_mixed_segments_happy_path_with_total():
-    """Tests that validate_mixed_segments accepts valid segments with total_n_bins."""
+    """Tests that validate_mixed_segments accepts valid segments
+    with total_n_bins."""
     segments = [
         {"method": "equidistant", "n_bins": 2},
         {"method": "equal_number", "n_bins": 5, "params": {}},
@@ -260,7 +262,8 @@ def test_validate_mixed_segments_invalid_n_bins_raises():
 
 
 def test_validate_mixed_segments_params_must_be_mapping_if_provided():
-    """Tests that validate_mixed_segments requires 'params' to be a mapping if given."""
+    """Tests that validate_mixed_segments requires 'params'
+    to be a mapping if given."""
     segments = [{"method": "eq", "n_bins": 2, "params": ["not", "a", "mapping"]}]
     with pytest.raises(TypeError, match=r"'params' must be a mapping"):
         validate_mixed_segments(segments)
