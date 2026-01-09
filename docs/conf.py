@@ -7,7 +7,7 @@
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#project-information
 
 project = "binny"
-copyright = "2026, Nikolina Šarčević"
+copyright = "2026, Nikolina Šarčević, Matthijs van der Wild, Cynthia Trendafilova"
 author = "Nikolina Šarčević"
 
 # -- General configuration ---------------------------------------------------
@@ -17,13 +17,14 @@ extensions = [
     "sphinx.ext.autodoc",
     "sphinx.ext.napoleon",
     "sphinx.ext.githubpages",
+    "sphinx.ext.doctest",
     "sphinx_multiversion",
 ]
 
 autoclass_content = "both"
 
 templates_path = ["_templates"]
-exclude_patterns = ["_build", "Thumbs.db", ".DS_Store"]
+exclude_patterns = ["_build", "Thumbs.db", ".DS_Store", "binny.core.rst"]
 
 html_sidebar = {
     "**": [

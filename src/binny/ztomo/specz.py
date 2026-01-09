@@ -50,94 +50,16 @@ Notes
 
 Examples
 --------
-Build true-z (spec-z) bins with no bin-response effects (pure top-hat selection):
-
 >>> import numpy as np
->>> from binny.specz import build_specz_bins
+>>> from binny.ztomo.specz import build_specz_bins
 >>> z = np.linspace(0.0, 2.0, 501)
 >>> nz = z**2 * np.exp(-z)
->>> bin_edges = [0.0, 0.5, 1.0, 1.5, 2.0]  # 4 true-z bins
+>>> bin_edges = [0.0, 0.5, 1.0, 1.5, 2.0]
 >>> bins = build_specz_bins(z, nz, bin_edges)
->>> list(bins.keys())
+>>> sorted(bins)
 [0, 1, 2, 3]
 >>> bins[0].shape
 (501,)
-
-Apply per-bin completeness (scalar or one value per bin):
-
->>> bins = build_specz_bins(
-...     z,
-...     nz,
-...     bin_edges,
-...     completeness=[0.9, 0.8, 0.7, 0.6],
-... )
-
-Enable catastrophic misassignment with a simple leakage prescription.
-Here 5% of each true bin leaks to neighboring observed bins:
-
->>> bins = build_specz_bins(
-...     z,
-...     nz,
-...     bin_edges,
-...     catastrophic_frac=0.05,
-...     leakage_model="neighbor",
-... )
-
-Use Gaussian leakage in bin-index space (wider leakage for higher-z bins):
-
->>> bins = build_specz_bins(
-...     z,
-...     nz,
-...     bin_edges,
-...     catastrophic_frac=[0.02, 0.03, 0.05, 0.08],
-...     leakage_model="gaussian",
-...     leakage_sigma=[1.0, 1.0, 1.5, 2.0],
-... )
-
-Provide an explicit misassignment matrix M[i, j] = P(i_obs | j_true)
-(each column must sum to 1):
-
->>> import numpy as np
->>> M = np.array([
-...     [0.98, 0.02, 0.00, 0.00],
-...     [0.02, 0.96, 0.02, 0.00],
-...     [0.00, 0.02, 0.96, 0.02],
-...     [0.00, 0.00, 0.02, 0.98],
-... ])
->>> bins = build_specz_bins(
-...     z,
-...     nz,
-...     bin_edges,
-...     misassignment_matrix=M,
-... )
-
-Optionally add a (usually tiny) Gaussian measurement-scatter response on top of
-catastrophic leakage, using a per-bin constant scatter:
-
->>> bins = build_specz_bins(
-...     z,
-...     nz,
-...     bin_edges,
-...     catastrophic_frac=0.05,
-...     leakage_model="neighbor",
-...     specz_scatter=[5e-4, 5e-4, 8e-4, 1e-3],
-...     specz_scatter_model="const",
-... )
-
-Or enable redshift-dependent scatter sigma(z) = sigma0 + sigma1 * (1 + z)
-(by leaving specz_scatter=None and setting sigma0/sigma1):
-
->>> bins = build_specz_bins(
-...     z,
-...     nz,
-...     bin_edges,
-...     catastrophic_frac=0.02,
-...     leakage_model="neighbor",
-...     specz_scatter=None,
-...     specz_scatter_model="sigma0_plus_sigma1_1pz",
-...     sigma0=1e-4,
-...     sigma1=2e-4,
-... )
 """
 
 from __future__ import annotations
