@@ -9,6 +9,7 @@ Submodules
 
    binny.utils.broadcasting
    binny.utils.normalization
+   binny.utils.validators
 
 Module contents
 ---------------
