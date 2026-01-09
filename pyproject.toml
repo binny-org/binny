@@ -22,12 +22,13 @@ dev = [
   "bump-my-version>=0.26",
 ]
 
-"docs" = [
-    "sphinx",
-    "sphinx-design",
-    "sphinx-multiversion",
-    "sphinxawesome-theme",
+docs = [
+  "sphinx[doctest]",
+  "sphinx-design",
+  "sphinx-multiversion",
+  "sphinxawesome-theme"
 ]
+
 
 [tool.ruff]
 line-length = 88
@@ -76,6 +77,16 @@ commands = [
     "{tox_root}/docs/_build/html",
     "--fail-on-warning",
   ],
+]
+
+[tool.tox.env.do]
+extras = ["docs"]
+allowlist_externals = ["open"]
+commands = [
+  ["sphinx-apidoc", "-o", "{tox_root}/docs", "{tox_root}/src/binny", "--separate", "-f"],
+  ["sphinx-build", "-b", "doctest", "{tox_root}/docs", "{tox_root}/docs/_build/doctest", "--fail-on-warning"],
+  ["sphinx-build", "-b", "html", "{tox_root}/docs", "{tox_root}/docs/_build/html", "--fail-on-warning"],
+  ["open", "{tox_root}/docs/_build/html/index.html"],
 ]
 
 [tool.tox.env.docs-releases]

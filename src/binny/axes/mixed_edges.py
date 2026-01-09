@@ -164,19 +164,22 @@ def mixed_edges(
     first edge of each subsequent segment is dropped) so the output is a single
     increasing edge array.
 
-    Segment specification
-        Each element of ``segments`` is a mapping with keys:
-        - ``"method"``: Binning method name or alias (resolved via
-          :func:`binny.core.validators.resolve_binning_method`).
-        - ``"n_bins"``: Number of bins in this segment (integer).
-        - ``"params"``: Optional mapping of method-specific parameters.
-          Any missing required parameter may be provided as a global keyword
-          argument to :func:`mixed_edges`.
+    Segment specification:
 
-    Global inputs
-        Some methods require arrays (e.g. ``x``/``weights``). You can provide
-        them globally, or per-segment via ``params``. If a required input is
-        missing, a ``ValueError`` is raised.
+        Each element of ``segments`` is a mapping with keys:
+
+        - ``"method"``: Binning method name or alias (resolved via
+          :func:`binny.utils.validators.resolve_binning_method`).
+        - ``"n_bins"``: Number of bins in this segment (integer).
+        - ``"params"``: Optional mapping of method-specific parameters. Any missing
+          required parameter may be provided as a global keyword argument to
+          :func:`mixed_edges`.
+
+    Global inputs:
+
+        Some methods require arrays (e.g. ``x``/``weights``). You can provide them
+        globally, or per-segment via ``params``. If a required input is missing,
+        a ``ValueError`` is raised.
 
     Args:
         segments: Sequence of segment specifications.
