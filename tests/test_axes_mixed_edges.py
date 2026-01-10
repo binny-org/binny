@@ -1,4 +1,4 @@
-"""Unit tests for binny.axes.mixed_edges module."""
+"""Unit tests for ``binny.axes.mixed_edges`` module."""
 
 import numpy as np
 import pytest

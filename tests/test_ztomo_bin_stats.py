@@ -1,4 +1,4 @@
-"""Unit tests for binny.ztomo.bin_stats functions."""
+"""Unit tests for ``binny.ztomo.bin_stats`` module."""
 
 import numpy as np
 import pytest

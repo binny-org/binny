@@ -1,4 +1,4 @@
-"""Unit tests for binny.utils.normalization."""
+"""Unit tests for ``binny.utils.normalization``."""
 
 import numpy as np
 import pytest

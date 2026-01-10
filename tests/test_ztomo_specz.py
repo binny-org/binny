@@ -1,4 +1,4 @@
-"""Unit tests for binny.ztomo.specz module."""
+"""Unit tests for ``binny.ztomo.specz`` module."""
 
 from __future__ import annotations
 
