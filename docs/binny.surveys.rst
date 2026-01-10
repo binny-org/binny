@@ -1,6 +1,14 @@
 binny.surveys package
 =====================
 
+Subpackages
+-----------
+
+.. toctree::
+   :maxdepth: 4
+
+   binny.surveys.configs
+
 Submodules
 ----------
 
@@ -8,6 +16,7 @@ Submodules
    :maxdepth: 4
 
    binny.surveys.lsst
+   binny.surveys.sky
 
 Module contents
 ---------------

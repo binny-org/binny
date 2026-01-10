@@ -121,6 +121,10 @@ package-dir = { "" = "src" }
 [tool.setuptools.packages.find]
 where = ["src"]
 
+[tool.setuptools.package-data]
+"binny.surveys" = ["configs/*.yaml"]
+
+
 [tool.bumpversion]
 current_version = "0.1.0"
 commit = true

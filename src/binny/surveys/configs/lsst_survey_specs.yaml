@@ -1,0 +1,50 @@
+lsst:
+  name: lsst
+
+  footprint:
+    nominal:
+      survey_area: 18000.0   # deg^2
+      frac_sky: 0.4363
+    years:
+      y1:
+        survey_area: 12000.0 # deg^2 (effective)
+        frac_sky: 0.2909
+      y10:
+        survey_area: 14000.0 # deg^2 (effective)
+        frac_sky: 0.3394
+
+
+  lens_sample:
+    y1:
+      # Smail: (z/z0)^alpha * exp[-(z/z0)^beta]
+      # Original LSST: (z/z0)^gamma * exp[-(z/z0)^alpha]
+      # => alpha := gamma (=2.0), beta := original alpha (=0.94)
+      smail: {alpha: 2.0, beta: 0.94, z0: 0.26}
+      n_gal_arcmin2: 18.0
+      n_tomo_bins: 5
+      bin_range: [0.2, 1.2]
+      binning: equidistant
+      photoz: {scatter_scale: 0.03, mean_offset: 0.0}
+
+    y10:
+      smail: {alpha: 2.0, beta: 0.90, z0: 0.28}
+      n_gal_arcmin2: 48.0
+      n_tomo_bins: 10
+      bin_range: [0.2, 1.2]
+      binning: equidistant
+      photoz: {scatter_scale: 0.03, mean_offset: 0.0}
+
+  source_sample:
+    y1:
+      smail: {alpha: 2.0, beta: 0.78, z0: 0.13}
+      n_gal_arcmin2: 10.0
+      n_tomo_bins: 5
+      binning: equal_number
+      photoz: {scatter_scale: 0.05, mean_offset: 0.0}
+
+    y10:
+      smail: {alpha: 2.0, beta: 0.68, z0: 0.11}
+      n_gal_arcmin2: 27.0
+      n_tomo_bins: 5
+      binning: equal_number
+      photoz: {scatter_scale: 0.05, mean_offset: 0.0}

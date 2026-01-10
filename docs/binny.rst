@@ -7,8 +7,8 @@ Subpackages
 .. toctree::
    :maxdepth: 4
 
+   binny.api
    binny.axes
-   binny.samples
    binny.scales
    binny.surveys
    binny.utils

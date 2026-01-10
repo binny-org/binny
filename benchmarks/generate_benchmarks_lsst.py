@@ -1,4 +1,26 @@
-import os
+"""Generate benchmark datasets for LSST galaxy samples.
+
+This script creates reference datasets for various redshift ranges,
+grid resolutions, and forecast years (Y1 and Y10) using the
+``LSSTGalaxySample`` class from the ``lsst_galaxy_sample.py``. The
+generated datasets include source and lens redshift distributions,
+tomographic bin edges, bin centers, and effective number densities.
+LSST survey specs are stored in the ``lsst_desc_specs.yaml`` file.
+
+The LSST code is the source of truth for these datasets, and it
+was written by Niko Sarcevic (GitHub @nikosarcevic) for the
+LSST DESC collaboration.
+
+The data is generated and stored in tests/reference/data/ directory
+under subdirectories named according to the redshift range and grid
+resolution (e.g., "default__default" for the default range and
+resolution). Each dataset is saved as a NumPy .npy file for easy
+loading and comparison in unit tests.
+"""
+
+from __future__ import annotations
+
+from pathlib import Path
 
 import numpy as np
 from lsst_galaxy_sample import LSSTGalaxySample
@@ -18,11 +40,12 @@ grid_resolutions = {
     "superfine": 2000,
 }
 
-forecast_years = ["1", "4", "7", "10"]
+forecast_years = ["1", "10"]
 
-# === Setup base output directory ===
-base_dir = os.path.abspath(os.path.join("benchmarks", "data"))
-os.makedirs(base_dir, exist_ok=True)
+# === Setup base output directory (repo-root/tests/reference/data) ===
+REPO_ROOT = Path(__file__).resolve().parents[1]
+base_dir = REPO_ROOT / "tests" / "reference" / "data"
+base_dir.mkdir(parents=True, exist_ok=True)
 
 # === Loop over all range/grid combinations and forecast years ===
 for range_name, (zmin, zmax) in range_types.items():
@@ -30,23 +53,20 @@ for range_name, (zmin, zmax) in range_types.items():
         redshift_grid = np.linspace(zmin, zmax, npoints)
         grid_tag = f"{range_name}__{resolution_name}"
 
-        save_dir = os.path.join(base_dir, grid_tag)
-        os.makedirs(save_dir, exist_ok=True)
+        save_dir = base_dir / grid_tag
+        save_dir.mkdir(parents=True, exist_ok=True)
 
         print(f"\nGenerating data for grid: {grid_tag}")
 
         for year in forecast_years:
             print(f"  - Forecast Year {year}")
 
-            # Initialize with current config
             presets = Presets(forecast_year=year, redshift_range=redshift_grid)
             init = LSSTGalaxySample(presets)
 
-            # === Step 1: Compute core inputs once ===
             source_nz = init.source_sample(normalized=True, save_file=False)
             lens_nz = init.lens_sample(normalized=True, save_file=False)
 
-            # === Step 2: Compute everything else using the cached inputs ===
             source_bins = init.source_bins(normalized=True, save_file=False)
             lens_bins = init.lens_bins(normalized=True, save_file=False)
 
@@ -63,7 +83,6 @@ for range_name, (zmin, zmax) in range_types.items():
             lens_neff_frac = init.get_n_eff_frac_clustering(save_file=False)
             source_neff_frac = init.get_n_eff_frac_lensing(save_file=False)
 
-            # === Step 3: Save once, outside ===
             sample_data = {
                 "source_nz": source_nz,
                 "lens_nz": lens_nz,
@@ -79,8 +98,7 @@ for range_name, (zmin, zmax) in range_types.items():
             }
 
             for key, value in sample_data.items():
-                filename = f"{key}_Y{year}.npy"
-                filepath = os.path.join(save_dir, filename)
+                filepath = save_dir / f"{key}_Y{year}.npy"
                 np.save(filepath, value)
 
-print(f"\n All benchmark datasets saved to: {base_dir}")
+print(f"\nAll reference datasets saved to: {base_dir}")

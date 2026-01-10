@@ -190,8 +190,8 @@ def build_photoz_bins(
             another form of error on the mean. May be a scalar (applied to all
             bins) or a sequence of length ``n_bins``.
         normalize_input: Whether to normalize the input ``nz`` before binning.
-        normalize_bins: Whether to normalize each output bin distribution so each
-            bin integrates to 1 on ``z``.
+        normalize_bins: Whether to normalize each output bin distribution to
+            integrate to 1 on ``z``.
         norm_method: Normalization method passed to :func:`normalize_1d`
             (e.g. ``"trapezoid"``).
 
@@ -266,6 +266,7 @@ def build_photoz_bins(
             outlier_mean_offset=float(outlier_mean_offset_arr[i]),
             outlier_mean_scale=float(outlier_mean_scale_arr[i]),
         )
+
         if normalize_bins:
             nz_bin = normalize_1d(z_arr, nz_bin, method=norm_method)
 
@@ -294,114 +295,139 @@ def true_redshift_distribution(
     ``P(bin | z)`` is the probability that an object at true redshift ``z`` is
     assigned to the observed photo-z bin ``[bin_min, bin_max]``.
 
-    This implementation uses a two-component (core + outlier) Gaussian mixture
-    photo-z error model expressed via the internal parameters ``c`` and ``z0``.
-    User-facing parameters are provided in the
-    "mean_scale/mean_offset/scatter_scale" form and mapped internally.
+    Photo-z model
+    -------------
+    This function implements a two-component (core + outlier) Gaussian mixture
+    model for the conditional observed redshift ``z_ph`` at fixed true redshift
+    ``z``.
 
-    Core component:
+    Core component (always present)::
 
-    - ``c_b = 1 / mean_scale``
-    - ``z_b = mean_offset / mean_scale``
-    - ``sigma_b = scatter_scale``
+        z_ph ~ Normal(mu_core(z), sigma_core(z))
 
-    Outlier component:
+        mu_core(z)    = mean_scale * z - mean_offset
+        sigma_core(z) = scatter_scale * (1 + z)
 
-    - ``c_o = 1 / outlier_mean_scale``
-    - ``z_o = outlier_mean_offset / outlier_mean_scale``
-    - ``sigma_o = outlier_scatter_scale``
+    Outlier component (optional; enabled only if ``outlier_frac > 0`` and
+    ``outlier_scatter_scale is not None``)::
 
-    The bin probability is computed by analytically integrating the Gaussian
-    selection model over observed redshift ``z_ph`` in ``[bin_min, bin_max]`` using
-    the error function. Because the Gaussian is expressed in terms of
-    ``(z - c z_ph - z0)``, the closed form includes a Jacobian factor ``1 / c``.
-    If the bins cover the full observed-redshift range
-    ``z_ph`` (effectively ``(-inf, +inf)``) then for fixed ``z`` the sum over bins is
-    approximately 1 (up to numerical edge effects).
+        z_ph ~ Normal(mu_out(z), sigma_out(z))
+
+        mu_out(z)    = outlier_mean_scale * z - outlier_mean_offset
+        sigma_out(z) = outlier_scatter_scale * (1 + z)
+
+    For a photo-z bin ``[bin_min, bin_max]``, the bin-assignment probability is::
+
+        P(bin | z) = (1 - outlier_frac) * P_core(bin | z)
+                     + outlier_frac * P_out(bin | z),
+
+    where ``P_core`` and ``P_out`` are the analytic Gaussian integrals over
+    ``z_ph`` in ``[bin_min, bin_max]`` computed using the error function.
 
     Args:
-        z: One-dimensional redshift grid.
-        nz: Parent redshift distribution evaluated on ``z``.
-        bin_min: Lower edge of the photo-z bin.
-        bin_max: Upper edge of the photo-z bin.
-        scatter_scale: Core photo-z scatter amplitude. The scatter in observed redshift
-            is ``sigma_ph(z) = scatter_scale * (1 + z) * mean_scale``.
-        mean_offset: Additive mean offset in the core mapping. Internally mapped
-            to ``z_b`` via ``z_b = mean_offset / mean_scale``.
-        mean_scale: Multiplicative mean scale in the core mapping. Internally
-            mapped to ``c_b`` via ``c_b = 1 / mean_scale``.
-        outlier_frac: Outlier mixture fraction in ``[0, 1]``.
-        outlier_scatter_scale: Outlier scatter amplitude.
-            The scatter in observed redshift is::
-
-                sigma_out(z) = outlier_scatter_scale
-                            * (1 + z) * outlier_mean_scale
-
-        outlier_mean_offset: Additive mean offset in the outlier mapping.
-            Internally mapped to ``z_o`` via
-            ``z_o = outlier_mean_offset / outlier_mean_scale``.
-        outlier_mean_scale: Multiplicative mean scale in the outlier mapping.
-            Internally mapped to ``c_o`` via
-            ``c_o = 1 / outlier_mean_scale``.
+        z: One-dimensional grid of true-redshift values.
+        nz: Parent (intrinsic) true-redshift distribution evaluated on ``z``.
+            This function does not normalize ``nz``.
+        bin_min: Lower edge of the photo-z bin in observed-redshift space.
+        bin_max: Upper edge of the photo-z bin in observed-redshift space.
+        scatter_scale: Core photo-z scatter amplitude. The observed-redshift scatter
+            is ``sigma_core(z) = scatter_scale * (1 + z)``.
+        mean_offset: Additive mean offset in the core mean mapping
+            ``mu_core(z) = mean_scale * z - mean_offset``.
+        mean_scale: Multiplicative slope in the core mean mapping. Defaults to 1.
+        outlier_frac: Outlier mixture fraction in ``[0, 1]``. If zero (default),
+            the outlier component is ignored.
+        outlier_scatter_scale: Outlier scatter amplitude. If ``None`` (default),
+            the outlier component is disabled even if ``outlier_frac > 0``.
+            When enabled, ``sigma_out(z) = outlier_scatter_scale * (1 + z)``.
+        outlier_mean_offset: Additive mean offset for the outlier mean mapping
+            ``mu_out(z) = outlier_mean_scale * z - outlier_mean_offset``.
+        outlier_mean_scale: Multiplicative slope for the outlier mean mapping
+            ``mu_out(z) = outlier_mean_scale * z - outlier_mean_offset``.
 
     Returns:
-        The photo-z-selected true-redshift distribution evaluated on ``z``.
+        The photo-z-selected true-redshift distribution
+        ``n_bin(z) = n(z) * P(bin | z)`` evaluated on the input grid ``z``.
 
     Raises:
         ValueError: If ``outlier_frac`` is not in the interval ``[0, 1]``.
-        ValueError: If any scale/scatter parameter is non-positive.
+        ValueError: If any scale or scatter parameter is non-positive.
 
     Notes:
-        The returned arrays are *shapes* in true redshift. If you want absolute
-        number densities (e.g. ``n_eff`` in gal/arcmin^2), apply that normalization
-        at the survey/tracer level (or set ``normalize_bins=False`` upstream and
-        scale there).
+        The returned array represents a *shape* in true redshift. If absolute
+        normalizations are required (e.g. number densities), they should be
+        applied at a higher level.
     """
     z_arr = np.asarray(z, dtype=float)
     n_arr = np.asarray(nz, dtype=float)
 
+    # --- validate mixture weight
     if not (0.0 <= outlier_frac <= 1.0):
         raise ValueError("outlier_frac must lie in [0, 1].")
+
+    # --- validate core params (always)
+    if mean_scale <= 0.0:
+        raise ValueError("mean_scale must be > 0.")
+    if scatter_scale <= 0.0:
+        raise ValueError("scatter_scale must be > 0.")
+
+    # --- validate outlier params ONLY when the outlier component is active
+    outliers_enabled = (outlier_frac > 0.0) and (outlier_scatter_scale is not None)
+    if outliers_enabled:
+        if outlier_mean_scale <= 0.0:
+            raise ValueError("outlier_mean_scale must be > 0.")
+        if outlier_scatter_scale <= 0.0:
+            raise ValueError("outlier_scatter_scale must be > 0.")
+
+    # --- core probability
+    p_core = _bin_prob_gaussian_photoz(
+        z_arr,
+        bin_min=bin_min,
+        bin_max=bin_max,
+        scatter_scale=scatter_scale,
+        mean_offset=mean_offset,
+        mean_scale=mean_scale,
+    )
+
+    # --- optional outliers
+    if outliers_enabled:
+        p_out = _bin_prob_gaussian_photoz(
+            z_arr,
+            bin_min=bin_min,
+            bin_max=bin_max,
+            scatter_scale=outlier_scatter_scale,  # not None here
+            mean_offset=outlier_mean_offset,
+            mean_scale=outlier_mean_scale,
+        )
+        p_bin = (1.0 - outlier_frac) * p_core + outlier_frac * p_out
+    else:
+        p_bin = p_core
+
+    return n_arr * p_bin
+
+
+def _bin_prob_gaussian_photoz(
+    z: FloatArray,
+    *,
+    bin_min: float,
+    bin_max: float,
+    scatter_scale: float,
+    mean_offset: float,
+    mean_scale: float = 1.0,
+) -> FloatArray:
+    """P(bin | z) for z_ph ~ N(mean_scale*z - mean_offset, scatter_scale*(1+z))."""
+    z_arr = np.asarray(z, dtype=float)
 
     if mean_scale <= 0.0:
         raise ValueError("mean_scale must be > 0.")
     if scatter_scale <= 0.0:
         raise ValueError("scatter_scale must be > 0.")
 
+    mu = mean_scale * z_arr - mean_offset
+    sigma = np.maximum(scatter_scale * (1.0 + z_arr) * mean_scale, 1e-10)
+
     sqrt2 = np.sqrt(2.0)
+    t_max = (bin_max - mu) / (sqrt2 * sigma)
+    t_min = (bin_min - mu) / (sqrt2 * sigma)
 
-    c_b = 1.0 / float(mean_scale)
-    z_b = float(mean_offset) / float(mean_scale)
-    sig_b = float(scatter_scale)
-
-    denom_b = sqrt2 * np.maximum(sig_b * (1.0 + z_arr), 1e-10)
-    a_min_b = (z_arr - c_b * bin_min - z_b) / denom_b
-    a_max_b = (z_arr - c_b * bin_max - z_b) / denom_b
-
-    # Core component bin probability (analytic integral over z_p in
-    # [bin_min, bin_max])
-    # NOTE: because the Gaussian is in (z - c_b z_p - z_b),
-    # integrating over z_p introduces a 1/c_b factor.
-    p_core = (0.5 / c_b) * (erf(a_min_b) - erf(a_max_b))
-
-    if outlier_frac > 0.0 and outlier_scatter_scale is not None:
-        if outlier_mean_scale <= 0.0:
-            raise ValueError("outlier_mean_scale must be > 0.")
-        if outlier_scatter_scale <= 0.0:
-            raise ValueError("outlier_scatter_scale must be > 0.")
-
-        c_o = 1.0 / float(outlier_mean_scale)
-        z_o = float(outlier_mean_offset) / float(outlier_mean_scale)
-        sig_o = float(outlier_scatter_scale)
-
-        denom_o = sqrt2 * np.maximum(sig_o * (1.0 + z_arr), 1e-10)
-        a_min_o = (z_arr - c_o * bin_min - z_o) / denom_o
-        a_max_o = (z_arr - c_o * bin_max - z_o) / denom_o
-
-        p_out = (0.5 / c_o) * (erf(a_min_o) - erf(a_max_o))
-
-        p_bin_given_z = (1.0 - outlier_frac) * p_core + outlier_frac * p_out
-    else:
-        p_bin_given_z = p_core
-
-    return n_arr * p_bin_given_z
+    return 0.5 * (erf(t_max) - erf(t_min))
