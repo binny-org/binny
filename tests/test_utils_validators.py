@@ -1,4 +1,4 @@
-"""Unit tests for binny.core.validators."""
+"""Unit tests for binny.utils.validators."""
 
 import numpy as np
 import pytest
@@ -9,6 +9,10 @@ from binny.utils.validators import (
     validate_interval,
     validate_mixed_segments,
     validate_n_bins,
+    validate_probability_vector,
+    validate_response_matrix,
+    validate_same_shape,
+    validated_float_arrays,
 )
 
 
@@ -278,3 +282,130 @@ def test_validate_mixed_segments_total_n_bins_mismatch_raises():
         match=r"Sum of segment n_bins is .*total_n_bins is 6",
     ):
         validate_mixed_segments(segments, total_n_bins=6)
+
+
+def test_validated_float_arrays_matches_validate_axis_and_weights():
+    """Tests that validated_float_arrays returns two float arrays on valid input."""
+    x = [0, 1, 2]
+    y = [10, 20, 30]
+    x_out, y_out = validated_float_arrays(x, y)
+
+    assert x_out.dtype == float
+    assert y_out.dtype == float
+    assert x_out.shape == (3,)
+    assert y_out.shape == (3,)
+
+
+def test_validated_float_arrays_rejects_non_1d():
+    """Tests that validated_float_arrays rejects non-1D input."""
+    x = [[0, 1], [2, 3]]
+    y = [[1, 1], [1, 1]]
+    with pytest.raises(ValueError, match=r"must be 1D"):
+        validated_float_arrays(x, y)
+
+
+def test_validated_float_arrays_requires_strictly_increasing_x():
+    """Tests that validated_float_arrays requires x to be strictly increasing."""
+    x = [0, 0, 1]
+    y = [1, 1, 1]
+    with pytest.raises(ValueError, match=r"strictly increasing"):
+        validated_float_arrays(x, y)
+
+
+def test_validate_response_matrix_happy_path_accepts_column_stochastic():
+    """Tests that validate_response_matrix accepts a valid column-stochastic matrix."""
+    m = np.array([[0.8, 0.2], [0.2, 0.8]], dtype=float)
+    validate_response_matrix(m, n_bins=2)
+
+
+def test_validate_response_matrix_requires_shape():
+    """Tests that validate_response_matrix rejects incorrect matrix shape."""
+    m = np.eye(3, dtype=float)
+    with pytest.raises(ValueError, match=r"must have shape \(2, 2\)"):
+        validate_response_matrix(m, n_bins=2)
+
+
+def test_validate_response_matrix_rejects_non_finite():
+    """Tests that validate_response_matrix rejects non-finite matrix entries."""
+    m = np.array([[1.0, np.nan], [0.0, 1.0]], dtype=float)
+    with pytest.raises(ValueError, match=r"must be finite"):
+        validate_response_matrix(m, n_bins=2)
+
+
+def test_validate_response_matrix_rejects_negative_entries():
+    """Tests that validate_response_matrix rejects negative matrix entries."""
+    m = np.array([[1.0, -1e-3], [0.0, 1.0]], dtype=float)
+    with pytest.raises(ValueError, match=r"must be non-negative"):
+        validate_response_matrix(m, n_bins=2)
+
+
+def test_validate_response_matrix_rejects_column_sums_not_one():
+    """Tests that validate_response_matrix rejects matrices with bad column sums."""
+    m = np.array([[0.9, 0.9], [0.1, 0.2]], dtype=float)
+    with pytest.raises(ValueError, match=r"must sum to 1"):
+        validate_response_matrix(m, n_bins=2)
+
+
+def test_validate_probability_vector_happy_path_returns_float64():
+    """Tests that validate_probability_vector returns float64 array on valid input."""
+    out = validate_probability_vector([0.2, 0.3, 0.5], name="p")
+    assert out.dtype == np.float64
+    np.testing.assert_allclose(out, [0.2, 0.3, 0.5])
+
+
+def test_validate_probability_vector_requires_1d():
+    """Tests that validate_probability_vector rejects non-1D inputs."""
+    p = [[0.5, 0.5]]
+    with pytest.raises(ValueError, match=r"p must be 1D"):
+        validate_probability_vector(p, name="p")
+
+
+def test_validate_probability_vector_rejects_empty_when_not_allowed():
+    """Tests that validate_probability_vector rejects empty vector by default."""
+    with pytest.raises(ValueError, match=r"p must be non-empty"):
+        validate_probability_vector([], name="p")
+
+
+def test_validate_probability_vector_allows_empty_when_requested():
+    """Tests that validate_probability_vector allows empty vector when allow_empty."""
+    out = validate_probability_vector([], name="p", allow_empty=True)
+    assert out.dtype == np.float64
+    assert out.size == 0
+
+
+def test_validate_probability_vector_rejects_non_finite():
+    """Tests that validate_probability_vector rejects non-finite entries."""
+    p = [0.5, np.inf, 0.5]
+    with pytest.raises(ValueError, match=r"p must be finite"):
+        validate_probability_vector(p, name="p")
+
+
+def test_validate_probability_vector_rejects_negative():
+    """Tests that validate_probability_vector rejects negative entries."""
+    p = [0.5, -0.1, 0.6]
+    with pytest.raises(ValueError, match=r"p must be nonnegative"):
+        validate_probability_vector(p, name="p")
+
+
+def test_validate_probability_vector_rejects_sum_not_one():
+    """Tests that validate_probability_vector rejects vectors not summing to one."""
+    p = [0.2, 0.2, 0.2]
+    with pytest.raises(ValueError, match=r"must sum to 1"):
+        validate_probability_vector(p, name="p")
+
+
+def test_validate_probability_vector_uses_custom_name_in_errors():
+    """Tests that validate_probability_vector uses custom name in error messages."""
+    with pytest.raises(ValueError, match=r"q must sum to 1"):
+        validate_probability_vector([0.4, 0.4], name="q")
+
+
+def test_validate_same_shape_happy_path_accepts_equal_shapes():
+    """Tests that validate_same_shape accepts inputs with the same shape."""
+    validate_same_shape([1, 2], np.array([3, 4]), name_a="a", name_b="b")
+
+
+def test_validate_same_shape_raises_with_custom_names():
+    """Tests that validate_same_shape errors mention the provided names."""
+    with pytest.raises(ValueError, match=r"x and y must have the same shape"):
+        validate_same_shape([1, 2, 3], [1, 2], name_a="x", name_b="y")
