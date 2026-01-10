@@ -1,4 +1,4 @@
-"""Unit tests for binny.utils.validators."""
+"""Unit tests for ``binny.utils.validators``."""
 
 import numpy as np
 import pytest

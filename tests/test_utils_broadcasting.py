@@ -1,3 +1,5 @@
+"""Unit tests for ``binny.utils.broadcasting``."""
+
 import numpy as np
 import pytest
 
