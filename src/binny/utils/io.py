@@ -14,6 +14,7 @@ from binny.utils.validators import validate_mixed_segments
 __all__ = [
     "load_nz",
     "load_binning_recipe",
+    "load_yaml",
 ]
 
 
@@ -220,3 +221,50 @@ def load_binning_recipe(path: str) -> list[dict[str, Any]]:
     validate_mixed_segments(norm_segments, total_n_bins=total_n_bins)
 
     return norm_segments
+
+
+def load_yaml(
+    source: str | Path,
+    *,
+    package: str | None = None,
+) -> dict[str, Any]:
+    """Loads YAML from disk or from a packaged resource.
+
+    Args:
+        source:
+            If ``package is None``: treated as a filesystem path.
+            If ``package`` is provided: treated as a filename inside that package.
+        package:
+            Package name for packaged YAML, e.g. ``"binny.surveys.configs"``.
+            If None, load from disk.
+
+    Returns:
+        Parsed YAML as a top-level mapping.
+
+    Raises:
+        FileNotFoundError:
+            If the file does not exist.
+        ValueError:
+            If the YAML root is not a mapping (dict-like).
+    """
+    if package is None:
+        p = Path(source).expanduser()
+        with p.open("r", encoding="utf-8") as f:
+            data = yaml.safe_load(f)
+    else:
+        from importlib import resources
+
+        filename = str(source)
+        with (
+            resources.files(package).joinpath(filename).open("r", encoding="utf-8") as f
+        ):
+            data = yaml.safe_load(f)
+
+    if not isinstance(data, Mapping):
+        where = str(source) if package is None else f"{package}:{source}"
+        got = type(data).__name__
+        raise ValueError(
+            f"Top-level YAML content must be a mapping; got {got} in {where}."
+        )
+
+    return dict(data)

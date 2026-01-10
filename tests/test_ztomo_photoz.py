@@ -130,58 +130,11 @@ def test_build_photoz_bins_basic_shapes_and_keys(z_nz):
         outlier_frac=0.0,
         outlier_scatter_scale=None,
         normalize_input=True,
-        normalize_bins=True,
     )
 
     assert list(bins.keys()) == [0, 1, 2]
     for k, arr in bins.items():
         assert isinstance(k, int)
-        assert arr.shape == z.shape
-        assert np.all(np.isfinite(arr))
-
-
-def test_build_photoz_bins_normalize_bins_integrates_to_one(z_nz):
-    """Tests that build_photoz_bins with normalize_bins=True."""
-    z, nz = z_nz
-    edges = [0.0, 0.5, 1.0, 1.5]
-
-    bins = build_photoz_bins(
-        z,
-        nz,
-        edges,
-        scatter_scale=0.05,
-        mean_offset=0.01,
-        mean_scale=1.0,
-        outlier_frac=0.02,
-        outlier_scatter_scale=0.15,
-        normalize_input=True,
-        normalize_bins=True,
-    )
-
-    for arr in bins.values():
-        integral = np.trapezoid(arr, z)
-        assert np.isclose(integral, 1.0, rtol=1e-6, atol=1e-8)
-
-
-def test_build_photoz_bins_normalize_input_allows_already_normalized():
-    """Tests that build_photoz_bins with normalize_input=True
-    accepts already-normalized input n(z)."""
-    z = np.linspace(0.0, 3.0, 501)
-    nz = np.ones_like(z)
-    nz = nz / np.trapezoid(nz, z)  # explicitly normalized
-
-    bins = build_photoz_bins(
-        z,
-        nz,
-        bin_edges=[0.0, 0.5, 1.0],
-        scatter_scale=0.05,
-        mean_offset=0.01,
-        normalize_input=True,
-        normalize_bins=False,
-    )
-
-    assert list(bins.keys()) == [0, 1]
-    for arr in bins.values():
         assert arr.shape == z.shape
         assert np.all(np.isfinite(arr))
 
@@ -201,7 +154,6 @@ def test_build_photoz_bins_per_bin_parameters(z_nz):
         outlier_frac=[0.00, 0.01, 0.02, 0.01],
         outlier_scatter_scale=[None, 0.20, 0.20, 0.15],
         normalize_input=True,
-        normalize_bins=True,
     )
 
     assert list(bins.keys()) == [0, 1, 2, 3]
@@ -225,49 +177,6 @@ def test_build_photoz_bins_broadcasting_wrong_length_raises(z_nz):
             mean_offset=0.01,
             normalize_input=True,
         )
-
-
-def test_build_photoz_bins_no_normalize_bins_sums_to_parent_when_bins_cover_range(z_nz):
-    """Test that build_photoz_bins with normalize_bins=False and
-    wide bin coverage sums to the normalized parent n(z)."""
-    z, nz = z_nz
-
-    # Use wide bin coverage so the selection partitions observed-z space well.
-    # This makes sum over bins approximate the parent distribution
-    # (up to edge effects).
-    edges = [-5.0, -1.0, 0.0, 1.0, 2.0, 5.0]
-
-    bins = build_photoz_bins(
-        z,
-        nz,
-        edges,
-        scatter_scale=0.05,
-        mean_offset=0.0,
-        mean_scale=1.0,
-        outlier_frac=0.0,
-        outlier_scatter_scale=None,
-        normalize_input=True,
-        normalize_bins=False,
-    )
-
-    # Each individual bin should integrate to <= 1 (they're fractional slices)
-    integrals = [np.trapezoid(arr, z) for arr in bins.values()]
-    assert all(0.0 <= integ <= 1.0 + 1e-10 for integ in integrals)
-
-    # Their sum should be close to 1 (since parent was normalized)
-    total_integral = float(np.sum(integrals))
-    assert np.isclose(total_integral, 1.0, rtol=5e-3, atol=5e-4)
-
-    # Pointwise sum over bins should approximate the normalized parent n(z)
-    summed = np.zeros_like(z, dtype=float)
-    for arr in bins.values():
-        summed += arr
-
-    # Compare to the normalized parent (what build_photoz_bins uses internally)
-    nz_norm = nz / np.trapezoid(nz, z)
-
-    rel_err = np.max(np.abs(summed - nz_norm) / np.maximum(nz_norm, 1e-12))
-    assert rel_err < 5e-2
 
 
 def test_build_photoz_bins_accepts_lists():
