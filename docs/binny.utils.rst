@@ -8,7 +8,9 @@ Submodules
    :maxdepth: 4
 
    binny.utils.broadcasting
+   binny.utils.io
    binny.utils.normalization
+   binny.utils.pairwise_metrics
    binny.utils.validators
 
 Module contents

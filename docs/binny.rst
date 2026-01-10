@@ -14,14 +14,6 @@ Subpackages
    binny.utils
    binny.ztomo
 
-Submodules
-----------
-
-.. toctree::
-   :maxdepth: 4
-
-   binny.io
-
 Module contents
 ---------------
 

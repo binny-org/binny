@@ -200,18 +200,18 @@ def summarize_bins(
     If an uncertainty on the mean is available, it is included as
     ``sigma_mean``. This happens in one of three ways:
 
-    - If sigma_mean is provided, it is used directly.
-    - If count_per_bin is provided, sigma_mean is computed as std divided by the
+    - If ``sigma_mean`` is provided, it is used directly.
+    - If count_per_bin is provided, ``sigma_mean`` is computed as std divided by the
       square root of the count for that bin.
     - If density_per_bin and survey_area are provided, an effective count is
-      inferred as density_per_bin times survey_area, and sigma_mean is computed
+      inferred as density_per_bin times survey_area, and ``sigma_mean`` is computed
       as std divided by the square root of that inferred count.
 
     Conventions:
         - ``density_per_bin`` is interpreted as a surface density in galaxies
-          per square arcminute.
+            per square arcminute.
         - ``survey_area`` is interpreted as an area in square arcminutes.
-        - ``count_per_bin` is an effective (dimensionless) count.
+        - ``count_per_bin`` is an effective (dimensionless) count.
 
     Args:
         z: One-dimensional redshift grid shared by all bins.
@@ -226,12 +226,12 @@ def summarize_bins(
             or a mapping keyed by bin index.
 
     Returns:
-        Mapping of the form {bin_idx: {"mean": ..., "std": ..., "sigma_mean": ...}}.
-        The "sigma_mean" field is included only when it can be determined.
+        Mapping of the form ``{bin_idx: {"mean": ..., "std": ..., "sigma_mean": ...}}``.
+        The ``"sigma_mean"`` field is included only when it can be determined.
 
     Raises:
         ValueError: If survey_area is required but not provided or not positive.
-        ValueError: If any required bin index is missing from sigma_mean,
+        ValueError: If any required bin index is missing from ``sigma_mean``,
             count_per_bin, or density_per_bin.
         ValueError: If any provided count is not positive.
     """
