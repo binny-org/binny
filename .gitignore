@@ -15,8 +15,3 @@ build/
 dist/
 *_build/
 
-# my local-only files
-lsst_galaxy_sample.py
-presets.py
-LSST_SRD_Redshift_Distributions_and_Binning.ipynb
-updated_lsst_desc_parameters.yaml
