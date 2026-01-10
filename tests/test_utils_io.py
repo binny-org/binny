@@ -1,4 +1,4 @@
-"""Unit tests for binny.utils.io helpers."""
+"""Unit tests for ``binny.utils.io``."""
 
 from __future__ import annotations
 

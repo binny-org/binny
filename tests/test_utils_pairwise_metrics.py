@@ -1,4 +1,4 @@
-"""Unit tests for binny.utils.pairwise_metrics."""
+"""Unit tests for ``binny.utils.pairwise_metrics``."""
 
 import numpy as np
 import pytest
