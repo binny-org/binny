@@ -1,0 +1,19 @@
+example_photoz:
+  name: example_photoz  # name of the survey
+
+  grid:  # grid of redshifts
+    z: {start: 0.0, stop: 3.0, n: 301}
+
+  nz:  # theoretical redshift distribution, Smail type
+    model: smail
+    params: {z0: 0.5, alpha: 2.0, beta: 1.0}
+
+  tomo:  # tomographic binning configuration
+    kind: photoz  # sampel type
+    binning_scheme: equidistant  # binning scheme
+    n_bins: 4
+    params:
+      scatter_scale: 0.05  # uncertainty on bin edges
+      mean_offset: 0.01  # mean offset of bin edges
+      normalize_input: true  # normalize input to unit integral
+      normalize_bins: true  # normalize bins to unit integral

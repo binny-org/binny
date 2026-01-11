@@ -1,0 +1,18 @@
+example_specz:
+  name: example_specz
+
+  grid:
+    z: {start: 0.0, stop: 2.0, n: 301}
+
+  nz:
+    model: smail
+    params: {z0: 0.4, alpha: 2.0, beta: 1.0}
+
+  tomo:
+    kind: specz
+    binning_scheme: equidistant
+    n_bins: 4
+    params:
+      completeness: 1.0
+      normalize_input: true
+      normalize_bins: true
