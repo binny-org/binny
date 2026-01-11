@@ -1,49 +1,142 @@
-"""Functions to build photometric-redshift–smeared tomographic bins.
+"""Functions to build photometric-redshift tomographic bins.
 
-This module provides helpers to construct true-redshift distributions selected
-by observed-redshift (photo-z) tomographic bins. The main entry point is
-:func:`build_photoz_bins`, which returns a dictionary mapping bin index to the
-corresponding photo-z-selected true-redshift distribution evaluated on a common
-true-z grid.
+This module builds true-redshift distributions selected by observed-redshift
+(photo-z) tomographic bins. The primary entry point is :func:`build_photoz_bins`,
+which returns a dict mapping bin index -> photo-z-selected ``n_bin(z)`` evaluated
+on a common true-z grid.
+
+Model
+-----
+For each observed-redshift bin ``[z_ph_min, z_ph_max]``, we compute
+
+    n_bin(z) = n(z) * P(bin | z),
+
+where ``P(bin | z)`` is the probability that an object at true redshift ``z``
+is assigned to that photo-z bin. The core photo-z model is Gaussian:
+
+    z_ph ~ Normal(mu(z), sigma(z)),
+    mu(z)    = mean_scale * z - mean_offset,
+    sigma(z) = scatter_scale * (1 + z) * mean_scale.
+
+Optionally, a second Gaussian outlier component may be included with mixture
+weight ``outlier_frac`` (enabled only when ``outlier_scatter_scale`` is not None).
+
+All bin-assignment probabilities are computed analytically by integrating the
+Gaussian(s) between the photo-z bin edges using the error function.
 
 Examples
 --------
->>> import numpy as np
->>> from binny.ztomo.photoz import build_photoz_bins
->>> z = np.linspace(0.0, 3.0, 501)
->>> nz = z**2 * np.exp(-z)
->>> bin_edges = [0.0, 0.5, 1.0, 1.5]
->>> bins = build_photoz_bins(
-...     z, nz, bin_edges,
-...     scatter_scale=0.05,
-...     mean_offset=0.01,
-... )
->>> sorted(bins)
-[0, 1, 2]
->>> bins[0].shape
-(501,)
+Explicit bin edges (photo-z space)::
+
+    >>> import numpy as np
+    >>> from binny.ztomo.photoz import build_photoz_bins
+    >>> z = np.linspace(0.0, 3.0, 501)
+    >>> nz = z**2 * np.exp(-z)
+    >>> bin_edges = [0.0, 0.5, 1.0, 1.5]
+    >>> bins = build_photoz_bins(
+    ...     z,
+    ...     nz,
+    ...     bin_edges,
+    ...     scatter_scale=0.05,
+    ...     mean_offset=0.01,
+    ... )
+    >>> sorted(bins)
+    [0, 1, 2]
+    >>> bins[0].shape
+    (501,)
+
+Binning scheme + n_bins (edges constructed internally)::
+
+    >>> bins = build_photoz_bins(
+    ...     z,
+    ...     nz,
+    ...     binning_scheme="equidistant",
+    ...     n_bins=4,
+    ...     scatter_scale=0.05,
+    ...     mean_offset=0.01,
+    ... )
+    >>> sorted(bins)
+    [0, 1, 2, 3]
+
+Equal-number in observed-z using an explicit (z_ph, nz_ph)::
+
+    >>> z_ph = np.linspace(0.0, 3.0, 501)
+    >>> nz_ph = z_ph**2 * np.exp(-z_ph)
+    >>> bins = build_photoz_bins(
+    ...     z,
+    ...     nz,
+    ...     binning_scheme="equal_number",
+    ...     n_bins=3,
+    ...     z_ph=z_ph,
+    ...     nz_ph=nz_ph,
+    ...     scatter_scale=0.05,
+    ...     mean_offset=0.01,
+    ... )
+    >>> sorted(bins)
+    [0, 1, 2]
+
+Mixed / segmented scheme (sequence of segments)::
+
+    >>> segments = [
+    ...     {"scheme": "equidistant", "n_bins": 2, "z_min": 0.0, "z_max": 1.0},
+    ...     {"scheme": "equidistant", "n_bins": 2, "z_min": 1.0, "z_max": 2.0},
+    ... ]
+    >>> bins = build_photoz_bins(
+    ...     z,
+    ...     nz,
+    ...     binning_scheme=segments,
+    ...     scatter_scale=0.05,
+    ...     mean_offset=0.01,
+    ... )
+    >>> sorted(bins)
+    [0, 1, 2, 3]
+
+Mixed / segmented scheme (dict with "segments" key)::
+
+    >>> scheme = {
+    ...     "segments": [
+    ...         {"scheme": "equidistant", "n_bins": 3, "z_min": 0.0, "z_max": 1.5},
+    ...         {"scheme": "equidistant", "n_bins": 1, "z_min": 1.5, "z_max": 3.0},
+    ...     ]
+    ... }
+    >>> bins = build_photoz_bins(
+    ...     z,
+    ...     nz,
+    ...     binning_scheme=scheme,
+    ...     scatter_scale=0.05,
+    ...     mean_offset=0.01,
+    ... )
+    >>> sorted(bins)
+    [0, 1, 2, 3]
 
 Notes
 -----
-- All outputs are evaluated on the same true-z grid ``z``.
-- If ``normalize_bins=True`` (default), each returned bin distribution integrates
-  to 1 on ``z``.
+- All outputs are evaluated on the input true-z grid ``z``.
+- If ``normalize_bins=True`` (default), each returned bin distribution is
+  normalized to integrate to 1 on ``z``.
+- ``bin_edges`` live in observed-redshift (photo-z) space.
 """
 
 from __future__ import annotations
 
-from collections.abc import Sequence
-from typing import Literal, TypeAlias
+from collections.abc import Mapping, Sequence
+from typing import Any, Literal, TypeAlias
 
 import numpy as np
-from numpy.typing import ArrayLike, NDArray
+from numpy.typing import NDArray
 from scipy.special import erf
 
+from binny.axes.bin_edges import equal_number_edges, equidistant_edges
 from binny.utils.broadcasting import as_per_bin
 from binny.utils.normalization import normalize_1d
-from binny.utils.validators import validate_axis_and_weights, validate_n_bins
+from binny.utils.validators import (
+    validate_axis_and_weights,
+    validate_n_bins,
+)
+from binny.ztomo.ztomo_utils import mixed_edges
 
 FloatArray: TypeAlias = NDArray[np.float64]
+BinningScheme: TypeAlias = str | Sequence[Mapping[str, Any]] | Mapping[str, Any]
 
 __all__ = [
     "build_photoz_bins",
@@ -52,12 +145,16 @@ __all__ = [
 
 
 def build_photoz_bins(
-    z: ArrayLike,
-    nz: ArrayLike,
-    bin_edges: ArrayLike,
+    z: FloatArray,
+    nz: FloatArray,
+    bin_edges: FloatArray | None = None,
+    *,
     scatter_scale: Sequence[float] | float,
     mean_offset: Sequence[float] | float,
-    *,
+    binning_scheme: BinningScheme | None = None,
+    n_bins: int | None = None,
+    z_ph: FloatArray | None = None,
+    nz_ph: FloatArray | None = None,
     mean_scale: Sequence[float] | float = 1.0,
     outlier_frac: Sequence[float] | float = 0.0,
     outlier_scatter_scale: Sequence[float] | float | None = None,
@@ -67,147 +164,137 @@ def build_photoz_bins(
     normalize_bins: bool = True,
     norm_method: Literal["trapezoid", "simpson"] = "trapezoid",
 ) -> dict[int, FloatArray]:
-    """Builds photo-z-smeared redshift distributions per tomographic bin.
+    """Builds photo-z-selected true-redshift distributions per tomographic bin.
 
-    This function constructs one true-redshift distribution per observed-redshift
-    (photo-z) bin defined by ``bin_edges``. It combines a parent true-redshift
-    distribution ``n(z)`` with a Gaussian photo-z selection model in observed
-    redshift.
-
-    Parameters that can vary by photo-z bin (e.g. scatter, mean mapping, outlier
-    properties) may be provided either as a scalar (applied to all bins) or as a
-    sequence of length ``n_bins`` (one value per bin). In all cases, ``n_bins`` is
-    inferred from ``bin_edges`` as ``len(bin_edges) - 1``.
-
-    For a galaxy at true redshift ``z``, the probability of being assigned to a
-    photo-z bin ``[z_ph_min, z_ph_max]`` is::
-
-        P(bin | z) = (1 - outlier_frac) * P_ph(bin | z)
-            + outlier_frac * P_out(bin | z)
-
-    where the core and outlier terms are Gaussian integrals over the photo-z bin
-    edges::
-
-        P_core(bin | z) =
-            integral_{z_ph_min}^{z_ph_max}
-            N(z_ph | mu_ph(z), sigma_ph(z)) dz_ph,
-        <BLANKLINE>
-        P_out(bin | z) =
-            integral_{z_ph_min}^{z_ph_max}
-            N(z_ph | mu_out(z), sigma_out(z)) dz_ph.
-
-    The core photo-z model is a Gaussian conditional distribution for the observed
-    redshift ``z_ph`` at fixed true redshift ``z``::
-
-        z_ph approx N(mu_ph(z), sigma_ph(z))
-
-    with::
-
-        mu_ph(z) = mean_scale * z - mean_offset
-
-    and::
-
-        sigma_ph(z) = scatter_scale * (1 + z) * mean_scale
-
-    (Equivalently: write the Gaussian in terms of ``(z - c z_ph - z0)`` with
-    ``c = 1 / mean_scale`` and ``z0 = mean_offset / mean_scale``. Integrating over
-    ``z_ph`` introduces a Jacobian factor ``1 / c`` in the bin probability.)
-
-    The outlier component is an optional second Gaussian with its own mean and
-    scatter::
-
-        z_ph approx N(mu_out(z), sigma_out(z))
-
-    where::
-
-        mu_out(z) = outlier_mean_scale * z - outlier_mean_offset
-
-    and::
-
-        sigma_out(z) = outlier_scatter_scale * (1 + z) * outlier_mean_scale
-
-    when enabled (and it contributes with mixture weight ``outlier_frac``).
-
-    The final true-redshift distribution for a given photo-z bin is::
-
-        n_bin(z) = n(z) * P(bin | z)
+    Bins are defined either by explicit ``bin_edges`` (in observed redshift) or by
+    ``(binning_scheme, n_bins)`` to construct edges. Per-bin photo-z parameters
+    (scatter/mean/outlier terms) may be scalars or sequences of length equal to
+    ``n_bins`` (single-scheme mode) or the total number of bins implied by the
+    resolved bin edges (mixed mode).
 
     Args:
-        z: One-dimensional grid of true-redshift values where inputs are defined and
-            outputs are evaluated.
-        nz: Parent (intrinsic) true-redshift distribution evaluated on ``z``.
-            If ``normalize_input=True``, this input is renormalized to integrate to 1.
-        bin_edges: One-dimensional array of tomographic bin edges in observed
-            redshift (photo-z) space. Adjacent entries define a bin
-            ``[bin_edges[i], bin_edges[i+1]]``. Must have length ``n_bins + 1``.
-        scatter_scale: Random photo-z scatter (the "noise" or uncertainty). This
-            controls the standard deviation of the core photo-z error distribution
-            via ``sigma_ph(z) = scatter_scale * (1 + z) * mean_scale``.
-            Larger values correspond to broader photo-z errors and increased leakage
-            between tomographic bins. May be a scalar (applied to all bins) or
-            a sequence of length ``n_bins``.
-        mean_offset: Systematic photo-z bias in the mean relation (an additive
-            shift). This shifts the center of the core photo-z Gaussian according to::
-
-                mu(z) = mean_scale * z - mean_offset
-
-            with ``mean_scale = 1``.
-            A positive ``mean_offset`` shifts the mean observed redshift downward by
-            that amount. May be a scalar (applied to all bins) or a sequence of length
-            ``n_bins``.
-        mean_scale: Systematic calibration error in the mean relation (a
-            multiplicative slope change). This stretches or compresses the mapping
-            between true redshift and the mean observed redshift in
-            ``mu(z) = mean_scale * z - mean_offset``. Values greater than 1 stretch
-            the mapping, while values less than 1 compress it. May be a scalar
-            (applied to all bins) or a sequence of length ``n_bins``.
-        outlier_frac: Fraction of objects treated as "outliers" in the photo-z error
-            model. Must lie in the interval ``[0, 1]`` and represents the mixture
-            weight in a two-component model::
-
-                P(bin | z) = (1 - outlier_frac) * P_core(bin | z)
-                    + outlier_frac * P_out(bin | z)
-
-            It controls how many galaxies have catastrophic photo-z errors. May be
-            a scalar (applied to all bins) or a sequence of length ``n_bins``.
-        outlier_scatter_scale: Random scatter (standard deviation) of the outlier
-            component. This is the "error on the observed photo-z" for the outlier
-            population, i.e. the width of the outlier Gaussian via::
-
-                sigma_out(z) = outlier_scatter_scale * (1 + z) * outlier_mean_scale
-
-            Set to ``None`` to disable the outlier component entirely
-            (even if ``outlier_frac > 0``).
-            May be a scalar or a sequence of length ``n_bins``.
-        outlier_mean_offset: Systematic bias in the mean relation for the outlier
-            component (an additive shift). This shifts the center of the outlier
-            Gaussian mean mapping. Conceptually, this is an error on the mean for
-            catastrophic outliers. May be a scalar (applied to all bins) or a
-            sequence of length ``n_bins``.
-        outlier_mean_scale: Systematic calibration (slope) error in the mean
-            relation for the outlier component (a multiplicative scale). This stretches
-            or compresses the mapping from true redshift to observed redshift, i.e.
-            another form of error on the mean. May be a scalar (applied to all
-            bins) or a sequence of length ``n_bins``.
-        normalize_input: Whether to normalize the input ``nz`` before binning.
-        normalize_bins: Whether to normalize each output bin distribution to
-            integrate to 1 on ``z``.
-        norm_method: Normalization method passed to :func:`normalize_1d`
-            (e.g. ``"trapezoid"``).
+        z: True-redshift grid where outputs are evaluated.
+        nz: Parent true-redshift distribution evaluated on ``z``.
+        bin_edges: Observed-redshift bin edges (length ``n_bins + 1``). Mutually
+            exclusive with ``binning_scheme`` / ``n_bins``.
+        scatter_scale: Core photo-z scatter amplitude (scalar or per-bin sequence).
+        mean_offset: Core mean offset (scalar or per-bin sequence).
+        binning_scheme: If ``bin_edges`` is None, scheme to build edges
+            (e.g. ``"equidistant"``, ``"equal_number"``), or a mixed binning
+            specification (sequence of segment dicts, or a dict with key
+            ``"segments"`` containing that sequence).
+        n_bins: Number of bins when using a string ``binning_scheme``.
+        z_ph: Observed redshift grid for equal-number edges.
+        nz_ph: Observed distribution for equal-number edges.
+        mean_scale: Core mean scale (scalar or per-bin sequence).
+        outlier_frac: Outlier mixture fraction in [0, 1] (scalar or per-bin sequence).
+        outlier_scatter_scale: Outlier scatter amplitude; set None to disable outliers.
+        outlier_mean_offset: Outlier mean offset.
+        outlier_mean_scale: Outlier mean scale.
+        normalize_input: If True, normalize ``nz`` on ``z`` before binning.
+        normalize_bins: If True, normalize each output bin on ``z``.
+        norm_method: Normalization method passed to :func:`normalize_1d`.
 
     Returns:
-        A mapping from photo-z bin index to the corresponding photo-z-smeared true
-        redshift distribution evaluated on ``z``.
+        Dict mapping bin index -> ``n_bin(z)`` array evaluated on ``z``.
 
     Raises:
-        ValueError: If ``bin_edges`` does not define a valid number of bins.
-        ValueError: If any scalar-or-sequence parameter cannot be broadcast to length
-            ``n_bins`` (e.g. wrong-length sequence).
+        ValueError: If bin specification is inconsistent, or if ``z_ph``/``nz_ph``
+            are provided inconsistently.
     """
     z_arr, n_arr = validate_axis_and_weights(z, nz)
 
-    bin_edges_arr = np.asarray(bin_edges, dtype=float)
+    # resolve bin edges (explicit or scheme-based)
+    if bin_edges is not None:
+        if (binning_scheme is not None) or (n_bins is not None):
+            raise ValueError(
+                "Provide either bin_edges or (binning_scheme, n_bins), not both."
+            )
+        bin_edges_arr = np.asarray(bin_edges, dtype=float)
 
+    else:
+        if binning_scheme is None:
+            raise ValueError("bin_edges is None. You must provide binning_scheme.")
+
+        # Case 1: single scheme (string)
+        if isinstance(binning_scheme, str):
+            if n_bins is None:
+                raise ValueError(
+                    "bin_edges is None and binning_scheme is a string. "
+                    "You must provide n_bins."
+                )
+
+            validate_n_bins(n_bins)
+
+            scheme = binning_scheme.lower()
+            if scheme in {"equidistant", "eq", "linear"}:
+                x_min = float(z_arr[0])
+                x_max = float(z_arr[-1])
+                bin_edges_arr = equidistant_edges(x_min, x_max, n_bins)
+
+            elif scheme in {"equal_number", "equipopulated", "en"}:
+                # Prefer explicit observed-z distribution if provided;
+                # otherwise fall back to using (z, nz) as a proxy for (z_ph,
+                # nz_ph).
+                if (z_ph is None) ^ (nz_ph is None):
+                    raise ValueError(
+                        "Provide both z_ph and nz_ph, or neither. "
+                        "If neither is provided, (z, nz) is used as a proxy for"
+                        " (z_ph, nz_ph)."
+                    )
+
+                if z_ph is None and nz_ph is None:
+                    bin_edges_arr = equal_number_edges_proxy(
+                        z_arr,
+                        n_arr,
+                        n_bins,
+                        normalize_input=normalize_input,
+                        norm_method=norm_method,
+                    )
+                else:
+                    zph_arr, nzph_arr = validate_axis_and_weights(z_ph, nz_ph)
+                    bin_edges_arr = equal_number_edges(zph_arr, nzph_arr, n_bins)
+
+            else:
+                raise ValueError(
+                    "Unsupported binning_scheme. Supported: "
+                    "'equidistant' (eq/linear) and 'equal_number'"
+                    " (equipopulated/en)."
+                )
+
+        # Case 2: mixed segments (sequence/dict)
+        else:
+            if n_bins is not None:
+                raise ValueError(
+                    "In mixed binning mode, set n_bins per segment and leave"
+                    " n_bins=None."
+                )
+
+            if isinstance(binning_scheme, Mapping):
+                if "segments" in binning_scheme:
+                    segments = binning_scheme["segments"]
+                else:
+                    raise ValueError(
+                        "Mixed binning dict must contain key 'segments' "
+                        "(e.g. {'segments': [ ... ]})."
+                    )
+            else:
+                segments = binning_scheme
+
+            if not isinstance(segments, Sequence) or isinstance(segments, str | bytes):
+                raise ValueError("Mixed binning requires a sequence of segment dicts.")
+
+            bin_edges_arr = mixed_edges(
+                segments,
+                z_axis=z_arr,
+                nz_axis=n_arr,
+                z_ph=z_ph,
+                nz_ph=nz_ph,
+                normalize_input=normalize_input,
+                norm_method=norm_method,
+            )
+
+    # validate edges
     if bin_edges_arr.ndim != 1:
         raise ValueError("bin_edges must be 1D.")
     if bin_edges_arr.size < 2:
@@ -217,35 +304,37 @@ def build_photoz_bins(
     if not np.all(np.diff(bin_edges_arr) > 0):
         raise ValueError("bin_edges must be strictly increasing.")
 
-    n_bins = bin_edges_arr.size - 1
-    validate_n_bins(n_bins)
+    n_bins_eff = bin_edges_arr.size - 1
+    validate_n_bins(n_bins_eff)
 
+    # normalize parent nz if requested
     if normalize_input:
         total = np.trapezoid(n_arr, x=z_arr)
         if not np.isclose(total, 1.0, rtol=1e-3, atol=1e-4):
             n_arr = normalize_1d(z_arr, n_arr, method=norm_method)
 
-    scatter_scale_arr = as_per_bin(scatter_scale, n_bins, "scatter_scale")
-    mean_offset_arr = as_per_bin(mean_offset, n_bins, "mean_offset")
-    mean_scale_arr = as_per_bin(mean_scale, n_bins, "mean_scale")
-    outlier_frac_arr = as_per_bin(outlier_frac, n_bins, "outlier_frac")
+    # broadcast per-bin params
+    scatter_scale_arr = as_per_bin(scatter_scale, n_bins_eff, "scatter_scale")
+    mean_offset_arr = as_per_bin(mean_offset, n_bins_eff, "mean_offset")
+    mean_scale_arr = as_per_bin(mean_scale, n_bins_eff, "mean_scale")
+    outlier_frac_arr = as_per_bin(outlier_frac, n_bins_eff, "outlier_frac")
 
     if outlier_scatter_scale is None:
-        outlier_scatter_arr = np.array([None] * n_bins, dtype=object)
+        outlier_scatter_arr = np.array([None] * n_bins_eff, dtype=object)
     else:
         outlier_scatter_arr = as_per_bin(
-            outlier_scatter_scale, n_bins, "outlier_scatter_scale"
+            outlier_scatter_scale, n_bins_eff, "outlier_scatter_scale"
         )
 
     outlier_mean_offset_arr = as_per_bin(
-        outlier_mean_offset, n_bins, "outlier_mean_offset"
+        outlier_mean_offset, n_bins_eff, "outlier_mean_offset"
     )
     outlier_mean_scale_arr = as_per_bin(
-        outlier_mean_scale, n_bins, "outlier_mean_scale"
+        outlier_mean_scale, n_bins_eff, "outlier_mean_scale"
     )
 
+    # build bins
     bins: dict[int, FloatArray] = {}
-
     for i, (z_min, z_max) in enumerate(
         zip(bin_edges_arr[:-1], bin_edges_arr[1:], strict=False)
     ):
@@ -289,74 +378,18 @@ def true_redshift_distribution(
     outlier_mean_offset: float = 0.0,
     outlier_mean_scale: float = 1.0,
 ) -> FloatArray:
-    """Computes the true-redshift distribution for a single photo-z bin.
+    """Computes ``n_bin(z) = n(z) * P(bin | z)`` for one photo-z bin.
 
-    The output distribution is computed as ``n(z) * P(bin | z)``, where
-    ``P(bin | z)`` is the probability that an object at true redshift ``z`` is
-    assigned to the observed photo-z bin ``[bin_min, bin_max]``.
-
-    Photo-z model
-    -------------
-    This function implements a two-component (core + outlier) Gaussian mixture
-    model for the conditional observed redshift ``z_ph`` at fixed true redshift
-    ``z``.
-
-    Core component (always present)::
-
-        z_ph ~ Normal(mu_core(z), sigma_core(z))
-
-        mu_core(z)    = mean_scale * z - mean_offset
-        sigma_core(z) = scatter_scale * (1 + z)
-
-    Outlier component (optional; enabled only if ``outlier_frac > 0`` and
-    ``outlier_scatter_scale is not None``)::
-
-        z_ph ~ Normal(mu_out(z), sigma_out(z))
-
-        mu_out(z)    = outlier_mean_scale * z - outlier_mean_offset
-        sigma_out(z) = outlier_scatter_scale * (1 + z)
-
-    For a photo-z bin ``[bin_min, bin_max]``, the bin-assignment probability is::
-
-        P(bin | z) = (1 - outlier_frac) * P_core(bin | z)
-                     + outlier_frac * P_out(bin | z),
-
-    where ``P_core`` and ``P_out`` are the analytic Gaussian integrals over
-    ``z_ph`` in ``[bin_min, bin_max]`` computed using the error function.
-
-    Args:
-        z: One-dimensional grid of true-redshift values.
-        nz: Parent (intrinsic) true-redshift distribution evaluated on ``z``.
-            This function does not normalize ``nz``.
-        bin_min: Lower edge of the photo-z bin in observed-redshift space.
-        bin_max: Upper edge of the photo-z bin in observed-redshift space.
-        scatter_scale: Core photo-z scatter amplitude. The observed-redshift scatter
-            is ``sigma_core(z) = scatter_scale * (1 + z)``.
-        mean_offset: Additive mean offset in the core mean mapping
-            ``mu_core(z) = mean_scale * z - mean_offset``.
-        mean_scale: Multiplicative slope in the core mean mapping. Defaults to 1.
-        outlier_frac: Outlier mixture fraction in ``[0, 1]``. If zero (default),
-            the outlier component is ignored.
-        outlier_scatter_scale: Outlier scatter amplitude. If ``None`` (default),
-            the outlier component is disabled even if ``outlier_frac > 0``.
-            When enabled, ``sigma_out(z) = outlier_scatter_scale * (1 + z)``.
-        outlier_mean_offset: Additive mean offset for the outlier mean mapping
-            ``mu_out(z) = outlier_mean_scale * z - outlier_mean_offset``.
-        outlier_mean_scale: Multiplicative slope for the outlier mean mapping
-            ``mu_out(z) = outlier_mean_scale * z - outlier_mean_offset``.
+    ``P(bin | z)`` is computed from a Gaussian core photo-z model, optionally
+    including a second Gaussian outlier component with mixture fraction
+    ``outlier_frac`` when ``outlier_scatter_scale`` is not None.
 
     Returns:
-        The photo-z-selected true-redshift distribution
-        ``n_bin(z) = n(z) * P(bin | z)`` evaluated on the input grid ``z``.
+        Photo-z-selected true-redshift distribution evaluated on ``z``.
 
     Raises:
-        ValueError: If ``outlier_frac`` is not in the interval ``[0, 1]``.
-        ValueError: If any scale or scatter parameter is non-positive.
-
-    Notes:
-        The returned array represents a *shape* in true redshift. If absolute
-        normalizations are required (e.g. number densities), they should be
-        applied at a higher level.
+        ValueError: If mixture fraction is outside [0, 1] or any active scale
+            parameter is non-positive.
     """
     z_arr = np.asarray(z, dtype=float)
     n_arr = np.asarray(nz, dtype=float)
@@ -404,6 +437,42 @@ def true_redshift_distribution(
         p_bin = p_core
 
     return n_arr * p_bin
+
+
+def equal_number_edges_proxy(
+    z: FloatArray,
+    nz: FloatArray,
+    n_bins: int,
+    *,
+    normalize_input: bool = True,
+    norm_method: Literal["trapezoid", "simpson"] = "trapezoid",
+) -> np.ndarray:
+    """Computes equal-number bin edges using (z, nz) as a fallback proxy for
+     (z_ph, nz_ph).
+
+    This is a convenience helper. If you do not have an observed-redshift
+    distribution n(z_ph), it approximates it with the provided true-redshift
+    distribution n(z).
+
+    Args:
+        z: Grid values (used as the proxy observed-redshift axis).
+        nz: Weights on ``z`` (used as the proxy observed-redshift distribution).
+        n_bins: Number of equal-number bins.
+        normalize_input: If True, normalize ``nz`` before computing quantiles.
+        norm_method: Normalization method for :func:`normalize_1d`.
+
+    Returns:
+        A strictly increasing array of length ``n_bins + 1``.
+    """
+    validate_n_bins(n_bins)
+    z_arr, n_arr = validate_axis_and_weights(z, nz)
+
+    if normalize_input:
+        total = np.trapezoid(n_arr, x=z_arr)
+        if not np.isclose(total, 1.0, rtol=1e-3, atol=1e-4):
+            n_arr = normalize_1d(z_arr, n_arr, method=norm_method)
+
+    return equal_number_edges(z_arr, n_arr, n_bins)
 
 
 def _bin_prob_gaussian_photoz(

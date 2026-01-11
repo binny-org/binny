@@ -12,6 +12,7 @@ Submodules
    binny.ztomo.distributions
    binny.ztomo.photoz
    binny.ztomo.specz
+   binny.ztomo.ztomo_utils
 
 Module contents
 ---------------
