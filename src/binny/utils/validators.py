@@ -20,6 +20,7 @@ __all__ = [
     "validated_float_arrays",
     "validate_probability_vector",
     "validate_same_shape",
+    "validate_grid_spec",
 ]
 
 FloatArray2D: TypeAlias = NDArray[np.float64]
@@ -394,3 +395,57 @@ def validate_same_shape(
     b_arr = np.asarray(b)
     if a_arr.shape != b_arr.shape:
         raise ValueError(f"{name_a} and {name_b} must have the same shape.")
+
+
+def validate_grid_spec(
+    x_min: float,
+    x_max: float,
+    n: int,
+    *,
+    log: bool = False,
+) -> tuple[float, float, int]:
+    """Returns validated grid endpoints and point count.
+
+    This validates inputs for sampling-grid builders (e.g., linear or log grids).
+    It ensures endpoints are finite and ordered, and enforces positivity for
+    log-spaced grids.
+
+    Args:
+        x_min: Lower endpoint of the grid.
+        x_max: Upper endpoint of the grid. Must be strictly greater than ``x_min``.
+        n: Number of grid points. Must be an integer >= 2.
+        log: If True, requires ``x_min > 0`` and ``x_max > 0``.
+
+    Returns:
+        Tuple ``(x_min_f, x_max_f, n_int)`` with endpoints as floats and ``n`` as int.
+
+    Raises:
+        TypeError: If ``n`` is not an integer-like value or endpoints are not real.
+        ValueError: If endpoints are not finite, not increasing, or (for ``log``)
+            not strictly positive, or if ``n < 2``.
+    """
+    if isinstance(n, bool):
+        raise TypeError("n must be an integer >= 2 (got bool).")
+    try:
+        n_int = int(n)
+    except (TypeError, ValueError) as e:
+        raise TypeError(f"n must be an integer >= 2 (got {type(n).__name__}).") from e
+    if n_int != n:
+        raise TypeError(f"n must be an integer >= 2 (got {n!r}).")
+    if n_int < 2:
+        raise ValueError(f"n must be >= 2 for a sampling grid (got {n_int}).")
+
+    try:
+        x0 = float(x_min)
+        x1 = float(x_max)
+    except (TypeError, ValueError) as e:
+        raise TypeError("x_min and x_max must be real numbers.") from e
+
+    if not np.isfinite(x0) or not np.isfinite(x1):
+        raise ValueError("x_min and x_max must be finite numbers.")
+    if x1 <= x0:
+        raise ValueError("x_max must be greater than x_min.")
+    if log and (x0 <= 0.0 or x1 <= 0.0):
+        raise ValueError("log-spaced grids require x_min > 0 and x_max > 0.")
+
+    return x0, x1, n_int

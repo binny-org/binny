@@ -41,13 +41,17 @@ def test_photoz_bins_forwards_to_build_photoz_bins(monkeypatch):
     out = api.photoz_bins(z, nz, edges, sigma0=0.05, f_cat=0.02)
 
     assert rec.called is True
-    assert rec.kwargs == {
-        "z": z,
-        "nz": nz,
-        "bin_edges": edges,
-        "sigma0": 0.05,
-        "f_cat": 0.02,
-    }
+
+    # Compare required keys first
+    assert set(rec.kwargs.keys()) == {"z", "nz", "bin_edges", "sigma0", "f_cat"}
+
+    np.testing.assert_allclose(rec.kwargs["z"], z)
+    np.testing.assert_allclose(rec.kwargs["nz"], nz)
+    np.testing.assert_allclose(rec.kwargs["bin_edges"], edges)
+
+    assert rec.kwargs["sigma0"] == 0.05
+    assert rec.kwargs["f_cat"] == 0.02
+
     assert out is expected
 
 
@@ -64,13 +68,21 @@ def test_specz_bins_forwards_to_build_specz_bins(monkeypatch):
     out = api.specz_bins(z, nz, edges, completeness=0.8, apply_specz_errors=True)
 
     assert rec.called is True
-    assert rec.kwargs == {
-        "z": z,
-        "nz": nz,
-        "bin_edges": edges,
-        "completeness": 0.8,
-        "apply_specz_errors": True,
+    assert set(rec.kwargs.keys()) == {
+        "z",
+        "nz",
+        "bin_edges",
+        "completeness",
+        "apply_specz_errors",
     }
+
+    np.testing.assert_allclose(rec.kwargs["z"], z)
+    np.testing.assert_allclose(rec.kwargs["nz"], nz)
+    np.testing.assert_allclose(rec.kwargs["bin_edges"], edges)
+
+    assert rec.kwargs["completeness"] == 0.8
+    assert rec.kwargs["apply_specz_errors"] is True
+
     assert out is expected
 
 
