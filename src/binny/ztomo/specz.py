@@ -1,8 +1,8 @@
 """Functions to build spectroscopic-redshift tomographic bins.
 
 This module constructs true-redshift tomographic-bin distributions for
-spectroscopic (true-z) binning, with optional survey-style *bin-response*
-effects that map *true bins* to *observed bins*.
+spectroscopic (true-z) binning, with optional survey-style bin-response effects
+that map true bins to observed bins.
 
 The main entry point is :func:`build_specz_bins`, which returns a dictionary
 mapping observed bin index -> observed-bin distribution ``n_obs_i(z)``, all
@@ -10,48 +10,48 @@ evaluated on a common true-z grid ``z``.
 
 Model overview
 --------------
-1) **True-bin selection (top-hat in true z).**
+1) True-bin selection (top-hat in true z).
 
 For true bin ``j`` with edges ``[z_j, z_{j+1}]``, define a selection window
 ``S_j(z)`` (left-closed, right-open by default) scaled by per-bin completeness
-``c_j``:
+``c_j``::
 
     S_j(z) = c_j * 1_{[z_j, z_{j+1})}(z)
 
-and build the true-bin distribution from the parent ``n(z)``:
+and build the true-bin distribution from the parent ``n(z)``::
 
     n_true_j(z) = n(z) * S_j(z)
 
-2) **Bin-to-bin response (optional).**
+2) Bin-to-bin response (optional).
 
 Observed bins are constructed by mixing the true bins with a column-stochastic
-response matrix ``M``:
+response matrix ``M``::
 
     M[i, j] = P(i_obs | j_true)
     sum_i M[i, j] = 1  for every true bin j
 
-The observed-bin distributions are:
+The observed-bin distributions are::
 
     n_obs_i(z) = sum_j M[i, j] * n_true_j(z)
 
 Supported response effects
 --------------------------
-- **Catastrophic misassignment (bin-level).**
+- Catastrophic misassignment (bin-level).
   A per-bin catastrophic fraction ``f_j`` is redistributed from the diagonal to
   other observed bins using a leakage prescription (uniform, neighbor, or
   Gaussian in bin-index space). If an explicit ``misassignment_matrix`` is
   provided, it is used directly and overrides the leakage model.
 
-- **Finite spec-z measurement scatter (optional).**
+- Finite spec-z measurement scatter (optional).
   Builds a second response matrix by integrating a Gaussian measurement model
-  for ``z_hat | z_true`` over observed bin edges to get
+  for ``z_hat | z_true`` over observed bin edges to get::
 
       P(z_hat in bin_i | z_true)
 
   then averages within each true bin to obtain a column-stochastic matrix
   ``M_scatter``.
 
-If both effects are enabled, the total response is applied as:
+If both effects are enabled, the total response is applied as::
 
     M_total = M_scatter @ M_cat
 
@@ -67,16 +67,72 @@ Normalization
 
 Examples
 --------
->>> import numpy as np
->>> from binny.ztomo.specz import build_specz_bins
->>> z = np.linspace(0.0, 2.0, 501)
->>> nz = z**2 * np.exp(-z)
->>> edges = [0.0, 0.5, 1.0, 1.5, 2.0]
->>> bins = build_specz_bins(z, nz, edges)
->>> sorted(bins)
-[0, 1, 2, 3]
->>> bins[0].shape
-(501,)
+Explicit bin edges (true-z space)::
+
+    >>> import numpy as np
+    >>> from binny.ztomo.specz import build_specz_bins
+    >>> z = np.linspace(0.0, 2.0, 501)
+    >>> nz = z**2 * np.exp(-z)
+    >>> bin_edges = [0.0, 0.5, 1.0, 1.5, 2.0]
+    >>> bins = build_specz_bins(z, nz, bin_edges)
+    >>> sorted(bins)
+    [0, 1, 2, 3]
+    >>> bins[0].shape
+    (501,)
+
+Binning scheme + n_bins (edges constructed internally)::
+
+    >>> bins = build_specz_bins(z, nz, binning_scheme="equidistant", n_bins=4)
+    >>> sorted(bins)
+    [0, 1, 2, 3]
+
+Equal-number in true-z using (z, nz) as weights::
+
+    >>> bins = build_specz_bins(
+    ...     z,
+    ...     nz,
+    ...     binning_scheme="equal_number",
+    ...     n_bins=3,
+    ...     normalize_input=True,
+    ...     normalize_bins=False,
+    ... )
+    >>> sorted(bins)
+    [0, 1, 2]
+
+Mixed / segmented scheme (sequence of segments)::
+
+    >>> segments = [
+    ...     {"scheme": "equidistant", "n_bins": 2, "z_min": 0.0, "z_max": 1.0},
+    ...     {"scheme": "equidistant", "n_bins": 2, "z_min": 1.0, "z_max": 2.0},
+    ... ]
+    >>> bins = build_specz_bins(z, nz, binning_scheme=segments, n_bins=None)
+    >>> sorted(bins)
+    [0, 1, 2, 3]
+
+Mixed / segmented scheme (dict with "segments" key)::
+
+    >>> scheme = {
+    ...     "segments": [
+    ...         {"scheme": "equidistant", "n_bins": 3, "z_min": 0.0, "z_max": 1.5},
+    ...         {"scheme": "equidistant", "n_bins": 1, "z_min": 1.5, "z_max": 2.0},
+    ...     ]
+    ... }
+    >>> bins = build_specz_bins(z, nz, binning_scheme=scheme, n_bins=None)
+    >>> sorted(bins)
+    [0, 1, 2, 3]
+
+Catastrophic misassignment (neighbor leakage)::
+
+    >>> bins = build_specz_bins(
+    ...     z,
+    ...     nz,
+    ...     bin_edges,
+    ...     catastrophic_frac=0.2,
+    ...     leakage_model="neighbor",
+    ...     normalize_bins=False,
+    ... )
+    >>> sorted(bins)
+    [0, 1, 2, 3]
 """
 
 from __future__ import annotations
@@ -159,7 +215,7 @@ def build_specz_bins(
       - Otherwise, edges are constructed from ``binning_scheme``:
         * String scheme + ``n_bins`` (e.g. "equidistant", "equal_number")
         * Mixed segments (sequence or {"segments": [...]}) passed to ``mixed_edges``.
-          Segment dicts must use ``z_min``/``z_max`` (not ``x_min``/``x_max``).
+        Segment dicts must use ``z_min``/``z_max`` (not ``x_min``/``x_max``).
 
     Normalization:
       - If ``normalize_input=True``, normalize the parent ``n(z)`` before binning.

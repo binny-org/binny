@@ -26,16 +26,88 @@ Gaussian(s) between the photo-z bin edges using the error function.
 
 Examples
 --------
->>> import numpy as np
->>> from binny.ztomo.photoz import build_photoz_bins
->>> z = np.linspace(0.0, 3.0, 501)
->>> nz = z**2 * np.exp(-z)
->>> bin_edges = [0.0, 0.5, 1.0, 1.5]
->>> bins = build_photoz_bins(z, nz, bin_edges, scatter_scale=0.05, mean_offset=0.01)
->>> sorted(bins)
-[0, 1, 2]
->>> bins[0].shape
-(501,)
+Explicit bin edges (photo-z space)::
+
+    >>> import numpy as np
+    >>> from binny.ztomo.photoz import build_photoz_bins
+    >>> z = np.linspace(0.0, 3.0, 501)
+    >>> nz = z**2 * np.exp(-z)
+    >>> bin_edges = [0.0, 0.5, 1.0, 1.5]
+    >>> bins = build_photoz_bins(
+    ...     z,
+    ...     nz,
+    ...     bin_edges,
+    ...     scatter_scale=0.05,
+    ...     mean_offset=0.01,
+    ... )
+    >>> sorted(bins)
+    [0, 1, 2]
+    >>> bins[0].shape
+    (501,)
+
+Binning scheme + n_bins (edges constructed internally)::
+
+    >>> bins = build_photoz_bins(
+    ...     z,
+    ...     nz,
+    ...     binning_scheme="equidistant",
+    ...     n_bins=4,
+    ...     scatter_scale=0.05,
+    ...     mean_offset=0.01,
+    ... )
+    >>> sorted(bins)
+    [0, 1, 2, 3]
+
+Equal-number in observed-z using an explicit (z_ph, nz_ph)::
+
+    >>> z_ph = np.linspace(0.0, 3.0, 501)
+    >>> nz_ph = z_ph**2 * np.exp(-z_ph)
+    >>> bins = build_photoz_bins(
+    ...     z,
+    ...     nz,
+    ...     binning_scheme="equal_number",
+    ...     n_bins=3,
+    ...     z_ph=z_ph,
+    ...     nz_ph=nz_ph,
+    ...     scatter_scale=0.05,
+    ...     mean_offset=0.01,
+    ... )
+    >>> sorted(bins)
+    [0, 1, 2]
+
+Mixed / segmented scheme (sequence of segments)::
+
+    >>> segments = [
+    ...     {"scheme": "equidistant", "n_bins": 2, "z_min": 0.0, "z_max": 1.0},
+    ...     {"scheme": "equidistant", "n_bins": 2, "z_min": 1.0, "z_max": 2.0},
+    ... ]
+    >>> bins = build_photoz_bins(
+    ...     z,
+    ...     nz,
+    ...     binning_scheme=segments,
+    ...     scatter_scale=0.05,
+    ...     mean_offset=0.01,
+    ... )
+    >>> sorted(bins)
+    [0, 1, 2, 3]
+
+Mixed / segmented scheme (dict with "segments" key)::
+
+    >>> scheme = {
+    ...     "segments": [
+    ...         {"scheme": "equidistant", "n_bins": 3, "z_min": 0.0, "z_max": 1.5},
+    ...         {"scheme": "equidistant", "n_bins": 1, "z_min": 1.5, "z_max": 3.0},
+    ...     ]
+    ... }
+    >>> bins = build_photoz_bins(
+    ...     z,
+    ...     nz,
+    ...     binning_scheme=scheme,
+    ...     scatter_scale=0.05,
+    ...     mean_offset=0.01,
+    ... )
+    >>> sorted(bins)
+    [0, 1, 2, 3]
 
 Notes
 -----
