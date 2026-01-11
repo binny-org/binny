@@ -27,9 +27,19 @@ FloatArray = NDArray[np.float64]
 
 
 class DistFunc(Protocol):
-    """Protocol for redshift distribution functions."""
+    """Callable interface for redshift distribution functions.
 
-    def __call__(self, z: NDArray[np.floating], /, **params: Any) -> FloatArray: ...
+    A distribution function maps an array of redshift values to an array of
+    non-negative weights of the same shape. Extra keyword parameters control
+    the shape of the distribution (e.g., location/scale/shape parameters).
+
+    Implementations are expected to accept ``z`` as the first positional-only
+    argument and accept distribution-specific parameters via ``**params``.
+    """
+
+    def __call__(self, z: NDArray[np.floating], /, **params: Any) -> FloatArray:
+        """Evaluates the distribution function."""
+        ...
 
 
 _DISTS: dict[str, DistFunc] = {
@@ -49,28 +59,54 @@ _DISTS: dict[str, DistFunc] = {
 
 
 def available_redshift_distributions() -> list[str]:
-    """Lists the names of available redshift distributions."""
+    """Returns the names of supported redshift distribution models.
+
+    This is the authoritative list of distribution identifiers accepted by
+    :func:`redshift_distribution`. Names are returned in sorted order and
+    include aliases (e.g., ``"smail"`` and ``"smail_like"``).
+
+    Returns:
+        Sorted list of distribution names.
+    """
     return sorted(_DISTS.keys())
 
 
 def redshift_distribution(
     name: str, z: NDArray[np.float64], /, **params: Any
 ) -> FloatArray:
-    """Evaluates a named redshift distribution.
+    """Evaluates a named redshift distribution model.
+
+    This is a convenience dispatcher over the concrete distribution functions
+    in :mod:`binny.ztomo.distributions`. It selects a distribution by name
+    (case-insensitive), converts ``z`` to ``float64``, and evaluates the model.
+
+    The meaning and valid set of ``**params`` depends on the chosen model. For
+    a given name, pass exactly the keyword parameters that the underlying
+    distribution function expects.
 
     Args:
-        name: Name of the redshift distribution. Available options are:
-            ``'smail'``, ``'gaussian'``, ``'gaussian_mixture'``, ``'gamma'``,
-            ``'schechter'``, ``'lognormal'``, ``'tophat'``, ``'shifted_smail'``,
-            ``'skew_normal'``, ``'student_t'``.
-        z: Redshift values where to evaluate the distribution.
-        **params: Parameters specific to the chosen distribution.
+        name: Distribution identifier (case-insensitive). Use
+            :func:`available_redshift_distributions` to list valid names.
+        z: Redshift grid at which to evaluate the model. Any array-like input is
+            accepted; it is converted to a ``float64`` NumPy array and the
+            output preserves the same shape.
+        **params: Model-specific parameters forwarded to the underlying
+            distribution implementation.
 
     Returns:
-        Array of evaluated distribution values at the input redshifts.
+        Array of distribution values evaluated at ``z`` (``float64``) with the
+        same shape as the input ``z``.
 
     Raises:
-        ValueError: If the specified distribution name is not recognized.
+        ValueError: If ``name`` is not a supported distribution identifier.
+
+    Examples:
+    >>> import numpy as np
+    >>> from binny.api.distributions import redshift_distribution
+    >>> z = np.linspace(0.0, 2.0, 5)
+    >>> y = redshift_distribution("gaussian", z, mu=1.0, sigma=0.2)
+    >>> y.shape == z.shape
+    True
     """
     key = name.lower()
     try:
