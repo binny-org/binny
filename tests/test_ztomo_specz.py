@@ -199,11 +199,11 @@ def test_apply_misassignment_matrix_identity_no_change():
 
 
 def test_apply_misassignment_matrix_requires_contiguous_keys():
-    """Tests that missing a required bin key raises an error during stacking."""
+    """Tests that bins must contain exactly keys 0..n_bins-1."""
     z, nz = _toy_z_nz()
-    bins = {0: nz, 2: nz}
+    bins = {0: nz, 2: nz}  # missing 1, has extra 2 for n_bins=2
     matrix = np.eye(2)
-    with pytest.raises(KeyError):
+    with pytest.raises(ValueError, match=r"bins must contain exactly keys 0\.\.1"):
         apply_misassignment_matrix(bins, matrix)
 
 
@@ -461,3 +461,236 @@ def test_build_specz_bins_adds_measurement_scatter_when_enabled_sigma0_sigma1():
     )
     dist = sum(np.linalg.norm(bins_sc[i] - bins_no[i]) for i in range(4))
     assert dist > 0.0
+
+
+def test_apply_misassignment_matrix_requires_same_bin_shapes():
+    """Tests that all bins must have identical array shapes."""
+    z, nz = _toy_z_nz()
+    bins = {0: nz, 1: nz[:-1]}  # shape mismatch
+    matrix = np.eye(2)
+    with pytest.raises(ValueError, match=r"All bin arrays must have the same shape"):
+        apply_misassignment_matrix(bins, matrix)
+
+
+def test_build_specz_bins_binning_scheme_equidistant_uses_n_bins():
+    """Tests that equidistant binning_scheme creates n_bins contiguous outputs."""
+    z, nz = _toy_z_nz()
+    bins = build_specz_bins(
+        z,
+        nz,
+        bin_edges=None,
+        binning_scheme="equidistant",
+        n_bins=4,
+    )
+    assert list(bins.keys()) == [0, 1, 2, 3]
+    for i in range(4):
+        assert bins[i].shape == z.shape
+        assert bins[i].dtype == np.float64
+
+
+def test_build_specz_bins_binning_scheme_equidistant_aliases_work():
+    """Tests that equidistant binning_scheme aliases are accepted."""
+    z, nz = _toy_z_nz()
+    for scheme in ["eq", "linear"]:
+        bins = build_specz_bins(
+            z,
+            nz,
+            bin_edges=None,
+            binning_scheme=scheme,
+            n_bins=3,
+        )
+        assert list(bins.keys()) == [0, 1, 2]
+
+
+def test_build_specz_bins_binning_scheme_equal_number_uses_n_bins():
+    """Tests that equal_number binning_scheme creates n_bins contiguous outputs."""
+    z, nz = _toy_z_nz("smooth")
+    bins = build_specz_bins(
+        z,
+        nz,
+        bin_edges=None,
+        binning_scheme="equal_number",
+        n_bins=4,
+        normalize_input=True,
+        normalize_bins=False,
+    )
+    assert list(bins.keys()) == [0, 1, 2, 3]
+    for i in range(4):
+        assert bins[i].shape == z.shape
+        assert bins[i].dtype == np.float64
+
+
+def test_build_specz_bins_binning_scheme_equal_number_aliases_work():
+    """Tests that equal_number binning_scheme aliases are accepted."""
+    z, nz = _toy_z_nz("smooth")
+    for scheme in ["equipopulated", "en"]:
+        bins = build_specz_bins(
+            z,
+            nz,
+            bin_edges=None,
+            binning_scheme=scheme,
+            n_bins=3,
+            normalize_input=True,
+            normalize_bins=False,
+        )
+        assert list(bins.keys()) == [0, 1, 2]
+
+
+def test_build_specz_bins_mixed_segments_sequence_creates_outputs():
+    """Tests that mixed segment binning_scheme as a sequence is accepted."""
+    z, nz = _toy_z_nz("smooth")
+    segments = [
+        {"scheme": "equidistant", "n_bins": 2, "z_min": 0.0, "z_max": 1.0},
+        {"scheme": "equidistant", "n_bins": 2, "z_min": 1.0, "z_max": 2.0},
+    ]
+    bins = build_specz_bins(
+        z,
+        nz,
+        bin_edges=None,
+        binning_scheme=segments,
+        n_bins=None,
+    )
+    assert list(bins.keys()) == [0, 1, 2, 3]
+    for i in range(4):
+        assert bins[i].shape == z.shape
+
+
+def test_build_specz_bins_mixed_segments_dict_with_segments_key_is_accepted():
+    """Tests that mixed segment binning_scheme dict with 'segments' is accepted."""
+    z, nz = _toy_z_nz("smooth")
+    scheme = {
+        "segments": [
+            {"scheme": "equidistant", "n_bins": 2, "z_min": 0.0, "z_max": 1.0},
+            {"scheme": "equidistant", "n_bins": 1, "z_min": 1.0, "z_max": 2.0},
+        ]
+    }
+    bins = build_specz_bins(
+        z,
+        nz,
+        bin_edges=None,
+        binning_scheme=scheme,
+        n_bins=None,
+    )
+    assert list(bins.keys()) == [0, 1, 2]
+    for i in range(3):
+        assert bins[i].shape == z.shape
+
+
+def test_build_specz_bins_mixed_segments_equal_number_is_accepted():
+    """Tests that mixed segments can include equal_number edges."""
+    z, nz = _toy_z_nz("smooth")
+    segments = [
+        {"scheme": "equal_number", "n_bins": 4, "z_min": 0.0, "z_max": 2.0},
+    ]
+    bins = build_specz_bins(
+        z,
+        nz,
+        bin_edges=None,
+        binning_scheme=segments,
+        n_bins=None,
+        normalize_input=True,
+        normalize_bins=False,
+    )
+    assert list(bins.keys()) == [0, 1, 2, 3]
+
+
+def test_build_specz_bins_rejects_bin_edges_and_binning_scheme_together():
+    """Tests that providing bin_edges and binning_scheme raises ValueError."""
+    z, nz = _toy_z_nz()
+    edges = _edges_4bins()
+    with pytest.raises(ValueError, match="Provide either bin_edges"):
+        build_specz_bins(
+            z,
+            nz,
+            bin_edges=edges,
+            binning_scheme="equidistant",
+            n_bins=4,
+        )
+
+
+def test_build_specz_bins_rejects_bin_edges_and_n_bins_together():
+    """Tests that providing bin_edges and n_bins raises ValueError."""
+    z, nz = _toy_z_nz()
+    edges = _edges_4bins()
+    with pytest.raises(ValueError, match="Provide either bin_edges"):
+        build_specz_bins(
+            z,
+            nz,
+            bin_edges=edges,
+            n_bins=4,
+        )
+
+
+def test_build_specz_bins_requires_binning_scheme_when_bin_edges_none():
+    """Tests that bin_edges=None requires binning_scheme."""
+    z, nz = _toy_z_nz()
+    with pytest.raises(ValueError, match="You must provide binning_scheme"):
+        build_specz_bins(z, nz, bin_edges=None, binning_scheme=None)
+
+
+def test_build_specz_bins_requires_n_bins_for_string_binning_scheme():
+    """Tests that string binning_scheme requires n_bins when bin_edges is None."""
+    z, nz = _toy_z_nz()
+    with pytest.raises(ValueError, match="You must provide n_bins"):
+        build_specz_bins(
+            z,
+            nz,
+            bin_edges=None,
+            binning_scheme="equidistant",
+            n_bins=None,
+        )
+
+
+def test_build_specz_bins_rejects_unknown_string_binning_scheme():
+    """Tests that an unknown string binning_scheme raises ValueError."""
+    z, nz = _toy_z_nz()
+    with pytest.raises(ValueError, match="Unsupported binning_scheme"):
+        build_specz_bins(
+            z,
+            nz,
+            bin_edges=None,
+            binning_scheme="nope",
+            n_bins=4,
+        )
+
+
+def test_build_specz_bins_mixed_mode_rejects_global_n_bins():
+    """Tests that mixed binning rejects n_bins when bin_edges is None."""
+    z, nz = _toy_z_nz()
+    scheme = [{"method": "equidistant", "n_bins": 2, "x_min": 0.0, "x_max": 2.0}]
+    with pytest.raises(ValueError, match="In mixed binning mode"):
+        build_specz_bins(
+            z,
+            nz,
+            bin_edges=None,
+            binning_scheme=scheme,
+            n_bins=2,
+        )
+
+
+def test_build_specz_bins_mixed_dict_requires_segments_key():
+    """Tests that mixed binning dict requires a 'segments' key."""
+    z, nz = _toy_z_nz()
+    scheme = {"not_segments": []}
+    with pytest.raises(ValueError, match="must contain key 'segments'"):
+        build_specz_bins(
+            z,
+            nz,
+            bin_edges=None,
+            binning_scheme=scheme,
+            n_bins=None,
+        )
+
+
+def test_build_specz_bins_mixed_binning_requires_sequence_of_segments():
+    """Tests that mixed binning rejects non-sequence segments."""
+    z, nz = _toy_z_nz()
+    scheme = {"segments": "not a list"}
+    with pytest.raises(ValueError, match="Mixed binning requires a sequence"):
+        build_specz_bins(
+            z,
+            nz,
+            bin_edges=None,
+            binning_scheme=scheme,
+            n_bins=None,
+        )
