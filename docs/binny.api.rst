@@ -10,6 +10,7 @@ Submodules
    binny.api.config
    binny.api.distributions
    binny.api.edges
+   binny.api.grids
    binny.api.metrics
    binny.api.surveys
    binny.api.tomo
