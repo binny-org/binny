@@ -113,7 +113,12 @@ commands = [
 
 
 [tool.pytest.ini_options]
+addopts = "-m 'not slow'"
 testpaths = ["tests"]
+markers = [
+  "slow: long-running tests (opt-in)",
+  "regression: heavier regression / sweep tests (opt-in)",
+]
 
 [tool.setuptools]
 package-dir = { "" = "src" }
