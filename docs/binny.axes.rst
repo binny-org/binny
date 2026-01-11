@@ -8,6 +8,7 @@ Submodules
    :maxdepth: 4
 
    binny.axes.bin_edges
+   binny.axes.grids
    binny.axes.mixed_edges
 
 Module contents
