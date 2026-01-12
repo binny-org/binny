@@ -1,6 +1,12 @@
 lsst:
   name: lsst
 
+  grid:  # redshift grid
+    z:
+      start: 0.0
+      stop: 3.5
+      n: 500  # number of redshifts
+
   footprint:
     nominal:
       survey_area: 18000.0   # deg^2
