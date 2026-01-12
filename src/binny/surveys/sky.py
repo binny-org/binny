@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from math import pi
 
 __all__ = [
@@ -13,6 +14,10 @@ __all__ = [
     "sr_to_f_sky",
     "deg2_to_arcmin2",
     "arcmin2_to_deg2",
+    "arcmin2_to_sr",
+    "sr_to_arcmin2",
+    "density_arcmin2_to_sr",
+    "density_sr_to_arcmin2",
 ]
 
 # Full sky solid angle in steradians
@@ -199,3 +204,93 @@ def arcmin2_to_deg2(area_arcmin2: float) -> float:
     deg2 = area / (60.0 * 60.0)
 
     return deg2
+
+
+def arcmin2_to_sr(area_arcmin2: float) -> float:
+    """Converts an area in arcmin^2 to steradians.
+
+    Args:
+        area_arcmin2: Area in square arcminutes.
+
+    Returns:
+        Area in steradians.
+
+    Raises:
+        ValueError: If area_arcmin2 is negative.
+    """
+    area = float(area_arcmin2)
+
+    if area < 0:
+        raise ValueError("area_arcmin2 must be non-negative.")
+
+    return deg2_to_sr(arcmin2_to_deg2(area))
+
+
+def sr_to_arcmin2(area_sr: float) -> float:
+    """Converts an area in steradians to arcmin^2.
+
+    Args:
+        area_sr: Area in steradians.
+
+    Returns:
+        Area in square arcminutes.
+
+    Raises:
+        ValueError: If area_sr is negative.
+    """
+    area = float(area_sr)
+
+    if area < 0:
+        raise ValueError("area_sr must be non-negative.")
+
+    return deg2_to_arcmin2(sr_to_deg2(area))
+
+
+def density_arcmin2_to_sr(density_per_bin: Mapping[int, float]) -> dict[int, float]:
+    """Converts per-bin densities from gal/arcmin^2 to gal/sr.
+
+    This multiplies by the conversion factor arcmin^2 per steradian.
+
+    Args:
+        density_per_bin: Mapping bin -> density in gal/arcmin^2.
+
+    Returns:
+        Mapping bin -> density in gal/sr.
+
+    Raises:
+        ValueError: If any density is negative.
+    """
+    arcmin2_per_sr = float(sr_to_arcmin2(1.0))
+
+    out: dict[int, float] = {}
+    for i, n in density_per_bin.items():
+        n_f = float(n)
+        if n_f < 0.0:
+            raise ValueError(f"density_per_bin[{i}] must be non-negative.")
+        out[int(i)] = n_f * arcmin2_per_sr
+    return out
+
+
+def density_sr_to_arcmin2(density_per_bin: Mapping[int, float]) -> dict[int, float]:
+    """Converts per-bin densities from gal/sr to gal/arcmin^2.
+
+    This divides by the conversion factor arcmin^2 per steradian.
+
+    Args:
+        density_per_bin: Mapping bin -> density in gal/sr.
+
+    Returns:
+        Mapping bin -> density in gal/arcmin^2.
+
+    Raises:
+        ValueError: If any density is negative.
+    """
+    arcmin2_per_sr = float(sr_to_arcmin2(1.0))
+
+    out: dict[int, float] = {}
+    for i, n in density_per_bin.items():
+        n_f = float(n)
+        if n_f < 0.0:
+            raise ValueError(f"density_per_bin[{i}] must be non-negative.")
+        out[int(i)] = n_f / arcmin2_per_sr
+    return out
