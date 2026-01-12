@@ -439,7 +439,7 @@ def tomo_from_config(
 
 def lsst_tomography(
     *,
-    z: Any,
+    z: Any | None = None,
     year: int,
     sample: Sample,
     config_file: str = "lsst_survey_specs.yaml",

@@ -24,7 +24,7 @@ def _year_key(year: int) -> str:
 
 def lsst_tomography(
     *,
-    z: Any,
+    z: Any | None = None,
     year: int,
     sample: Sample,
     config_file: str = "lsst_survey_specs.yaml",
@@ -38,6 +38,21 @@ def lsst_tomography(
         cfg = cfg_all["lsst"]
     except KeyError as e:
         raise ValueError("Preset YAML must contain top-level key 'lsst'.") from e
+
+    if z is None:
+        try:
+            zspec = cfg["grid"]["z"]
+            z_min = float(zspec["start"])
+            z_max = float(zspec["stop"])
+            n = int(zspec["n"])
+        except KeyError as e:
+            raise ValueError(
+                "Preset YAML must contain lsst.grid.z with keys: start, stop, n "
+                "when z is not passed."
+            ) from e
+        z = np.linspace(z_min, z_max, n, dtype=np.float64)
+    else:
+        z = np.asarray(z, dtype=np.float64)
 
     yk = _year_key(year)
 
