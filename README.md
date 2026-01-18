@@ -1,6 +1,8 @@
 # binny
 
 [![CI](https://github.com/binny-org/binny/actions/workflows/ci.yml/badge.svg)](https://github.com/binny-org/binny/actions/workflows/ci.yml)
+[![codecov](https://codecov.io/gh/binny-org/binny/branch/main/graph/badge.svg)](https://codecov.io/gh/binny-org/binny)
+
 
 **binny** is a Python library providing flexible and well-tested
 tomographic binning algorithms for cosmology and related scientific workflows.

@@ -1,14 +1,12 @@
-"""Tomography configurations for LSST survey samples."""
+"""LSST tomography convenience wrapper."""
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from typing import Any, Literal
 
-import numpy as np
-
-from binny.api.distributions import redshift_distribution
-from binny.api.edges import bin_edges
-from binny.api.tomo import photoz_bins
+from binny.nz_tomo.photoz import build_photoz_bins
+from binny.surveys.config_core import survey_from_mapping
 from binny.utils.io import load_yaml
 
 Sample = Literal["lens", "source"]
@@ -17,108 +15,114 @@ __all__ = ["lsst_tomography"]
 
 
 def _year_key(year: int) -> str:
+    """Converts year selector to YAML key."""
     if year in (1, 10):
         return f"y{year}"
-    raise ValueError("year must be 1 or 10 for this LSST preset.")
+    raise ValueError("year must be 1 or 10 for LSST presets.")
 
 
 def lsst_tomography(
     *,
-    z: Any | None = None,
     year: int,
     sample: Sample,
+    z: Any | None = None,
     config_file: str = "lsst_survey_specs.yaml",
-    normalize_input: bool = True,
-    normalize_bins: bool = True,
-) -> dict[int, np.ndarray]:
-    """Builds LSST photo-z tomographic n_i(z) from a packaged YAML preset."""
-    cfg_all = load_yaml(config_file, package="binny.surveys.configs")
-
-    try:
-        cfg = cfg_all["lsst"]
-    except KeyError as e:
-        raise ValueError("Preset YAML must contain top-level key 'lsst'.") from e
-
-    if z is None:
-        try:
-            zspec = cfg["grid"]["z"]
-            z_min = float(zspec["start"])
-            z_max = float(zspec["stop"])
-            n = int(zspec["n"])
-        except KeyError as e:
-            raise ValueError(
-                "Preset YAML must contain lsst.grid.z with keys: start, stop, n "
-                "when z is not passed."
-            ) from e
-        z = np.linspace(z_min, z_max, n, dtype=np.float64)
-    else:
-        z = np.asarray(z, dtype=np.float64)
-
+    include_survey_metadata: bool = False,
+    include_tomo_metadata: bool = False,
+):
+    """Builds LSST photo-z tomographic bins from the shipped LSST YAML
+    preset."""
     yk = _year_key(year)
 
-    sample_key = "lens_sample" if sample == "lens" else "source_sample"
-    try:
-        block = cfg[sample_key][yk]
-    except KeyError as e:
-        raise ValueError(f"Preset missing {sample_key}.{yk}.") from e
+    cfg_all = load_yaml(config_file, package="binny.surveys.configs")
+    cfg_lsst = cfg_all.get("lsst")
+    if not isinstance(cfg_lsst, Mapping):
+        raise ValueError("Preset YAML must contain top-level mapping 'lsst'.")
 
-    # Parent n(z)
+    sample_keys = {
+        "lens": "lens_sample",
+        "source": "source_sample",
+    }
+
+    sample_key = sample_keys[sample]
+    sample_block = cfg_lsst.get(sample_key)
+    if not isinstance(sample_block, Mapping):
+        raise ValueError(f"Preset missing mapping lsst.{sample_key}.")
+
+    block = sample_block.get(yk)
+    if not isinstance(block, Mapping):
+        raise ValueError(f"Preset missing mapping lsst.{sample_key}.{yk}.")
+
+    grid = cfg_lsst.get("grid")
+    if not isinstance(grid, Mapping):
+        raise ValueError("Preset missing mapping lsst.grid.")
+
+    sm = block.get("smail")
+    if not isinstance(sm, Mapping):
+        raise ValueError(f"Preset missing mapping lsst.{sample_key}.{yk}.smail.")
+
+    pz = block.get("photoz")
+    if not isinstance(pz, Mapping):
+        raise ValueError(f"Preset missing mapping lsst.{sample_key}.{yk}.photoz.")
+
     try:
-        sm = block["smail"]
+        n_bins = int(block["n_tomo_bins"])
         z0 = float(sm["z0"])
         alpha = float(sm["alpha"])
         beta = float(sm["beta"])
-    except KeyError as e:
-        raise ValueError(
-            f"Preset missing required smail parameter: {e.args[0]}."
-        ) from e
-
-    nz = redshift_distribution("smail", z, z0=z0, alpha=alpha, beta=beta)
-
-    # Tomographic edges
-    try:
-        n_bins = int(block["n_tomo_bins"])
-    except KeyError as e:
-        raise ValueError("Preset missing required key 'n_tomo_bins'.") from e
-
-    default_method = "equidistant" if sample == "lens" else "equal_number"
-    method = str(block.get("binning", default_method))
-
-    if method == "equidistant":
-        # equidistant uses x_min/x_max only
-        if "bin_range" in block:
-            x_min, x_max = map(float, block["bin_range"])
-        else:
-            x_min, x_max = float(np.min(z)), float(np.max(z))
-
-        edges = bin_edges("equidistant", x_min=x_min, x_max=x_max, n_bins=n_bins)
-
-    elif method == "equal_number":
-        # equal_number uses x, weights
-        edges = bin_edges("equal_number", x=z, weights=nz, n_bins=n_bins)
-
-    else:
-        raise ValueError(
-            f"Unsupported binning='{method}' for LSST preset. "
-            "Use 'equidistant' (lens) or 'equal_number' (source)."
-        )
-
-    # Photo-z model
-    try:
-        pz = block["photoz"]
         scatter_scale = float(pz["scatter_scale"])
         mean_offset = float(pz["mean_offset"])
     except KeyError as e:
-        raise ValueError(
-            f"Preset missing required photoz parameter: {e.args[0]}."
-        ) from e
+        raise ValueError(f"Preset missing required key: {e.args[0]!r}.") from e
 
-    return photoz_bins(
+    default_scheme = "equidistant" if sample == "lens" else "equal_number"
+    scheme = str(block.get("binning", default_scheme)).lower()
+
+    # Build a minimal in-memory config entry and reuse the generic parser.
+    cfg_entry: dict[str, Any] = {
+        "name": str(cfg_lsst.get("name", "lsst")),
+        "grid": grid,
+        "footprint": cfg_lsst.get("footprint"),
+        "nz": {
+            "model": "smail",
+            "params": {"z0": z0, "alpha": alpha, "beta": beta},
+        },
+        "tomo": {
+            "kind": "photoz",
+            "binning_scheme": scheme,
+            "params": {
+                "n_bins": n_bins,
+                "scatter_scale": scatter_scale,
+                "mean_offset": mean_offset,
+            },
+        },
+    }
+
+    z_arr, nz_arr, tomo, survey_meta = survey_from_mapping(
+        cfg=cfg_entry,
+        key="lsst",
         z=z,
-        nz=nz,
-        bin_edges=edges,
-        scatter_scale=scatter_scale,
-        mean_offset=mean_offset,
-        normalize_input=normalize_input,
-        normalize_bins=normalize_bins,
+        include_survey_metadata=include_survey_metadata,
     )
+
+    bins_out = build_photoz_bins(
+        z=z_arr,
+        nz=nz_arr,
+        bin_edges=tomo["bin_edges"],
+        binning_scheme=tomo["binning_scheme"],
+        include_metadata=include_tomo_metadata,
+        **tomo["params"],
+    )
+
+    if include_tomo_metadata:
+        bins, tomo_meta = bins_out
+    else:
+        bins, tomo_meta = bins_out, None
+
+    if include_survey_metadata and include_tomo_metadata:
+        return bins, survey_meta, tomo_meta
+    if include_survey_metadata:
+        return bins, survey_meta
+    if include_tomo_metadata:
+        return bins, tomo_meta
+    return bins

@@ -5,7 +5,11 @@ from __future__ import annotations
 import numpy as np
 import pytest
 
-from binny.axes.grids import linear_grid, log_grid
+from binny.axes.grids import (
+    grid,
+    linear_grid,
+    log_grid,
+)
 
 
 def test_linear_grid_returns_float64_and_shape():
@@ -144,6 +148,30 @@ def test_log_grid_rejects_non_positive_x_min(x_min: float, x_max: float):
     """Tests that log_grid rejects non-positive x_min."""
     with pytest.raises(ValueError, match=r"> 0|positive|log-spaced"):
         log_grid(x_min, x_max, 3)
+
+
+@pytest.mark.parametrize("kind", ["linear", "lin", "uniform", "LiNeAr"])
+def test_grid_dispatches_to_linear(kind: str):
+    """Tests that grid dispatches linear aliases to linear_grid."""
+    g = grid(kind, start=0.0, stop=1.0, n=5)
+    expected = linear_grid(0.0, 1.0, 5)
+    assert np.allclose(g, expected)
+    assert g.dtype == np.float64
+
+
+@pytest.mark.parametrize("kind", ["log", "log_grid", "logarithmic", "geom", "geometric", "LoG"])
+def test_grid_dispatches_to_log(kind: str):
+    """Tests that grid dispatches log aliases to log_grid."""
+    g = grid(kind, start=1.0, stop=100.0, n=6)
+    expected = log_grid(1.0, 100.0, 6)
+    assert np.allclose(g, expected)
+    assert g.dtype == np.float64
+
+
+def test_grid_rejects_unknown_kind():
+    """Tests that grid raises for unknown kind."""
+    with pytest.raises(ValueError, match=r"Unknown grid kind"):
+        grid("banana", start=0.0, stop=1.0, n=3)
 
 
 def test_log_grid_matches_log_edges_output():

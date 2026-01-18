@@ -54,9 +54,7 @@ def as_per_bin(x: float | int | Sequence | None, n_bins: int, name: str) -> np.n
 
     # If any entry is None, we must preserve None -> object array
     if any(v is None for v in seq):
-        return np.array(
-            [float(v) if v is not None else None for v in seq], dtype=object
-        )
+        return np.array([float(v) if v is not None else None for v in seq], dtype=object)
 
     # Otherwise, safe to return float array
     return np.asarray([float(v) for v in seq], dtype=float)

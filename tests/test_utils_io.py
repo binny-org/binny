@@ -8,7 +8,11 @@ import numpy as np
 import pytest
 import yaml
 
-from binny.utils.io import load_binning_recipe, load_nz
+from binny.utils.io import (
+    load_binning_recipe,
+    load_nz,
+    load_yaml,
+)
 
 
 def _write_txt(path: Path, arr: np.ndarray, *, delimiter: str | None = None) -> None:
@@ -36,7 +40,9 @@ def test_load_nz_npy_two_column_array_sorts_by_z(tmp_path: Path) -> None:
     assert np.allclose(nz, [0.0, 10.0, 20.0])
 
 
-def test_load_nz_npy_two_column_array_respects_column_indices(tmp_path: Path) -> None:
+def test_load_nz_npy_two_column_array_respects_column_indices(
+    tmp_path: Path,
+) -> None:
     """Tests that load_nz respects x_col and nz_col for 2D arrays."""
     p = tmp_path / "nz.npy"
     arr = np.array(
@@ -72,9 +78,7 @@ def test_load_nz_npy_structured_missing_fields_raises(tmp_path: Path) -> None:
     arr = np.zeros(3, dtype=[("z", "f8"), ("nope", "f8")])
     np.save(p, arr)
 
-    with pytest.raises(
-        ValueError, match=r"(does not contain.*z.*nz|no field of name nz)"
-    ):
+    with pytest.raises(ValueError, match=r"(does not contain.*z.*nz|no field of name nz)"):
         load_nz(p)
 
 
@@ -128,12 +132,12 @@ def test_load_nz_npz_without_key_picks_first_suitable(tmp_path: Path) -> None:
     assert np.allclose(nz, [0.0, 10.0, 20.0])
 
 
-def test_load_nz_npz_without_key_no_suitable_array_raises(tmp_path: Path) -> None:
+def test_load_nz_npz_without_key_no_suitable_array_raises(
+    tmp_path: Path,
+) -> None:
     """Tests that load_nz raises if .npz has no (N,2+) array and no key is given."""
     p = tmp_path / "nz.npz"
-    np.savez(
-        p, a=np.array([1.0, 2.0]), b=np.array([[1.0, 2.0, 3.0]])
-    )  # (1,3) ok actually
+    np.savez(p, a=np.array([1.0, 2.0]), b=np.array([[1.0, 2.0, 3.0]]))  # (1,3) ok actually
     # Ensure neither is suitable: use (1,) and (1,1)
     p2 = tmp_path / "nz2.npz"
     np.savez(p2, a=np.array([1.0, 2.0]), b=np.array([[1.0]]))
@@ -210,7 +214,11 @@ def test_load_binning_recipe_valid_yaml_returns_normalized_segments(
         "name": "example",
         "n_bins": 5,
         "segments": [
-            {"method": "eq", "n_bins": 3, "params": {"x_min": 0.0, "x_max": 1.0}},
+            {
+                "method": "eq",
+                "n_bins": 3,
+                "params": {"x_min": 0.0, "x_max": 1.0},
+            },
             {"method": "equal_number", "n_bins": 2},
         ],
     }
@@ -226,7 +234,9 @@ def test_load_binning_recipe_valid_yaml_returns_normalized_segments(
     assert segs[1]["params"] == {}
 
 
-def test_load_binning_recipe_top_level_not_mapping_raises(tmp_path: Path) -> None:
+def test_load_binning_recipe_top_level_not_mapping_raises(
+    tmp_path: Path,
+) -> None:
     """Tests that load_binning_recipe raises if YAML top-level is not a mapping."""
     p = tmp_path / "recipe.yml"
     p.write_text(yaml.safe_dump(["nope"]), encoding="utf-8")
@@ -269,9 +279,7 @@ def test_load_binning_recipe_segment_missing_required_keys_raises(
     p = tmp_path / "recipe.yml"
     p.write_text(yaml.safe_dump({"segments": [{"method": "eq"}]}), encoding="utf-8")
 
-    with pytest.raises(
-        ValueError, match=r"must contain at least 'method' and 'n_bins'"
-    ):
+    with pytest.raises(ValueError, match=r"must contain at least 'method' and 'n_bins'"):
         load_binning_recipe(str(p))
 
 
@@ -308,3 +316,63 @@ def test_load_binning_recipe_validate_mixed_segments_errors_propagate(
 
     with pytest.raises(ValueError):
         load_binning_recipe(str(p))
+
+
+def test_load_yaml_from_disk_mapping_returns_dict(tmp_path: Path) -> None:
+    """Tests that load_yaml loads a YAML mapping from disk."""
+    p = tmp_path / "cfg.yml"
+    p.write_text(yaml.safe_dump({"a": 1, "b": {"c": 2}}), encoding="utf-8")
+
+    out = load_yaml(p)
+    assert isinstance(out, dict)
+    assert out["a"] == 1
+    assert out["b"]["c"] == 2
+
+
+def test_load_yaml_from_disk_non_mapping_raises(tmp_path: Path) -> None:
+    """Tests that load_yaml raises when disk YAML root is not a mapping."""
+    p = tmp_path / "cfg.yml"
+    p.write_text(yaml.safe_dump(["nope"]), encoding="utf-8")
+
+    with pytest.raises(ValueError, match=r"Top-level YAML content must be a mapping"):
+        load_yaml(p)
+
+
+def test_load_yaml_from_package_mapping(monkeypatch, tmp_path: Path) -> None:
+    """Tests that load_yaml loads a YAML mapping from a package resource."""
+    # Create a fake package resource dir with a YAML file
+    pkgdir = tmp_path / "fakepkg"
+    pkgdir.mkdir()
+    (pkgdir / "__init__.py").write_text("", encoding="utf-8")
+    (pkgdir / "x.yml").write_text(yaml.safe_dump({"k": "v"}), encoding="utf-8")
+
+    # Patch importlib.resources.files to point at our fake package dir
+    import importlib.resources as resources
+
+    def fake_files(package: str):
+        assert package == "fakepkg"
+        return pkgdir
+
+    monkeypatch.setattr(resources, "files", fake_files)
+
+    out = load_yaml("x.yml", package="fakepkg")
+    assert out == {"k": "v"}
+
+
+def test_load_yaml_from_package_non_mapping_raises(monkeypatch, tmp_path: Path) -> None:
+    """Tests that load_yaml raises when packaged YAML root is not a mapping."""
+    pkgdir = tmp_path / "fakepkg"
+    pkgdir.mkdir()
+    (pkgdir / "__init__.py").write_text("", encoding="utf-8")
+    (pkgdir / "x.yml").write_text(yaml.safe_dump(["nope"]), encoding="utf-8")
+
+    import importlib.resources as resources
+
+    def fake_files(package: str):
+        assert package == "fakepkg"
+        return pkgdir
+
+    monkeypatch.setattr(resources, "files", fake_files)
+
+    with pytest.raises(ValueError, match=r"Top-level YAML content must be a mapping"):
+        load_yaml("x.yml", package="fakepkg")

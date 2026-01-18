@@ -7,12 +7,18 @@ from functools import partial
 from typing import Literal, TypeAlias
 
 import numpy as np
+from numpy.typing import NDArray
 
-from binny.utils.normalization import mass_per_segment, prepare_metric_inputs
 from binny.utils.validators import (
+    validate_axis_and_weights,
     validate_probability_vector,
     validate_same_shape,
 )
+
+PrepMode: TypeAlias = Literal["curves", "segments_prob"]
+NormMode: TypeAlias = Literal["none", "normalize", "check"]
+MetricUnit: TypeAlias = Literal["fraction", "percent"]
+FloatArray = NDArray[np.float64]
 
 __all__ = [
     "pair_min",
@@ -23,14 +29,12 @@ __all__ = [
     "fill_symmetric",
     "segment_mass_probs",
     "apply_unit",
+    "prepare_metric_inputs",
+    "mass_per_segment",
 ]
 
-MetricUnit: TypeAlias = Literal["fraction", "percent"]
 
-
-def _pair_min_kernel(
-    z: np.ndarray, curves: Mapping[int, np.ndarray], i: int, j: int
-) -> float:
+def _pair_min_kernel(z: np.ndarray, curves: Mapping[int, np.ndarray], i: int, j: int) -> float:
     """Computes overlap as the integral of the pointwise minimum.
 
     This overlap score integrates ``min(p_i(z), p_j(z))`` over a shared grid
@@ -107,9 +111,7 @@ def _kl_base2(a: np.ndarray, b: np.ndarray) -> float:
     """
     mask = a > 0.0
     if not np.all(b[mask] > 0.0):
-        raise ValueError(
-            "KL divergence is undefined when b has zeros where a is positive."
-        )
+        raise ValueError("KL divergence is undefined when b has zeros where a is positive.")
     return float(np.sum(a[mask] * np.log2(a[mask] / b[mask])))
 
 
@@ -184,9 +186,7 @@ def _pair_tv_kernel(masses: Mapping[int, np.ndarray], i: int, j: int) -> float:
     return float(0.5 * np.sum(np.abs(a - b)))  # in [0, 1]
 
 
-def pair_min(
-    z_arr: np.ndarray, p: Mapping[int, np.ndarray]
-) -> Callable[[int, int], float]:
+def pair_min(z_arr: np.ndarray, p: Mapping[int, np.ndarray]) -> Callable[[int, int], float]:
     """Computes overlap as the integral of the pointwise minimum.
 
     This overlap score integrates ``min(p_i(z), p_j(z))`` over a shared grid
@@ -215,9 +215,7 @@ def pair_min(
     return partial(_pair_min_kernel, z, curves)
 
 
-def pair_cosine(
-    z_arr: np.ndarray, p: Mapping[int, np.ndarray]
-) -> Callable[[int, int], float]:
+def pair_cosine(z_arr: np.ndarray, p: Mapping[int, np.ndarray]) -> Callable[[int, int], float]:
     """Computes cosine similarity under a trapezoid inner product.
 
     This similarity treats curves as functions on a shared grid and computes
@@ -282,7 +280,9 @@ def pair_js(masses: Mapping[int, np.ndarray]) -> Callable[[int, int], float]:
     return partial(_pair_js_kernel, masses)
 
 
-def pair_hellinger(masses: Mapping[int, np.ndarray]) -> Callable[[int, int], float]:
+def pair_hellinger(
+    masses: Mapping[int, np.ndarray],
+) -> Callable[[int, int], float]:
     """Computes Hellinger distance between probability vectors.
 
     Hellinger distance is a bounded, symmetric distance on discrete probability
@@ -428,3 +428,127 @@ def apply_unit(
     if unit == "percent":
         return {i: {j: 100.0 * v for j, v in row.items()} for i, row in mat.items()}
     raise ValueError('unit must be "fraction" or "percent".')
+
+
+def prepare_metric_inputs(
+    z_arr: np.ndarray,
+    p: Mapping[int, np.ndarray],
+    *,
+    mode: PrepMode,
+    curve_norm: NormMode = "none",
+    rtol: float = 1e-3,
+    atol: float = 1e-6,
+) -> tuple[np.ndarray, dict[int, np.ndarray]]:
+    """Prepares inputs for pairwise metrics (validate once; optionally normalize).
+
+    This is a convenience wrapper that standardizes the common boilerplate for
+    pairwise curve metrics:
+
+    - Validates ``z_arr`` and each curve in ``p`` using
+        :func:`validate_axis_and_weights`.
+    - Optionally normalizes curves to unit trapezoid integral or
+        checks they already are.
+    - Optionally converts curves to per-segment probability vectors (segment masses
+      normalized to sum to 1), suitable for discrete probability metrics.
+
+    Args:
+        z_arr: 1D strictly increasing grid of nodes.
+        p: Mapping from id to curve values evaluated on ``z_arr``.
+        mode: Output mode:
+            - ``"curves"``: return validated (and possibly normalized) node curves.
+            - ``"segments_prob"``: return per-segment mass *probability* vectors.
+        curve_norm: How to treat curve normalization before any conversion:
+            - ``"none"``: no normalization checks beyond basic validation.
+            - ``"normalize"``: divide each curve by its trapezoid integral.
+            - ``"check"``: require each curve integrates to 1 within tolerance.
+        rtol: Relative tolerance for the unit-integral check when
+            ``curve_norm="check"``.
+        atol: Absolute tolerance for the unit-integral check when
+            ``curve_norm="check"``.
+
+    Returns:
+        ``(z_arr, out)`` where ``z_arr`` is float64 and ``out`` maps ids to arrays:
+        - For ``mode="curves"``: arrays have length ``len(z_arr)``.
+        - For ``mode="segments_prob"``: arrays have length ``len(z_arr) - 1``
+            and sum to 1.
+
+    Raises:
+        ValueError: If ``z_arr`` or any curve fails validation, if a curve has
+            non-positive trapezoid integral (needed for normalize/check),
+            if a check fails, or if a curve yields non-positive total
+            segment mass in ``"segments_prob"`` mode.
+    """
+    z_arr = np.asarray(z_arr, dtype=float)
+
+    curves: dict[int, np.ndarray] = {}
+    for idx, curve in p.items():
+        _, c = validate_axis_and_weights(z_arr, curve)
+        area = float(np.trapezoid(c, x=z_arr))
+
+        if curve_norm == "normalize":
+            if area <= 0.0:
+                raise ValueError(f"bin {idx} has non-positive integral: {area}.")
+            c = (c / area).astype(np.float64, copy=False)
+
+        elif curve_norm == "check":
+            if area <= 0.0:
+                raise ValueError(f"bin {idx} has non-positive integral: {area}.")
+            if not np.isclose(area, 1.0, rtol=rtol, atol=atol):
+                raise ValueError(
+                    f"bin {idx} does not appear normalized (integral={area}). "
+                    "Set curve_norm='normalize' or curve_norm='none'."
+                )
+            c = c.astype(np.float64, copy=False)
+
+        else:  # "none"
+            c = c.astype(np.float64, copy=False)
+
+        curves[int(idx)] = c
+
+    if mode == "curves":
+        return z_arr.astype(np.float64, copy=False), curves
+
+    if mode == "segments_prob":
+        probs: dict[int, np.ndarray] = {}
+        for idx, c in curves.items():
+            m = mass_per_segment(z_arr, c)
+            s = float(np.sum(m))
+            if s <= 0.0:
+                raise ValueError(f"bin {idx} has non-positive mass on segments.")
+            probs[idx] = (m / s).astype(np.float64, copy=False)
+        return z_arr.astype(np.float64, copy=False), probs
+
+    raise ValueError('mode must be "curves" or "segments_prob".')
+
+
+def mass_per_segment(z_arr: np.ndarray, p_arr: np.ndarray) -> FloatArray:
+    """Returns trapezoid masses per grid segment for a curve sampled at nodes.
+
+    This converts node values into per-interval masses using the trapezoid rule,
+    which is useful for building cumulative masses, rebinning, or diagnostics that
+    operate on segment contributions rather than node values.
+
+    Args:
+        z_arr: 1D array of grid nodes.
+        p_arr: 1D array of curve values at the nodes.
+
+    Returns:
+        A ``float64`` array of length ``len(z_arr) - 1`` containing trapezoid masses
+        for each adjacent node interval.
+
+    Raises:
+        ValueError: If inputs are not 1D arrays of the same length.
+        ValueError: If ``z_arr`` is not strictly increasing.
+    """
+    z_arr = np.asarray(z_arr, dtype=float)
+    p_arr = np.asarray(p_arr, dtype=float)
+
+    if z_arr.ndim != 1 or p_arr.ndim != 1 or z_arr.size != p_arr.size:
+        raise ValueError("z_arr and p_arr must be 1D arrays of the same length.")
+
+    if not np.all(np.diff(z_arr) > 0):
+        raise ValueError("z_arr must be strictly increasing.")
+
+    dz = np.diff(z_arr)
+    mass = 0.5 * (p_arr[:-1] + p_arr[1:]) * dz
+    return mass.astype(np.float64, copy=False)

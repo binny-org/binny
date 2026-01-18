@@ -1,18 +1,28 @@
-example_specz:
-  name: example_specz
+# Spec-z example using the new schema (with inline comments).
 
-  grid:
-    z: {start: 0.0, stop: 2.0, n: 301}
+name: example_specz  # optional name for the survey/setup
 
-  nz:
-    model: smail
-    params: {z0: 0.4, alpha: 2.0, beta: 1.0}
+z_grid: {start: 0.0, stop: 2.0, n: 301}  # common true-z grid for all outputs
 
-  tomo:
-    kind: specz
-    binning_scheme: equidistant
-    n_bins: 4
-    params:
-      completeness: 1.0
-      normalize_input: true
-      normalize_bins: true
+tomography:
+  - role: lens  # sample label (lens/source)
+    year: '4'  # string is recommended for stable keys
+
+    kind: specz  # dispatcher: specz binning (hard edges + optional misassignment)
+
+    nz:  # parent / underlying true-redshift distribution n(z)
+      model: smail
+      params: {z0: 0.4, alpha: 2.0, beta: 1.0}
+
+    bins:
+      scheme: equidistant  # binning scheme used to construct edges
+      n_bins: 4
+      # range: [0.0, 2.0]  # optional restriction for binning
+      # edges: [0.0, 0.5, 1.0, 1.5, 2.0]  # alternative to scheme-based
+
+    # Spec-z selection / assignment model parameters
+    # (names depend on what your spec-z builder supports)
+    uncertainties:
+      completeness: 1.0  # fraction kept/assigned (1.0 = complete)
+
+    normalize_bins: true  # normalize each output bin n_i(z) to unit integral

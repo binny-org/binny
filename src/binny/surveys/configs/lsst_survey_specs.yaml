@@ -1,56 +1,92 @@
-lsst:
-  name: lsst
+name: lsst  # optional name for the survey/setup
 
-  grid:  # redshift grid
-    z:
-      start: 0.0
-      stop: 3.5
-      n: 500  # number of redshifts
-
+# Optional survey metadata (binning code can ignore unless requested)
+survey_meta:
   footprint:
-    nominal:
-      survey_area: 18000.0   # deg^2
-      frac_sky: 0.4363
+    # Can provide either survey_area [deg^2] or frac_sky (or both).
+    nominal: {survey_area: 18000.0}
     years:
-      y1:
-        survey_area: 12000.0 # deg^2 (effective)
-        frac_sky: 0.2909
-      y10:
-        survey_area: 14000.0 # deg^2 (effective)
-        frac_sky: 0.3394
+      # Year labels are strings on purpose (stable keys).
+      '1':  {survey_area: 12000.0}
+      '10': {survey_area: 14000.0}
+
+# Redshift grid used for evaluating n(z) and all n_i(z) outputs
+z_grid: {start: 0.0, stop: 3.5, n: 500}
 
 
-  lens_sample:
-    y1:
-      # Smail: (z/z0)^alpha * exp[-(z/z0)^beta]
-      # Original LSST: (z/z0)^gamma * exp[-(z/z0)^alpha]
-      # => alpha := gamma (=2.0), beta := original alpha (=0.94)
-      smail: {alpha: 2.0, beta: 0.94, z0: 0.26}
-      n_gal_arcmin2: 18.0
-      n_tomo_bins: 5
-      bin_range: [0.2, 1.2]
-      binning: equidistant
-      photoz: {scatter_scale: 0.03, mean_offset: 0.0}
+tomography:
+  # LENS (Y1)
+  - role: lens  # optional label (e.g. lens/source); used for bookkeeping/keys
+    year: '1'   # optional label; string is recommended for stable YAML keys
 
-    y10:
-      smail: {alpha: 2.0, beta: 0.90, z0: 0.28}
-      n_gal_arcmin2: 48.0
-      n_tomo_bins: 10
-      bin_range: [0.2, 1.2]
-      binning: equidistant
-      photoz: {scatter_scale: 0.03, mean_offset: 0.0}
+    # Optional population metadata (not needed to build bins)
+    n_gal_arcmin2: 18.0  # surface density [gal/arcmin^2]; optional
 
-  source_sample:
-    y1:
-      smail: {alpha: 2.0, beta: 0.78, z0: 0.13}
-      n_gal_arcmin2: 10.0
-      n_tomo_bins: 5
-      binning: equal_number
-      photoz: {scatter_scale: 0.05, mean_offset: 0.0}
+    # Tomography kind (dispatcher). If omitted, default could be "photoz".
+    kind: photoz
 
-    y10:
-      smail: {alpha: 2.0, beta: 0.68, z0: 0.11}
-      n_gal_arcmin2: 27.0
-      n_tomo_bins: 5
-      binning: equal_number
-      photoz: {scatter_scale: 0.05, mean_offset: 0.0}
+    nz:
+      model: smail
+      params: { z0: 0.26, alpha: 2.0, beta: 0.94}
+
+    # Bin specification:
+    # - Option A (scheme-based): provide scheme + n_bins (+ optional range)
+    # - Option B (explicit edges): provide edges only (no scheme / n_bins)
+    bins:
+      scheme: equidistant
+      n_bins: 5
+      range: [0.2, 1.2]
+      # edges: [0.2, 0.4, 0.6, 0.8, 1.0, 1.2]  # alternative to scheme-based
+
+    # Photo-z uncertainty / error model parameters (name intentionally not "photoz")
+    uncertainties:
+      scatter_scale: 0.03  # sigma(z) ~ scatter_scale * (1+z) * mean_scale
+      mean_offset: 0.0     # mu(z) ~ mean_scale * z - mean_offset
+      # mean_scale: 1.0     # optional (scalar broadcasts), if supported
+
+  # LENS (Y10)
+  - role: lens
+    year: '10'
+    n_gal_arcmin2: 48.0  # surface density [gal/arcmin^2]; optional
+    kind: photoz
+    nz:
+      model: smail
+      params: { z0: 0.28, alpha: 2.0, beta: 0.9 }
+    bins:
+      scheme: equidistant
+      n_bins: 10
+      range: [0.2, 1.2]
+    uncertainties:
+      scatter_scale: 0.03
+      mean_offset: 0.0
+
+  # SOURCE (Y1)
+  - role: source
+    year: '1'
+    n_gal_arcmin2: 10.0  # surface density [gal/arcmin^2]; optional
+    kind: photoz
+    nz:
+      model: smail
+      params: { z0: 0.13, alpha: 2.0, beta: 0.78 }
+    bins:
+      scheme: equal_number
+      n_bins: 5
+      # edges: [...]  # alternative to scheme-based
+    uncertainties:
+      scatter_scale: 0.05
+      mean_offset: 0.0
+
+  # SOURCE (Y10)
+  - role: source
+    year: '10'
+    n_gal_arcmin2: 27.0  # surface density [gal/arcmin^2]; optional
+    kind: photoz
+    nz:
+      model: smail
+      params: { z0: 0.11, alpha: 2.0, beta: 0.68 }
+    bins:
+      scheme: equal_number
+      n_bins: 5
+    uncertainties:
+      scatter_scale: 0.05
+      mean_offset: 0.0

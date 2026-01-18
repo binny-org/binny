@@ -1,19 +1,34 @@
-example_photoz:
-  name: example_photoz  # name of the survey
+# Example survey config using the new schema (with inline comments).
 
-  grid:  # grid of redshifts
-    z: {start: 0.0, stop: 3.0, n: 301}
+name: example_photoz  # optional label for this survey/setup
 
-  nz:  # theoretical redshift distribution, Smail type
-    model: smail
-    params: {z0: 0.5, alpha: 2.0, beta: 1.0}
+survey_meta:  # optional metadata; ignored unless explicitly requested
+  footprint:
+    nominal: {survey_area: 18000.0}  # deg^2
+    years:
+      '1': {survey_area: 12000.0}  # deg^2 for Y1
 
-  tomo:  # tomographic binning configuration
-    kind: photoz  # sampel type
-    binning_scheme: equidistant  # binning scheme
-    n_bins: 4
-    params:
-      scatter_scale: 0.05  # uncertainty on bin edges
-      mean_offset: 0.01  # mean offset of bin edges
-      normalize_input: true  # normalize input to unit integral
-      normalize_bins: true  # normalize bins to unit integral
+z_grid: {start: 0.0, stop: 3.0, n: 301}  # common true-z grid for all outputs
+
+tomography:
+  - role: lens  # sample label (lens/source)
+    year: '1'  # use strings for stable YAML keys
+
+    n_gal_arcmin2: 18.0  # optional surface density [gal/arcmin^2]
+
+    kind: photoz  # tomography kind (dispatcher)
+
+    nz:  # parent redshift distribution model
+      model: smail  # model name resolved by nz registry
+      params: {z0: 0.5, alpha: 2.0, beta: 1.0}  # model parameters
+
+    bins:  # bin specification (choose scheme-based OR explicit edges)
+      scheme: equidistant  # binning scheme name
+      n_bins: 4  # number of tomographic bins
+      # range: [0.2, 1.2]  # optional restriction for binning
+      # edges: [0.2, 0.45, 0.7, 0.95, 1.2]  # alternative to scheme-based
+
+    uncertainties:  # photo-z uncertainty model parameters
+      scatter_scale: 0.05  # sigma(z) = scatter_scale * (1+z) * mean_scale
+      mean_offset: 0.01  # mu(z) = mean_scale * z - mean_offset
+      # mean_scale: 1.0  # optional, if supported by your photo-z model

@@ -4,8 +4,10 @@ import numpy as np
 import pytest
 
 from binny.utils.validators import (
+    edge_coercion,
     resolve_binning_method,
     validate_axis_and_weights,
+    validate_grid_spec,
     validate_interval,
     validate_mixed_segments,
     validate_n_bins,
@@ -231,9 +233,7 @@ def test_validate_mixed_segments_requires_mapping():
 def test_validate_mixed_segments_requires_method_and_n_bins_keys():
     """Tests that validate_mixed_segments requires 'method' and 'n_bins' keys."""
     segments = [{"method": "eq"}]
-    with pytest.raises(
-        ValueError, match=r"must contain at least 'method' and 'n_bins'"
-    ):
+    with pytest.raises(ValueError, match=r"must contain at least 'method' and 'n_bins'"):
         validate_mixed_segments(segments)
 
 
@@ -409,3 +409,70 @@ def test_validate_same_shape_raises_with_custom_names():
     """Tests that validate_same_shape errors mention the provided names."""
     with pytest.raises(ValueError, match=r"x and y must have the same shape"):
         validate_same_shape([1, 2, 3], [1, 2], name_a="x", name_b="y")
+
+
+def test_validate_grid_spec_rejects_non_int_like_n():
+    """Tests that validate_grid_spec raises TypeError for non-int-like n."""
+    with pytest.raises(TypeError, match=r"n must be an integer >= 2"):
+        validate_grid_spec(0.0, 1.0, "3")  # type: ignore[arg-type]
+
+
+def test_validate_grid_spec_rejects_non_real_endpoints():
+    """Tests that validate_grid_spec raises TypeError for non-real endpoints."""
+    with pytest.raises(TypeError, match=r"x_min and x_max must be real numbers"):
+        validate_grid_spec("nope", 1.0, 3)  # type: ignore[arg-type]
+
+
+def test_edge_coercion_mapping_missing_index_raises_with_message():
+    """Tests that edge_coercion mapping case raises on missing bin index."""
+    edges = {0: (0.0, 1.0)}
+    with pytest.raises(ValueError, match=r"bin_edges is missing bin index"):
+        edge_coercion([0, 1], edges)
+
+
+def test_edge_coercion_array_out_of_range_bin_raises():
+    """Tests that edge_coercion array case raises for out-of-range bin index."""
+    edges = np.array([0.0, 1.0, 2.0])
+    with pytest.raises(ValueError, match=r"out of range"):
+        edge_coercion([2], edges)
+
+
+def test_validate_grid_spec_rejects_non_int_like_n_valueerror_from_int():
+    """Tests that validate_grid_spec wraps ValueError from int(n) into TypeError."""
+    with pytest.raises(TypeError, match=r"n must be an integer >= 2"):
+        validate_grid_spec(0.0, 1.0, "3")  # type: ignore[arg-type]
+
+
+def test_edge_coercion_mapping_happy_path_returns_float_pairs():
+    """Tests that edge_coercion mapping case returns float-valued edge pairs."""
+    edges = {0: ("0.0", "1.0"), 2: (2, 3)}
+    out = edge_coercion([0, 2], edges)
+    assert out == {0: (0.0, 1.0), 2: (2.0, 3.0)}
+    assert isinstance(out[0][0], float)
+    assert isinstance(out[0][1], float)
+
+
+def test_edge_coercion_array_bad_shape_raises():
+    """Tests that edge_coercion rejects non-1D or too-short edge arrays."""
+    with pytest.raises(ValueError, match=r"1D sequence"):
+        edge_coercion([0], np.array([[0.0, 1.0]]))
+    with pytest.raises(ValueError, match=r"length at least 2"):
+        edge_coercion([0], np.array([0.0]))
+
+
+def test_edge_coercion_array_nonfinite_raises():
+    """Tests that edge_coercion rejects arrays with non-finite values."""
+    with pytest.raises(ValueError, match=r"must be finite"):
+        edge_coercion([0], [0.0, np.nan, 1.0])
+
+
+def test_edge_coercion_array_not_strictly_increasing_raises():
+    """Tests that edge_coercion rejects arrays that are not strictly increasing."""
+    with pytest.raises(ValueError, match=r"strictly increasing"):
+        edge_coercion([0], [0.0, 0.0, 1.0])
+
+
+def test_edge_coercion_array_happy_path_builds_mapping():
+    """Tests that edge_coercion array case builds the expected mapping."""
+    out = edge_coercion([0, 1], [0.0, 1.0, 3.0])
+    assert out == {0: (0.0, 1.0), 1: (1.0, 3.0)}

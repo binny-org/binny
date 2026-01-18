@@ -1,10 +1,9 @@
+"""Public Binny API."""
+
 from __future__ import annotations
 
-from importlib import import_module
+from binny.api.nz_tomography import NZTomography
 
-_api = import_module("binny.api")
-
-__all__ = list(getattr(_api, "__all__", []))
-
-for name in __all__:
-    globals()[name] = getattr(_api, name)
+__all__ = [
+    "NZTomography",
+]

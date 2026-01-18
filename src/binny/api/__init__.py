@@ -4,13 +4,7 @@ from __future__ import annotations
 
 from importlib import import_module
 
-_API_MODULES = (
-    "binny.api.distributions",
-    "binny.api.edges",
-    "binny.api.metrics",
-    "binny.api.surveys",
-    "binny.api.tomo",
-)
+_API_MODULES = ("binny.api.nz_tomography",)
 
 __all__: list[str] = []
 
