@@ -1,7 +1,15 @@
-"""Session-style tomography facade.
+"""Survey-level convenience APIs.
 
-Users only import NZTomography. The class caches (z, nz) and an optional
-tomography entry spec, then builds bins and computes diagnostics.
+This module provides user-facing helpers for building tomographic
+redshift bins from survey specifications. The helpers wire together three
+steps that are commonly used together:
+
+1) build (or accept) a common true-redshift grid ``z``,
+2) evaluate a parent redshift distribution ``n(z)`` on that grid,
+3) build tomographic bins using photo-z or spec-z selection models.
+
+The primary workflow is config-driven (YAML). Mapping-based variants provide
+the same behavior without file I/O.
 """
 
 from __future__ import annotations
@@ -31,7 +39,19 @@ __all__ = ["NZTomography"]
 
 
 class NZTomography:
-    """User-facing API for tomography: cache parent, build bins, compute stats."""
+    """Builds photo-z-selected tomographic bins.
+
+    For each observed-redshift bin ``[z_ph_min, z_ph_max]``, this constructs a
+    true-redshift distribution
+
+        ``n_bin(z) = n(z) * P(bin | z)``,
+
+    where ``P(bin | z)`` is the probability that an object at true redshift ``z``
+    is assigned to that photo-z bin under the configured photo-z model.
+
+    The public entry point returns a dict mapping bin index to the corresponding
+    ``n_bin(z)`` evaluated on a common true-z grid.
+    """
 
     def __init__(self) -> None:
         self._parent: dict[str, Any] | None = None
@@ -250,12 +270,12 @@ class NZTomography:
         return self._last.get("tomo_meta")
 
     def shape_stats(self, **kwargs) -> dict[str, Any]:
-        """Compute shape-only stats for cached bins."""
+        """Computes shape-only stats for cached bins."""
         self._require_bins()
         return _shape_stats(z=self._parent["z"], bins=self._last["bins"], **kwargs)
 
     def population_stats(self, **kwargs) -> dict[str, Any]:
-        """Compute population stats from cached tomo metadata."""
+        """Computes population stats from cached tomo metadata."""
         self._require_bins()
         meta = self._last.get("tomo_meta")
         if meta is None:

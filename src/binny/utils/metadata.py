@@ -172,7 +172,7 @@ def save_metadata_txt(
     *,
     decimal_places: int | None = 2,
 ) -> Path:
-    """Write metadata to a UTF-8 text file."""
+    """Writes metadata to a UTF-8 text file."""
     p = Path(path)
     rounded = _round_floats(dict(meta), decimal_places)
     p.write_text(_format(rounded) + "\n", encoding="utf-8")
