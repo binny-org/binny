@@ -3,6 +3,7 @@
 import numpy as np
 import pytest
 
+import binny.axes.mixed_edges as memod
 from binny.axes.mixed_edges import (
     _call_with,
     _get,
@@ -34,6 +35,7 @@ def test_call_with_applies_casts_and_calls_func():
     """Tests that _call_with casts params and calls the function correctly."""
 
     def dummy_func(*, x_min: float, x_max: float, n_bins: int) -> np.ndarray:
+        """Dummy function that returns a linspace."""
         assert isinstance(x_min, float)
         assert isinstance(x_max, float)
         return np.linspace(x_min, x_max, n_bins + 1)
@@ -57,12 +59,20 @@ def test_mixed_edges_concatenates_segments_without_duplicate_boundary():
     """Tests that mixed_edges concatenates segments and removes duplicate
     boundaries."""
     segments = [
-        {"method": "equidistant", "n_bins": 2, "params": {"x_min": 0.0, "x_max": 2.0}},
-        {"method": "equidistant", "n_bins": 2, "params": {"x_min": 2.0, "x_max": 4.0}},
+        {
+            "method": "equidistant",
+            "n_bins": 2,
+            "params": {"x_min": 0.0, "x_max": 2.0},
+        },
+        {
+            "method": "equidistant",
+            "n_bins": 2,
+            "params": {"x_min": 2.0, "x_max": 4.0},
+        },
     ]
     edges = mixed_edges(segments)
 
-    assert edges.shape == (5,)  # 3 + (3-1) = 5
+    assert edges.shape == (5,)
     assert np.allclose(edges, np.array([0.0, 1.0, 2.0, 3.0, 4.0]))
     assert np.all(np.diff(edges) > 0)
 
@@ -71,9 +81,17 @@ def test_mixed_edges_raises_when_segment_boundaries_do_not_match():
     """Tests that mixed_edges raises ValueError when segment boundaries
     do not match."""
     segments = [
-        {"method": "equidistant", "n_bins": 2, "params": {"x_min": 0.0, "x_max": 2.0}},
+        {
+            "method": "equidistant",
+            "n_bins": 2,
+            "params": {"x_min": 0.0, "x_max": 2.0},
+        },
         # starts at 2.1 instead of 2.0
-        {"method": "equidistant", "n_bins": 2, "params": {"x_min": 2.1, "x_max": 4.0}},
+        {
+            "method": "equidistant",
+            "n_bins": 2,
+            "params": {"x_min": 2.1, "x_max": 4.0},
+        },
     ]
     with pytest.raises(ValueError, match=r"does not match previous right edge"):
         mixed_edges(segments)
@@ -148,7 +166,11 @@ def test_mixed_edges_log_and_geometric_are_monotonic():
     """Tests that mixed_edges with log and geometric segments
     produces strictly increasing edges."""
     segments = [
-        {"method": "log", "n_bins": 3, "params": {"x_min": 1.0, "x_max": 100.0}},
+        {
+            "method": "log",
+            "n_bins": 3,
+            "params": {"x_min": 1.0, "x_max": 100.0},
+        },
         {
             "method": "geometric",
             "n_bins": 2,
@@ -215,7 +237,61 @@ def test_validate_segment_edges_allows_boundary_match_within_tolerance():
     """Tests that _validate_segment_edges allows left edge to match previous
     right edge within tolerance."""
     edges = np.array([2.0, 3.0, 4.0])
-    right = _validate_segment_edges(
-        1, edges, n_bins=2, prev_right=2.0 + 1e-13, atol=1e-12
-    )
+    right = _validate_segment_edges(1, edges, n_bins=2, prev_right=2.0 + 1e-13, atol=1e-12)
     assert right == 4.0
+
+
+def test_mixed_edges_final_sanity_check_catches_nonincreasing_combined_edges(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Tests that mixed_edges raises if the combined edge array is not increasing."""
+
+    def fake_call_with(
+        seg_i: int,
+        params,
+        n_bins: int,
+        g,
+        *,
+        func,
+        required,
+        casts=None,
+    ) -> np.ndarray:
+        """Fake calls to _call_with that return different edges for each segment."""
+        _ = params, n_bins, g, func, required, casts
+        if seg_i == 0:
+            return np.array([0.0, 1.0, 2.0], dtype=float)
+        return np.array([2.0, 1.5, 3.0], dtype=float)
+
+    def fake_validate_segment_edges(
+        seg_i: int,
+        edges: np.ndarray,
+        *,
+        n_bins: int,
+        prev_right: float | None,
+        atol: float = 1e-12,
+    ) -> float:
+        """Fake validation that rejects non-increasing edges for the second segment."""
+        _ = seg_i, n_bins
+        edges = np.asarray(edges, dtype=float)
+        if prev_right is not None and not np.isclose(edges[0], prev_right, rtol=0, atol=atol):
+            raise ValueError("boundary mismatch in test")
+        return float(edges[-1])
+
+    monkeypatch.setattr(memod, "_call_with", fake_call_with)
+    monkeypatch.setattr(memod, "_validate_segment_edges", fake_validate_segment_edges)
+
+    segments = [
+        {
+            "method": "equidistant",
+            "n_bins": 2,
+            "params": {"x_min": 0.0, "x_max": 2.0},
+        },
+        {
+            "method": "equidistant",
+            "n_bins": 2,
+            "params": {"x_min": 2.0, "x_max": 4.0},
+        },
+    ]
+
+    with pytest.raises(ValueError, match=r"Combined mixed edges are not strictly increasing"):
+        memod.mixed_edges(segments)

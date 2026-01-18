@@ -10,11 +10,13 @@ import pytest
 from binny.surveys.sky import (
     arcmin2_to_deg2,
     arcmin2_to_sr,
+    area_to_arcmin2,
     deg2_to_arcmin2,
     deg2_to_f_sky,
     deg2_to_sr,
     density_arcmin2_to_sr,
     density_sr_to_arcmin2,
+    density_to_per_arcmin2,
     f_sky_to_deg2,
     f_sky_to_sr,
     sr_to_arcmin2,
@@ -159,3 +161,86 @@ def test_arcmin2_per_sr_factor_is_consistent() -> None:
     arcmin2_per_sr = sr_to_arcmin2(1.0)
     expected = _DEG2_PER_SR * 60.0 * 60.0
     assert np.isclose(arcmin2_per_sr, expected, rtol=0.0, atol=1e-10)
+
+
+def test_area_to_arcmin2_rejects_unknown_unit() -> None:
+    """Tests that area_to_arcmin2 rejects unknown unit strings."""
+    with pytest.raises(ValueError, match="unit must be one of"):
+        area_to_arcmin2(1.0, unit="m2")
+
+
+def test_area_to_arcmin2_rejects_negative_area() -> None:
+    """Tests that area_to_arcmin2 rejects negative area values."""
+    with pytest.raises(ValueError, match="area must be non-negative"):
+        area_to_arcmin2(-1.0, unit="deg2")
+
+
+def test_area_to_arcmin2_warns_on_zero_area() -> None:
+    """Tests that area_to_arcmin2 warns when area is 0."""
+    with pytest.warns(UserWarning, match="area is 0"):
+        out = area_to_arcmin2(0.0, unit="deg2")
+    assert out == 0.0
+
+
+@pytest.mark.parametrize("unit", ["arcmin2", "arcmin^2"])
+def test_area_to_arcmin2_identity_for_arcmin2_units(unit: str) -> None:
+    """Tests that area_to_arcmin2 is identity for arcmin2-like units."""
+    out = area_to_arcmin2(12.5, unit=unit)
+    assert np.isclose(out, 12.5, rtol=0.0, atol=0.0)
+
+
+@pytest.mark.parametrize("unit", ["deg2", "deg^2"])
+def test_area_to_arcmin2_converts_from_deg2(unit: str) -> None:
+    """Tests that area_to_arcmin2 converts from deg2 to arcmin2."""
+    out = area_to_arcmin2(2.0, unit=unit)
+    assert np.isclose(out, deg2_to_arcmin2(2.0), rtol=0.0, atol=1e-12)
+
+
+@pytest.mark.parametrize("unit", ["sr", "steradian", "steradians"])
+def test_area_to_arcmin2_converts_from_sr(unit: str) -> None:
+    """Tests that area_to_arcmin2 converts from sr to arcmin2."""
+    out = area_to_arcmin2(1.23, unit=unit)
+    assert np.isclose(out, sr_to_arcmin2(1.23), rtol=0.0, atol=1e-12)
+
+
+def test_density_to_per_arcmin2_rejects_unknown_unit() -> None:
+    """Tests that density_to_per_arcmin2 rejects unknown unit strings."""
+    with pytest.raises(ValueError, match="unit must be one of"):
+        density_to_per_arcmin2(1.0, unit="m2")
+
+
+def test_density_to_per_arcmin2_rejects_negative_density() -> None:
+    """Tests that density_to_per_arcmin2 rejects negative density values."""
+    with pytest.raises(ValueError, match="density must be non-negative"):
+        density_to_per_arcmin2(-1.0, unit="arcmin2")
+
+
+def test_density_to_per_arcmin2_warns_on_zero_density() -> None:
+    """Tests that density_to_per_arcmin2 warns when density is 0."""
+    with pytest.warns(UserWarning, match="density is 0"):
+        out = density_to_per_arcmin2(0.0, unit="deg2")
+    assert out == 0.0
+
+
+@pytest.mark.parametrize("unit", ["arcmin2", "arcmin^2"])
+def test_density_to_per_arcmin2_identity_for_arcmin2_units(unit: str) -> None:
+    """Tests that density_to_per_arcmin2 is identity for arcmin2-like units."""
+    out = density_to_per_arcmin2(3.4, unit=unit)
+    assert np.isclose(out, 3.4, rtol=0.0, atol=0.0)
+
+
+@pytest.mark.parametrize("unit", ["deg2", "deg^2"])
+def test_density_to_per_arcmin2_converts_from_deg2(unit: str) -> None:
+    """Tests that density_to_per_arcmin2 converts from per-deg2 to per-arcmin2."""
+    d = 3600.0  # 1 gal/arcmin2 expressed as gal/deg2
+    out = density_to_per_arcmin2(d, unit=unit)
+    assert np.isclose(out, 1.0, rtol=0.0, atol=1e-12)
+
+
+@pytest.mark.parametrize("unit", ["sr", "steradian", "steradians"])
+def test_density_to_per_arcmin2_converts_from_sr(unit: str) -> None:
+    """Tests that density_to_per_arcmin2 converts from per-sr to per-arcmin2."""
+    d_sr = 123.0
+    out = density_to_per_arcmin2(d_sr, unit=unit)
+    expected = d_sr / float(sr_to_arcmin2(1.0))
+    assert np.isclose(out, expected, rtol=0.0, atol=1e-12)

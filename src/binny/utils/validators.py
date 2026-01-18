@@ -21,6 +21,7 @@ __all__ = [
     "validate_probability_vector",
     "validate_same_shape",
     "validate_grid_spec",
+    "edge_coercion",
 ]
 
 FloatArray2D: TypeAlias = NDArray[np.float64]
@@ -113,8 +114,7 @@ def validate_n_bins(
 
     if n_bins > max_bins:
         raise ValueError(
-            f"n_bins={n_bins} is too large; may cause memory issues "
-            f"(max allowed={max_bins})."
+            f"n_bins={n_bins} is too large; may cause memory issues (max allowed={max_bins})."
         )
 
 
@@ -248,9 +248,7 @@ def validate_mixed_segments(
             raise TypeError(f"Segment {i} must be a mapping, got {type(seg).__name__}.")
 
         if "method" not in seg or "n_bins" not in seg:
-            raise ValueError(
-                f"Segment {i} must contain at least 'method' and 'n_bins' keys."
-            )
+            raise ValueError(f"Segment {i} must contain at least 'method' and 'n_bins' keys.")
 
         if not isinstance(seg["method"], str):
             raise TypeError(f"Segment {i}: 'method' must be a string.")
@@ -270,9 +268,7 @@ def validate_mixed_segments(
         n_sum += n_bins
 
     if total_n_bins is not None and n_sum != total_n_bins:
-        raise ValueError(
-            f"Sum of segment n_bins is {n_sum}, but total_n_bins is {total_n_bins}."
-        )
+        raise ValueError(f"Sum of segment n_bins is {n_sum}, but total_n_bins is {total_n_bins}.")
 
 
 def validate_response_matrix(matrix: FloatArray2D, n_bins: int) -> None:
@@ -305,9 +301,7 @@ def validate_response_matrix(matrix: FloatArray2D, n_bins: int) -> None:
     matrix_clip = np.maximum(matrix, 0.0)
     col_sums = matrix_clip.sum(axis=0)
     if not np.allclose(col_sums, 1.0, rtol=1e-6, atol=1e-10):
-        raise ValueError(
-            "Each column of misassignment_matrix must sum to 1 (column-stochastic)."
-        )
+        raise ValueError("Each column of misassignment_matrix must sum to 1 (column-stochastic).")
 
 
 def validated_float_arrays(x: ArrayLike, y: ArrayLike) -> tuple[FloatArray, FloatArray]:
@@ -449,3 +443,57 @@ def validate_grid_spec(
         raise ValueError("log-spaced grids require x_min > 0 and x_max > 0.")
 
     return x0, x1, n_int
+
+
+def edge_coercion(
+    bin_indices: Sequence[int],
+    bin_edges: Mapping[int, tuple[float, float]] | Sequence[float] | np.ndarray,
+) -> dict[int, tuple[float, float]]:
+    """Returns a mapping from bin index to ``(lo, hi)`` edge pairs.
+
+    This normalizes bin-edge inputs into a consistent dictionary form. It supports
+    either an explicit per-bin edge mapping or a single strictly increasing edge
+    array interpreted in the standard way, where bin ``j`` corresponds to
+    ``(edges[j], edges[j+1])``.
+
+    Args:
+        bin_indices: Bin indices that must be present in the returned mapping.
+        bin_edges: Either a mapping ``{idx: (lo, hi)}`` or a 1D strictly increasing
+            edge array ``[e0, e1, ..., eN]``.
+
+    Returns:
+        A mapping ``{idx: (lo, hi)}`` with float-valued edge pairs.
+
+    Raises:
+        ValueError: If a required bin index is missing from a mapping input.
+        ValueError: If an edge array is not 1D, has fewer than two entries, contains
+            non-finite values, or is not strictly increasing.
+        ValueError: If any requested bin index is out of range for an edge array.
+    """
+    bin_indices = [int(i) for i in bin_indices]
+    edges_map: dict[int, tuple[float, float]] = {}
+
+    if isinstance(bin_edges, Mapping):
+        for j in bin_indices:
+            try:
+                lo, hi = bin_edges[j]
+            except KeyError as e:
+                raise ValueError(f"bin_edges is missing bin index {e.args[0]}.") from e
+            edges_map[j] = (float(lo), float(hi))
+        return edges_map
+
+    edges_arr = np.asarray(bin_edges, dtype=float)
+    if edges_arr.ndim != 1 or edges_arr.size < 2:
+        raise ValueError("bin_edges must be a 1D sequence with length at least 2.")
+    if not np.all(np.isfinite(edges_arr)):
+        raise ValueError("bin_edges must be finite.")
+    if not np.all(np.diff(edges_arr) > 0):
+        raise ValueError("bin_edges must be strictly increasing.")
+
+    max_bin = edges_arr.size - 2
+    for j in bin_indices:
+        if j < 0 or j > max_bin:
+            raise ValueError(f"bin index {j} is out of range for edges of length {edges_arr.size}.")
+        edges_map[j] = (float(edges_arr[j]), float(edges_arr[j + 1]))
+
+    return edges_map

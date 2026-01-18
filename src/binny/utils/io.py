@@ -78,9 +78,7 @@ def load_nz(
                 z = np.asarray(arr["z"], dtype=float)
                 nz = np.asarray(arr["nz"], dtype=float)
             except KeyError as exc:
-                raise ValueError(
-                    f".npy file {path} does not contain 'z' and 'nz' fields."
-                ) from exc
+                raise ValueError(f".npy file {path} does not contain 'z' and 'nz' fields.") from exc
         else:
             raise ValueError(
                 f"Unsupported .npy structure in {path!s}; expected an (N, 2) array "
@@ -122,9 +120,7 @@ def load_nz(
         arr = np.asarray(arr)
 
         if arr.ndim == 1:
-            raise ValueError(
-                f"Text file {path!s} must have at least two columns for z and n(z)."
-            )
+            raise ValueError(f"Text file {path!s} must have at least two columns for z and n(z).")
         if arr.shape[1] <= max(x_col, nz_col):
             raise ValueError(
                 f"Requested columns x_col={x_col}, nz_col={nz_col} are out of bounds "
@@ -145,9 +141,7 @@ def load_nz(
     nz = np.asarray(nz, dtype=float).ravel()
 
     if z.size != nz.size:
-        raise ValueError(
-            f"z and nz must have the same length; got {z.size} and {nz.size}."
-        )
+        raise ValueError(f"z and nz must have the same length; got {z.size} and {nz.size}.")
 
     if not np.all(np.isfinite(z)):
         raise ValueError("Loaded z contains non-finite values.")
@@ -200,9 +194,7 @@ def load_binning_recipe(path: str) -> list[dict[str, Any]]:
             raise ValueError(f"Segment {i} must be a mapping.")
 
         if "method" not in seg or "n_bins" not in seg:
-            raise ValueError(
-                f"Segment {i} must contain at least 'method' and 'n_bins'."
-            )
+            raise ValueError(f"Segment {i} must contain at least 'method' and 'n_bins'.")
 
         method = str(seg["method"])
         n_bins = int(seg["n_bins"])
@@ -255,16 +247,12 @@ def load_yaml(
         from importlib import resources
 
         filename = str(source)
-        with (
-            resources.files(package).joinpath(filename).open("r", encoding="utf-8") as f
-        ):
+        with resources.files(package).joinpath(filename).open("r", encoding="utf-8") as f:
             data = yaml.safe_load(f)
 
     if not isinstance(data, Mapping):
         where = str(source) if package is None else f"{package}:{source}"
         got = type(data).__name__
-        raise ValueError(
-            f"Top-level YAML content must be a mapping; got {got} in {where}."
-        )
+        raise ValueError(f"Top-level YAML content must be a mapping; got {got} in {where}.")
 
     return dict(data)

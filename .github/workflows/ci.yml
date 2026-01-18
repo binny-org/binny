@@ -35,4 +35,4 @@ jobs:
 
       - name: Tests (pytest)
         run: |
-          pytest
+          pytest --cov=binny --cov-report=term-missing --cov-report=xml

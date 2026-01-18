@@ -4,76 +4,144 @@ version = "0.1.0"
 description = "Flexible tomographic binning algorithms for cosmology."
 readme = "README.md"
 requires-python = ">=3.10"
-authors = [{ name = "Nikolina Sarcevic", email = "nikolina.sarcevic@gmail.com" }]
 license = { text = "MIT" }
+authors = [{ name = "Nikolina Sarcevic", email = "nikolina.sarcevic@gmail.com" }]
 
 dependencies = [
   "numpy",
-  "scipy",
-  "tox",
   "pyyaml",
+  "scipy",
 ]
 
 [project.optional-dependencies]
 dev = [
-  "ruff>=0.6",
+  "bump-my-version>=0.26",
   "pytest>=8",
   "pytest-cov>=5",
-  "bump-my-version>=0.26",
+  "ruff>=0.6",
+  "tox>=4.22",
 ]
-
 docs = [
   "sphinx[doctest]",
   "sphinx-design",
   "sphinx-multiversion",
-  "sphinxawesome-theme"
 ]
 
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[tool.coverage.run]
+branch = true
+parallel = true
+source = ["binny"]
+
+[tool.coverage.report]
+exclude_lines = [
+  "pragma: no cover",
+  "if TYPE_CHECKING:",
+  "raise NotImplementedError",
+]
+fail_under = 90
+show_missing = true
+skip_empty = true
+
+[tool.pytest.ini_options]
+addopts = "-m 'not slow'"
+markers = [
+  "slow: long-running tests (opt-in)",
+  "regression: heavier regression / sweep tests (opt-in)",
+]
+testpaths = ["tests"]
 
 [tool.ruff]
-line-length = 88
-target-version = "py310"
 exclude = [
   "benchmarks",
 ]
-
-[tool.ruff.lint]
-select = ["E", "F", "I", "B", "UP"]
+line-length = 100
+target-version = "py310"
 
 [tool.ruff.format]
-quote-style = "double"
 indent-style = "space"
+quote-style = "double"
 
+[tool.ruff.lint]
+select = ["B", "E", "F", "I", "UP"]
 
-[tool.tox.env_run_base.setenv]
-PIP_CACHE_DIR = "{tox_root}/.cache/pip"
+[tool.setuptools]
+package-dir = { "" = "src" }
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+"binny.surveys" = ["configs/*.yaml"]
+
+[tool.bumpversion]
+commit = true
+current_version = "0.1.0"
+tag = true
+
+[tool.bumpversion.files."pyproject.toml"]
+replace = 'version = "{new_version}"'
+search = 'version = "{current_version}"'
 
 
 [tool.tox]
 requires = ["tox>=4.22"]
 envlist = [
+  "py312",
+  "cov",
+  "cov-strict",
   "docs",
+  "do",
   "docs-releases",
 ]
 
+
+[tool.tox.env_run_base.setenv]
+PIP_CACHE_DIR = "{tox_root}/.cache/pip"
+
+[tool.tox.env.py312]
+description = "Run unit tests"
+extras = ["dev"]
+commands = [
+  ["pytest", "-q"],
+]
+
+[tool.tox.env.cov]
+description = "Coverage report for dev (does not fail)"
+extras = ["dev"]
+commands = [
+  [
+    "pytest",
+    "-q",
+    "--cov=binny",
+    "--cov-branch",
+    "--cov-report=term-missing:skip-covered",
+    "--cov-fail-under=0",
+  ],
+]
+
+[tool.tox.env.cov-strict]
+description = "Coverage gate (fails if below fail_under)"
+extras = ["dev"]
+commands = [
+  [
+    "pytest",
+    "-q",
+    "--cov=binny",
+    "--cov-branch",
+    "--cov-report=term-missing:skip-covered",
+  ],
+]
 
 [tool.tox.env.docs]
 description = "Build the HTML files for the current state using Sphinx"
 extras = ["docs"]
 commands = [
-  [
-    "sphinx-apidoc",
-    "-o", "{tox_root}/docs",
-    "{tox_root}/src/binny",
-    "--separate",
-    "-f",
-  ],
-  [
-    "sphinx-build",
-    "{tox_root}/docs",
-    "{tox_root}/docs/_build/html",
-    "--fail-on-warning",
-  ],
+  ["sphinx-apidoc", "-o", "{tox_root}/docs", "{tox_root}/src/binny", "--separate", "-f"],
+  ["sphinx-build", "{tox_root}/docs", "{tox_root}/docs/_build/html", "--fail-on-warning"],
 ]
 
 [tool.tox.env.do]
@@ -91,55 +159,7 @@ description = "Build the documentation for binny releases using Sphinx"
 extras = ["docs"]
 allowlist_externals = ["cp"]
 commands = [
-  [
-    "sphinx-apidoc",
-    "-o", "{tox_root}/docs",
-    "{tox_root}/src/binny",
-    "--separate",
-    "-f",
-  ],
-  [
-    "sphinx-multiversion",
-    "{tox_root}/docs",
-    "{tox_root}/docs/_build/html",
-    "--fail-on-warning",
-  ],
-  [
-    "cp",
-    "{tox_root}/docs/_templates/pages_redirect.html",
-    "{tox_root}/docs/_build/html/index.html",
-  ],
+  ["sphinx-apidoc", "-o", "{tox_root}/docs", "{tox_root}/src/binny", "--separate", "-f"],
+  ["sphinx-multiversion", "{tox_root}/docs", "{tox_root}/docs/_build/html", "--fail-on-warning"],
+  ["cp", "{tox_root}/docs/_templates/pages_redirect.html", "{tox_root}/docs/_build/html/index.html"],
 ]
-
-
-[tool.pytest.ini_options]
-addopts = "-m 'not slow'"
-testpaths = ["tests"]
-markers = [
-  "slow: long-running tests (opt-in)",
-  "regression: heavier regression / sweep tests (opt-in)",
-]
-
-[tool.setuptools]
-package-dir = { "" = "src" }
-
-[tool.setuptools.packages.find]
-where = ["src"]
-
-[tool.setuptools.package-data]
-"binny.surveys" = ["configs/*.yaml"]
-
-
-[tool.bumpversion]
-current_version = "0.1.0"
-commit = true
-tag = true
-
-[tool.bumpversion.files."pyproject.toml"]
-search = 'version = "{current_version}"'
-replace = 'version = "{new_version}"'
-
-
-[build-system]
-requires = ["setuptools>=61"]
-build-backend = "setuptools.build_meta"

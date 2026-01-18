@@ -45,9 +45,7 @@ def _gaussian(x: np.ndarray, mu: float, sig: float) -> np.ndarray:
 
 def _weights_pos(x: np.ndarray) -> np.ndarray:
     """Generates a toy positive weight function for testing."""
-    w = 1.0 + 0.2 * _gaussian(
-        x, mu=0.9 * (x.min() + x.max()), sig=0.3 * (x.max() - x.min())
-    )
+    w = 1.0 + 0.2 * _gaussian(x, mu=0.9 * (x.min() + x.max()), sig=0.3 * (x.max() - x.min()))
     return np.asarray(w, dtype=float)
 
 
@@ -56,9 +54,7 @@ def _chi_of_z(z: np.ndarray) -> np.ndarray:
     return z + 0.15 * z**2
 
 
-def _two_segment_specs(
-    method0: str, method1: str, *, n0: int = 3, n1: int = 4
-) -> list[dict]:
+def _two_segment_specs(method0: str, method1: str, *, n0: int = 3, n1: int = 4) -> list[dict]:
     """Generates a two-segment binning specification for testing."""
     return [
         {"method": method0, "n_bins": n0, "params": {}},
@@ -70,7 +66,11 @@ def test_mixed_edges_method_alias_invariance() -> None:
     """Tests that method aliases produce identical edges."""
     segs_a = [{"method": "eq", "n_bins": 6, "params": {"x_min": 0.0, "x_max": 2.0}}]
     segs_b = [
-        {"method": "equidistant", "n_bins": 6, "params": {"x_min": 0.0, "x_max": 2.0}}
+        {
+            "method": "equidistant",
+            "n_bins": 6,
+            "params": {"x_min": 0.0, "x_max": 2.0},
+        }
     ]
 
     ea = mixed_edges(segs_a, total_n_bins=6)
@@ -82,8 +82,16 @@ def test_mixed_edges_method_alias_invariance() -> None:
 def test_mixed_edges_is_deterministic() -> None:
     """Tests that repeated calls with the same inputs yield identical edges."""
     segs = [
-        {"method": "equidistant", "n_bins": 3, "params": {"x_min": 0.0, "x_max": 1.0}},
-        {"method": "equidistant", "n_bins": 2, "params": {"x_min": 1.0, "x_max": 2.0}},
+        {
+            "method": "equidistant",
+            "n_bins": 3,
+            "params": {"x_min": 0.0, "x_max": 1.0},
+        },
+        {
+            "method": "equidistant",
+            "n_bins": 2,
+            "params": {"x_min": 1.0, "x_max": 2.0},
+        },
     ]
     e1 = mixed_edges(segs, total_n_bins=5)
     e2 = mixed_edges(segs, total_n_bins=5)
@@ -120,8 +128,16 @@ def test_mixed_edges_segment_param_overrides_global_fallback() -> None:
 def test_mixed_edges_concatenation_boundary_dedup() -> None:
     """Tests that shared boundaries between segments appear only once."""
     segments = [
-        {"method": "equidistant", "n_bins": 3, "params": {"x_min": 0.0, "x_max": 1.0}},
-        {"method": "equidistant", "n_bins": 2, "params": {"x_min": 1.0, "x_max": 2.0}},
+        {
+            "method": "equidistant",
+            "n_bins": 3,
+            "params": {"x_min": 0.0, "x_max": 1.0},
+        },
+        {
+            "method": "equidistant",
+            "n_bins": 2,
+            "params": {"x_min": 1.0, "x_max": 2.0},
+        },
     ]
 
     e = mixed_edges(segments, total_n_bins=5)
@@ -134,8 +150,16 @@ def test_mixed_edges_translation_invariance_for_interval_methods() -> None:
     """Tests that translating the input interval translates the edges."""
     shift = 3.7
     segments0 = [
-        {"method": "equidistant", "n_bins": 4, "params": {"x_min": 0.0, "x_max": 2.0}},
-        {"method": "equidistant", "n_bins": 3, "params": {"x_min": 2.0, "x_max": 5.0}},
+        {
+            "method": "equidistant",
+            "n_bins": 4,
+            "params": {"x_min": 0.0, "x_max": 2.0},
+        },
+        {
+            "method": "equidistant",
+            "n_bins": 3,
+            "params": {"x_min": 2.0, "x_max": 5.0},
+        },
     ]
     segments_s = [
         {
@@ -160,8 +184,16 @@ def test_mixed_edges_scale_invariance_for_interval_methods() -> None:
     """Tests that scaling the input interval scales the edges."""
     scale = 2.5
     segments0 = [
-        {"method": "equidistant", "n_bins": 4, "params": {"x_min": 0.0, "x_max": 2.0}},
-        {"method": "equidistant", "n_bins": 3, "params": {"x_min": 2.0, "x_max": 5.0}},
+        {
+            "method": "equidistant",
+            "n_bins": 4,
+            "params": {"x_min": 0.0, "x_max": 2.0},
+        },
+        {
+            "method": "equidistant",
+            "n_bins": 3,
+            "params": {"x_min": 2.0, "x_max": 5.0},
+        },
     ]
     segments_s = [
         {
@@ -277,8 +309,16 @@ def test_mixed_edges_equidistant_chi_invariant_under_linear_chi_rescaling() -> N
 def test_mixed_edges_requires_matching_segment_boundaries() -> None:
     """Tests that mismatched segment boundaries raise an error."""
     segments = [
-        {"method": "equidistant", "n_bins": 3, "params": {"x_min": 0.0, "x_max": 1.0}},
-        {"method": "equidistant", "n_bins": 2, "params": {"x_min": 1.1, "x_max": 2.0}},
+        {
+            "method": "equidistant",
+            "n_bins": 3,
+            "params": {"x_min": 0.0, "x_max": 1.0},
+        },
+        {
+            "method": "equidistant",
+            "n_bins": 2,
+            "params": {"x_min": 1.1, "x_max": 2.0},
+        },
     ]
 
     with pytest.raises(ValueError, match="does not match previous right edge"):
@@ -288,7 +328,11 @@ def test_mixed_edges_requires_matching_segment_boundaries() -> None:
 def test_mixed_edges_rejects_nonincreasing_edges_from_method() -> None:
     """Tests that non-increasing edges from a method raise an error."""
     segments = [
-        {"method": "equidistant", "n_bins": 3, "params": {"x_min": 1.0, "x_max": 1.0}}
+        {
+            "method": "equidistant",
+            "n_bins": 3,
+            "params": {"x_min": 1.0, "x_max": 1.0},
+        }
     ]
     with pytest.raises(ValueError):
         mixed_edges(segments, total_n_bins=3)
@@ -310,17 +354,23 @@ def test_mixed_edges_rejects_unknown_method() -> None:
 def test_mixed_edges_missing_required_global_or_segment_inputs_raises() -> None:
     """Tests that missing required inputs raise an error."""
     segments = [{"method": "equal_number", "n_bins": 3, "params": {}}]
-    with pytest.raises(
-        ValueError, match="requires .* in params or as a global argument"
-    ):
+    with pytest.raises(ValueError, match="requires .* in params or as a global argument"):
         mixed_edges(segments, total_n_bins=3)
 
 
 def test_mixed_edges_total_n_bins_validation() -> None:
     """Tests that total_n_bins validation works correctly."""
     segments = [
-        {"method": "equidistant", "n_bins": 2, "params": {"x_min": 0.0, "x_max": 1.0}},
-        {"method": "equidistant", "n_bins": 2, "params": {"x_min": 1.0, "x_max": 2.0}},
+        {
+            "method": "equidistant",
+            "n_bins": 2,
+            "params": {"x_min": 0.0, "x_max": 1.0},
+        },
+        {
+            "method": "equidistant",
+            "n_bins": 2,
+            "params": {"x_min": 1.0, "x_max": 2.0},
+        },
     ]
 
     with pytest.raises(ValueError):

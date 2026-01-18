@@ -9,10 +9,10 @@ Subpackages
 
    binny.api
    binny.axes
-   binny.scales
+   binny.nz
+   binny.nz_tomo
    binny.surveys
    binny.utils
-   binny.ztomo
 
 Module contents
 ---------------

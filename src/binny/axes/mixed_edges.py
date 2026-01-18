@@ -42,9 +42,7 @@ def _get(seg_i: int, params: Mapping[str, Any], key: str, fallback: Any) -> Any:
     """
     val = params.get(key, fallback)
     if val is None:
-        raise ValueError(
-            f"Segment {seg_i} requires {key!r} in params or as a global argument."
-        )
+        raise ValueError(f"Segment {seg_i} requires {key!r} in params or as a global argument.")
     return val
 
 
@@ -125,9 +123,7 @@ def _validate_segment_edges(
         raise ValueError(f"Segment {seg_i}: edges must be 1D, got shape {edges.shape}.")
 
     if edges.size != n_bins + 1:
-        raise ValueError(
-            f"Segment {seg_i}: expected {n_bins + 1} edges, got {edges.size}."
-        )
+        raise ValueError(f"Segment {seg_i}: expected {n_bins + 1} edges, got {edges.size}.")
 
     if not np.all(np.isfinite(edges)):
         raise ValueError(f"Segment {seg_i}: edges must be finite.")
@@ -135,9 +131,7 @@ def _validate_segment_edges(
     if not np.all(np.diff(edges) > 0):
         raise ValueError(f"Segment {seg_i}: edges must be strictly increasing.")
 
-    mismatch = prev_right is not None and not np.isclose(
-        edges[0], prev_right, rtol=0, atol=atol
-    )
+    mismatch = prev_right is not None and not np.isclose(edges[0], prev_right, rtol=0, atol=atol)
     if mismatch:
         raise ValueError(
             f"Segment {seg_i}: left edge {edges[0]} does not match previous "
@@ -202,7 +196,13 @@ def mixed_edges(
     """
     validate_mixed_segments(segments, total_n_bins=total_n_bins)
 
-    g = {"x": x, "weights": weights, "info_density": info_density, "z": z, "chi": chi}
+    g = {
+        "x": x,
+        "weights": weights,
+        "info_density": info_density,
+        "z": z,
+        "chi": chi,
+    }
 
     all_edges: list[np.ndarray] = []
     prev_right: float | None = None
@@ -227,9 +227,7 @@ def mixed_edges(
             casts=spec.get("casts"),
         )
 
-        prev_right = _validate_segment_edges(
-            i, edges, n_bins=n_bins, prev_right=prev_right
-        )
+        prev_right = _validate_segment_edges(i, edges, n_bins=n_bins, prev_right=prev_right)
 
         edges = np.asarray(edges, dtype=float)
         all_edges.append(edges if i == 0 else edges[1:])

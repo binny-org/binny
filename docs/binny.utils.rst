@@ -9,6 +9,7 @@ Submodules
 
    binny.utils.broadcasting
    binny.utils.io
+   binny.utils.metadata
    binny.utils.normalization
    binny.utils.pairwise_metrics
    binny.utils.validators

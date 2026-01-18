@@ -1,65 +1,58 @@
-example_specz_full:
-  name: "example_specz_full"
+# Full spec-z example using the new schema (with inline comments).
 
-  grid:
-    # True-redshift grid used for all outputs n_obs_i(z)
-    z:
-      start: 0.0
-      stop: 2.0
-      n: 501
+name: "example_specz_full"  # optional name for the survey/setup
 
-  nz:
-    # Parent / underlying true-redshift distribution n(z)
-    model: smail
-    params:
-      z0: 0.4
-      alpha: 2.0
-      beta: 1.0
+# True-redshift grid used for all outputs n_obs_i(z)
+z_grid:
+  start: 0.0
+  stop: 2.0
+  n: 501
 
-  tomo:
-    # Dispatcher: photoz or specz
-    kind: specz
+tomography:
+  - role: lens  # sample label (lens/source)
+    year: '3'  # string is recommended for stable keys
 
-    # Use binning_scheme + n_bins to construct true-z bin edges internally
-    # (alternative is to provide explicit bin_edges)
-    binning_scheme: equidistant
-    n_bins: 4
+    kind: specz  # dispatcher: specz
 
-    params:
+    nz:  # parent / underlying true-redshift distribution n(z)
+      model: smail
+      params:
+        z0: 0.4
+        alpha: 2.0
+        beta: 1.0
+
+    bins:
+      # Use scheme + n_bins to construct true-z bin edges internally
+      # (alternative is to provide explicit edges)
+      scheme: equidistant
+      n_bins: 4
+      # range: [0.0, 2.0]  # optional restriction for binning
+      # edges: [0.0, 0.5, 1.0, 1.5, 2.0]  # alternative to scheme-based
+
+    uncertainties:
       # Per-bin completeness factor c_j in [0, 1] applied to the true-bin selection
-      completeness: [ 1.00, 0.95, 0.90, 0.85 ]
+      completeness: [1.00, 0.95, 0.90, 0.85]
 
       # Catastrophic misassignment fraction f_j in [0, 1]
-      # (bin-level reassignment; redistributed using leakage_model unless an explicit
-      # misassignment_matrix is provided)
-      catastrophic_frac: [ 0.00, 0.05, 0.10, 0.15 ]
+      # Bin-level reassignment; redistributed using leakage_model unless an explicit
+      # misassignment_matrix is provided.
+      catastrophic_frac: [0.00, 0.05, 0.10, 0.15]
       leakage_model: neighbor  # uniform | neighbor | gaussian
-      leakage_sigma: [ 1.0, 1.0, 1.0, 1.0 ]  # used only when leakage_model: gaussian
+      leakage_sigma: [1.0, 1.0, 1.0, 1.0]  # used only when leakage_model: gaussian
 
-      # Optional explicit catastrophic response matrix M_cat (overrides catastrophic_frac
-      # and leakage_model/leakage_sigma when provided). Must be column-stochastic:
-      # columns sum to 1, and M[i,j] = P(i_obs | j_true).
+      # Optional explicit catastrophic response matrix M_cat (overrides frac+model).
+      # Must be column-stochastic: columns sum to 1, and M[i,j] = P(i_obs | j_true).
       # misassignment_matrix:
-      #   - [ 1.0, 0.0, 0.0, 0.0 ]
-      #   - [ 0.0, 1.0, 0.0, 0.0 ]
-      #   - [ 0.0, 0.0, 1.0, 0.0 ]
-      #   - [ 0.0, 0.0, 0.0, 1.0 ]
+      #   - [1.0, 0.0, 0.0, 0.0]
+      #   - [0.0, 1.0, 0.0, 0.0]
+      #   - [0.0, 0.0, 1.0, 0.0]
+      #   - [0.0, 0.0, 0.0, 1.0]
 
       # Optional measurement scatter in observed redshift z_hat | z_true.
-      # If enabled, a Gaussian scatter response matrix M_scatter is built and applied
-      # after catastrophic mixing:
-      #   M_total = M_scatter @ M_cat
-      #
-      # Two ways to enable scatter:
-      # (A) Provide specz_scatter (scalar or per-bin list; must be > 0), OR
-      # (B) Leave specz_scatter null and set specz_scatter_model to
-      #     sigma0_plus_sigma1_1pz with sigma0>0 or sigma1>0.
-      specz_scatter: [ 0.001, 0.001, 0.0015, 0.002 ]  # constant-per-true-bin sigma (in z)
+      # If enabled, a Gaussian scatter response is applied after catastrophic mixing.
+      specz_scatter: [0.001, 0.001, 0.0015, 0.002]  # per-true-bin sigma in z
       specz_scatter_model: const  # used only when specz_scatter is null
       sigma0: 0.0
       sigma1: 0.0
 
-      # Normalization controls
-      normalize_input: true   # normalize parent n(z) to unit integral on the true-z grid
-      normalize_bins: true    # normalize each output observed bin (if non-empty)
-      norm_method: trapezoid  # can be simpson or trapezoid
+    normalize_bins: true  # normalize each output observed bin n_obs_i(z) to unit integral

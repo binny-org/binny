@@ -1,56 +1,52 @@
-example_photoz_full:
-  name: "example_photoz_full"
+# Full photo-z example using the new schema (with inline comments).
 
-  grid:
-    # True-redshift grid used for all outputs n_i(z)
-    z:
-      start: 0.0
-      stop: 3.0
-      n: 301
+name: "example_photoz_full"  # optional name for the survey/setup
 
-  nz:
-    # Parent / underlying true-redshift distribution n(z)
-    model: smail
-    params:
-      z0: 0.5
-      alpha: 2.0
-      beta: 1.0
+# True-redshift grid used for evaluating n(z) and all outputs n_i(z)
+z_grid:
+  start: 0.0
+  stop: 3.0
+  n: 301
 
-  tomo:
-    # Dispatcher: photoz or specz
-    kind: photoz
+tomography:
+  - role: source  # sample label (lens/source)
+    year: '1'  # string is recommended for stable keys
 
-    # Use binning_scheme + n_bins to construct bin edges internally
-    # (alternative is to provide explicit bin_edges)
-    binning_scheme: equal_number
-    n_bins: 4
+    kind: photoz  # dispatcher: photoz or specz
 
-    params:
-      # For equal-number binning, edges are computed from the parent (z, nz) by
-      # default. Users may optionally provide an explicit observed-redshift
-      # distribution (z_ph, nz_ph) instead.
+    nz:  # parent / underlying true-redshift distribution n(z)
+      model: smail
+      params:
+        z0: 0.5
+        alpha: 2.0
+        beta: 1.0
 
+    bins:
+      # Use scheme + n_bins to construct edges internally
+      # (alternative is to provide explicit edges)
+      scheme: equal_number
+      n_bins: 4
+      # range: [0.0, 3.0]  # optional restriction for binning
+      # edges: [0.0, 0.6, 1.1, 1.8, 3.0]  # alternative to scheme-based
+
+    uncertainties:
       # Core photo-z model parameters (scalar or per-bin sequences of length n_bins)
 
-      # photo-z scatter amplitude (sigma = scatter_scale * (1+z)*mean_scale)
-      scatter_scale: [ 0.03, 0.04, 0.05, 0.06 ]
-      # mean bias/offset in mu(z) = mean_scale*z - mean_offset
-      mean_offset: [ 0.00, 0.01, 0.01, 0.02 ]
-      # scale of mean relation in mu(z) = mean_scale*z - mean_offset
-      mean_scale: [ 1.00, 1.00, 1.00, 1.00 ]
+      # photo-z scatter amplitude (sigma = scatter_scale * (1+z) * mean_scale)
+      scatter_scale: [0.03, 0.04, 0.05, 0.06]
 
-      # mixture fraction of outliers
-      outlier_frac: [ 0.00, 0.02, 0.03, 0.05 ]
-      # outlier scatter amplitude (enables outliers when not null and frac>0)
-      outlier_scatter_scale: [ null, 0.20, 0.25, 0.30 ]
-      # outlier mean bias/offset
-      outlier_mean_offset: [ 0.00, 0.05, 0.05, 0.08 ]
-      # outlier mean scale (also scales outlier sigma via your definition)
-      outlier_mean_scale: [ 1.00, 1.00, 1.00, 1.00 ]
+      # mean relation mu(z) = mean_scale * z - mean_offset
+      mean_offset: [0.00, 0.01, 0.01, 0.02]
+      mean_scale:  [1.00, 1.00, 1.00, 1.00]
 
-      # normalize parent n(z) to unit integral on the true-z grid before binning
-      normalize_input: true
-      # normalize each output bin to unit integral on the true-z grid
-      normalize_bins: true
-      # integration method: trapezoid or simpson
-      norm_method: trapezoid
+      # optional outlier mixture (enabled when outlier_scatter_scale is not null)
+      outlier_frac: [0.00, 0.02, 0.03, 0.05]
+
+      # outlier scatter amplitude (null disables per-bin outliers)
+      outlier_scatter_scale: [null, 0.20, 0.25, 0.30]
+
+      # outlier mean relation parameters
+      outlier_mean_offset: [0.00, 0.05, 0.05, 0.08]
+      outlier_mean_scale:  [1.00, 1.00, 1.00, 1.00]
+
+    normalize_bins: true  # normalize each output bin n_i(z) to unit integral

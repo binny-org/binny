@@ -4,38 +4,36 @@ from __future__ import annotations
 
 import warnings
 from collections.abc import Mapping, Sequence
-from typing import Literal, TypeAlias
+from typing import Any, Literal
 
 import numpy as np
-from numpy.typing import ArrayLike, NDArray
+from numpy.typing import NDArray
 from scipy.integrate import simpson
 
 from binny.utils.validators import validate_axis_and_weights
 
-FloatArray = np.ndarray
-PrepMode: TypeAlias = Literal["curves", "segments_prob"]
-NormMode: TypeAlias = Literal["none", "normalize", "check"]
+FloatArray = NDArray[np.float64]
 
 __all__ = [
     "normalize_1d",
     "integrate_bins",
     "cdf_from_curve",
     "weighted_quantile_from_cdf",
-    "mass_per_segment",
     "normalize_or_check_curves",
+    "as_float_array",
+    "as_bins_dict",
+    "require_bins",
+    "curve_norm_mode",
     "trapz_weights",
+    "normalize_over_z",
     "normalize_edges",
     "prepare_metric_inputs",
-    "curve_norm_mode",
 ]
 
 
-FloatArray = NDArray[np.float64]
-
-
 def normalize_1d(
-    x: ArrayLike,
-    y: ArrayLike,
+    x: FloatArray,
+    y: FloatArray,
     *,
     method: Literal["trapezoid", "simpson"] = "trapezoid",
 ) -> FloatArray:
@@ -76,8 +74,8 @@ def normalize_1d(
 
 
 def integrate_bins(
-    z: ArrayLike,
-    bins: Mapping[int, ArrayLike],
+    z: FloatArray,
+    bins: Mapping[int, FloatArray],
 ) -> dict[int, float]:
     """Computes trapezoid integrals for multiple curves evaluated on a shared grid.
 
@@ -117,8 +115,8 @@ def integrate_bins(
 
 
 def cdf_from_curve(
-    z: ArrayLike,
-    nz: ArrayLike,
+    z: FloatArray,
+    nz: FloatArray,
 ) -> tuple[FloatArray, float]:
     """Builds a trapezoid cumulative mass function from a nonnegative curve.
 
@@ -220,76 +218,6 @@ def weighted_quantile_from_cdf(
     return float(z_arr[j - 1] + t * (z_arr[j] - z_arr[j - 1]))
 
 
-def trapz_weights(z_arr: np.ndarray) -> FloatArray:
-    """Returns trapezoid-rule integration weights for a strictly increasing 1D grid.
-
-    The returned weights satisfy ``np.trapezoid(f, x=z_arr) == np.sum(w * f)`` for
-    arrays ``f`` evaluated at the grid nodes, which is useful for vectorized
-    integrations and repeated inner products on a fixed axis.
-
-    Args:
-        z_arr: 1D grid of nodes.
-
-    Returns:
-        A ``float64`` array of node weights with the same shape as ``z_arr``. For
-        grids with fewer than two points, the weights are all zeros.
-
-    Raises:
-        ValueError: If ``z_arr`` is not 1D.
-        ValueError: If ``z_arr`` is not strictly increasing.
-    """
-    z_arr = np.asarray(z_arr, dtype=float)
-    if z_arr.ndim != 1:
-        raise ValueError("z_arr must be a 1D array.")
-
-    if z_arr.size < 2:
-        return np.zeros_like(z_arr, dtype=np.float64)
-
-    if not np.all(np.diff(z_arr) > 0):
-        raise ValueError("z_arr must be strictly increasing.")
-
-    dz = np.diff(z_arr)
-
-    w = np.empty_like(z_arr, dtype=np.float64)
-    w[0] = 0.5 * dz[0]
-    w[-1] = 0.5 * dz[-1]
-    w[1:-1] = 0.5 * (dz[:-1] + dz[1:])
-    return w
-
-
-def mass_per_segment(z_arr: np.ndarray, p_arr: np.ndarray) -> FloatArray:
-    """Returns trapezoid masses per grid segment for a curve sampled at nodes.
-
-    This converts node values into per-interval masses using the trapezoid rule,
-    which is useful for building cumulative masses, rebinning, or diagnostics that
-    operate on segment contributions rather than node values.
-
-    Args:
-        z_arr: 1D array of grid nodes.
-        p_arr: 1D array of curve values at the nodes.
-
-    Returns:
-        A ``float64`` array of length ``len(z_arr) - 1`` containing trapezoid masses
-        for each adjacent node interval.
-
-    Raises:
-        ValueError: If inputs are not 1D arrays of the same length.
-        ValueError: If ``z_arr`` is not strictly increasing.
-    """
-    z_arr = np.asarray(z_arr, dtype=float)
-    p_arr = np.asarray(p_arr, dtype=float)
-
-    if z_arr.ndim != 1 or p_arr.ndim != 1 or z_arr.size != p_arr.size:
-        raise ValueError("z_arr and p_arr must be 1D arrays of the same length.")
-
-    if not np.all(np.diff(z_arr) > 0):
-        raise ValueError("z_arr must be strictly increasing.")
-
-    dz = np.diff(z_arr)
-    mass = 0.5 * (p_arr[:-1] + p_arr[1:]) * dz
-    return mass.astype(np.float64, copy=False)
-
-
 def normalize_or_check_curves(
     z_arr: np.ndarray,
     p: Mapping[int, np.ndarray],
@@ -360,151 +288,71 @@ def normalize_or_check_curves(
     return out
 
 
-def normalize_edges(
-    bin_indices: Sequence[int],
-    bin_edges: Mapping[int, tuple[float, float]] | Sequence[float] | np.ndarray,
-) -> dict[int, tuple[float, float]]:
-    """Returns a mapping from bin index to ``(lo, hi)`` edge pairs.
+def as_float_array(x: Any, *, name: str) -> NDArray[np.float64]:
+    """Coerce an array-like input to a float64 NumPy array.
 
-    This normalizes bin-edge inputs into a consistent dictionary form. It supports
-    either an explicit per-bin edge mapping or a single strictly increasing edge
-    array interpreted in the standard way, where bin ``j`` corresponds to
-    ``(edges[j], edges[j+1])``.
+    This helper standardizes user inputs to a consistent dtype for numerical
+    routines. It is used to keep user-facing APIs forgiving while ensuring that
+    downstream computations receive a predictable array type.
 
     Args:
-        bin_indices: Bin indices that must be present in the returned mapping.
-        bin_edges: Either a mapping ``{idx: (lo, hi)}`` or a 1D strictly increasing
-            edge array ``[e0, e1, ..., eN]``.
+        x: Array-like input.
+        name: Name of the input (used in error messages).
 
     Returns:
-        A mapping ``{idx: (lo, hi)}`` with float-valued edge pairs.
+        A 1D or nD NumPy array with dtype float64.
 
     Raises:
-        ValueError: If a required bin index is missing from a mapping input.
-        ValueError: If an edge array is not 1D, has fewer than two entries, contains
-            non-finite values, or is not strictly increasing.
-        ValueError: If any requested bin index is out of range for an edge array.
+        ValueError: If the input cannot be converted to a float array.
     """
-    bin_indices = [int(i) for i in bin_indices]
-    edges_map: dict[int, tuple[float, float]] = {}
-
-    if isinstance(bin_edges, Mapping):
-        for j in bin_indices:
-            try:
-                lo, hi = bin_edges[j]
-            except KeyError as e:
-                raise ValueError(f"bin_edges is missing bin index {e.args[0]}.") from e
-            edges_map[j] = (float(lo), float(hi))
-        return edges_map
-
-    edges_arr = np.asarray(bin_edges, dtype=float)
-    if edges_arr.ndim != 1 or edges_arr.size < 2:
-        raise ValueError("bin_edges must be a 1D sequence with length at least 2.")
-    if not np.all(np.isfinite(edges_arr)):
-        raise ValueError("bin_edges must be finite.")
-    if not np.all(np.diff(edges_arr) > 0):
-        raise ValueError("bin_edges must be strictly increasing.")
-
-    max_bin = edges_arr.size - 2
-    for j in bin_indices:
-        if j < 0 or j > max_bin:
-            raise ValueError(
-                f"bin index {j} is out of range for edges of length {edges_arr.size}."
-            )
-        edges_map[j] = (float(edges_arr[j]), float(edges_arr[j + 1]))
-
-    return edges_map
+    try:
+        return np.asarray(x, dtype=np.float64)
+    except Exception as e:  # pragma: no cover
+        raise ValueError(f"Could not convert {name} to a float array.") from e
 
 
-def prepare_metric_inputs(
-    z_arr: np.ndarray,
-    p: Mapping[int, np.ndarray],
+def as_bins_dict(bins: Mapping[int, Any]) -> dict[int, NDArray[np.float64]]:
+    """Coerce a bins mapping to ``dict[int, float64 array]``.
+
+    This helper normalizes bin curve mappings provided by users (or returned by
+    builders) into a consistent representation used across diagnostics. It keeps
+    the public API flexible while ensuring diagnostics can assume a stable type.
+
+    Args:
+        bins: Mapping of bin identifiers to bin curves.
+
+    Returns:
+        A dictionary mapping integer bin indices to float64 arrays.
+    """
+    return {int(k): as_float_array(v, name=f"bins[{k!r}]") for k, v in bins.items()}
+
+
+def require_bins(
+    bins: Mapping[int, Any] | None,
     *,
-    mode: PrepMode,
-    curve_norm: NormMode = "none",
-    rtol: float = 1e-3,
-    atol: float = 1e-6,
-) -> tuple[np.ndarray, dict[int, np.ndarray]]:
-    """Prepares inputs for pairwise metrics (validate once; optionally normalize).
+    cached: Mapping[int, Any] | None = None,
+    name: str = "bins",
+) -> dict[int, NDArray[np.float64]]:
+    """Resolves bins from an explicit argument or cached bins.
 
-    This is a convenience wrapper that standardizes the common boilerplate for
-    pairwise curve metrics:
-
-    - Validates ``z_arr`` and each curve in ``p`` using
-        :func:`validate_axis_and_weights`.
-    - Optionally normalizes curves to unit trapezoid integral or
-        checks they already are.
-    - Optionally converts curves to per-segment probability vectors (segment masses
-      normalized to sum to 1), suitable for discrete probability metrics.
+    This helper supports wrapper-style APIs where diagnostics accept an optional
+    ``bins`` argument but may also use bins cached on an instance.
 
     Args:
-        z_arr: 1D strictly increasing grid of nodes.
-        p: Mapping from id to curve values evaluated on ``z_arr``.
-        mode: Output mode:
-            - ``"curves"``: return validated (and possibly normalized) node curves.
-            - ``"segments_prob"``: return per-segment mass *probability* vectors.
-        curve_norm: How to treat curve normalization before any conversion:
-            - ``"none"``: no normalization checks beyond basic validation.
-            - ``"normalize"``: divide each curve by its trapezoid integral.
-            - ``"check"``: require each curve integrates to 1 within tolerance.
-        rtol: Relative tolerance for the unit-integral check when
-            ``curve_norm="check"``.
-        atol: Absolute tolerance for the unit-integral check when
-            ``curve_norm="check"``.
+        bins: Optional bins mapping provided by the caller.
+        cached: Optional cached bins mapping (for wrapper classes).
+        name: Name used in error messages.
 
     Returns:
-        ``(z_arr, out)`` where ``z_arr`` is float64 and ``out`` maps ids to arrays:
-        - For ``mode="curves"``: arrays have length ``len(z_arr)``.
-        - For ``mode="segments_prob"``: arrays have length ``len(z_arr) - 1``
-            and sum to 1.
+        A bins dictionary with integer keys and float64 arrays.
 
     Raises:
-        ValueError: If ``z_arr`` or any curve fails validation, if a curve has
-            non-positive trapezoid integral (needed for normalize/check),
-            if a check fails, or if a curve yields non-positive total
-            segment mass in ``"segments_prob"`` mode.
+        ValueError: If neither ``bins`` nor ``cached`` are provided.
     """
-    z_arr = np.asarray(z_arr, dtype=float)
-
-    curves: dict[int, np.ndarray] = {}
-    for idx, curve in p.items():
-        _, c = validate_axis_and_weights(z_arr, curve)
-        area = float(np.trapezoid(c, x=z_arr))
-
-        if curve_norm == "normalize":
-            if area <= 0.0:
-                raise ValueError(f"bin {idx} has non-positive integral: {area}.")
-            c = (c / area).astype(np.float64, copy=False)
-
-        elif curve_norm == "check":
-            if area <= 0.0:
-                raise ValueError(f"bin {idx} has non-positive integral: {area}.")
-            if not np.isclose(area, 1.0, rtol=rtol, atol=atol):
-                raise ValueError(
-                    f"bin {idx} does not appear normalized (integral={area}). "
-                    "Set curve_norm='normalize' or curve_norm='none'."
-                )
-            c = c.astype(np.float64, copy=False)
-
-        else:  # "none"
-            c = c.astype(np.float64, copy=False)
-
-        curves[int(idx)] = c
-
-    if mode == "curves":
-        return z_arr.astype(np.float64, copy=False), curves
-
-    if mode == "segments_prob":
-        probs: dict[int, np.ndarray] = {}
-        for idx, c in curves.items():
-            m = mass_per_segment(z_arr, c)
-            s = float(np.sum(m))
-            if s <= 0.0:
-                raise ValueError(f"bin {idx} has non-positive mass on segments.")
-            probs[idx] = (m / s).astype(np.float64, copy=False)
-        return z_arr.astype(np.float64, copy=False), probs
-
-    raise ValueError('mode must be "curves" or "segments_prob".')
+    b = cached if bins is None else bins
+    if b is None:
+        raise ValueError(f"{name} is not set. Build bins first or pass {name}=...")
+    return as_bins_dict(b)
 
 
 def curve_norm_mode(
@@ -530,3 +378,207 @@ def curve_norm_mode(
     if not assume_normalized:
         return "none"
     return "normalize" if normalize_if_needed else "check"
+
+
+def trapz_weights(z_arr: np.ndarray) -> FloatArray:
+    """Returns trapezoid-rule integration weights for a strictly increasing 1D grid.
+
+    The returned weights satisfy ``np.trapezoid(f, x=z_arr) == np.sum(w * f)`` for
+    arrays ``f`` evaluated at the grid nodes, which is useful for vectorized
+    integrations and repeated inner products on a fixed axis.
+
+    Args:
+        z_arr: 1D grid of nodes.
+
+    Returns:
+        A ``float64`` array of node weights with the same shape as ``z_arr``. For
+        grids with fewer than two points, the weights are all zeros.
+
+    Raises:
+        ValueError: If ``z_arr`` is not 1D.
+        ValueError: If ``z_arr`` is not strictly increasing.
+    """
+    z_arr = np.asarray(z_arr, dtype=float)
+    if z_arr.ndim != 1:
+        raise ValueError("z_arr must be a 1D array.")
+
+    if z_arr.size < 2:
+        return np.zeros_like(z_arr, dtype=np.float64)
+
+    if not np.all(np.diff(z_arr) > 0):
+        raise ValueError("z_arr must be strictly increasing.")
+
+    dz = np.diff(z_arr)
+
+    w = np.empty_like(z_arr, dtype=np.float64)
+    w[0] = 0.5 * dz[0]
+    w[-1] = 0.5 * dz[-1]
+    w[1:-1] = 0.5 * (dz[:-1] + dz[1:])
+    return w
+
+
+def normalize_over_z(z: FloatArray, nz: FloatArray) -> FloatArray:
+    """Normalizes ``nz`` so that it integrates to 1 over ``z``."""
+    z_arr = np.asarray(z, dtype=np.float64)
+    nz_arr = np.asarray(nz, dtype=np.float64)
+
+    if z_arr.ndim != 1 or nz_arr.ndim != 1:
+        raise ValueError("normalize_over_z requires 1D arrays for z and nz.")
+    if z_arr.size < 2:
+        raise ValueError("normalize_over_z requires at least two z points.")
+    if z_arr.shape != nz_arr.shape:
+        raise ValueError("normalize_over_z requires z and nz to have the same shape.")
+    if not np.all(np.isfinite(z_arr)) or not np.all(np.isfinite(nz_arr)):
+        raise ValueError("normalize_over_z requires finite z and nz.")
+    if not np.all(np.diff(z_arr) > 0):
+        raise ValueError("normalize_over_z requires z to be strictly increasing.")
+
+    area = float(np.trapezoid(nz_arr, x=z_arr))
+    if not np.isfinite(area) or area <= 0.0:
+        raise ValueError("Cannot normalize: non-positive or non-finite integral.")
+
+    return nz_arr / area
+
+
+def normalize_edges(
+    bin_indices: Sequence[int],
+    bin_edges: Mapping[int, tuple[float, float]] | Sequence[float] | np.ndarray,
+) -> dict[int, tuple[float, float]]:
+    """Normalizes bin-edge specifications to a mapping of (lo, hi) per bin index.
+
+    Args:
+        bin_indices: Sorted bin indices present in the bins mapping.
+        bin_edges: Either a mapping {i: (lo, hi)} or an edge array where bin i uses
+            (edges[i], edges[i+1]).
+
+    Returns:
+        Mapping {i: (lo, hi)} for all i in bin_indices.
+
+    Raises:
+        ValueError: If required edges are missing or invalid.
+    """
+    idx = [int(i) for i in bin_indices]
+
+    # Mapping case: {i: (lo, hi)}
+    if isinstance(bin_edges, Mapping):
+        out: dict[int, tuple[float, float]] = {}
+        for i in idx:
+            if i not in bin_edges:
+                raise ValueError(f"missing bin index {i} in bin_edges.")
+            lo, hi = bin_edges[i]
+            lo_f = float(lo)
+            hi_f = float(hi)
+            out[i] = (lo_f, hi_f)
+        return out
+
+    # Sequence case: edges array-like
+    edges = np.asarray(bin_edges, dtype=float)
+    if edges.ndim != 1 or edges.size < 2:
+        raise ValueError("bin_edges must be a 1D sequence with at least two edges.")
+    if not np.all(np.isfinite(edges)):
+        raise ValueError("bin_edges must contain only finite values.")
+
+    max_i = max(idx) if idx else -1
+    if edges.size < (max_i + 2):
+        raise ValueError(
+            f"bin_edges must have at least {max_i + 2} entries for bins up to {max_i}."
+        )
+
+    out = {}
+    for i in idx:
+        out[i] = (float(edges[i]), float(edges[i + 1]))
+    return out
+
+
+def prepare_metric_inputs(
+    z: Any,
+    bins: Mapping[int, Any],
+    *,
+    mode: Literal["curves", "segments_prob"],
+    curve_norm: Literal["none", "normalize", "check"] = "none",
+    rtol: float = 1e-3,
+    atol: float = 1e-6,
+) -> tuple[np.ndarray, dict[int, np.ndarray]]:
+    """Validates bin curves and prepares curve- or segment-mass inputs for metrics.
+
+    Args:
+        z: Shared 1D grid of nodes.
+        bins: Mapping from bin index to curve values evaluated on ``z``.
+        mode: ``"curves"`` to return node values; ``"segments_prob"`` to return
+            per-segment probability masses (length ``len(z)-1``).
+        curve_norm: Normalization handling:
+            - ``"none"``: no normalization/checking beyond basic validation.
+            - ``"normalize"``: divide each curve by its trapezoid integral.
+            - ``"check"``: require each curve to have unit integral (within tol).
+        rtol: Relative tolerance for unit-integral checks.
+        atol: Absolute tolerance for unit-integral checks.
+
+    Returns:
+        (z_arr, out) where out is:
+            - curves dict {i: y(z)} if mode="curves"
+            - segment probs dict {i: p_k} if mode="segments_prob"
+
+    Raises:
+        ValueError: If inputs are invalid, or normalization checks fail.
+    """
+    z_arr = np.asarray(z, dtype=float)
+    if z_arr.ndim != 1 or z_arr.size < 2:
+        raise ValueError("z must be a 1D array with at least two points.")
+    if not np.all(np.isfinite(z_arr)):
+        raise ValueError("z must contain only finite values.")
+    if not np.all(np.diff(z_arr) > 0):
+        raise ValueError("z must be strictly increasing.")
+
+    if len(bins) == 0:
+        return z_arr, {}
+
+    if mode not in {"curves", "segments_prob"}:
+        raise ValueError("mode must be 'curves' or 'segments_prob'.")
+
+    curves: dict[int, np.ndarray] = {}
+    for k, v in bins.items():
+        i = int(k)
+        try:
+            _, y = validate_axis_and_weights(z_arr, v)
+        except ValueError as e:
+            raise ValueError(f"Invalid bin {i}: {e}") from e
+
+        area = float(np.trapezoid(y, x=z_arr))
+
+        needs_positive_mass = False
+        if curve_norm != "none":
+            needs_positive_mass = True
+        elif mode == "segments_prob":
+            needs_positive_mass = True
+
+        if needs_positive_mass and (area <= 0.0 or not np.isfinite(area)):
+            raise ValueError(f"bin {i} has non-positive or non-finite integral: {area}.")
+
+        if curve_norm == "check":
+            is_unit = bool(np.isclose(area, 1.0, rtol=rtol, atol=atol))
+            if not is_unit:
+                raise ValueError(
+                    f"bin {i} does not appear normalized (integral={area}). "
+                    "Set curve_norm='normalize' or pass already-normalized curves."
+                )
+
+        if curve_norm == "normalize":
+            y = (y / area).astype(np.float64, copy=False)
+        else:
+            y = y.astype(np.float64, copy=False)
+
+        curves[i] = y
+
+    if mode == "curves":
+        return z_arr, curves
+
+    dz = np.diff(z_arr)
+    masses: dict[int, np.ndarray] = {}
+    for i, y in curves.items():
+        seg = 0.5 * (y[:-1] + y[1:]) * dz
+        total = float(np.sum(seg))
+        if total <= 0.0 or not np.isfinite(total):
+            raise ValueError(f"bin {i} has non-positive segment mass total: {total}.")
+        masses[i] = (seg / total).astype(np.float64, copy=False)
+
+    return z_arr, masses

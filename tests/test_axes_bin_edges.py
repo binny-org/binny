@@ -3,6 +3,7 @@
 import numpy as np
 import pytest
 
+import binny.axes.bin_edges as bemod
 from binny.axes.bin_edges import (
     _cumulative_trapz,
     _equal_weight_edges,
@@ -179,9 +180,7 @@ def test_equal_weight_edges_equalizes_integrated_weight_approximately():
     total = _trapz_integral_between(x, w, edges[0], edges[-1])
     target = total / n_bins
 
-    bin_ints = [
-        _trapz_integral_between(x, w, edges[i], edges[i + 1]) for i in range(n_bins)
-    ]
+    bin_ints = [_trapz_integral_between(x, w, edges[i], edges[i + 1]) for i in range(n_bins)]
 
     rel_err = np.max(np.abs(np.array(bin_ints) - target) / target)
     assert rel_err < 5e-3
@@ -251,3 +250,30 @@ def test_equal_weight_edges_nonfinite_total_raises():
     w = np.full_like(x, np.inf)
     with pytest.raises(ValueError):
         _equal_weight_edges(x, w, 3)
+
+
+def test_equidistant_chi_edges_requires_strictly_increasing_chi():
+    """Tests that equidistant_chi_edges raises when chi is not strictly increasing."""
+    z = np.linspace(0.0, 1.0, 6)
+    chi = np.array([0.0, 1.0, 1.0, 2.0, 3.0, 4.0])  # plateau -> not strictly inc
+
+    with pytest.raises(ValueError, match=r"chi must be strictly increasing"):
+        _ = equidistant_chi_edges(z, chi, 3)
+
+
+def test_equal_weight_edges_repeated_edges_guard_triggers(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Tests that _equal_weight_edges raises if interpolation yields non-increasing edges."""
+
+    def _bad_interp(_x, _xp, fp):
+        """Returns first value in fp array, which is repeated for all x values."""
+        return float(fp[0])
+
+    monkeypatch.setattr(bemod.np, "interp", _bad_interp)
+
+    x = np.linspace(0.0, 1.0, 11)
+    w = np.ones_like(x)
+
+    with pytest.raises(ValueError, match=r"Cannot construct strictly increasing bin edges"):
+        bemod._equal_weight_edges(x, w, 5)

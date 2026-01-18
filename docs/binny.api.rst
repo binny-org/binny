@@ -7,13 +7,7 @@ Submodules
 .. toctree::
    :maxdepth: 4
 
-   binny.api.config
-   binny.api.distributions
-   binny.api.edges
-   binny.api.grids
-   binny.api.metrics
-   binny.api.surveys
-   binny.api.tomo
+   binny.api.nz_tomography
 
 Module contents
 ---------------

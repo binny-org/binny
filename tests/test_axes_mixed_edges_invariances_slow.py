@@ -15,7 +15,7 @@ import numpy as np
 import pytest
 
 from binny.axes.mixed_edges import mixed_edges
-from binny.ztomo.bin_stats import bin_centers
+from binny.nz_tomo.bin_stats import bin_centers
 
 pytestmark = pytest.mark.slow
 
@@ -40,9 +40,7 @@ def _chi_of_z(z: np.ndarray) -> np.ndarray:
     return z + 0.15 * z**2
 
 
-def _bins_from_edges_triangular(
-    axis: np.ndarray, edges: np.ndarray
-) -> dict[int, np.ndarray]:
+def _bins_from_edges_triangular(axis: np.ndarray, edges: np.ndarray) -> dict[int, np.ndarray]:
     """Returns per-bin arrays with triangular weighting within each edge interval."""
     x = np.asarray(axis, dtype=float)
     e = np.asarray(edges, dtype=float)
@@ -62,9 +60,7 @@ def _bins_from_edges_triangular(
     return bins
 
 
-def _assert_edges_ok(
-    edges: np.ndarray, n_bins: int, *, x_min: float, x_max: float
-) -> None:
+def _assert_edges_ok(edges: np.ndarray, n_bins: int, *, x_min: float, x_max: float) -> None:
     """Asserts that edges are valid and match expected endpoints."""
     e = np.asarray(edges, dtype=float)
     assert e.ndim == 1
@@ -101,9 +97,7 @@ def _split_interval(
     return segs
 
 
-def _choose_nbins_per_segment(
-    total: int, n_segments: int, rng: np.random.Generator
-) -> list[int]:
+def _choose_nbins_per_segment(total: int, n_segments: int, rng: np.random.Generator) -> list[int]:
     """Returns a random partition of total into n_segments positive integers."""
     if n_segments == 1:
         return [int(total)]
@@ -131,7 +125,11 @@ def _build_interval_segments(
     segs: list[dict[str, Any]] = []
     for (lo, hi), n in zip(intervals, nbins, strict=True):
         segs.append(
-            {"method": method, "n_bins": int(n), "params": {"x_min": lo, "x_max": hi}}
+            {
+                "method": method,
+                "n_bins": int(n),
+                "params": {"x_min": lo, "x_max": hi},
+            }
         )
 
     for i in range(1, len(segs)):
@@ -160,9 +158,7 @@ def _build_array_segment(
     return [{"method": method, "n_bins": int(n_bins), "params": params}]
 
 
-def _build_chi_segment(
-    n_bins: int, *, z: np.ndarray, chi: np.ndarray
-) -> list[dict[str, Any]]:
+def _build_chi_segment(n_bins: int, *, z: np.ndarray, chi: np.ndarray) -> list[dict[str, Any]]:
     """Builds an equidistant_chi segment specification."""
     return [
         {
@@ -279,7 +275,8 @@ def test_mixed_edges_equal_number_invariant_under_weight_scaling_and_normalizati
     norm = float(np.trapezoid(w, x=x))
     w_norm = w / norm
     e2 = mixed_edges(
-        _build_array_segment("equal_number", n_bins, x=x, w=w_norm), total_n_bins=n_bins
+        _build_array_segment("equal_number", n_bins, x=x, w=w_norm),
+        total_n_bins=n_bins,
     )
 
     assert np.allclose(e0, e1, rtol=0.0, atol=5e-12)
@@ -373,16 +370,12 @@ def test_mixed_edges_equidistant_chi_invariant_under_affine_chi_transform(
     b = float(rng.uniform(-50.0, 50.0))
 
     e0 = mixed_edges(_build_chi_segment(n_bins, z=z, chi=chi), total_n_bins=n_bins)
-    e1 = mixed_edges(
-        _build_chi_segment(n_bins, z=z, chi=a * chi + b), total_n_bins=n_bins
-    )
+    e1 = mixed_edges(_build_chi_segment(n_bins, z=z, chi=a * chi + b), total_n_bins=n_bins)
 
     assert np.allclose(e0, e1, rtol=0.0, atol=5e-12)
 
 
-def _bins_from_edges_uniform(
-    axis: np.ndarray, edges: np.ndarray
-) -> dict[int, np.ndarray]:
+def _bins_from_edges_uniform(axis: np.ndarray, edges: np.ndarray) -> dict[int, np.ndarray]:
     """Builds per-bin arrays with uniform weighting within each edge interval."""
     z = np.asarray(axis, dtype=float)
     e = np.asarray(edges, dtype=float)
