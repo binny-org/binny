@@ -570,10 +570,10 @@ def population_stats(
     Fractions are always checked against the bin indices present in ``bins``.
 
     Optional survey-level allocation:
-        - If ``density_total`` (gal/arcmin^2) is provided, return per-bin allocated
-          surface densities.
-        - If ``survey_area`` (arcmin^2) is also provided, return per-bin
-         effective counts.
+
+    - If ``density_total`` (gal/arcmin^2) is provided, return per-bin allocated
+      surface densities.
+    - If ``survey_area`` (arcmin^2) is also provided, return per-bin effective counts.
 
     Args:
         bins: Mapping from bin index to bin curves.
@@ -587,12 +587,15 @@ def population_stats(
 
     Returns:
         Mapping with keys:
-            - ``"fractions"``: {bin_idx: fraction}
-          and optionally:
-            - ``"density_total"``: float
-            - ``"density_per_bin"``: {bin_idx: gal/arcmin^2}
-            - ``"survey_area"``: float
-            - ``"count_per_bin"``: {bin_idx: effective count}
+
+        - ``"fractions"``: {bin_idx: fraction}
+
+        And optionally:
+
+        - ``"density_total"``: float
+        - ``"density_per_bin"``: {bin_idx: gal/arcmin^2}
+        - ``"survey_area"``: float
+        - ``"count_per_bin"``: {bin_idx: effective count}
 
     Raises:
         ValueError: If bins is empty.

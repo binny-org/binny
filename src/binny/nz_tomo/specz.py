@@ -37,26 +37,26 @@ The observed-bin distributions are::
 Supported response effects
 --------------------------
 - Catastrophic response (bin-level).
-      A per-bin catastrophic fraction ``f_j`` is redistributed from the diagonal to
-      other observed bins using a leakage prescription (uniform, neighbor, or
-      Gaussian in bin-index space). If an explicit ``response_matrix`` is
-      provided, it is used directly and overrides the leakage model.
+  A per-bin catastrophic fraction ``f_j`` is redistributed from the diagonal to
+  other observed bins using a leakage prescription (uniform, neighbor, or
+  Gaussian in bin-index space). If an explicit ``response_matrix`` is provided,
+  it is used directly and overrides the leakage model.
 
 - Finite spec-z measurement scatter (optional).
-      Builds a second response matrix by integrating a Gaussian measurement model
-      for ``z_hat | z_true`` over observed bin edges to get::
+  Builds a second response matrix by integrating a Gaussian measurement model
+  for ``z_hat | z_true`` over observed bin edges to get::
 
-          P(z_hat in bin_i | z_true)
+      P(z_hat in bin_i | z_true)
 
-      then averages within each true bin to obtain a column-stochastic matrix
-      ``M_scatter``.
+  then averages within each true bin to obtain a column-stochastic matrix
+  ``M_scatter``.
 
-    If both effects are enabled, the total response is applied as::
+  If both effects are enabled, the total response is applied as::
 
-        M_total = M_scatter @ M_cat
+      M_total = M_scatter @ M_cat
 
-    meaning catastrophic reassignment is applied first (at the bin level), followed
-    by additional mixing from measurement scatter.
+  meaning catastrophic reassignment is applied first (at the bin level), followed
+  by additional mixing from measurement scatter.
 
 Normalization
 -------------
@@ -157,10 +157,10 @@ def build_specz_bins(
         save_metadata_path: If provided, save metadata to this path as a text file.
 
     Returns:
-        If metadata is not requested:
-            Dict mapping observed bin index -> ``n_obs_i(z)`` evaluated on ``z``.
-        Otherwise:
-            Tuple ``(bins, metadata)``.
+        If ``include_metadata`` is False, returns a dict mapping observed bin index to
+        ``n_obs_i(z)`` evaluated on ``z``.
+
+        If ``include_metadata`` is True, returns ``(bins, metadata)``.
     """
     z_arr, parent_arr0 = validate_axis_and_weights(z, nz)
     need_meta = include_metadata or (save_metadata_path is not None)

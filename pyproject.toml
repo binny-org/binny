@@ -25,6 +25,7 @@ docs = [
   "sphinx[doctest]",
   "sphinx-design",
   "sphinx-multiversion",
+  "sphinxawesome-theme",
 ]
 
 [build-system]
@@ -97,7 +98,6 @@ envlist = [
   "do",
   "docs-releases",
 ]
-
 
 [tool.tox.env_run_base.setenv]
 PIP_CACHE_DIR = "{tox_root}/.cache/pip"

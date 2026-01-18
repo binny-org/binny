@@ -3,24 +3,24 @@
 This module provides small, reusable helpers for reading survey YAML files and
 selecting entries from a flat tomography list schema.
 
-Schema (new):
+Schema (new)::
 
-name: <optional str>
-survey_meta: <optional mapping>            # ignored unless requested
-z_grid: {start: float, stop: float, n: int}  # optional; default used if missing
-nz: {model: str, params: {…}}             # required parent distribution
-tomography:                               # required
-  - role: <optional str>
-    year: <optional str>
-    n_gal_arcmin2: <optional float>
-    kind: photoz|specz                    # optional; defaults to photoz
-    bins:
-      edges: [...]                        # explicit edges
-      # OR
-      scheme: <str>
-      n_bins: <int>
-      range: [z_min, z_max]               # optional
-    uncertainties: {…}                    # optional kwargs passed to builders
+    name: <optional str>
+    survey_meta: <optional mapping>            # ignored unless requested
+    z_grid: {start: float, stop: float, n: int}  # optional; default used if missing
+    nz: {model: str, params: {…}}             # required parent distribution
+    tomography:                               # required
+      - role: <optional str>
+        year: <optional str>
+        n_gal_arcmin2: <optional float>
+        kind: photoz|specz                    # optional; defaults to photoz
+        bins:
+          edges: [...]                        # explicit edges
+          # OR
+          scheme: <str>
+          n_bins: <int>
+          range: [z_min, z_max]               # optional
+        uncertainties: {…}                    # optional kwargs passed to builders
 """
 
 from __future__ import annotations
