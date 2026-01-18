@@ -52,8 +52,30 @@ PIP_CACHE_DIR = "{tox_root}/.cache/pip"
 [tool.tox]
 requires = ["tox>=4.22"]
 envlist = [
+  "py312",
+  "cov",
   "docs",
   "docs-releases",
+]
+
+[tool.tox.env.py312]
+description = "Run unit tests"
+extras = ["dev"]
+commands = [
+  ["pytest", "-q"],
+]
+
+[tool.tox.env.cov]
+description = "Run tests with coverage report"
+extras = ["dev"]
+commands = [
+  [
+    "pytest",
+    "-q",
+    "--cov=binny",
+    "--cov-branch",
+    "--cov-report=term-missing:skip-covered",
+  ],
 ]
 
 
