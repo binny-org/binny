@@ -38,17 +38,9 @@ jobs:
           pytest --cov=binny --cov-report=term-missing --cov-report=xml
 
       - name: Upload coverage to Codecov
-        # Upload only once (pick one python) and skip fork PRs (no secrets there).
-        if: >
-          matrix.python-version == '3.12' &&
-          (
-            github.event_name == 'push' ||
-            github.event.pull_request.head.repo.fork == false
-          )
+        if: matrix.python-version == '3.12'
         uses: codecov/codecov-action@v5
         with:
+          token: ${{ secrets.CODECOV_TOKEN }}
           files: coverage.xml
           fail_ci_if_error: true
-        env:
-          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
-
