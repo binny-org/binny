@@ -296,3 +296,51 @@ def _survey_meta(
         "year": year,
         "survey_meta": _extract_survey_meta(cfg),
     }
+
+
+def _builder_kwargs_from_spec(spec: Mapping[str, Any]) -> dict[str, Any]:
+    """
+    Translate schema-facing bins/uncertainties -> builder-facing kwargs.
+
+    Schema bins:
+      - edges: [...]
+        OR
+      - scheme: str
+        n_bins: int
+      - range: [zmin, zmax] (optional)
+
+    Builder kwargs:
+      - bin_edges
+      - binning_scheme
+      - n_bins
+      - bin_range (optional)
+      + uncertainties passthrough
+    """
+    if "bins" not in spec or not isinstance(spec["bins"], Mapping):
+        raise ValueError("tomo_spec must contain a 'bins' mapping.")
+
+    bins = spec["bins"]
+
+    # bin definition: explicit edges OR scheme+n_bins
+    if "edges" in bins:
+        kw: dict[str, Any] = {
+            "bin_edges": bins["edges"],
+            "binning_scheme": None,
+            "n_bins": None,
+        }
+    else:
+        kw = {
+            "bin_edges": None,
+            "binning_scheme": bins["scheme"],
+            "n_bins": bins["n_bins"],
+        }
+
+    # passthrough builder kwargs
+    params: dict[str, Any] = dict(spec.get("uncertainties") or {})
+
+    # normalize range naming (optional)
+    if "range" in bins:
+        params.setdefault("bin_range", bins["range"])
+
+    kw.update(params)
+    return kw

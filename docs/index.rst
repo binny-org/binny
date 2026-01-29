@@ -1,18 +1,23 @@
-.. binny documentation master file, created by
-   sphinx-quickstart on Sat Jan  3 10:54:54 2026.
-   You can adapt this file completely to your liking, but it should at least
-   contain the root `toctree` directive.
+Binny
+=====
 
-binny documentation
-===================
+**Binny** is a Python library providing flexible, explicit, and well-tested
+tomographic binning algorithms for cosmology and related scientific workflows.
 
-Add your content using ``reStructuredText`` syntax. See the
-`reStructuredText <https://www.sphinx-doc.org/en/master/usage/restructuredtext/index.html>`_
-documentation for details.
+It is designed to be easy to integrate into forecasting, inference, and
+data-processing pipelines, with an emphasis on clarity, reproducibility, and
+robust validation.
 
 
 .. toctree::
    :maxdepth: 1
    :caption: Contents:
 
-   modules
+   overview
+   theory/index
+   examples/index
+   installation
+   citation
+   development
+   contributing
+   api/index

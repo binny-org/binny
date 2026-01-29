@@ -1,28 +1,3 @@
-"""Survey config parsing utilities (new schema).
-
-This module provides small, reusable helpers for reading survey YAML files and
-selecting entries from a flat tomography list schema.
-
-Schema (new)::
-
-    name: <optional str>
-    survey_meta: <optional mapping>            # ignored unless requested
-    z_grid: {start: float, stop: float, n: int}  # optional; default used if missing
-    nz: {model: str, params: {…}}             # required parent distribution
-    tomography:                               # required
-      - role: <optional str>
-        year: <optional str>
-        n_gal_arcmin2: <optional float>
-        kind: photoz|specz                    # optional; defaults to photoz
-        bins:
-          edges: [...]                        # explicit edges
-          # OR
-          scheme: <str>
-          n_bins: <int>
-          range: [z_min, z_max]               # optional
-        uncertainties: {…}                    # optional kwargs passed to builders
-"""
-
 from __future__ import annotations
 
 from collections.abc import Mapping
@@ -33,6 +8,7 @@ import numpy as np
 
 from binny.surveys.config_utils import (
     _build_parent_nz,
+    _builder_kwargs_from_spec,
     _extract_z_grid,
     _iter_tomography_entries,
     _parse_entry,
@@ -44,49 +20,76 @@ from binny.surveys.config_utils import (
 )
 
 __all__ = [
-    "survey_from_config",
-    "survey_from_mapping",
-    "spec_from_config",
-    "spec_from_mapping",
-    "build_from_config",
-    "build_from_mapping",
-    "build_from_arrays",
+    "build_bins_from_config",
+    "build_bins_from_mapping",
+    "build_bins_from_arrays",
 ]
 
-_CONFIG_PKG = "binny.surveys.configs"
+
+def _norm_kind(kind: str) -> str:
+    return str(kind).strip().lower()
 
 
-def survey_from_config(
+def _require_kind(spec: Mapping[str, Any], *, kind: str) -> None:
+    k = _norm_kind(kind)
+    if _norm_kind(spec["kind"]) != k:
+        raise ValueError(f"kind must be {k!r} for this helper.")
+
+
+def _call_builder(
     *,
-    config_file: str | Path,
-    key: str | None = None,
-    role: str | None = None,
-    year: Any | None = None,
-    z: Any | None = None,
-    include_survey_metadata: bool = False,
-) -> tuple[np.ndarray, np.ndarray, dict[str, Any], dict[str, Any] | None]:
-    """Loads a config and returns (z, nz, tomo_spec, optional meta)."""
-    cfg, resolved_key = _resolve_config_entry(config_file=config_file, key=None)
-    return survey_from_mapping(
-        cfg=cfg,
-        key=resolved_key,
-        role=role,
-        year=year,
-        z=z,
-        include_survey_metadata=include_survey_metadata,
+    builder,
+    z_arr: np.ndarray,
+    nz_arr: np.ndarray,
+    spec: Mapping[str, Any],
+    include_tomo_metadata: bool,
+) -> tuple[Any, Any | None]:
+    kwargs = _builder_kwargs_from_spec(spec)
+
+    out = builder(
+        z=z_arr,
+        nz=nz_arr,
+        include_metadata=include_tomo_metadata,
+        **kwargs,
     )
 
+    if include_tomo_metadata:
+        bins_out, tomo_meta = out
+        return bins_out, tomo_meta
 
-def survey_from_mapping(
+    return out, None
+
+
+def _shape_build_return(
     *,
+    bins_out: Any,
+    survey_meta: dict[str, Any] | None,
+    tomo_meta: Any | None,
+    include_survey_metadata: bool,
+    include_tomo_metadata: bool,
+):
+    if include_survey_metadata and include_tomo_metadata:
+        return bins_out, survey_meta, tomo_meta
+    if include_survey_metadata:
+        return bins_out, survey_meta
+    if include_tomo_metadata:
+        return bins_out, tomo_meta
+    return bins_out
+
+
+def build_bins_from_mapping(
+    *,
+    kind: str,
+    builder,
     cfg: Mapping[Any, Any],
     key: str = "survey",
     role: str | None = None,
     year: Any | None = None,
     z: Any | None = None,
     include_survey_metadata: bool = False,
-) -> tuple[np.ndarray, np.ndarray, dict[str, Any], dict[str, Any] | None]:
-    """Parses a mapping and returns (z, nz, tomo_spec, optional meta)."""
+    include_tomo_metadata: bool = False,
+):
+    """Build tomographic bins from an in-memory mapping using a provided builder."""
     cfg = _require_mapping(cfg, what="cfg")
 
     z_arr = _extract_z_grid(cfg, z)
@@ -96,65 +99,34 @@ def survey_from_mapping(
     entry = _require_single(matches, what="tomography entry")
 
     spec = _parse_entry(entry)
+    _require_kind(spec, kind=kind)
+
     nz_arr = _build_parent_nz(entry, z_arr)
 
-    meta = (
+    survey_meta = (
         _survey_meta(cfg=cfg, resolved_key=str(key), role=spec["role"], year=spec["year"])
         if include_survey_metadata
         else None
     )
-    return z_arr, nz_arr, spec, meta
 
-
-def spec_from_config(
-    *,
-    kind: str,
-    config_file: str | Path,
-    key: str | None = None,
-    role: str | None = None,
-    year: Any | None = None,
-    z: Any | None = None,
-    include_survey_metadata: bool = False,
-):
-    """Returns the parsed spec (z, nz, spec[, meta]) for a requested kind."""
-    z_arr, nz_arr, spec, meta = survey_from_config(
-        config_file=config_file,
-        key=key,
-        role=role,
-        year=year,
-        z=z,
-        include_survey_metadata=include_survey_metadata,
+    bins_out, tomo_meta = _call_builder(
+        builder=builder,
+        z_arr=z_arr,
+        nz_arr=nz_arr,
+        spec=spec,
+        include_tomo_metadata=include_tomo_metadata,
     )
-    if spec["kind"] != str(kind).strip().lower():
-        raise ValueError(f"kind must be {str(kind).strip().lower()!r} for this helper.")
-    return (z_arr, nz_arr, spec, meta) if include_survey_metadata else (z_arr, nz_arr, spec)
 
-
-def spec_from_mapping(
-    *,
-    kind: str,
-    cfg: Mapping[Any, Any],
-    key: str = "survey",
-    role: str | None = None,
-    year: Any | None = None,
-    z: Any | None = None,
-    include_survey_metadata: bool = False,
-):
-    """Returns the parsed spec (z, nz, spec[, meta]) for a requested kind."""
-    z_arr, nz_arr, spec, meta = survey_from_mapping(
-        cfg=cfg,
-        key=key,
-        role=role,
-        year=year,
-        z=z,
+    return _shape_build_return(
+        bins_out=bins_out,
+        survey_meta=survey_meta,
+        tomo_meta=tomo_meta,
         include_survey_metadata=include_survey_metadata,
+        include_tomo_metadata=include_tomo_metadata,
     )
-    if spec["kind"] != str(kind).strip().lower():
-        raise ValueError(f"kind must be {str(kind).strip().lower()!r} for this helper.")
-    return (z_arr, nz_arr, spec, meta) if include_survey_metadata else (z_arr, nz_arr, spec)
 
 
-def build_from_config(
+def build_bins_from_config(
     *,
     kind: str,
     builder,
@@ -166,120 +138,22 @@ def build_from_config(
     include_survey_metadata: bool = False,
     include_tomo_metadata: bool = False,
 ):
-    """Builds tomographic bins from a YAML config using a provided builder."""
-    z_arr, nz_arr, spec, survey_meta = survey_from_config(
-        config_file=config_file,
-        key=key,
-        role=role,
-        year=year,
-        z=z,
-        include_survey_metadata=include_survey_metadata,
-    )
-    if spec["kind"] != str(kind).strip().lower():
-        raise ValueError(f"kind must be {str(kind).strip().lower()!r} for this helper.")
-
-    bins = spec["bins"]
-    if "edges" in bins:
-        bin_edges = bins["edges"]
-        binning_scheme = None
-        n_bins = None
-    else:
-        bin_edges = None
-        binning_scheme = bins["scheme"]
-        n_bins = bins["n_bins"]
-
-    params: dict[str, Any] = dict(spec.get("uncertainties") or {})
-    if "range" in bins:
-        # many bin builders accept bin_range; normalize naming here if you want
-        params.setdefault("bin_range", bins["range"])
-
-    out = builder(
-        z=z_arr,
-        nz=nz_arr,
-        bin_edges=bin_edges,
-        binning_scheme=binning_scheme,
-        n_bins=n_bins,
-        include_metadata=include_tomo_metadata,
-        **params,
-    )
-
-    if include_tomo_metadata:
-        bins_out, tomo_meta = out
-    else:
-        bins_out, tomo_meta = out, None
-
-    if include_survey_metadata and include_tomo_metadata:
-        return bins_out, survey_meta, tomo_meta
-    if include_survey_metadata:
-        return bins_out, survey_meta
-    if include_tomo_metadata:
-        return bins_out, tomo_meta
-    return bins_out
-
-
-def build_from_mapping(
-    *,
-    kind: str,
-    builder,
-    cfg: Mapping[Any, Any],
-    key: str = "survey",
-    role: str | None = None,
-    year: Any | None = None,
-    z: Any | None = None,
-    include_survey_metadata: bool = False,
-    include_tomo_metadata: bool = False,
-):
-    """Builds tomographic bins from an in-memory mapping using a provided builder."""
-    z_arr, nz_arr, spec, survey_meta = survey_from_mapping(
+    """Build tomographic bins from YAML using a provided builder."""
+    cfg, resolved_key = _resolve_config_entry(config_file=config_file, key=key)
+    return build_bins_from_mapping(
+        kind=kind,
+        builder=builder,
         cfg=cfg,
-        key=key,
+        key=resolved_key,
         role=role,
         year=year,
         z=z,
         include_survey_metadata=include_survey_metadata,
-    )
-    if spec["kind"] != str(kind).strip().lower():
-        raise ValueError(f"kind must be {str(kind).strip().lower()!r} for this helper.")
-
-    bins = spec["bins"]
-    if "edges" in bins:
-        bin_edges = bins["edges"]
-        binning_scheme = None
-        n_bins = None
-    else:
-        bin_edges = None
-        binning_scheme = bins["scheme"]
-        n_bins = bins["n_bins"]
-
-    params: dict[str, Any] = dict(spec.get("uncertainties") or {})
-    if "range" in bins:
-        params.setdefault("bin_range", bins["range"])
-
-    out = builder(
-        z=z_arr,
-        nz=nz_arr,
-        bin_edges=bin_edges,
-        binning_scheme=binning_scheme,
-        n_bins=n_bins,
-        include_metadata=include_tomo_metadata,
-        **params,
+        include_tomo_metadata=include_tomo_metadata,
     )
 
-    if include_tomo_metadata:
-        bins_out, tomo_meta = out
-    else:
-        bins_out, tomo_meta = out, None
 
-    if include_survey_metadata and include_tomo_metadata:
-        return bins_out, survey_meta, tomo_meta
-    if include_survey_metadata:
-        return bins_out, survey_meta
-    if include_tomo_metadata:
-        return bins_out, tomo_meta
-    return bins_out
-
-
-def build_from_arrays(
+def build_bins_from_arrays(
     *,
     kind: str,
     builder,
@@ -288,39 +162,19 @@ def build_from_arrays(
     tomo_spec: Mapping[str, Any],
     include_tomo_metadata: bool = False,
 ):
-    """Builds tomographic bins from in-memory (z, nz, entry_spec)."""
+    """Build tomographic bins from in-memory (z, nz, tomo_spec)."""
     z_arr = np.asarray(z, dtype=float)
     nz_arr = np.asarray(nz, dtype=float)
 
     spec = _parse_entry(tomo_spec)
-    if spec["kind"] != str(kind).strip().lower():
-        raise ValueError(f"kind must be {str(kind).strip().lower()!r} for this helper.")
+    _require_kind(spec, kind=kind)
 
-    bins = spec["bins"]
-    if "edges" in bins:
-        bin_edges = bins["edges"]
-        binning_scheme = None
-        n_bins = None
-    else:
-        bin_edges = None
-        binning_scheme = bins["scheme"]
-        n_bins = bins["n_bins"]
-
-    params: dict[str, Any] = dict(spec.get("uncertainties") or {})
-    if "range" in bins:
-        params.setdefault("bin_range", bins["range"])
-
-    out = builder(
-        z=z_arr,
-        nz=nz_arr,
-        bin_edges=bin_edges,
-        binning_scheme=binning_scheme,
-        n_bins=n_bins,
-        include_metadata=include_tomo_metadata,
-        **params,
+    bins_out, tomo_meta = _call_builder(
+        builder=builder,
+        z_arr=z_arr,
+        nz_arr=nz_arr,
+        spec=spec,
+        include_tomo_metadata=include_tomo_metadata,
     )
 
-    if include_tomo_metadata:
-        bins_out, tomo_meta = out
-        return bins_out, tomo_meta
-    return out
+    return (bins_out, tomo_meta) if include_tomo_metadata else bins_out
