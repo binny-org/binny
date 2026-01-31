@@ -82,8 +82,8 @@ def build_photoz_bins(
     nz: FloatArray,
     bin_edges: FloatArray | None = None,
     *,
-    scatter_scale: Sequence[float] | float | None = None,
-    mean_offset: Sequence[float] | float | None = None,
+    scatter_scale: Sequence[float] | float = 0.0,
+    mean_offset: Sequence[float] | float = 0.0,
     binning_scheme: BinningScheme | None = None,
     n_bins: int | None = None,
     bin_range: tuple[float, float] | None = None,
@@ -124,7 +124,7 @@ def build_photoz_bins(
         bin_edges=bin_edges,
         binning_scheme=binning_scheme,
         n_bins=n_bins,
-        bin_range=bin_range,  # NEW: do range restriction without grid snapping
+        bin_range=bin_range,
         # equal-number in photo-z space if (z_ph, nz_ph) provided, else fallback to (z, nz)
         equal_number_axis=z_ph,
         equal_number_weights=nz_ph,
@@ -140,10 +140,6 @@ def build_photoz_bins(
     n_bins_eff = int(bin_edges_arr.size - 1)
 
     # 2) Broadcast per-bin model params (photoz-specific)
-    if scatter_scale is None:
-        scatter_scale = 0.0  # no uncertainty
-    if mean_offset is None:
-        mean_offset = 0.0  # no bias
     scatter_scale_arr = as_per_bin(scatter_scale, n_bins_eff, "scatter_scale")
     mean_offset_arr = as_per_bin(mean_offset, n_bins_eff, "mean_offset")
     mean_scale_arr = as_per_bin(mean_scale, n_bins_eff, "mean_scale")
@@ -239,7 +235,8 @@ def true_redshift_distribution(
 
     ``P(bin | z)`` is computed from a Gaussian core photo-z model, optionally
     including a second Gaussian outlier component with mixture fraction
-    ``outlier_frac`` when ``outlier_scatter_scale`` is not None.
+    outlier_frac when outlier_frac > 0 (requires outlier_scatter_scale, which
+    may be 0.0 for deterministic).
 
     Returns:
         Photo-z-selected true-redshift distribution evaluated on ``z``.
@@ -255,6 +252,12 @@ def true_redshift_distribution(
     if not (0.0 <= outlier_frac <= 1.0):
         raise ValueError("outlier_frac must lie in [0, 1].")
 
+    if outlier_frac > 0.0 and outlier_scatter_scale is None:
+        raise ValueError(
+            "outlier_scatter_scale must be set when outlier_frac > 0. "
+            "Use 0.0 for a deterministic (no-uncertainty) outlier component."
+        )
+
     # --- validate core params (always)
     if mean_scale <= 0.0:
         raise ValueError("mean_scale must be > 0.")
@@ -262,12 +265,12 @@ def true_redshift_distribution(
         raise ValueError("scatter_scale must be >= 0.")
 
     # --- validate outlier params ONLY when the outlier component is active
-    outliers_enabled = (outlier_frac > 0.0) and (outlier_scatter_scale is not None)
+    outliers_enabled = outlier_frac > 0.0
     if outliers_enabled:
         if outlier_mean_scale <= 0.0:
             raise ValueError("outlier_mean_scale must be > 0.")
-        if outlier_scatter_scale <= 0.0:
-            raise ValueError("outlier_scatter_scale must be > 0.")
+        if outlier_scatter_scale < 0.0:
+            raise ValueError("outlier_scatter_scale must be >= 0.")
 
     # --- core probability
     p_core = _bin_prob_gaussian_photoz(
