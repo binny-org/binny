@@ -1,4 +1,4 @@
-"""I/O helpers for binny."""
+"""I/O utilities."""
 
 from __future__ import annotations
 

@@ -29,7 +29,7 @@ def build_tomo_bins_metadata(
     count_per_bin: Mapping[int, float] | None = None,
     notes: Mapping[str, Any] | None = None,
 ) -> dict[str, Any]:
-    """Build metadata for tomographic redshift-bin products.
+    """Builds metadata for tomographic redshift-bin products.
 
     This function packages tomographic bin outputs into a self-describing,
     serializable dictionary that can be saved alongside generated bin curves.
