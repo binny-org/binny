@@ -3,7 +3,7 @@
 This module provides small, reusable helpers for reading survey YAML files and
 selecting entries from a flat tomography list schema.
 
-Schema (new)::
+Schema::
 
     name: <optional str>
     survey_meta: <optional mapping>  # ignored unless requested
@@ -53,7 +53,7 @@ class SurveyFootprint(TypedDict, total=False):
 
 
 def _load_yaml_mapping(path: str | Path) -> Mapping[Any, Any]:
-    """Load a YAML file and require a mapping at the document root.
+    """Loads a YAML file and require a mapping at the document root.
 
     Args:
         path: Path to a YAML file.
@@ -73,7 +73,7 @@ def _load_yaml_mapping(path: str | Path) -> Mapping[Any, Any]:
 
 
 def _require_mapping(obj: Any, *, what: str) -> Mapping[Any, Any]:
-    """Validate that an object is a mapping.
+    """Validates that an object is a mapping.
 
     This is a small schema helper used to enforce that nested YAML blocks
     (e.g., ``bins``, ``nz``, ``survey_meta``) are mappings before they are
@@ -95,7 +95,7 @@ def _require_mapping(obj: Any, *, what: str) -> Mapping[Any, Any]:
 
 
 def list_configs() -> list[str]:
-    """List shipped survey configuration filenames.
+    """Lists shipped survey configuration filenames.
 
     Returns:
         Sorted list of YAML filenames shipped in the ``binny.surveys.configs``
@@ -108,7 +108,7 @@ def list_configs() -> list[str]:
 
 
 def config_path(filename: str) -> Path:
-    """Resolve a shipped config filename to a concrete filesystem path.
+    """Resolves a shipped config filename to a concrete filesystem path.
 
     This helper locates configuration files bundled with the package and
     returns a usable local path (via ``importlib.resources.as_file``).
@@ -174,7 +174,7 @@ def _resolve_config_entry(
 
 
 def _normalize_label(x: Any | None) -> str | None:
-    """Normalize a label-like field from config input.
+    """Normalizes a label-like field from config input.
 
     This trims whitespace and treats empty strings as missing. It is used for
     optional selector fields such as ``role``, ``year``, and ``name``.
@@ -192,7 +192,7 @@ def _normalize_label(x: Any | None) -> str | None:
 
 
 def _extract_z_grid(cfg: Mapping[Any, Any], z: Any | None) -> np.ndarray:
-    """Select the common true-redshift grid for all outputs.
+    """Selects the common true-redshift grid for all outputs.
 
     Priority order:
       1) explicit override ``z``
@@ -214,7 +214,6 @@ def _extract_z_grid(cfg: Mapping[Any, Any], z: Any | None) -> np.ndarray:
 
     zspec = cfg.get("z_grid")
     if zspec is None:
-        # Package default; document it in schema docs.
         return linear_grid(0.0, 3.0, 301)
 
     zspec = _require_mapping(zspec, what="Config.z_grid")
@@ -229,7 +228,7 @@ def _extract_z_grid(cfg: Mapping[Any, Any], z: Any | None) -> np.ndarray:
 
 
 def _extract_survey_meta(cfg: Mapping[Any, Any]) -> dict[str, Any] | None:
-    """Extract optional survey metadata passthrough.
+    """Extracts optional survey metadata passthrough.
 
     Args:
         cfg: Parsed config mapping.
@@ -247,7 +246,7 @@ def _extract_survey_meta(cfg: Mapping[Any, Any]) -> dict[str, Any] | None:
 
 
 def _build_parent_nz(entry: Mapping[Any, Any], z: np.ndarray) -> np.ndarray:
-    """Build the parent n(z) on the provided true-redshift grid.
+    """Builds the parent n(z) on the provided true-redshift grid.
 
     This reads the ``nz`` block (model name + params) and evaluates the
     registered n(z) model on the common grid.
@@ -347,7 +346,7 @@ def _require_single(entries: list[Mapping[Any, Any]], *, what: str) -> Mapping[A
 
 
 def _parse_bins(bins_block: Any) -> dict[str, Any]:
-    """Parse and normalize a bin specification block.
+    """Parses and normalize a bin specification block.
 
     The bin specification must define *either* explicit bin edges *or* a
     binning scheme with a number of bins. Mixed specifications are rejected.
@@ -399,7 +398,7 @@ def _parse_bins(bins_block: Any) -> dict[str, Any]:
 
 
 def _parse_entry(entry: Mapping[Any, Any]) -> dict[str, Any]:
-    """Parse and normalize a single tomography entry.
+    """Parses and normalize a single tomography entry.
 
     This normalizes label-like fields (role/year/name), validates the entry
     kind, and ensures required nested blocks (nz, bins) are present.
@@ -477,7 +476,7 @@ def _survey_meta(
 
 
 def _builder_kwargs_from_spec(spec: Mapping[str, Any]) -> dict[str, Any]:
-    """Translate schema-facing bin/uncertainty fields into builder kwargs.
+    """Translates schema-facing bin/uncertainty fields into builder kwargs.
 
     This converts a normalized tomography spec into the keyword arguments
     expected by the tomo builders.
