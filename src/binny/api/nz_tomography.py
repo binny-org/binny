@@ -1,302 +1,339 @@
-"""Survey-level convenience APIs.
-
-This module provides user-facing helpers for building tomographic
-redshift bins from survey specifications. The helpers wire together three
-steps that are commonly used together:
-
-1) build (or accept) a common true-redshift grid ``z``,
-2) evaluate a parent redshift distribution ``n(z)`` on that grid,
-3) build tomographic bins using photo-z or spec-z selection models.
-
-The primary workflow is config-driven (YAML). Mapping-based variants provide
-the same behavior without file I/O.
-"""
-
 from __future__ import annotations
 
 from collections.abc import Mapping
 from pathlib import Path
-from typing import Any, Literal
+from typing import Any
 
 import numpy as np
 
+import binny.nz_tomo.bin_similarity as _bin_sim
+import binny.surveys.config_utils as cu
+from binny.nz.registry import available_models as _available_nz_models
+from binny.nz.registry import nz_model as _nz_model
 from binny.nz_tomo.bin_stats import population_stats as _population_stats
 from binny.nz_tomo.bin_stats import shape_stats as _shape_stats
-from binny.surveys.session_core import (
-    build_bins_from_state as _build_bins_from_state,
-)
-from binny.surveys.session_core import (
-    load_entry_from_config as _load_entry_from_config,
-)
-from binny.surveys.session_core import (
-    load_entry_from_mapping as _load_entry_from_mapping,
-)
-from binny.surveys.session_core import (
-    make_parent_from_arrays as _make_parent_from_arrays,
-)
 
 __all__ = ["NZTomography"]
 
 
+def _norm_str(x: Any) -> str:
+    return str(x).strip().lower()
+
+
 class NZTomography:
-    """Builds photo-z-selected tomographic bins.
-
-    For each observed-redshift bin ``[z_ph_min, z_ph_max]``, this constructs a
-    true-redshift distribution
-
-        ``n_bin(z) = n(z) * P(bin | z)``,
-
-    where ``P(bin | z)`` is the probability that an object at true redshift ``z``
-    is assigned to that photo-z bin under the configured photo-z model.
-
-    The public entry point returns a dict mapping bin index to the corresponding
-    ``n_bin(z)`` evaluated on a common true-z grid.
-    """
+    """User-facing tomography wrapper with minimal surface area."""
 
     def __init__(self) -> None:
         self._parent: dict[str, Any] | None = None
-        self._last: dict[str, Any] | None = None
+        self._state: dict[str, Any] | None = None
 
-    # -------------------------
-    # Constructors
-    # -------------------------
-    @classmethod
-    def from_config(
-        cls,
-        config_file: str | Path,
-        *,
-        key: str | None = None,
-        role: str | None = None,
-        year: Any | None = None,
-        z: Any | None = None,
-        include_survey_metadata: bool = False,
-    ) -> NZTomography:
-        """Create a session by loading one entry from a YAML config."""
-        t = cls()
-        t.load_entry_from_config(
-            config_file=config_file,
-            key=key,
-            role=role,
-            year=year,
-            z=z,
-            include_survey_metadata=include_survey_metadata,
-        )
-        return t
+    @staticmethod
+    def nz_model(name: str, z: Any, /, **params: Any) -> np.ndarray:
+        return _nz_model(name, z, **params)
 
-    @classmethod
-    def from_mapping(
-        cls,
-        cfg: Mapping[Any, Any],
-        *,
-        key: str = "survey",
-        role: str | None = None,
-        year: Any | None = None,
-        z: Any | None = None,
-        include_survey_metadata: bool = False,
-    ) -> NZTomography:
-        """Create a session by loading one entry from a mapping."""
-        t = cls()
-        t.load_entry_from_mapping(
-            cfg=cfg,
-            key=key,
-            role=role,
-            year=year,
-            z=z,
-            include_survey_metadata=include_survey_metadata,
-        )
-        return t
+    @staticmethod
+    def list_nz_models() -> list[str]:
+        return _available_nz_models()
 
-    # -------------------------
-    # State
-    # -------------------------
+    @staticmethod
+    def list_survey_presets() -> list[str]:
+        presets: list[str] = []
+        for name in cu.list_configs():
+            s = str(name)
+            if s.endswith("_survey_specs.yaml"):
+                presets.append(s.removesuffix("_survey_specs.yaml"))
+        return sorted(set(presets))
+
     def clear(self) -> None:
-        """Clears cached parent, cached entry spec, and cached bins."""
         self._parent = None
-        self._last = None
+        self._state = None
 
-    def has_parent(self) -> bool:
-        """Returns True if a parent (z, nz) has been cached."""
-        return self._parent is not None
-
-    def has_entry(self) -> bool:
-        """Returns True if an entry spec has been cached."""
-        return self._last is not None and self._last.get("tomo_spec") is not None
-
-    def has_bins(self) -> bool:
-        """Returns True if bins have been built and cached."""
-        return self._last is not None and self._last.get("bins") is not None
-
-    def parent_source(self) -> Literal["arrays", "config", "mapping", "none"]:
-        """Returns the cached parent source type."""
-        if self._parent is None:
-            return "none"
-        return self._parent["source"]
-
-    # -------------------------
-    # Load / set
-    # -------------------------
-    def set_parent_from_arrays(
+    def build_bins(
         self,
         *,
-        z: Any,
-        nz: Any,
-        survey_meta: Mapping[str, Any] | None = None,
-    ) -> None:
-        """Set parent (z, nz) directly. Clears cached entry and bins."""
-        self._parent = _make_parent_from_arrays(z=z, nz=nz, survey_meta=survey_meta)
-        self._last = None
-
-    def load_entry_from_config(
-        self,
-        *,
-        config_file: str | Path,
+        config_file: str | Path | None = None,
+        cfg: Mapping[Any, Any] | None = None,
+        z: Any | None = None,
+        nz: Any | None = None,
+        tomo_spec: Mapping[str, Any] | None = None,
         key: str | None = None,
         role: str | None = None,
         year: Any | None = None,
-        z: Any | None = None,
-        include_survey_metadata: bool = False,
-    ) -> None:
-        """Load (z, nz, tomo_spec) for one entry from YAML and cache it."""
-        self._parent, self._last = _load_entry_from_config(
-            config_file=config_file,
-            key=key,
-            role=role,
-            year=year,
-            z=z,
-            include_survey_metadata=include_survey_metadata,
-        )
-
-    def load_entry_from_mapping(
-        self,
-        *,
-        cfg: Mapping[Any, Any],
-        key: str = "survey",
-        role: str | None = None,
-        year: Any | None = None,
-        z: Any | None = None,
-        include_survey_metadata: bool = False,
-    ) -> None:
-        """Load (z, nz, tomo_spec) for one entry from a mapping and cache it."""
-        self._parent, self._last = _load_entry_from_mapping(
-            cfg=cfg,
-            key=key,
-            role=role,
-            year=year,
-            z=z,
-            include_survey_metadata=include_survey_metadata,
-        )
-
-    # -------------------------
-    # Accessors
-    # -------------------------
-    def z(self) -> np.ndarray:
-        """Returns cached true-z grid."""
-        self._require_parent()
-        return self._parent["z"]
-
-    def nz(self) -> np.ndarray:
-        """Returns cached parent n(z)."""
-        self._require_parent()
-        return self._parent["nz"]
-
-    def survey_meta(self) -> Mapping[str, Any] | None:
-        """Returns cached survey metadata, if available."""
-        self._require_parent()
-        return self._parent.get("survey_meta")
-
-    def tomo_spec(self) -> Mapping[str, Any]:
-        """Returns cached tomography entry spec."""
-        self._require_entry()
-        return self._last["tomo_spec"]
-
-    def kind(self, default: str = "photoz") -> str:
-        """Returns cached kind from tomo_spec, else default."""
-        if self._last is None:
-            return str(default).strip().lower()
-        spec = self._last.get("tomo_spec")
-        if not isinstance(spec, Mapping):
-            return str(default).strip().lower()
-        return str(spec.get("kind", default)).strip().lower()
-
-    def build(
-        self,
-        *,
-        include_metadata: bool = False,
         kind: str | None = None,
         overrides: Mapping[str, Any] | None = None,
-    ):
-        """Build bins using cached parent + cached tomo_spec."""
-        self._require_parent()
-        self._require_entry()
-        self._last, out = _build_bins_from_state(
-            parent=self._parent,
-            last=self._last,
-            include_metadata=include_metadata,
-            kind=kind,
-            overrides=overrides,
-        )
-        return out
+        include_survey_metadata: bool = False,
+        include_tomo_metadata: bool = False,
+    ) -> dict[str, Any]:
+        """
+        Build bins from config OR mapping OR arrays.
 
-    def build_from_arrays(
+        Returns a payload dict with:
+          z, nz, spec, bins, tomo_meta, survey_meta
+        """
+        self.clear()
+
+        # 1) Load parent + initial spec into cache
+        self._parent, self._state = self._load_parent_and_spec(
+            config_file=config_file,
+            cfg=cfg,
+            z=z,
+            nz=nz,
+            tomo_spec=tomo_spec,
+            key=key,
+            role=role,
+            year=year,
+            include_survey_metadata=include_survey_metadata,
+        )
+
+        # 2) Prepare spec (copy + overrides)
+        spec = dict(self._state["tomo_spec"])
+
+        if kind is not None:
+            spec["kind"] = _norm_str(kind)
+        else:
+            spec["kind"] = _norm_str(spec.get("kind", "photoz"))
+
+        if overrides:
+            for k, v in overrides.items():
+                if isinstance(v, Mapping) and isinstance(spec.get(k), Mapping):
+                    spec[k] = {**spec[k], **v}
+                else:
+                    spec[k] = v
+
+        if "bins" not in spec or not isinstance(spec["bins"], Mapping):
+            raise ValueError("tomo_spec must contain a 'bins' mapping.")
+
+        # 3) Resolve builder
+        builder = self._resolve_builder(spec["kind"])
+
+        # 4) Build bins (schema -> builder kwargs)
+        builder_kwargs = cu._builder_kwargs_from_spec(spec)
+        out = builder(
+            z=self._parent["z"],
+            nz=self._parent["nz"],
+            include_metadata=include_tomo_metadata,
+            **builder_kwargs,
+        )
+
+        if include_tomo_metadata:
+            bins, tomo_meta = out
+        else:
+            bins, tomo_meta = out, None
+
+        # 5) Cache state
+        self._state["bins"] = bins
+        self._state["tomo_meta"] = tomo_meta
+        self._state["tomo_spec"] = spec
+
+        # 6) Return payload
+        return {
+            "z": self._parent["z"],
+            "nz": self._parent["nz"],
+            "spec": dict(spec),
+            "bins": bins,
+            "tomo_meta": tomo_meta,
+            "survey_meta": self._parent.get("survey_meta") if include_survey_metadata else None,
+        }
+
+    def build_survey_bins(
+        self,
+        survey: str,
+        *,
+        role: str | None = None,
+        year: Any | None = None,
+        z: Any | None = None,
+        overrides: Mapping[str, Any] | None = None,
+        include_survey_metadata: bool = False,
+        include_tomo_metadata: bool = False,
+        include_stats: bool = False,
+        config_file: str | Path | None = None,
+    ) -> dict[str, Any]:
+        """Bilds survey bins from a preset config file."""
+        if config_file is None:
+            s = _norm_str(survey)
+            filename = f"{s}_survey_specs.yaml"
+            try:
+                config_file = cu.config_path(filename)
+            except FileNotFoundError as e:
+                raise FileNotFoundError(
+                    f"Unknown shipped survey preset {survey!r}. "
+                    f"Expected {filename!r}. Available: {cu.list_configs()}"
+                ) from e
+
+        # If user wants stats, we must have tomo_meta.
+        if include_stats:
+            include_tomo_metadata = True
+
+        payload = self.build_bins(
+            config_file=config_file,
+            role=role,
+            year=year,
+            z=z,
+            overrides=overrides,
+            include_survey_metadata=include_survey_metadata,
+            include_tomo_metadata=include_tomo_metadata,
+        )
+        payload["survey"] = _norm_str(survey)
+
+        if include_stats:
+            payload["shape_stats"] = self.shape_stats()
+            payload["population_stats"] = self.population_stats()
+
+        return payload
+
+    def shape_stats(self, **kwargs: Any) -> dict[str, Any]:
+        self._require_bins()
+        return _shape_stats(z=self._parent["z"], bins=self._state["bins"], **kwargs)
+
+    def population_stats(self, **kwargs: Any) -> dict[str, Any]:
+        self._require_bins()
+        meta = self._state.get("tomo_meta")
+        if meta is None:
+            raise ValueError("No tomo metadata cached. Rebuild with include_tomo_metadata=True.")
+        return _population_stats(bins=self._state["bins"], metadata=meta, **kwargs)
+
+    def cross_bin_stats(
         self,
         *,
-        z: Any,
-        nz: Any,
-        tomo_spec: Mapping[str, Any],
-        include_metadata: bool = False,
-        survey_meta: Mapping[str, Any] | None = None,
-    ):
-        """One-shot build from (z, nz, tomo_spec)."""
-        self.set_parent_from_arrays(z=z, nz=nz, survey_meta=survey_meta)
-        self._last = {
-            "tomo_spec": dict(tomo_spec),
-            "bins": None,
-            "tomo_meta": None,
-            "kind": str(tomo_spec.get("kind", "photoz")).strip().lower(),
-        }
-        return self.build(include_metadata=include_metadata)
+        overlap: Mapping[str, Any] | None = None,
+        pairs: Mapping[str, Any] | None = None,
+        leakage: Mapping[str, Any] | None = None,
+        pearson: Mapping[str, Any] | None = None,
+    ) -> dict[str, Any]:
+        """Compute a bundle of cross-bin matrices from cached bins.
 
-    # -------------------------
-    # Stats
-    # -------------------------
-    def bins(self) -> Mapping[int, np.ndarray]:
-        """Returns cached bins from the most recent build."""
+        Args:
+            overlap: kwargs for cross_bin_metrics.bin_overlap(...), or None to skip.
+            pairs: kwargs for cross_bin_metrics.overlap_pairs(...), or None to skip.
+            leakage: kwargs for cross_bin_metrics.leakage_matrix(...), must include
+                "bin_edges" inside the dict, or None to skip.
+            pearson: kwargs for cross_bin_metrics.pearson_matrix(...), or None to skip.
+
+        Returns:
+            dict with some subset of keys: "overlap", "pairs", "leakage", "pearson".
+        """
         self._require_bins()
-        return self._last["bins"]
+        z = self._parent["z"]
+        bins = self._state["bins"]
 
-    def tomo_meta(self) -> Mapping[str, Any] | None:
-        """Returns cached tomography metadata from the most recent build."""
-        self._require_entry()
-        return self._last.get("tomo_meta")
+        out: dict[str, Any] = {}
 
-    def shape_stats(self, **kwargs) -> dict[str, Any]:
-        """Computes shape-only stats for cached bins."""
-        self._require_bins()
-        return _shape_stats(z=self._parent["z"], bins=self._last["bins"], **kwargs)
+        if overlap is not None:
+            out["overlap"] = _bin_sim.bin_overlap(z, bins, **dict(overlap))
 
-    def population_stats(self, **kwargs) -> dict[str, Any]:
-        """Computes population stats from cached tomo metadata."""
-        self._require_bins()
-        meta = self._last.get("tomo_meta")
-        if meta is None:
-            raise ValueError("No tomo metadata cached. Rebuild with include_metadata=True.")
-        return _population_stats(bins=self._last["bins"], metadata=meta, **kwargs)
+        if pairs is not None:
+            out["pairs"] = _bin_sim.overlap_pairs(z, bins, **dict(pairs))
 
-    # -------------------------
-    # Internal
-    # -------------------------
-    def _require_parent(self) -> None:
-        if self._parent is None:
-            raise ValueError(
-                "No parent (z, nz) cached. Use from_config/from_mapping or set_parent_from_arrays."
+        if leakage is not None:
+            kw = dict(leakage)
+            if "bin_edges" not in kw:
+                raise ValueError("leakage requires leakage={'bin_edges': ...}.")
+            bin_edges = kw.pop("bin_edges")
+            out["leakage"] = _bin_sim.leakage_matrix(z, bins, bin_edges, **kw)
+
+        if pearson is not None:
+            out["pearson"] = _bin_sim.pearson_matrix(z, bins, **dict(pearson))
+
+        return out
+
+    def _load_parent_and_spec(
+        self,
+        *,
+        config_file: str | Path | None,
+        cfg: Mapping[Any, Any] | None,
+        z: Any | None,
+        nz: Any | None,
+        tomo_spec: Mapping[str, Any] | None,
+        key: str | None,
+        role: str | None,
+        year: Any | None,
+        include_survey_metadata: bool,
+    ) -> tuple[dict[str, Any], dict[str, Any]]:
+        # arrays path
+        if z is not None and nz is not None and tomo_spec is not None:
+            parent = {
+                "z": np.asarray(z, dtype=float),
+                "nz": np.asarray(nz, dtype=float),
+                "survey_meta": None,
+            }
+
+            # If user passes arrays, allow tomo_spec without an nz block.
+            spec_in = dict(tomo_spec)
+            spec_in.setdefault("nz", {"model": "arrays"})  # satisfy _parse_entry
+
+            spec = cu._parse_entry(spec_in)
+            spec["kind"] = _norm_str(spec.get("kind", "photoz"))
+
+            state = {"tomo_spec": spec, "bins": None, "tomo_meta": None}
+            return parent, state
+
+        # config path -> resolve to mapping, then continue
+        if config_file is not None:
+            cfg_map, resolved_key = cu._resolve_config_entry(config_file=config_file, key=key)
+            return self._load_parent_and_spec(
+                config_file=None,
+                cfg=cfg_map,
+                z=z,
+                nz=nz,
+                tomo_spec=tomo_spec,
+                key=resolved_key,
+                role=role,
+                year=year,
+                include_survey_metadata=include_survey_metadata,
             )
 
-    def _require_entry(self) -> None:
-        self._require_parent()
-        if self._last is None or self._last.get("tomo_spec") is None:
-            raise ValueError("No tomo_spec cached. Load an entry or use build_from_arrays.")
+        # mapping path
+        if cfg is not None:
+            cfg = cu._require_mapping(cfg, what="cfg")
+            z_arr = cu._extract_z_grid(cfg, z)
+
+            entries = cu._iter_tomography_entries(cfg)
+            matches = cu._select_entries(entries, role=role, year=year)
+            entry = cu._require_single(matches, what="tomography entry")
+
+            spec = cu._parse_entry(entry)
+            spec["kind"] = _norm_str(spec.get("kind", "photoz"))
+
+            nz_arr = cu._build_parent_nz(entry, z_arr)
+
+            parent = {
+                "z": z_arr,
+                "nz": nz_arr,
+                "survey_meta": (
+                    cu._survey_meta(
+                        cfg=cfg,
+                        resolved_key=str(key or "survey"),
+                        role=spec["role"],
+                        year=spec["year"],
+                    )
+                    if include_survey_metadata
+                    else None
+                ),
+            }
+            state = {"tomo_spec": spec, "bins": None, "tomo_meta": None}
+            return parent, state
+
+        raise ValueError(
+            "Provide either (config_file=...), (cfg=...), or (z=..., nz=..., tomo_spec=...)."
+        )
+
+    def _require_state(self) -> None:
+        if self._parent is None or self._state is None or self._state.get("tomo_spec") is None:
+            raise ValueError("No cached entry. Call build_bins(...) first.")
 
     def _require_bins(self) -> None:
-        self._require_entry()
-        if self._last.get("bins") is None:
-            raise ValueError("No bins cached. Call build(...) first.")
+        self._require_state()
+        if self._state.get("bins") is None:
+            raise ValueError("No bins cached. Call build_bins(...) first.")
+
+    def _resolve_builder(self, kind: str):
+        k = _norm_str(kind)
+        if k == "photoz":
+            from binny.nz_tomo.photoz import build_photoz_bins
+
+            return build_photoz_bins
+        if k == "specz":
+            from binny.nz_tomo.specz import build_specz_bins
+
+            return build_specz_bins
+        raise ValueError(f"Unknown tomography kind {k!r}.")

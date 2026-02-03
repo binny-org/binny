@@ -16,7 +16,7 @@ assigned to that photo-z bin. The core photo-z model is Gaussian::
 
     z_ph ~ Normal(mu(z), sigma(z)),
     mu(z)    = mean_scale * z - mean_offset,
-    sigma(z) = scatter_scale * (1 + z) * mean_scale.
+    sigma(z) = scatter_scale * (1 + z).
 
 Optionally, a second Gaussian outlier component may be included with mixture
 weight ``outlier_frac`` (enabled only when ``outlier_scatter_scale`` is not None).
@@ -82,8 +82,8 @@ def build_photoz_bins(
     nz: FloatArray,
     bin_edges: FloatArray | None = None,
     *,
-    scatter_scale: Sequence[float] | float,
-    mean_offset: Sequence[float] | float,
+    scatter_scale: Sequence[float] | float = 0.0,
+    mean_offset: Sequence[float] | float = 0.0,
     binning_scheme: BinningScheme | None = None,
     n_bins: int | None = None,
     bin_range: tuple[float, float] | None = None,
@@ -124,7 +124,7 @@ def build_photoz_bins(
         bin_edges=bin_edges,
         binning_scheme=binning_scheme,
         n_bins=n_bins,
-        bin_range=bin_range,  # NEW: do range restriction without grid snapping
+        bin_range=bin_range,
         # equal-number in photo-z space if (z_ph, nz_ph) provided, else fallback to (z, nz)
         equal_number_axis=z_ph,
         equal_number_weights=nz_ph,
@@ -235,7 +235,8 @@ def true_redshift_distribution(
 
     ``P(bin | z)`` is computed from a Gaussian core photo-z model, optionally
     including a second Gaussian outlier component with mixture fraction
-    ``outlier_frac`` when ``outlier_scatter_scale`` is not None.
+    outlier_frac when outlier_frac > 0 (requires outlier_scatter_scale, which
+    may be 0.0 for deterministic).
 
     Returns:
         Photo-z-selected true-redshift distribution evaluated on ``z``.
@@ -251,19 +252,25 @@ def true_redshift_distribution(
     if not (0.0 <= outlier_frac <= 1.0):
         raise ValueError("outlier_frac must lie in [0, 1].")
 
+    if outlier_frac > 0.0 and outlier_scatter_scale is None:
+        raise ValueError(
+            "outlier_scatter_scale must be set when outlier_frac > 0. "
+            "Use 0.0 for a deterministic (no-uncertainty) outlier component."
+        )
+
     # --- validate core params (always)
     if mean_scale <= 0.0:
         raise ValueError("mean_scale must be > 0.")
-    if scatter_scale <= 0.0:
-        raise ValueError("scatter_scale must be > 0.")
+    if scatter_scale < 0.0:
+        raise ValueError("scatter_scale must be >= 0.")
 
     # --- validate outlier params ONLY when the outlier component is active
-    outliers_enabled = (outlier_frac > 0.0) and (outlier_scatter_scale is not None)
+    outliers_enabled = outlier_frac > 0.0
     if outliers_enabled:
         if outlier_mean_scale <= 0.0:
             raise ValueError("outlier_mean_scale must be > 0.")
-        if outlier_scatter_scale <= 0.0:
-            raise ValueError("outlier_scatter_scale must be > 0.")
+        if outlier_scatter_scale < 0.0:
+            raise ValueError("outlier_scatter_scale must be >= 0.")
 
     # --- core probability
     p_core = _bin_prob_gaussian_photoz(
@@ -304,13 +311,16 @@ def _bin_prob_gaussian_photoz(
     """P(bin | z) for z_ph ~ N(mean_scale*z - mean_offset, scatter_scale*(1+z))."""
     z_arr = np.asarray(z, dtype=float)
 
-    if scatter_scale <= 0.0:
-        raise ValueError("scatter_scale must be > 0.")
+    if scatter_scale < 0.0:
+        raise ValueError("scatter_scale must be >= 0.")
 
     # Reference convention:
-    # mu(z) = mean_scale*z - mean_offset  (keep if you want)
-    # BUT sigma(z) must NOT be multiplied by mean_scale.
     mu = mean_scale * z_arr - mean_offset
+
+    # no-uncertainty limit: deterministic assignment in photo-z space
+    if scatter_scale == 0.0:
+        return ((mu >= bin_min) & (mu < bin_max)).astype(np.float64)
+
     sigma = np.maximum(scatter_scale * (1.0 + z_arr), 1e-10)
 
     sqrt2 = np.sqrt(2.0)

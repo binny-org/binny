@@ -28,10 +28,7 @@ def test_examples_load_and_build_bins(fname: str) -> None:
         raw = yaml.safe_load(path.read_text(encoding="utf-8"))
         assert isinstance(raw, Mapping)
 
-        if "survey" in raw and isinstance(raw["survey"], Mapping):
-            root = raw["survey"]
-        else:
-            root = raw
+        root = raw["survey"] if isinstance(raw.get("survey"), Mapping) else raw
 
         assert "z_grid" in root
         assert "tomography" in root
@@ -41,34 +38,31 @@ def test_examples_load_and_build_bins(fname: str) -> None:
         for entry in root["tomography"]:
             assert isinstance(entry, Mapping)
 
-            # Required selectors
             role = entry.get("role")
             year = entry.get("year")
             assert role is not None
             assert year is not None
 
-            # Optional numeric metadata must be None or numeric
             if "n_gal_arcmin2" in entry:
                 val = entry.get("n_gal_arcmin2")
                 assert val is None or isinstance(val, int | float)
 
-            # Uncertainties must be a mapping if present
             unc = entry.get("uncertainties")
             if unc is not None:
                 assert isinstance(unc, Mapping)
 
-            t = NZTomography.from_config(
+            t = NZTomography()
+            payload = t.build_bins(
                 config_file=path,
                 key=None,
                 role=str(role),
                 year=str(year),
                 include_survey_metadata=True,
+                include_tomo_metadata=True,  # needed for population_stats()
             )
 
-            _ = t.build(include_metadata=True)
-
-            z = t.z()
-            bins = t.bins()
+            z = payload["z"]
+            bins = payload["bins"]
 
             assert isinstance(z, np.ndarray)
             assert z.ndim == 1
@@ -81,10 +75,8 @@ def test_examples_load_and_build_bins(fname: str) -> None:
                 assert v.shape == z.shape
                 assert np.all(np.isfinite(v))
 
-            # Shape stats must always work
             out = t.shape_stats()
             assert isinstance(out, dict)
 
-            # Population stats must work when metadata is requested
             pop = t.population_stats()
             assert isinstance(pop, dict)

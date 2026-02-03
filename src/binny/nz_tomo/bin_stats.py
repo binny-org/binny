@@ -21,6 +21,7 @@ from typing import Any
 
 import numpy as np
 
+from binny.utils.metadata import _round_floats
 from binny.utils.normalization import cdf_from_curve, weighted_quantile_from_cdf
 from binny.utils.validators import validate_axis_and_weights
 
@@ -38,6 +39,32 @@ __all__ = [
     "shape_stats",
     "population_stats",
 ]
+
+
+def _bin_widths(bin_edges: np.ndarray) -> list[float]:
+    """Compute bin widths from bin edges."""
+    w = np.diff(np.asarray(bin_edges, dtype=float))
+    return [float(x) for x in w]
+
+
+def _width_summary(widths: list[float]) -> dict[str, float]:
+    """Compute summary statistics for bin widths."""
+    w = np.asarray(widths, dtype=float)
+    return {
+        "min": float(np.min(w)),
+        "max": float(np.max(w)),
+        "mean": float(np.mean(w)),
+        "std": float(np.std(w)),
+    }
+
+
+def _equidistant_score(widths: list[float]) -> float:
+    """Compute the equidistant width score."""
+    w = np.asarray(widths, dtype=float)
+    m = float(np.mean(w))
+    if m <= 0.0:
+        return 0.0
+    return float(np.max(np.abs(w - m)) / m)
 
 
 def bin_moments(z: Any, nz_bin: Any) -> dict[str, float]:
@@ -548,7 +575,24 @@ def shape_stats(
     if bin_edges is not None:
         out["in_range_fraction"] = in_range_fraction_per_bin(z_arr, bins, bin_edges)
 
-    return out
+        edges_info: dict[str, Any] = {}
+
+        if isinstance(bin_edges, Mapping):
+            # bin_edges is {bin_idx: (lo, hi)}
+            widths_per_bin = {int(i): float(hi) - float(lo) for i, (lo, hi) in bin_edges.items()}
+            widths = [widths_per_bin[i] for i in indices]  # ordered like bins
+            edges_info["widths_per_bin"] = widths_per_bin
+        else:
+            # bin_edges is a 1D edge sequence [e0, e1, ..., eN]
+            edges_arr = np.asarray(bin_edges, dtype=float)
+            widths = _bin_widths(edges_arr)
+            edges_info["widths"] = widths
+
+        edges_info["width_summary"] = _width_summary(widths)
+        edges_info["equidistant_score"] = _equidistant_score(widths)
+        out["edges"] = edges_info
+
+    return _round_floats(out, decimal_places)
 
 
 def population_stats(
@@ -560,6 +604,7 @@ def population_stats(
     normalize_frac: bool = True,
     rtol: float = 1e-2,
     atol: float = 1e-3,
+    decimal_places: int | None = 2,
 ) -> dict[str, Any]:
     """Compute population / normalization statistics for tomographic bins.
 
@@ -584,6 +629,7 @@ def population_stats(
             If False, require they sum to 1 within (rtol, atol).
         rtol: Relative tolerance for sum-to-one checks when normalize_frac=False.
         atol: Absolute tolerance for sum-to-one checks when normalize_frac=False.
+        decimal_places: Rounding precision for returned values.
 
     Returns:
         Mapping with keys:
@@ -640,4 +686,4 @@ def population_stats(
             out["survey_area"] = float(survey_area)
             out["count_per_bin"] = galaxy_count_per_bin(density_per_bin, float(survey_area))
 
-    return out
+    return _round_floats(out, decimal_places)

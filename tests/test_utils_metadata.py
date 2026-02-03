@@ -15,7 +15,7 @@ def test_build_tomo_bins_metadata_includes_optional_notes_and_casts_keys():
     parent = np.array([0.0, 1.0, 0.0], dtype=float)
     edges = np.array([0.0, 1.0, 2.0], dtype=float)
 
-    bins = {"1": np.array([0.0, 1.0, 0.0], dtype=float)}  # str key on purpose
+    bins = {"1": np.array([0.0, 1.0, 0.0], dtype=float)}
 
     meta = build_tomo_bins_metadata(
         kind="photoz",

@@ -452,7 +452,6 @@ def test_as_float_array_raises_on_uncoercible_input():
 
 def test_curve_norm_mode_required_true_assume_true_normalize_false_returns_check():
     """Tests that curve_norm_mode returns 'check' when required and assume_normalized."""
-    from binny.utils.normalization import curve_norm_mode
 
     assert (
         curve_norm_mode(
@@ -466,7 +465,6 @@ def test_curve_norm_mode_required_true_assume_true_normalize_false_returns_check
 
 def test_prepare_metric_inputs_rejects_unknown_mode_message():
     """Tests that prepare_metric_inputs raises for unknown mode string."""
-    from binny.utils.normalization import prepare_metric_inputs
 
     z = np.array([0.0, 1.0])
     bins = {0: np.array([1.0, 1.0])}
@@ -476,7 +474,6 @@ def test_prepare_metric_inputs_rejects_unknown_mode_message():
 
 def test_normalization_prepare_metric_inputs_rejects_unknown_mode():
     """Tests that normalization.prepare_metric_inputs rejects unknown modes."""
-    from binny.utils.normalization import prepare_metric_inputs
 
     z = np.array([0.0, 1.0])
     bins = {0: np.array([1.0, 1.0])}
@@ -487,7 +484,6 @@ def test_normalization_prepare_metric_inputs_rejects_unknown_mode():
 
 def test_normalization_prepare_metric_inputs_rejects_nonfinite_integral_when_required():
     """Tests that prepare_metric_inputs rejects non-finite integrals when needed."""
-    from binny.utils.normalization import prepare_metric_inputs
 
     z = np.array([0.0, 1.0, 2.0])
     # y has NaN -> validate_axis_and_weights should fail, but we also want the
@@ -500,8 +496,6 @@ def test_normalization_prepare_metric_inputs_rejects_nonfinite_integral_when_req
 
 def test_normalization_prepare_metric_inputs_segments_prob_requires_positive_mass():
     """Tests that segments_prob mode rejects non-positive mass curves."""
-    from binny.utils.normalization import prepare_metric_inputs
-
     z = np.array([0.0, 1.0, 2.0])
     bins = {0: np.zeros_like(z)}
 
@@ -511,8 +505,6 @@ def test_normalization_prepare_metric_inputs_segments_prob_requires_positive_mas
 
 def test_normalization_prepare_metric_inputs_check_rejects_not_unit_integral():
     """Tests that curve_norm='check' rejects non-unit-integral curves."""
-    from binny.utils.normalization import prepare_metric_inputs
-
     z = np.array([0.0, 1.0, 2.0])
     bins = {0: np.array([0.0, 2.0, 0.0])}  # area=2
 
@@ -526,6 +518,7 @@ def test_equal_weight_edges_repeated_edges_guard_triggers(
     """Tests that _equal_weight_edges raises if interpolation yields non-increasing edges."""
 
     def _bad_interp(x: float, xp: np.ndarray, fp: np.ndarray) -> float:
+        """A bad interpolation function that always returns the same value."""
         _, _ = x, xp
         return float(fp[0])  # force repeated interior edges
 
@@ -555,9 +548,6 @@ def test_weighted_quantile_from_cdf_searchsorted_overrun_returns_last():
     """Tests that weighted_quantile_from_cdf returns last node when j >= size."""
     z = np.array([0.0, 1.0])
     cdf = np.array([0.0, 1.0])
-    # If norm is slightly smaller than last CDF but target ends up larger due to float,
-    # you can force the branch by giving q=1 and norm=1 but using a cdf that doesn't reach norm.
-    # Better: direct overrun with inconsistent inputs.
     assert weighted_quantile_from_cdf(z, cdf, norm=2.0, q=1.0) == 1.0
 
 

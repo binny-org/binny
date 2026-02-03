@@ -7,6 +7,7 @@ from typing import Any, Literal
 
 import numpy as np
 
+from binny.utils.metadata import _round_floats
 from binny.utils.normalization import (
     normalize_edges,
     prepare_metric_inputs,
@@ -51,6 +52,7 @@ def bin_overlap(
     normalize: bool = False,
     rtol: float = 1e-3,
     atol: float = 1e-6,
+    decimal_places: int | None = 2,
 ) -> dict[int, dict[int, float]]:
     """Computes a pairwise comparison matrix for binned redshift distributions.
 
@@ -137,7 +139,12 @@ def bin_overlap(
             pair_value = pair_cosine(z_m, curves)
 
     mat = fill_symmetric(bin_indices, pair_value)
-    return apply_unit(mat, unit)
+    out = apply_unit(mat, unit)
+
+    if decimal_places is None:
+        return out
+
+    return _round_floats(out, decimal_places=decimal_places)
 
 
 def overlap_pairs(
@@ -151,6 +158,7 @@ def overlap_pairs(
     normalize: bool = False,
     rtol: float = 1e-3,
     atol: float = 1e-6,
+    decimal_places: int | None = 2,
 ) -> list[tuple[int, int, float]]:
     """Returns bin-index pairs passing a threshold in a chosen pairwise metric.
 
@@ -189,6 +197,7 @@ def overlap_pairs(
         normalize=normalize,
         rtol=rtol,
         atol=atol,
+        decimal_places=None,
     )
 
     indices = sorted(int(k) for k in values.keys())
@@ -209,7 +218,11 @@ def overlap_pairs(
             if v <= threshold:
                 out.append((i, j, v))
     out.sort(key=lambda t: t[2])
-    return out
+
+    if decimal_places is None:
+        return out
+
+    return [(i, j, float(np.round(v, decimal_places))) for (i, j, v) in out]
 
 
 def leakage_matrix(
@@ -218,6 +231,7 @@ def leakage_matrix(
     bin_edges: Mapping[int, tuple[float, float]] | Sequence[float] | np.ndarray,
     *,
     unit: MetricUnit = "fraction",
+    decimal_places: int | None = 2,
 ) -> dict[int, dict[int, float]]:
     """Computes a leakage/confusion matrix between bins based on nominal edges.
 
@@ -280,7 +294,12 @@ def leakage_matrix(
 
             leak[i][j] = float(frac)
 
-    return apply_unit(leak, unit)
+    out = apply_unit(leak, unit)
+
+    if decimal_places is None:
+        return out
+
+    return _round_floats(out, decimal_places=decimal_places)
 
 
 def pearson_matrix(
@@ -290,6 +309,7 @@ def pearson_matrix(
     normalize: bool = False,
     rtol: float = 1e-3,
     atol: float = 1e-6,
+    decimal_places: int | None = 2,
 ) -> dict[int, dict[int, float]]:
     """Computes a trapezoid-weighted Pearson correlation matrix between bin curves.
 
@@ -374,4 +394,6 @@ def pearson_matrix(
             corr[i][j] = val
             corr[j][i] = val
 
-    return corr
+    if decimal_places is None:
+        return corr
+    return _round_floats(corr, decimal_places=decimal_places)

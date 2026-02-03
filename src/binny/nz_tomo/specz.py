@@ -136,6 +136,7 @@ def build_specz_bins(
             ``"equidistant"``, ``"equal_number"``), or a mixed binning specification
             (sequence of segment dicts, or a dict with key ``"segments"``).
         n_bins: Number of bins when using a string ``binning_scheme``.
+        bin_range: If provided, overrides ``bin_edges`` to build a range of bins.
         completeness: Per-bin completeness factors (scalar or per-bin sequence).
         catastrophic_frac: Per-bin catastrophic fractions (scalar or per-bin sequence).
         leakage_model: Leakage prescription for catastrophes ("uniform",
@@ -191,6 +192,10 @@ def build_specz_bins(
     )
     n_bins_eff = int(bin_edges_arr.size - 1)
 
+    # --- scatter knobs: either explicit specz_scatter OR sigma0/sigma1 model, not both
+    if specz_scatter is not None and (sigma0 != 0.0 or sigma1 != 0.0):
+        raise ValueError("Provide either specz_scatter OR ``sigma0/sigma1``, not both.")
+
     # --- normalize parent for true-bin construction if requested
     parent_arr = parent_arr0
     if normalize_input:
@@ -214,6 +219,16 @@ def build_specz_bins(
         and specz_scatter_model == "sigma0_plus_sigma1_1pz"
         and (sigma0 > 0.0 or sigma1 > 0.0)
     )
+
+    if scatter_enabled:
+        # Validate explicit per-bin scatter early (nice error message here).
+        if specz_scatter is not None:
+            sig = np.asarray(as_per_bin(specz_scatter, n_bins_eff, "specz_scatter"), dtype=float)
+            if np.any(sig < 0.0):
+                raise ValueError("specz_scatter must be >= 0.")
+            if np.allclose(sig, 0.0):
+                scatter_enabled = False
+
     if scatter_enabled:
         matrix_scatter = specz_gaussian_response_matrix(
             z_arr=z_arr,
@@ -224,6 +239,8 @@ def build_specz_bins(
             sigma1=sigma1,
         )
         matrix_total = matrix_scatter @ matrix_cat
+    else:
+        matrix_total = matrix_cat
 
     # --- raw true-bin callback (top-hat * completeness)
     def raw_true_bin_for_edge(j: int, zmin: float, zmax: float) -> FloatArray1D:
@@ -437,7 +454,7 @@ def specz_gaussian_response_matrix(
     z_arr: FloatArray1D,
     bin_edges: FloatArray1D,
     specz_scatter: Sequence[float] | float | None,
-    model: Literal["const", "sigma0_plus_sigma1_1pz"] = "const",
+    model: Literal["sigma0_plus_sigma1_1pz"] = "sigma0_plus_sigma1_1pz",
     sigma0: float = 0.0,
     sigma1: float = 0.0,
 ) -> FloatArray2D:
@@ -446,13 +463,18 @@ def specz_gaussian_response_matrix(
     bin_edges_arr = np.asarray(bin_edges, dtype=float)
     n_bins = int(bin_edges_arr.size - 1)
 
+    if specz_scatter is not None and (sigma0 != 0.0 or sigma1 != 0.0):
+        raise ValueError("Provide either specz_scatter OR ``sigma0/sigma1``, not both.")
+
     if specz_scatter is not None:
         sig_bin = as_per_bin(specz_scatter, n_bins, "specz_scatter").astype(float)
-        if np.any(sig_bin <= 0.0):
-            raise ValueError("specz_scatter must be > 0 when provided.")
+        if np.any(sig_bin < 0.0):
+            raise ValueError("specz_scatter must be >= 0 when provided.")
+        # no-uncertainty limit: identity
+        if np.allclose(sig_bin, 0.0):
+            return np.eye(n_bins, dtype=np.float64)
     else:
-        if model != "sigma0_plus_sigma1_1pz":
-            raise ValueError("If specz_scatter is None, model must be 'sigma0_plus_sigma1_1pz'.")
+        # specz_scatter not provided -> use sigma0/sigma1 model knobs
         if sigma0 < 0.0 or sigma1 < 0.0:
             raise ValueError("sigma0 and sigma1 must be >= 0.")
         if sigma0 == 0.0 and sigma1 == 0.0:
@@ -476,6 +498,10 @@ def specz_gaussian_response_matrix(
 
         if specz_scatter is not None:
             sigma = float(sig_bin[j]) * np.ones_like(z_in)
+            # if this bin’s scatter is exactly 0, it contributes no mixing
+            if np.allclose(sigma, 0.0):
+                matrix[j, j] = 1.0
+                continue
         else:
             sigma = sigma0 + sigma1 * (1.0 + z_in)
 
