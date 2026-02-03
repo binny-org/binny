@@ -231,7 +231,7 @@ def test_tophat_distribution_inclusive_edges():
 
 def test_tophat_distribution_raises_for_bad_interval():
     """Tests that tophat_distribution raises ValueError"""
-    with pytest.raises(ValueError, match="zmax must be greater than zmin"):
+    with pytest.raises(ValueError, match=r"`{0,2}zmax`{0,2} must be greater than `{0,2}zmin`{0,2}"):
         tophat_distribution([0.0, 1.0], zmin=1.0, zmax=1.0)
 
 
