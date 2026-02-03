@@ -7,7 +7,7 @@ from typing import Any, Literal
 
 import numpy as np
 
-from binny.utils.metadata import _round_floats
+from binny.utils.metadata import round_floats
 from binny.utils.normalization import (
     normalize_edges,
     prepare_metric_inputs,
@@ -82,6 +82,7 @@ def bin_overlap(
         normalize: Wheather to normalize curves before comparison.
         rtol: Relative tolerance for the normalization check.
         atol: Absolute tolerance for the normalization check.
+        decimal_places: Rounding precision for output values.
 
     Returns:
         Nested mapping ``mat[i][j]`` giving the pairwise value between bins
@@ -120,8 +121,10 @@ def bin_overlap(
             pair_value = pair_js(masses)
         elif method_l == "hellinger":
             pair_value = pair_hellinger(masses)
-        else:  # "tv"
+        elif method_l == "tv":
             pair_value = pair_tv(masses)
+        else:
+            raise ValueError(f"method {method_l!r} is not supported for segment-mass metrics.")
 
     else:
         z_m, curves = prepare_metric_inputs(
@@ -144,7 +147,7 @@ def bin_overlap(
     if decimal_places is None:
         return out
 
-    return _round_floats(out, decimal_places=decimal_places)
+    return round_floats(out, decimal_places=decimal_places)
 
 
 def overlap_pairs(
@@ -178,6 +181,7 @@ def overlap_pairs(
         normalize: Passed to :func:`bin_overlap`.
         rtol: Relative tolerance for normalization check (if needed).
         atol: Absolute tolerance for normalization check (if needed).
+        decimal_places: Rounding precision for output values.
 
     Returns:
         List of (i, j, value) tuples with i < j, sorted by decreasing value for
@@ -248,6 +252,7 @@ def leakage_matrix(
             a sequence/array of edges where bin ``i`` has edges
             ``(bin_edges[i], bin_edges[i+1])``.
         unit: Output units. If ``"percent"``, values are multiplied by 100.
+        decimal_places: Rounding precision for output values.
 
     Returns:
         Nested mapping ``leak[i][j]`` giving the fraction of mass in bin ``i``
@@ -299,7 +304,7 @@ def leakage_matrix(
     if decimal_places is None:
         return out
 
-    return _round_floats(out, decimal_places=decimal_places)
+    return round_floats(out, decimal_places=decimal_places)
 
 
 def pearson_matrix(
@@ -334,6 +339,7 @@ def pearson_matrix(
             look normalized are normalized with a warning.
         rtol: Relative tolerance for the normalization check.
         atol: Absolute tolerance for the normalization check.
+        decimal_places: Rounding precision for output values.
 
     Returns:
         Nested mapping ``corr[i][j]`` giving the Pearson correlation between
@@ -396,4 +402,4 @@ def pearson_matrix(
 
     if decimal_places is None:
         return corr
-    return _round_floats(corr, decimal_places=decimal_places)
+    return round_floats(corr, decimal_places=decimal_places)
