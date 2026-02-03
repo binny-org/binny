@@ -6,6 +6,7 @@ from typing import Any
 
 import numpy as np
 
+import binny.nz_tomo.bin_similarity as _bin_sim
 import binny.surveys.config_utils as cu
 from binny.nz.registry import available_models as _available_nz_models
 from binny.nz.registry import nz_model as _nz_model
@@ -24,22 +25,25 @@ class NZTomography:
 
     def __init__(self) -> None:
         self._parent: dict[str, Any] | None = None
-        self._state: dict[str, Any] | None = None  # holds tomo_spec, bins, tomo_meta
+        self._state: dict[str, Any] | None = None
 
-    # -------------------------
-    # n(z) registry convenience
-    # -------------------------
     @staticmethod
     def nz_model(name: str, z: Any, /, **params: Any) -> np.ndarray:
         return _nz_model(name, z, **params)
 
     @staticmethod
-    def available_nz_models() -> list[str]:
+    def list_nz_models() -> list[str]:
         return _available_nz_models()
 
-    # -------------------------
-    # Public API
-    # -------------------------
+    @staticmethod
+    def list_survey_presets() -> list[str]:
+        presets: list[str] = []
+        for name in cu.list_configs():
+            s = str(name)
+            if s.endswith("_survey_specs.yaml"):
+                presets.append(s.removesuffix("_survey_specs.yaml"))
+        return sorted(set(presets))
+
     def clear(self) -> None:
         self._parent = None
         self._state = None
@@ -144,7 +148,7 @@ class NZTomography:
         include_stats: bool = False,
         config_file: str | Path | None = None,
     ) -> dict[str, Any]:
-        """One-shot for shipped presets; returns payload dict."""
+        """Bilds survey bins from a preset config file."""
         if config_file is None:
             s = _norm_str(survey)
             filename = f"{s}_survey_specs.yaml"
@@ -177,17 +181,6 @@ class NZTomography:
 
         return payload
 
-    # -------------------------
-    # Stats API
-    # -------------------------
-    def bins(self) -> Mapping[int, np.ndarray]:
-        self._require_bins()
-        return self._state["bins"]
-
-    def tomo_meta(self) -> Mapping[str, Any] | None:
-        self._require_state()
-        return self._state.get("tomo_meta")
-
     def shape_stats(self, **kwargs: Any) -> dict[str, Any]:
         self._require_bins()
         return _shape_stats(z=self._parent["z"], bins=self._state["bins"], **kwargs)
@@ -199,9 +192,50 @@ class NZTomography:
             raise ValueError("No tomo metadata cached. Rebuild with include_tomo_metadata=True.")
         return _population_stats(bins=self._state["bins"], metadata=meta, **kwargs)
 
-    # -------------------------
-    # Internal plumbing
-    # -------------------------
+    def cross_bin_stats(
+        self,
+        *,
+        overlap: Mapping[str, Any] | None = None,
+        pairs: Mapping[str, Any] | None = None,
+        leakage: Mapping[str, Any] | None = None,
+        pearson: Mapping[str, Any] | None = None,
+    ) -> dict[str, Any]:
+        """Compute a bundle of cross-bin matrices from cached bins.
+
+        Args:
+            overlap: kwargs for cross_bin_metrics.bin_overlap(...), or None to skip.
+            pairs: kwargs for cross_bin_metrics.overlap_pairs(...), or None to skip.
+            leakage: kwargs for cross_bin_metrics.leakage_matrix(...), must include
+                "bin_edges" inside the dict, or None to skip.
+            pearson: kwargs for cross_bin_metrics.pearson_matrix(...), or None to skip.
+
+        Returns:
+            dict with some subset of keys: "overlap", "pairs", "leakage", "pearson".
+        """
+        self._require_bins()
+        z = self._parent["z"]
+        bins = self._state["bins"]
+
+        out: dict[str, Any] = {}
+
+        if overlap is not None:
+            out["overlap"] = _bin_sim.bin_overlap(z, bins, **dict(overlap))
+
+        if pairs is not None:
+            out["pairs"] = _bin_sim.overlap_pairs(z, bins, **dict(pairs))
+
+        if leakage is not None:
+            kw = dict(leakage)
+            if "bin_edges" not in kw:
+                raise ValueError("leakage requires leakage={'bin_edges': ...}.")
+            bin_edges = kw.pop("bin_edges")
+            out["leakage"] = _bin_sim.leakage_matrix(z, bins, bin_edges, **kw)
+
+        if pearson is not None:
+            out["pearson"] = _bin_sim.pearson_matrix(z, bins, **dict(pearson))
+
+        return out
+
     def _load_parent_and_spec(
         self,
         *,

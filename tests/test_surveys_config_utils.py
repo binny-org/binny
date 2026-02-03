@@ -1,4 +1,4 @@
-"""Tests that survey config utility helpers work for the new schema."""
+"""Unit tests for binny.surveys.config_utils."""
 
 from __future__ import annotations
 

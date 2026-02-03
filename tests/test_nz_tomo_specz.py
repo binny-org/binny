@@ -88,7 +88,8 @@ def test_response_explicit_matrix_invalid_shape():
 
 
 def test_response_explicit_matrix_invalid_column_sums():
-    """Tests that an explicit response matrix with invalid column sums raises ValueError."""
+    """Tests that an explicit response matrix with invalid column sums
+    raises."""
     matrix0 = np.array([[1.0, 0.0], [0.0, 0.0]])
     with pytest.raises(ValueError):
         build_specz_response_matrix(2, response_matrix=matrix0)
@@ -218,18 +219,20 @@ def test_gaussian_scatter_identity_when_sigma0_sigma1_zero():
 
 
 def test_gaussian_scatter_requires_sigma0_plus_sigma1_when_none():
-    """Tests that specz_scatter=None requires model='sigma0_plus_sigma1_1pz'."""
+    """Tests that model must be supported when specz_scatter is None."""
     z, _ = _toy_z_nz()
     edges = _edges_4bins()
-    with pytest.raises(ValueError, match=r"model must be 'sigma0_plus_sigma1_1pz'"):
-        specz_gaussian_response_matrix(
-            z_arr=z,
-            bin_edges=edges,
-            specz_scatter=None,
-            model="const",
-            sigma0=1e-4,
-            sigma1=0.0,
-        )
+
+    matrix = specz_gaussian_response_matrix(
+        z_arr=z,
+        bin_edges=edges,
+        specz_scatter=None,
+        model="const",
+        sigma0=1e-4,
+        sigma1=0.0,
+    )
+    assert matrix.shape == (4, 4)
+    _assert_col_stochastic(matrix)
 
 
 def test_gaussian_scatter_returns_col_stochastic_matrix():
@@ -620,7 +623,6 @@ def test_response_rejects_unknown_leakage_model() -> None:
 
 def test_gaussian_leakage_sigma_allows_fallback_when_weights_underflow() -> None:
     """Tests that gaussian leakage can fall back to neighbor-like behavior."""
-    # Force w.sum() -> 0 by using a *tiny* sigma so exp() underflows for all i != j.
     matrix = build_specz_response_matrix(
         4,
         catastrophic_frac=0.3,
@@ -634,14 +636,24 @@ def test_gaussian_leakage_sigma_allows_fallback_when_weights_underflow() -> None
 
 
 def test_gaussian_scatter_rejects_nonpositive_specz_scatter() -> None:
-    """Tests that specz_gaussian_response_matrix rejects non-positive specz_scatter."""
+    """Tests that negative specz_scatter is rejected (zero is allowed)."""
     z, _ = _toy_z_nz()
     edges = _edges_4bins()
-    with pytest.raises(ValueError, match=r"specz_scatter must be > 0"):
+
+    m0 = specz_gaussian_response_matrix(
+        z_arr=z,
+        bin_edges=edges,
+        specz_scatter=[1e-3, 0.0, 1e-3, 1e-3],
+        model="const",
+    )
+    assert m0.shape == (4, 4)
+    _assert_col_stochastic(m0)
+
+    with pytest.raises(ValueError, match=r"specz_scatter must be >= 0"):
         specz_gaussian_response_matrix(
             z_arr=z,
             bin_edges=edges,
-            specz_scatter=[1e-3, 0.0, 1e-3, 1e-3],
+            specz_scatter=[1e-3, -1e-6, 1e-3, 1e-3],
             model="const",
         )
 

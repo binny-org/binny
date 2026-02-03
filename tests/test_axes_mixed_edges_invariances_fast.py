@@ -54,14 +54,6 @@ def _chi_of_z(z: np.ndarray) -> np.ndarray:
     return z + 0.15 * z**2
 
 
-def _two_segment_specs(method0: str, method1: str, *, n0: int = 3, n1: int = 4) -> list[dict]:
-    """Generates a two-segment binning specification for testing."""
-    return [
-        {"method": method0, "n_bins": n0, "params": {}},
-        {"method": method1, "n_bins": n1, "params": {}},
-    ]
-
-
 def test_mixed_edges_method_alias_invariance() -> None:
     """Tests that method aliases produce identical edges."""
     segs_a = [{"method": "eq", "n_bins": 6, "params": {"x_min": 0.0, "x_max": 2.0}}]

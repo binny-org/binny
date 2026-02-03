@@ -35,7 +35,7 @@ def test_true_redshift_distribution_full_range_returns_parent(z_nz):
 
 
 def test_true_redshift_distribution_outlier_disabled_matches_core(z_nz):
-    """Tests that outliers are ignored when outlier_scatter_scale is None."""
+    """Tests that outliers require outlier_scatter_scale when outlier_frac > 0."""
     z, nz = z_nz
 
     core_only = true_redshift_distribution(
@@ -50,21 +50,22 @@ def test_true_redshift_distribution_outlier_disabled_matches_core(z_nz):
         outlier_scatter_scale=None,
     )
 
-    outlier_disabled = true_redshift_distribution(
-        z,
-        nz,
-        bin_min=0.5,
-        bin_max=1.0,
-        scatter_scale=0.05,
-        mean_offset=0.01,
-        mean_scale=1.0,
-        outlier_frac=0.5,  # nonzero, but outliers still disabled
-        outlier_scatter_scale=None,
-        outlier_mean_offset=0.2,
-        outlier_mean_scale=0.9,
-    )
+    with pytest.raises(ValueError, match=r"outlier_scatter_scale must be set"):
+        true_redshift_distribution(
+            z,
+            nz,
+            bin_min=0.5,
+            bin_max=1.0,
+            scatter_scale=0.05,
+            mean_offset=0.01,
+            mean_scale=1.0,
+            outlier_frac=0.5,
+            outlier_scatter_scale=None,
+            outlier_mean_offset=0.2,
+            outlier_mean_scale=0.9,
+        )
 
-    assert np.allclose(outlier_disabled, core_only, rtol=0.0, atol=0.0)
+    assert np.all(np.isfinite(core_only))
 
 
 def test_true_redshift_distribution_outliers_enabled_changes_output(z_nz):
@@ -126,16 +127,31 @@ def test_true_redshift_distribution_validates_parameters(z_nz):
             mean_scale=0.0,
         )
 
-    with pytest.raises(ValueError, match=r"scatter_scale must be > 0"):
+    with pytest.raises(ValueError, match=r"scatter_scale must be >="):
         true_redshift_distribution(
             z,
             nz,
             0.0,
             1.0,
-            scatter_scale=0.0,
+            scatter_scale=-1.0,
             mean_offset=0.0,
             mean_scale=1.0,
         )
+
+    # scatter_scale == 0.0 is allowed (deterministic assignment limit)
+    out0 = true_redshift_distribution(
+        z,
+        nz,
+        0.0,
+        1.0,
+        scatter_scale=0.0,
+        mean_offset=0.0,
+        mean_scale=1.0,
+        outlier_frac=0.0,
+        outlier_scatter_scale=None,
+    )
+    assert out0.shape == z.shape
+    assert np.all(np.isfinite(out0))
 
     with pytest.raises(ValueError, match=r"outlier_mean_scale must be > 0"):
         true_redshift_distribution(
@@ -151,18 +167,22 @@ def test_true_redshift_distribution_validates_parameters(z_nz):
             outlier_mean_scale=0.0,
         )
 
-    with pytest.raises(ValueError, match=r"outlier_scatter_scale must be > 0"):
-        true_redshift_distribution(
-            z,
-            nz,
-            0.0,
-            1.0,
-            scatter_scale=0.1,
-            mean_offset=0.0,
-            mean_scale=1.0,
-            outlier_frac=0.2,
-            outlier_scatter_scale=0.0,
-        )
+    # outlier_scatter_scale == 0.0 is allowed when outliers are enabled
+    out1 = true_redshift_distribution(
+        z,
+        nz,
+        0.0,
+        1.0,
+        scatter_scale=0.1,
+        mean_offset=0.0,
+        mean_scale=1.0,
+        outlier_frac=0.2,
+        outlier_scatter_scale=0.0,
+        outlier_mean_offset=0.0,
+        outlier_mean_scale=1.0,
+    )
+    assert out1.shape == z.shape
+    assert np.all(np.isfinite(out1))
 
 
 def test_true_redshift_distribution_accepts_lists():

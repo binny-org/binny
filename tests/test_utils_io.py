@@ -137,8 +137,7 @@ def test_load_nz_npz_without_key_no_suitable_array_raises(
 ) -> None:
     """Tests that load_nz raises if .npz has no (N,2+) array and no key is given."""
     p = tmp_path / "nz.npz"
-    np.savez(p, a=np.array([1.0, 2.0]), b=np.array([[1.0, 2.0, 3.0]]))  # (1,3) ok actually
-    # Ensure neither is suitable: use (1,) and (1,1)
+    np.savez(p, a=np.array([1.0, 2.0]), b=np.array([[1.0, 2.0, 3.0]]))
     p2 = tmp_path / "nz2.npz"
     np.savez(p2, a=np.array([1.0, 2.0]), b=np.array([[1.0]]))
 
@@ -340,7 +339,6 @@ def test_load_yaml_from_disk_non_mapping_raises(tmp_path: Path) -> None:
 
 def test_load_yaml_from_package_mapping(monkeypatch, tmp_path: Path) -> None:
     """Tests that load_yaml loads a YAML mapping from a package resource."""
-    # Create a fake package resource dir with a YAML file
     pkgdir = tmp_path / "fakepkg"
     pkgdir.mkdir()
     (pkgdir / "__init__.py").write_text("", encoding="utf-8")
@@ -350,6 +348,7 @@ def test_load_yaml_from_package_mapping(monkeypatch, tmp_path: Path) -> None:
     import importlib.resources as resources
 
     def fake_files(package: str):
+        """Fake importlib.resources.files that returns our fake package dir."""
         assert package == "fakepkg"
         return pkgdir
 

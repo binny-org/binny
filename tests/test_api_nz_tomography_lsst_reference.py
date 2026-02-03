@@ -12,7 +12,6 @@ from binny.api.nz_tomography import NZTomography
 
 _REPO_ROOT = Path(__file__).resolve().parents[1]
 _REF_IO_PATH = _REPO_ROOT / "benchmarks" / "reference_io.py"
-_LSST_YAML = _REPO_ROOT / "src" / "binny" / "surveys" / "configs" / "lsst_survey_specs.yaml"
 _REF_BASE = _REPO_ROOT / "tests" / "reference" / "data"
 
 _spec = importlib.util.spec_from_file_location("benchmarks_reference_io", _REF_IO_PATH)
@@ -50,9 +49,7 @@ def _parse_preset(preset: str) -> tuple[float, float, int]:
     return zmin, zmax, n
 
 
-def _stack_bins(
-    bins: dict[int, np.ndarray] | dict[str, np.ndarray],
-) -> np.ndarray:
+def _stack_bins(bins: dict[int, np.ndarray] | dict[str, np.ndarray]) -> np.ndarray:
     """Stacks bins into a single array."""
     keys = sorted(bins, key=lambda k: int(k))
     return np.stack([np.asarray(bins[k], dtype=float) for k in keys], axis=0)
@@ -62,7 +59,7 @@ def _stack_bins(
 @pytest.mark.parametrize("year", [1, 10])
 @pytest.mark.parametrize("role", ["lens", "source"])
 def test_lsst_nztomography_matches_reference(preset: str, year: int, role: str) -> None:
-    """Tests that LSST YAML config matches reference .npy dataset."""
+    """Tests that LSST survey preset matches reference .npy dataset."""
     ref = load_benchmark(preset=preset, sample=role, year=year)
     ref_bins = np.asarray(ref["bins"], dtype=float)
     ref_z = np.asarray(ref["z"], dtype=float)
@@ -71,18 +68,19 @@ def test_lsst_nztomography_matches_reference(preset: str, year: int, role: str) 
     z = np.linspace(zmin, zmax, n, dtype=float)
     np.testing.assert_allclose(z, ref_z, rtol=0.0, atol=0.0)
 
-    t = NZTomography.from_config(
-        _LSST_YAML,
-        key="survey",
+    # New API: use shipped preset via build_survey_bins
+    t = NZTomography()
+    payload = t.build_survey_bins(
+        "lsst",
         role=role,
         year=str(year),
         z=z,
         include_survey_metadata=False,
+        include_tomo_metadata=False,
+        include_stats=False,
     )
 
-    t.build(include_metadata=False)
-
-    got_bins = _stack_bins(dict(t.bins()))
+    got_bins = _stack_bins(dict(payload["bins"]))
     assert got_bins.shape == ref_bins.shape
 
     np.testing.assert_allclose(got_bins, ref_bins, rtol=1e-10, atol=1e-12)

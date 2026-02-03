@@ -41,16 +41,6 @@ def _normalize_pdf(z: np.ndarray, nz: np.ndarray) -> np.ndarray:
     return nz / norm
 
 
-def _bins_from_edges(z: np.ndarray, nz: np.ndarray, edges: list[float]) -> dict[int, np.ndarray]:
-    """Partitions nz(z) into bin curves using fixed edges."""
-    bins: dict[int, np.ndarray] = {}
-    for i in range(len(edges) - 1):
-        lo, hi = float(edges[i]), float(edges[i + 1])
-        m = (z >= lo) & (z < hi) if i < len(edges) - 2 else (z >= lo) & (z <= hi)
-        bins[i] = nz * m.astype(float)
-    return bins
-
-
 def _make_nonmonotonic_z() -> np.ndarray:
     """Returns a nearly-monotonic grid with a tiny non-monotonic swap."""
     z = _toy_grid().copy()
@@ -218,7 +208,7 @@ def test_population_stats_uses_metadata_not_bin_integrals() -> None:
     bins = {0: b0, 1: b1}
 
     meta: dict[str, Any] = {"frac_per_bin": {0: 0.8, 1: 0.2}}
-    out = population_stats(bins, meta, normalize_frac=False)
+    out = population_stats(bins, meta, normalize_frac=False, decimal_places=16)
 
     assert out["fractions"][0] == pytest.approx(0.8, rel=0.0, abs=1e-12)
     assert out["fractions"][1] == pytest.approx(0.2, rel=0.0, abs=1e-12)
@@ -230,7 +220,7 @@ def test_population_stats_normalizes_frac_when_requested() -> None:
     bins = {0: _gaussian(z, 0.6, 0.1), 1: _gaussian(z, 1.2, 0.2)}
 
     meta: dict[str, Any] = {"frac_per_bin": {0: 2.0, 1: 1.0}}
-    out = population_stats(bins, meta, normalize_frac=True)
+    out = population_stats(bins, meta, normalize_frac=True, decimal_places=16)
 
     assert out["fractions"][0] == pytest.approx(2.0 / 3.0, rel=0.0, abs=1e-12)
     assert out["fractions"][1] == pytest.approx(1.0 / 3.0, rel=0.0, abs=1e-12)
@@ -244,7 +234,7 @@ def test_population_stats_normalize_false_still_returns_normalized() -> None:
     bins = {0: _gaussian(z, 0.6, 0.1), 1: _gaussian(z, 1.2, 0.2)}
 
     meta: dict[str, Any] = {"frac_per_bin": {0: 0.2, 1: 0.2}}
-    out = population_stats(bins, meta, normalize_frac=False, rtol=0.0, atol=0.0)
+    out = population_stats(bins, meta, normalize_frac=False, rtol=0.0, atol=0.0, decimal_places=16)
 
     assert sum(out["fractions"].values()) == pytest.approx(1.0, rel=0.0, abs=1e-12)
     assert out["fractions"][0] == pytest.approx(0.5, rel=0.0, abs=1e-12)
@@ -257,7 +247,7 @@ def test_population_stats_density_allocation_matches_fractions() -> None:
     bins = {0: _gaussian(z, 0.6, 0.1), 1: 10.0 * _gaussian(z, 1.2, 0.2)}
     meta: dict[str, Any] = {"frac_per_bin": {0: 0.25, 1: 0.75}}
 
-    out = population_stats(bins, meta, density_total=40.0, normalize_frac=False)
+    out = population_stats(bins, meta, density_total=40.0, normalize_frac=False, decimal_places=16)
 
     assert out["density_total"] == pytest.approx(40.0, rel=0.0, abs=0.0)
     assert out["density_per_bin"][0] == pytest.approx(10.0, rel=0.0, abs=1e-12)
@@ -271,11 +261,7 @@ def test_population_stats_count_allocation_matches_density_and_area() -> None:
     meta: dict[str, Any] = {"frac_per_bin": {"0": 0.4, "1": 0.6}}
 
     out = population_stats(
-        bins,
-        meta,
-        density_total=10.0,
-        survey_area=100.0,
-        normalize_frac=False,
+        bins, meta, density_total=10.0, survey_area=100.0, normalize_frac=False, decimal_places=16
     )
 
     assert out["count_per_bin"][0] == pytest.approx(10.0 * 0.4 * 100.0, abs=1e-12)
@@ -300,7 +286,7 @@ def test_population_stats_raises_if_survey_area_without_density_total() -> None:
     meta: dict[str, Any] = {"frac_per_bin": {0: 1.0}}
 
     with pytest.raises(ValueError, match="survey_area requires density_total"):
-        population_stats(bins, meta, survey_area=100.0)
+        population_stats(bins, meta, survey_area=100.0, decimal_places=16)
 
 
 def test_galaxy_fraction_per_bin_normalizes_and_casts_keys() -> None:

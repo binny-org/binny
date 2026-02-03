@@ -461,5 +461,185 @@ def test_population_stats_normalize_frac_false_rejects_not_sum_one(
     bins = {0: _gaussian(z, 0.6, 0.1), 1: _gaussian(z, 1.2, 0.2)}
     meta = {"frac_per_bin": {0: 1.0, 1: 1.0}}  # doesn't matter now
 
-    with pytest.raises(ValueError, match=r"normalize_frac=False requires fractions to sum to 1"):
+    with pytest.raises(
+        ValueError, match=r"normalize_frac=False requires" r" fractions to sum to 1"
+    ):
         population_stats(bins, meta, normalize_frac=False, rtol=0.0, atol=0.0)
+
+
+def test_shape_stats_edges_info_for_mapping_edges() -> None:
+    """Tests that shape_stats returns edges info for mapping bin_edges."""
+    z = _toy_grid()
+    bins = {0: _gaussian(z, 0.6, 0.1), 1: _gaussian(z, 1.2, 0.2)}
+    edges = {0: (0.3, 0.9), 1: (0.9, 1.6)}  # widths: 0.6, 0.7
+
+    out = shape_stats(z, bins, bin_edges=edges, decimal_places=None)
+
+    assert "edges" in out
+    assert set(out["edges"].keys()) >= {"widths_per_bin", "width_summary", "equidistant_score"}
+    assert out["edges"]["widths_per_bin"] == {0: pytest.approx(0.6), 1: pytest.approx(0.7)}
+
+    ws = out["edges"]["width_summary"]
+    assert ws["min"] == pytest.approx(0.6)
+    assert ws["max"] == pytest.approx(0.7)
+    assert out["edges"]["equidistant_score"] > 0.0
+
+
+def test_shape_stats_edges_info_for_sequence_edges() -> None:
+    """Tests that shape_stats returns edges info for sequence bin_edges."""
+    z = _toy_grid()
+    bins = {0: _gaussian(z, 0.6, 0.1), 1: _gaussian(z, 1.2, 0.2)}
+    edges = [0.0, 1.0, 2.0]  # widths: 1.0, 1.0
+
+    out = shape_stats(z, bins, bin_edges=edges, decimal_places=None)
+
+    assert "edges" in out
+    assert set(out["edges"].keys()) >= {"widths", "width_summary", "equidistant_score"}
+    assert out["edges"]["widths"] == [pytest.approx(1.0), pytest.approx(1.0)]
+
+    ws = out["edges"]["width_summary"]
+    assert ws["min"] == pytest.approx(1.0)
+    assert ws["max"] == pytest.approx(1.0)
+    assert out["edges"]["equidistant_score"] == pytest.approx(0.0)
+
+
+def test_shape_stats_edges_sequence_includes_edges_info() -> None:
+    """Tests that shape_stats includes edges info in returned sequence."""
+    z = _toy_grid()
+    bins = {0: _gaussian(z, 0.6, 0.1), 1: _gaussian(z, 1.2, 0.2)}
+    edges = [0.0, 0.8, 2.0]  # widths: 0.8, 1.2 (mean 1.0)
+
+    out = shape_stats(z, bins, bin_edges=edges, decimal_places=None)
+
+    assert "edges" in out
+    assert set(out["edges"].keys()) >= {"widths", "width_summary", "equidistant_score"}
+    assert out["edges"]["widths"] == pytest.approx([0.8, 1.2])
+    assert out["edges"]["width_summary"]["mean"] == pytest.approx(1.0)
+    assert out["edges"]["equidistant_score"] == pytest.approx(0.2)
+
+
+def test_shape_stats_edges_info_mapping() -> None:
+    """Tests that shape_stats returns edges info for mapping bin_edges."""
+    z = _toy_grid()
+    bins = {0: _gaussian(z, 0.6, 0.1), 1: _gaussian(z, 1.2, 0.2)}
+    edges = {0: (0.0, 1.0), 1: (1.0, 2.0)}
+    out = shape_stats(z, bins, bin_edges=edges, decimal_places=None)
+
+    assert "edges" in out
+    assert set(out["edges"].keys()) >= {"widths_per_bin", "width_summary", "equidistant_score"}
+    assert out["edges"]["widths_per_bin"][0] == pytest.approx(1.0)
+    assert out["edges"]["widths_per_bin"][1] == pytest.approx(1.0)
+    assert out["edges"]["equidistant_score"] == pytest.approx(0.0)
+
+
+def test_shape_stats_edges_info_sequence() -> None:
+    """Tests that shape_stats returns edges info for sequence bin_edges."""
+    z = _toy_grid()
+    bins = {0: _gaussian(z, 0.6, 0.1), 1: _gaussian(z, 1.2, 0.2)}
+    edges = [0.0, 0.8, 2.0]  # widths 0.8 and 1.2
+    out = shape_stats(z, bins, bin_edges=edges, decimal_places=None)
+
+    assert "edges" in out
+    assert set(out["edges"].keys()) >= {"widths", "width_summary", "equidistant_score"}
+    assert out["edges"]["widths"] == pytest.approx([0.8, 1.2])
+    assert out["edges"]["equidistant_score"] > 0.0
+
+
+def test_population_stats_normalize_frac_false_accepts_sum_one() -> None:
+    """Tests that population_stats accepts fractions that sum to 1 when normalize_frac is False."""
+    z = _toy_grid()
+    bins = {0: _gaussian(z, 0.6, 0.1), 1: _gaussian(z, 1.2, 0.2)}
+    meta = {"frac_per_bin": {0: 0.4, 1: 0.6}}  # already sums to 1
+
+    out = population_stats(bins, meta, normalize_frac=False, rtol=0.0, atol=0.0)
+
+    assert out["fractions"][0] == pytest.approx(0.4)
+    assert out["fractions"][1] == pytest.approx(0.6)
+
+
+def test_population_stats_density_only_no_counts() -> None:
+    """Tests that population_stats returns only density when no counts are provided."""
+    z = _toy_grid()
+    bins = {0: _gaussian(z, 0.6, 0.1), 1: _gaussian(z, 1.2, 0.2)}
+    meta = {"frac_per_bin": {0: 1.0, 1: 3.0}}
+
+    out = population_stats(bins, meta, density_total=40.0)
+
+    assert "density_per_bin" in out
+    assert "count_per_bin" not in out
+
+
+def test_in_range_fraction_returns_zero_if_range_has_too_few_grid_points() -> None:
+    """Tests that in_range_fraction returns zero if range has too few grid points."""
+    z = np.array([0.0, 1.0, 2.0])
+    nz = np.array([0.0, 1.0, 0.0])
+    # range picks only one point
+    assert in_range_fraction(z, nz, 1.0, 1.0 + 1e-12) == pytest.approx(0.0)
+
+
+def test_galaxy_fraction_per_bin_reads_nested_bins_block() -> None:
+    """Tests that galaxy_fraction_per_bin reads nested bins block."""
+    meta = {"bins": {"frac_per_bin": {0: 1.0, 1: 1.0}}}
+    fracs = galaxy_fraction_per_bin(meta)
+    assert set(fracs) == {0, 1}
+    assert sum(fracs.values()) == pytest.approx(1.0)
+
+
+def test__equidistant_score_returns_zero_if_mean_width_nonpositive() -> None:
+    """Tests that _equidistant_score returns zero if mean width is nonpositive."""
+    import binny.nz_tomo.bin_stats as bs
+
+    assert bs._equidistant_score([0.0, 0.0]) == pytest.approx(0.0)  # mean = 0
+    assert bs._equidistant_score([-1.0, 1.0]) == pytest.approx(0.0)  # mean = 0
+
+
+def test_in_range_fraction_returns_zero_if_mask_too_small() -> None:
+    """Tests that in_range_fraction returns zero if mask is too small."""
+    z = np.array([0.0, 1.0, 2.0], dtype=float)
+    nz = np.array([0.0, 1.0, 0.0], dtype=float)  # positive total weight
+
+    f = in_range_fraction(z, nz, 1.0, 1.0 + 1e-12)  # only z==1.0 in mask
+    assert f == pytest.approx(0.0)
+
+
+def test_in_range_fraction_per_bin_rejects_bad_edges_array_shape() -> None:
+    """Tests that in_range_fraction_per_bin rejects bad edges array shape."""
+    z = _toy_grid()
+    bins = {0: _gaussian(z, 0.6, 0.1)}
+    with pytest.raises(ValueError, match="bin_edges must be a 1D sequence"):
+        in_range_fraction_per_bin(z, bins, np.zeros((2, 2)))
+
+
+def test_peak_flags_no_interior_peaks_branch() -> None:
+    """Tests that peak_flags returns zero peaks when no interior peaks are detected."""
+    z = np.array([0.0, 1.0, 2.0, 3.0], dtype=float)
+    nz = np.array([1.0, 2.0, 3.0, 4.0], dtype=float)  # monotone increasing
+
+    out = peak_flags(z, nz, min_rel_height=0.1)
+    assert out["num_peaks"] == pytest.approx(0.0)
+    assert out["mode"] == pytest.approx(3.0)
+
+
+def test_peak_flags_height_filter_removes_detected_peaks_branch() -> None:
+    """Tests that peak_flags height filter can remove all detected peaks."""
+    z = np.array([0.0, 1.0, 2.0, 3.0, 4.0], dtype=float)
+    # interior peak at z=2 (bigger than neighbors) but tiny compared to global max at endpoint
+    nz = np.array([10.0, 0.0, 0.2, 0.0, 0.0], dtype=float)
+
+    out = peak_flags(z, nz, min_rel_height=0.05)  # threshold = 0.5, peak=0.2 filtered out
+    assert out["num_peaks"] == pytest.approx(0.0)
+    assert out["second_peak_ratio"] == pytest.approx(0.0)
+
+
+def test_shape_stats_edges_mapping_includes_edges_info() -> None:
+    """Tests that shape_stats includes edges info in returned mapping."""
+    z = _toy_grid()
+    bins = {0: _gaussian(z, 0.6, 0.1), 1: _gaussian(z, 1.2, 0.2)}
+    edges = {0: (0.0, 1.0), 1: (1.0, 2.0)}  # widths: 1.0, 1.0
+
+    out = shape_stats(z, bins, bin_edges=edges, decimal_places=None)
+
+    assert "edges" in out
+    assert out["edges"]["widths_per_bin"][0] == pytest.approx(1.0)
+    assert out["edges"]["widths_per_bin"][1] == pytest.approx(1.0)
+    assert out["edges"]["equidistant_score"] == pytest.approx(0.0)
