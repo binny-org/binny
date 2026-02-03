@@ -14,11 +14,10 @@ from __future__ import annotations
 
 import numpy as np
 from numpy import exp
-from numpy.typing import NDArray
+from scipy.special import erf
 
 from binny.utils.normalization import normalize_over_z
-
-FloatArray = NDArray[np.float64]
+from binny.utils.types import FloatArray
 
 __all__ = [
     "smail_like_distribution",
@@ -407,7 +406,7 @@ def skew_normal_distribution(
     u = alpha * x
 
     # Phi(u) = 0.5 * (1 + erf(u / sqrt(2)))
-    phi = 0.5 * (1.0 + np.vectorize(np.math.erf)(u / np.sqrt(2.0)))
+    phi = 0.5 * (1.0 + np.vectorize(erf)(u / np.sqrt(2.0)))
 
     nz = np.exp(-0.5 * x**2) * phi
     return _maybe_normalize(z_arr, nz, normalize)

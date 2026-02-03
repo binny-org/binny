@@ -8,10 +8,7 @@ from typing import Any, Literal
 
 import numpy as np
 
-__all__ = [
-    "build_tomo_bins_metadata",
-    "save_metadata_txt",
-]
+__all__ = ["build_tomo_bins_metadata", "save_metadata_txt", "round_floats"]
 
 
 def build_tomo_bins_metadata(
@@ -143,7 +140,7 @@ def _format(meta: Any, indent: int = 0) -> str:
     return f"{pad}{meta}"
 
 
-def _round_floats(obj: Any, decimal_places: int | None) -> Any:
+def round_floats(obj: Any, decimal_places: int | None) -> Any:
     """Recursively rounds floats in nested metadata."""
     if decimal_places is None:
         return obj
@@ -155,13 +152,13 @@ def _round_floats(obj: Any, decimal_places: int | None) -> Any:
         return float(round(float(obj), decimal_places))
 
     if isinstance(obj, Mapping):
-        return {k: _round_floats(v, decimal_places) for k, v in obj.items()}
+        return {k: round_floats(v, decimal_places) for k, v in obj.items()}
 
     if isinstance(obj, list):
-        return [_round_floats(v, decimal_places) for v in obj]
+        return [round_floats(v, decimal_places) for v in obj]
 
     if isinstance(obj, tuple):
-        return tuple(_round_floats(v, decimal_places) for v in obj)
+        return tuple(round_floats(v, decimal_places) for v in obj)
 
     return obj
 
@@ -174,6 +171,6 @@ def save_metadata_txt(
 ) -> Path:
     """Writes metadata to a UTF-8 text file."""
     p = Path(path)
-    rounded = _round_floats(dict(meta), decimal_places)
+    rounded = round_floats(dict(meta), decimal_places)
     p.write_text(_format(rounded) + "\n", encoding="utf-8")
     return p
