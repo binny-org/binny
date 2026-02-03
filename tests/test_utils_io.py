@@ -214,7 +214,7 @@ def test_load_binning_recipe_valid_yaml_returns_normalized_segments(
         "n_bins": 5,
         "segments": [
             {
-                "method": "eq",
+                "method": "eq_dist",
                 "n_bins": 3,
                 "params": {"x_min": 0.0, "x_max": 1.0},
             },
@@ -225,7 +225,7 @@ def test_load_binning_recipe_valid_yaml_returns_normalized_segments(
 
     segs = load_binning_recipe(str(p))
     assert isinstance(segs, list)
-    assert segs[0]["method"] == "eq"
+    assert segs[0]["method"] == "eq_dist"
     assert segs[0]["n_bins"] == 3
     assert segs[0]["params"] == {"x_min": 0.0, "x_max": 1.0}
     assert segs[1]["method"] == "equal_number"
@@ -276,7 +276,7 @@ def test_load_binning_recipe_segment_missing_required_keys_raises(
 ) -> None:
     """Tests that load_binning_recipe raises if a segment lacks method or n_bins."""
     p = tmp_path / "recipe.yml"
-    p.write_text(yaml.safe_dump({"segments": [{"method": "eq"}]}), encoding="utf-8")
+    p.write_text(yaml.safe_dump({"segments": [{"method": "eq_dist"}]}), encoding="utf-8")
 
     with pytest.raises(ValueError, match=r"must contain at least 'method' and 'n_bins'"):
         load_binning_recipe(str(p))
@@ -286,7 +286,7 @@ def test_load_binning_recipe_params_not_mapping_raises(tmp_path: Path) -> None:
     """Tests that load_binning_recipe raises if segment params is not a mapping."""
     p = tmp_path / "recipe.yml"
     p.write_text(
-        yaml.safe_dump({"segments": [{"method": "eq", "n_bins": 1, "params": ["x"]}]}),
+        yaml.safe_dump({"segments": [{"method": "eq_dist", "n_bins": 1, "params": ["x"]}]}),
         encoding="utf-8",
     )
 
@@ -305,8 +305,8 @@ def test_load_binning_recipe_validate_mixed_segments_errors_propagate(
             {
                 "n_bins": 3,
                 "segments": [
-                    {"method": "eq", "n_bins": 2},
-                    {"method": "eq", "n_bins": 2},
+                    {"method": "eq_dist", "n_bins": 2},
+                    {"method": "eq_dist", "n_bins": 2},
                 ],
             }
         ),
