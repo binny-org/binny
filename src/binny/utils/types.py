@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Mapping, Sequence
-from typing import TypeAlias
+from typing import Any, TypeAlias
 
 import numpy as np
 from numpy.typing import NDArray
@@ -49,3 +49,7 @@ IndexSeq: TypeAlias = Sequence[int]
 EdgePair: TypeAlias = tuple[float, float]
 EdgeMap: TypeAlias = Mapping[int, EdgePair]
 EdgesLike: TypeAlias = EdgeMap | Sequence[float] | NDArray[np.floating]
+
+
+# Binning schemes
+BinningScheme: TypeAlias = str | Sequence[Mapping[str, Any]] | Mapping[str, Any]
