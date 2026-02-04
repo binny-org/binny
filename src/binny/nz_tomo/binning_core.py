@@ -8,7 +8,7 @@ helpers to keep behavior consistent across binning methods.
 from __future__ import annotations
 
 from collections.abc import Callable, Mapping, Sequence
-from typing import Any, Literal, TypeAlias
+from typing import Any, Literal
 
 import numpy as np
 
@@ -16,10 +16,8 @@ from binny.axes.bin_edges import equal_number_edges, equidistant_edges
 from binny.nz_tomo.nz_tomo_utils import mixed_edges_from_segments
 from binny.utils.metadata import build_tomo_bins_metadata, save_metadata_txt
 from binny.utils.normalization import normalize_1d
-from binny.utils.types import FloatArray
+from binny.utils.types import BinningScheme, FloatArray
 from binny.utils.validators import validate_axis_and_weights, validate_n_bins
-
-BinningScheme: TypeAlias = str | Sequence[Mapping[str, Any]] | Mapping[str, Any]
 
 __all__ = [
     "resolve_bin_edges",
