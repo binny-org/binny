@@ -87,6 +87,23 @@ def _metric_from_curves_n(
     """
 
     def _metric(*idx: int) -> float:
+        """Evaluate the index metric for a tuple of indices.
+
+        Selects the curve for each slot by the corresponding index and applies
+        the provided curve-level kernel. The number of indices must match the
+        number of curve slots.
+
+        Args:
+            *idx: Indices selecting one curve from each slot.
+
+        Returns:
+            Scalar metric value from applying the kernel to the selected curves.
+
+        Raises:
+            TypeError: If the number of indices does not match the number of
+                slots.
+            KeyError: If any index is missing from its slot mapping.
+        """
         if len(idx) != len(arrs):
             raise TypeError(f"Expected {len(arrs)} indices, got {len(idx)}.")
         curves: list[FloatArray1D] = []
@@ -98,6 +115,24 @@ def _metric_from_curves_n(
         return float(kernel(*curves))
 
     return _metric
+
+
+def _min_overlap_integral_kernel(zz: FloatArray1D) -> Callable[..., float]:
+    """Return a kernel that computes ∫ min(cs) dzz for curves on grid ``zz``."""
+
+    def _kernel(*cs: FloatArray1D) -> float:
+        """Compute the unnormalized overlap integral of the provided curves.
+
+        Args:
+            *cs: Curve arrays evaluated on the common grid ``zz``.
+
+        Returns:
+            The integral over ``zz`` of the pointwise minimum of the curves.
+        """
+        m = np.minimum.reduce(cs)
+        return float(np.trapezoid(m, zz))
+
+    return _kernel
 
 
 def metric_min_overlap_fraction(
@@ -130,29 +165,33 @@ def metric_min_overlap_fraction(
             indices.
     """
     zz, arrs, norms = _prepare_indexed_curves_and_norms(z=z, curves=curves)
-
-    def _kernel(*cs: FloatArray1D) -> float:
-        m = np.minimum.reduce(cs)
-        return float(np.trapezoid(m, zz))
-
-    base = _metric_from_curves_n(arrs, _kernel)
+    base = _metric_from_curves_n(arrs, _min_overlap_integral_kernel(zz))
 
     def _metric(*idx: int) -> float:
-        if len(idx) != len(arrs):
-            raise TypeError(f"Expected {len(arrs)} indices, got {len(idx)}.")
+        """Evaluate the minimum-overlap fraction for a tuple of indices.
 
+        Computes the overlap integral (via the base metric) and normalizes it by
+        the product of the individual curve integrals for the selected indices.
+
+        Args:
+            *idx: Indices selecting one curve from each slot.
+
+        Returns:
+            Overlap fraction in [0, 1] (0 if any selected curve has zero
+            integral).
+
+        Raises:
+            TypeError: If the number of indices does not match the number of
+                slots.
+            KeyError: If any index is missing from its slot mapping.
+        """
         denom = 1.0
         for slot, ii in enumerate(idx):
-            slot_norms = norms[slot]
-            if ii not in slot_norms:
-                raise KeyError(f"Missing curves for slot {slot} index {ii}.")
-            di = slot_norms[ii]
+            di = norms[slot][ii]  # KeyError if missing.
             if di == 0.0:
                 return 0.0
             denom *= di
-
-        num = float(base(*idx))
-        return num / denom
+        return float(base(*idx)) / denom  # base checks arity
 
     return _metric
 
@@ -186,29 +225,32 @@ def metric_overlap_coefficient(
             indices.
     """
     zz, arrs, norms = _prepare_indexed_curves_and_norms(z=z, curves=curves)
-
-    def _kernel(*cs: FloatArray1D) -> float:
-        m = np.minimum.reduce(cs)
-        return float(np.trapezoid(m, zz))
-
-    base = _metric_from_curves_n(arrs, _kernel)
+    base = _metric_from_curves_n(arrs, _min_overlap_integral_kernel(zz))
 
     def _metric(*idx: int) -> float:
-        if len(idx) != len(arrs):
-            raise TypeError(f"Expected {len(arrs)} indices, got {len(idx)}.")
+        """Evaluate the overlap coefficient for a tuple of indices.
 
+        Computes the overlap integral (via the base metric) and normalizes it by
+        the smallest of the individual curve integrals for the selected indices.
+
+        Args:
+            *idx: Indices selecting one curve from each slot.
+
+        Returns:
+            Overlap coefficient in [0, 1] (0 if the minimum integral is zero or
+            undefined).
+
+        Raises:
+            TypeError: If the number of indices does not match the number of
+                slots.
+            KeyError: If any index is missing from its slot mapping.
+        """
         denom = np.inf
         for slot, ii in enumerate(idx):
-            slot_norms = norms[slot]
-            if ii not in slot_norms:
-                raise KeyError(f"Missing curves for slot {slot} index {ii}.")
-            denom = min(denom, slot_norms[ii])
-
+            denom = min(denom, norms[slot][ii])  # KeyError if missing.
         if denom == 0.0 or not np.isfinite(denom):
             return 0.0
-
-        num = float(base(*idx))
-        return num / float(denom)
+        return float(base(*idx)) / float(denom)  # base checks arity
 
     return _metric
 
