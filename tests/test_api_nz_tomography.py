@@ -428,7 +428,7 @@ def test_cross_bin_stats_delegates_to_bin_similarity(monkeypatch):
     )
     monkeypatch.setattr(cu, "_builder_kwargs_from_spec", lambda spec: {"n_bins": 2}, raising=True)
 
-    calls: dict[str, dict] = {"overlap": {}, "pairs": {}, "leakage": {}, "pearson": {}}
+    calls: dict[str, dict] = {"overlap": {}, "correlations": {}, "leakage": {}, "pearson": {}}
 
     def fake_overlap(z, bins, **kw):
         """Fake overlap matrix that returns a constant matrix."""
@@ -436,8 +436,8 @@ def test_cross_bin_stats_delegates_to_bin_similarity(monkeypatch):
         return np.eye(len(bins))
 
     def fake_pairs(z, bins, **kw):
-        """Fake pairs matrix that returns a constant matrix."""
-        calls["pairs"] = {"z": np.asarray(z), "bins": bins, "kw": dict(kw)}
+        """Fake correlations matrix that returns a constant matrix."""
+        calls["correlations"] = {"z": np.asarray(z), "bins": bins, "kw": dict(kw)}
         return [(0, 1)]
 
     def fake_leakage(z, bins, bin_edges, **kw):
@@ -478,7 +478,7 @@ def test_cross_bin_stats_delegates_to_bin_similarity(monkeypatch):
         pearson={"clip": True},
     )
 
-    assert set(out.keys()) == {"overlap", "pairs", "leakage", "pearson"}
+    assert set(out.keys()) == {"overlap", "correlations", "leakage", "pearson"}
     assert out["overlap"].shape == (2, 2)
     assert out["leakage"].shape == (2, 2)
 
@@ -486,7 +486,7 @@ def test_cross_bin_stats_delegates_to_bin_similarity(monkeypatch):
     assert calls["overlap"]["bins"] == payload["bins"]
     assert calls["overlap"]["kw"] == {"metric": "l1"}
 
-    assert calls["pairs"]["kw"] == {"threshold": 0.1}
+    assert calls["correlations"]["kw"] == {"threshold": 0.1}
     assert calls["leakage"]["bin_edges"] == [0.0, 0.5, 1.0]
     assert calls["leakage"]["kw"] == {"normalize": True}
     assert calls["pearson"]["kw"] == {"clip": True}

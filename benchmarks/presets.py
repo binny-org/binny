@@ -21,7 +21,7 @@ class Presets:
         Args:
             redshift_range (numpy.ndarray): The redshift range for the analysis.
             forecast_year (str): The forecast year.
-            correlation_pair_type (str): The type of correlation pairs to use.
+            correlation_pair_type (str): The type of correlation correlations to use.
         """
 
         if redshift_range is None:

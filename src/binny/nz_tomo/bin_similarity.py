@@ -56,7 +56,7 @@ def bin_overlap(
 ) -> dict[int, dict[int, float]]:
     """Computes a pairwise comparison matrix for binned redshift distributions.
 
-    This function compares all pairs of bin distributions evaluated on a shared
+    This function compares all correlations of bin distributions evaluated on a shared
     redshift grid and returns a symmetric matrix of values.
 
     Supported methods:
@@ -163,10 +163,10 @@ def overlap_pairs(
     atol: float = 1e-6,
     decimal_places: int | None = 2,
 ) -> list[tuple[int, int, float]]:
-    """Returns bin-index pairs passing a threshold in a chosen pairwise metric.
+    """Returns bin-index correlations passing a threshold in a chosen pairwise metric.
 
     This is a convenience wrapper around :func:`bin_overlap`. It computes the
-    pairwise matrix and returns unique off-diagonal pairs ``(i, j)`` with
+    pairwise matrix and returns unique off-diagonal correlations ``(i, j)`` with
     ``i < j`` that pass the requested threshold.
 
     Args:

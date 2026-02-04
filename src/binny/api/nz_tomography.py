@@ -351,7 +351,7 @@ class NZTomography:
             pearson: Keyword arguments for Pearson correlation computation, or ``None`` to skip.
 
         Returns:
-            A dictionary containing a subset of keys ``"overlap"``, ``"pairs"``,
+            A dictionary containing a subset of keys ``"overlap"``, ``"correlations"``,
             ``"leakage"``, and ``"pearson"``.
 
         Raises:
@@ -368,7 +368,7 @@ class NZTomography:
             out["overlap"] = _bin_sim.bin_overlap(z, bins, **dict(overlap))
 
         if pairs is not None:
-            out["pairs"] = _bin_sim.overlap_pairs(z, bins, **dict(pairs))
+            out["correlations"] = _bin_sim.overlap_pairs(z, bins, **dict(pairs))
 
         if leakage is not None:
             kw = dict(leakage)

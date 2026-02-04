@@ -461,7 +461,7 @@ def edge_coercion(
     bin_indices: IndexSeq,
     bin_edges: EdgesLike,
 ) -> dict[int, tuple[float, float]]:
-    """Returns a mapping from bin index to ``(lo, hi)`` edge pairs.
+    """Returns a mapping from bin index to ``(lo, hi)`` edge correlations.
 
     This normalizes bin-edge inputs into a consistent dictionary form. It supports
     either an explicit per-bin edge mapping or a single strictly increasing edge
@@ -474,7 +474,7 @@ def edge_coercion(
             edge array ``[e0, e1, ..., eN]``.
 
     Returns:
-        A mapping ``{idx: (lo, hi)}`` with float-valued edge pairs.
+        A mapping ``{idx: (lo, hi)}`` with float-valued edge correlations.
 
     Raises:
         ValueError: If a required bin index is missing from a mapping input.
