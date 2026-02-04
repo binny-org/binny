@@ -51,11 +51,10 @@ densities, or counts.
 
 from __future__ import annotations
 
-from collections.abc import Mapping, Sequence
-from typing import Any, Literal, TypeAlias
+from collections.abc import Sequence
+from typing import Any, Literal
 
 import numpy as np
-from numpy.typing import NDArray
 from scipy.special import erf
 
 from binny.nz_tomo.binning_core import (
@@ -66,10 +65,8 @@ from binny.nz_tomo.binning_core import (
 )
 from binny.utils.broadcasting import as_per_bin
 from binny.utils.normalization import normalize_1d
+from binny.utils.types import BinningScheme, FloatArray
 from binny.utils.validators import validate_axis_and_weights
-
-FloatArray: TypeAlias = NDArray[np.float64]
-BinningScheme: TypeAlias = str | Sequence[Mapping[str, Any]] | Mapping[str, Any]
 
 __all__ = [
     "build_photoz_bins",
