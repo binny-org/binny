@@ -22,7 +22,7 @@ from binny.utils.validators import (
     "name, expected",
     [
         ("equidistant", "equidistant"),
-        (" eq ", "equidistant"),
+        (" eq_dist ", "equidistant"),
         ("LINEAR", "equidistant"),
         ("log", "log"),
         ("log_edges", "log"),
@@ -201,7 +201,7 @@ def test_validate_mixed_segments_happy_path_no_total():
     """Tests that validate_mixed_segments accepts valid segments
     without total_n_bins."""
     segments = [
-        {"method": "eq", "n_bins": 3},
+        {"method": "eq_dist", "n_bins": 3},
         {"method": "log", "n_bins": 2, "params": {"base": 10}},
     ]
     validate_mixed_segments(segments)
@@ -225,14 +225,14 @@ def test_validate_mixed_segments_rejects_empty():
 
 def test_validate_mixed_segments_requires_mapping():
     """Tests that validate_mixed_segments requires each segment to be a mapping."""
-    segments = [("eq", 2)]
+    segments = [("eq_dist", 2)]
     with pytest.raises(TypeError, match=r"must be a mapping"):
         validate_mixed_segments(segments)
 
 
 def test_validate_mixed_segments_requires_method_and_n_bins_keys():
     """Tests that validate_mixed_segments requires 'method' and 'n_bins' keys."""
-    segments = [{"method": "eq"}]
+    segments = [{"method": "eq_dist"}]
     with pytest.raises(ValueError, match=r"must contain at least 'method' and 'n_bins'"):
         validate_mixed_segments(segments)
 
@@ -246,7 +246,7 @@ def test_validate_mixed_segments_method_must_be_str():
 
 def test_validate_mixed_segments_n_bins_must_be_int():
     """Tests that validate_mixed_segments requires 'n_bins' to be an int."""
-    segments = [{"method": "eq", "n_bins": 2.0}]
+    segments = [{"method": "eq_dist", "n_bins": 2.0}]
     with pytest.raises(TypeError, match=r"'n_bins' must be an int"):
         validate_mixed_segments(segments)
 
@@ -260,7 +260,7 @@ def test_validate_mixed_segments_unknown_method_raises():
 
 def test_validate_mixed_segments_invalid_n_bins_raises():
     """Tests that validate_mixed_segments raises for invalid n_bins values."""
-    segments = [{"method": "eq", "n_bins": 0}]
+    segments = [{"method": "eq_dist", "n_bins": 0}]
     with pytest.raises(ValueError, match=r"n_bins must be positive"):
         validate_mixed_segments(segments)
 
@@ -268,7 +268,7 @@ def test_validate_mixed_segments_invalid_n_bins_raises():
 def test_validate_mixed_segments_params_must_be_mapping_if_provided():
     """Tests that validate_mixed_segments requires 'params'
     to be a mapping if given."""
-    segments = [{"method": "eq", "n_bins": 2, "params": ["not", "a", "mapping"]}]
+    segments = [{"method": "eq_dist", "n_bins": 2, "params": ["not", "a", "mapping"]}]
     with pytest.raises(TypeError, match=r"'params' must be a mapping"):
         validate_mixed_segments(segments)
 
@@ -276,7 +276,7 @@ def test_validate_mixed_segments_params_must_be_mapping_if_provided():
 def test_validate_mixed_segments_total_n_bins_mismatch_raises():
     """Tests that validate_mixed_segments raises when sum of n_bins
     does not match total_n_bins."""
-    segments = [{"method": "eq", "n_bins": 2}, {"method": "log", "n_bins": 3}]
+    segments = [{"method": "eq_dist", "n_bins": 2}, {"method": "log", "n_bins": 3}]
     with pytest.raises(
         ValueError,
         match=r"Sum of segment n_bins is .*total_n_bins is 6",

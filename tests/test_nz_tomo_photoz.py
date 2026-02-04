@@ -532,8 +532,8 @@ def test_build_photoz_bins_mixed_requires_no_top_level_n_bins(z_nz):
     """Tests that mixed mode rejects top-level n_bins."""
     z, nz = z_nz
     segs = [
-        {"z_min": 0.0, "z_max": 1.0, "scheme": "eq", "n_bins": 2},
-        {"z_min": 1.0, "z_max": 2.0, "scheme": "eq", "n_bins": 2},
+        {"z_min": 0.0, "z_max": 1.0, "scheme": "eq_dist", "n_bins": 2},
+        {"z_min": 1.0, "z_max": 2.0, "scheme": "eq_dist", "n_bins": 2},
     ]
     with pytest.raises(ValueError, match=r"mixed|segments"):
         build_photoz_bins(
@@ -565,8 +565,8 @@ def test_build_photoz_bins_mixed_sequence_builds_bins(z_nz):
     """Tests that mixed segments build the correct total bin count."""
     z, nz = z_nz
     segs = [
-        {"z_min": 0.0, "z_max": 1.0, "scheme": "eq", "n_bins": 2},
-        {"z_min": 1.0, "z_max": 2.0, "scheme": "eq", "n_bins": 3},
+        {"z_min": 0.0, "z_max": 1.0, "scheme": "eq_dist", "n_bins": 2},
+        {"z_min": 1.0, "z_max": 2.0, "scheme": "eq_dist", "n_bins": 3},
     ]
     bins = build_photoz_bins(
         z,
@@ -583,8 +583,8 @@ def test_build_photoz_bins_mixed_dict_builds_bins(z_nz):
     """Tests that mixed dict form builds bins."""
     z, nz = z_nz
     segs = [
-        {"z_min": 0.0, "z_max": 1.0, "scheme": "eq", "n_bins": 2},
-        {"z_min": 1.0, "z_max": 2.0, "scheme": "eq", "n_bins": 1},
+        {"z_min": 0.0, "z_max": 1.0, "scheme": "eq_dist", "n_bins": 2},
+        {"z_min": 1.0, "z_max": 2.0, "scheme": "eq_dist", "n_bins": 1},
     ]
     bins = build_photoz_bins(
         z,

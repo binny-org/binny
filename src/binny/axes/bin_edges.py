@@ -78,10 +78,9 @@ def log_edges(x_min: float, x_max: float, n_bins: int) -> np.ndarray:
 def equal_number_edges(x: Any, weights: Any, n_bins: int) -> np.ndarray:
     """Returns bin edges with equal integrated weight per bin.
 
-    This constructs edges along ``x`` so that each bin contains the same
-    integral of ``weights`` over ``x``. If you pass galaxy counts (or a number
-    density) as ``weights``, this corresponds to “equal-number” / equipopulated
-    binning.
+    This constructs edges along ``x`` such that each bin encloses the same
+    integrated weight over ``x``. When ``weights`` represent galaxy counts or
+    number density, this yields equal-number (equipopulated) bins.
 
     Args:
         x: 1D axis values (must be strictly increasing).
@@ -116,8 +115,8 @@ def equal_information_edges(x: Any, info_density: Any, n_bins: int) -> np.ndarra
         1D array of bin edges with shape ``(n_bins + 1,)``.
 
     Raises:
-        ValueError: If inputs are invalid or the total integrated information is
-            non-positive.
+        ValueError: If inputs are invalid or the total integrated information
+            is non-positive.
     """
     validate_n_bins(n_bins)
     return _equal_weight_edges(x, info_density, n_bins)
@@ -130,9 +129,9 @@ def equidistant_chi_edges(
 ) -> np.ndarray:
     """Returns bin edges uniform in comoving distance, expressed in ``z``.
 
-    Assumes ``chi(z)`` is monotonic and ``z`` and ``chi`` are matched 1D arrays.
-    Useful for cosmological applications where uniform spacing in comoving
-    distance is desired.
+    Requires ``chi(z)`` is monotonic and ``z`` and ``chi`` are matched 1D
+    arrays. Useful for cosmological applications where uniform spacing in
+    comoving distance is desired.
 
     Args:
         z: 1D array of redshift values.
@@ -162,8 +161,8 @@ def geometric_edges(x_min: float, x_max: float, n_bins: int) -> np.ndarray:
     """Returns geometrically spaced bin edges between ``x_min`` and ``x_max``.
 
     Geometric spacing means the ratio between successive edges is constant,
-    i.e. ``edges[k+1] / edges[k]`` is the same for all ``k``. The returned edges
-    include both endpoints.
+    i.e. ``edges[k+1] / edges[k]`` is the same for all ``k``.
+    The returned edges include both endpoints.
 
     Notes:
         Geometric spacing is the multiplicative analogue of linear spacing.
@@ -206,9 +205,9 @@ def _equal_weight_edges(x: Any, weights: Any, n_bins: int) -> np.ndarray:
 
     This constructs edges along ``x`` so that each bin contains the same integral
     of ``weights`` over ``x`` (using a cumulative trapezoidal integral). This is
-    the core helper behind “equal-number” binning when ``weights`` represent counts
-    or a number density, and behind “equal-information” binning when ``weights``
-    represent an information density.
+    the core helper behind “equal-number” binning when ``weights`` represent
+    counts or a number density, and behind “equal-information” binning when
+    ``weights`` represent an information density.
 
     Args:
         x: 1D axis values (must be strictly increasing).
@@ -219,14 +218,15 @@ def _equal_weight_edges(x: Any, weights: Any, n_bins: int) -> np.ndarray:
         1D array of bin edges with shape ``(n_bins + 1,)``.
 
     Raises:
-        ValueError: If ``weights`` contains negative values, if the total integrated
-            weight is not positive or not finite, or if the computed edges are not
-            strictly increasing (e.g. because the weight distribution is too
-            concentrated for the resolution of ``x``).
+        ValueError: If ``weights`` contains negative values, if the total
+            integrated weight is not positive or not finite, or if the
+            computed edges are not strictly increasing (e.g. if weights are
+            too concentrated relative to the resolution of ``x`)
     """
     x_arr, w_arr = validate_axis_and_weights(x, weights)
 
-    # 1) Equal-weight binning assumes non-negative weights (counts/info density).
+    # 1) Equal-weight binning assumes non-negative weights
+    # (counts/info density)
     if np.any(w_arr < 0):
         raise ValueError("weights must be non-negative for equal-weight binning.")
 
@@ -253,12 +253,13 @@ def _equal_weight_edges(x: Any, weights: Any, n_bins: int) -> np.ndarray:
 
     edges_arr = np.array(edges, dtype=float)
 
-    # 4) Interp can return repeated edges if weights are too spiky / grid too coarse.
+    # 4) Interp can return repeated edges
+    # if weights are too spiky / grid too coarse.
     if np.any(np.diff(edges_arr) <= 0):
         raise ValueError(
-            "Cannot construct strictly increasing bin edges for"
-            " equal-weight binning. Check that x is sufficiently resolved "
-            "and weights are not too concentrated."
+            "Cannot construct strictly increasing bin edges "
+            "for equal-weight binning. Insufficient x resolution or "
+            "overly concentrated weights can cause repeated edges."
         )
 
     return edges_arr

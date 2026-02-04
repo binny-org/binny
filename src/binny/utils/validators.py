@@ -3,12 +3,18 @@
 from __future__ import annotations
 
 from collections.abc import Mapping, Sequence
-from typing import Any, TypeAlias
+from typing import Any
 
 import numpy as np
-from numpy.typing import ArrayLike, NDArray
 
-FloatArray = NDArray[np.float64]
+from binny.utils.types import (
+    Arrayish,
+    EdgesLike,
+    FloatArray1D,
+    FloatArray2D,
+    FloatLike1D,
+    IndexSeq,
+)
 
 __all__ = [
     "validate_interval",
@@ -24,13 +30,13 @@ __all__ = [
     "edge_coercion",
 ]
 
-FloatArray2D: TypeAlias = NDArray[np.float64]
 
 # Normalised names for binning methods and short aliases
 _BIN_METHOD_ALIASES: dict[str, str] = {
     # equidistant (linear in x)
     "equidistant": "equidistant",
-    "eq": "equidistant",
+    "ed": "equidistant",
+    "eq_dist": "equidistant",
     "linear": "equidistant",
     # log-spaced
     "log": "log",
@@ -39,12 +45,15 @@ _BIN_METHOD_ALIASES: dict[str, str] = {
     "equal_number": "equal_number",
     "equipop": "equal_number",
     "en": "equal_number",
+    "eq_num": "equal_number",
     # equal-information
     "equal_information": "equal_information",
+    "eq_info": "equal_information",
     "info": "equal_information",
     # chi-spaced in comoving distance
     "equidistant_chi": "equidistant_chi",
     "chi": "equidistant_chi",
+    "eq_chi": "equidistant_chi",
     # geometric in x
     "geometric": "geometric",
     "geom": "geometric",
@@ -100,8 +109,8 @@ def validate_n_bins(
 
     Raises:
         TypeError: If ``n_bins`` is not an integer.
-        ValueError: If ``n_bins <= 0``, if ``allow_one`` is False and ``n_bins == 1``,
-            or if ``n_bins > max_bins``.
+        ValueError: If ``n_bins <= 0``, if ``allow_one`` is False and
+            ``n_bins == 1``, or if ``n_bins > max_bins``.
     """
     if not isinstance(n_bins, int):
         raise TypeError("n_bins must be an integer.")
@@ -157,9 +166,9 @@ def validate_interval(
 
 
 def validate_axis_and_weights(
-    x: ArrayLike,
-    weights: ArrayLike,
-) -> tuple[FloatArray, FloatArray]:
+    x: FloatLike1D,
+    weights: FloatLike1D,
+) -> tuple[FloatArray1D, FloatArray1D]:
     """Returns validated 1D axis values and weights as float64 arrays.
 
     This validates a sampling axis and a corresponding weight array for use in
@@ -304,7 +313,10 @@ def validate_response_matrix(matrix: FloatArray2D, n_bins: int) -> None:
         raise ValueError("Each column of misassignment_matrix must sum to 1 (column-stochastic).")
 
 
-def validated_float_arrays(x: ArrayLike, y: ArrayLike) -> tuple[FloatArray, FloatArray]:
+def validated_float_arrays(
+    x: FloatLike1D,
+    y: FloatLike1D,
+) -> tuple[FloatArray1D, FloatArray1D]:
     """Returns two validated 1D float64 arrays with matched shape and finite values.
 
     This is a convenience wrapper for workflows that take paired 1D arrays and need
@@ -329,13 +341,13 @@ def validated_float_arrays(x: ArrayLike, y: ArrayLike) -> tuple[FloatArray, Floa
 
 
 def validate_probability_vector(
-    p: ArrayLike,
+    p: FloatLike1D,
     *,
     name: str = "p",
     rtol: float = 1e-6,
     atol: float = 1e-12,
     allow_empty: bool = False,
-) -> FloatArray:
+) -> FloatArray1D:
     """Returns a validated 1D probability vector as float64.
 
     Checks:
@@ -378,8 +390,8 @@ def validate_probability_vector(
 
 
 def validate_same_shape(
-    a: ArrayLike,
-    b: ArrayLike,
+    a: Arrayish,
+    b: Arrayish,
     *,
     name_a: str = "a",
     name_b: str = "b",
@@ -446,8 +458,8 @@ def validate_grid_spec(
 
 
 def edge_coercion(
-    bin_indices: Sequence[int],
-    bin_edges: Mapping[int, tuple[float, float]] | Sequence[float] | np.ndarray,
+    bin_indices: IndexSeq,
+    bin_edges: EdgesLike,
 ) -> dict[int, tuple[float, float]]:
     """Returns a mapping from bin index to ``(lo, hi)`` edge pairs.
 

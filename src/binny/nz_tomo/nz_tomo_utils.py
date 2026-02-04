@@ -1,4 +1,4 @@
-"""Utility functions for ``binny.nz_tomo`` module."""
+"""Helpers for tomographic binning workflows in ``binny.nz_tomo``."""
 
 from collections.abc import Mapping, Sequence
 from typing import Any
@@ -22,7 +22,7 @@ __all__ = [
 def photoz_segments_to_axes(
     segments: Sequence[Mapping[str, Any]],
 ) -> list[dict[str, Any]]:
-    """Convert a photo-z-style mixed-bin spec into an axes-style segment spec.
+    """Converts photo-z segment specifications to the mixed-binning format.
 
     This helper translates a list of segment mappings (each describing a binning
     scheme and redshift range) into the format expected by
@@ -72,7 +72,7 @@ def mixed_edges_from_segments(
     z_ph: Any | None,
     nz_ph: Any | None,
 ) -> np.ndarray:
-    """Build mixed bin edges from a segmented binning specification.
+    """Returns bin edges for a mixed segment specification.
 
     This function creates a single 1D array of bin edges by stitching together
     multiple binning segments. Each segment defines a redshift interval and a
@@ -127,7 +127,7 @@ def mixed_edges_from_segments(
 def extract_bin_edges_from_meta(
     meta: Mapping[str, Any],
 ) -> NDArray[np.float64] | None:
-    """Extract bin edges from builder metadata.
+    """Extracts bin edges from tomography builder metadata.
 
     This helper pulls out the ``bin_edges`` entry from tomography builder metadata
     when present. It is used to support downstream diagnostics (e.g., leakage
@@ -137,7 +137,7 @@ def extract_bin_edges_from_meta(
         meta: Builder metadata mapping.
 
     Returns:
-        A float64 array of bin edges if present, otherwise ``None``.
+        An array of bin edges if present, otherwise ``None``.
     """
     be = meta.get("bin_edges", None)
     if be is None:
@@ -146,7 +146,7 @@ def extract_bin_edges_from_meta(
 
 
 def resolve_n_bins_for_builder(*, bin_edges: Any | None, n_bins: int | None) -> int | None:
-    """Resolve the effective ``n_bins`` argument for bin builders.
+    """Resolves ``n_bins`` when optional explicit edges are supported.
 
     This helper enforces a single rule: when explicit ``bin_edges`` are provided,
     builders should not also receive ``n_bins``. It keeps the logic consistent

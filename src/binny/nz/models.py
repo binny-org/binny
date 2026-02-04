@@ -14,11 +14,10 @@ from __future__ import annotations
 
 import numpy as np
 from numpy import exp
-from numpy.typing import NDArray
+from scipy.special import erf
 
 from binny.utils.normalization import normalize_over_z
-
-FloatArray = NDArray[np.float64]
+from binny.utils.types import FloatArray
 
 __all__ = [
     "smail_like_distribution",
@@ -61,7 +60,8 @@ def smail_like_distribution(
         z0: Characteristic redshift scale (must be positive).
         alpha: Power-law index for low redshifts.
         beta: Exponential cutoff index for high redshifts.
-        normalize: If ``True``, normalizes the curve to have integral 1 over ``z``.
+        normalize: If ``True``, normalizes the curve to have
+            integral 1 over ``z``.
 
     Returns:
         Smail-like distribution evaluated at ``z`` (normalized if requested).
@@ -95,7 +95,8 @@ def gaussian_distribution(
         z: Redshift or array of redshifts.
         mu: Mean redshift.
         sigma: Standard deviation (must be positive).
-        normalize: If ``True``, normalizes the curve to have integral 1 over ``z``.
+        normalize: If ``True``, normalizes the curve to have
+            integral 1 over ``z``.
 
     Returns:
         Gaussian evaluated at ``z`` (normalized if requested).
@@ -132,14 +133,15 @@ def gaussian_mixture_distribution(
         sigmas: Array of component std devs, shape ``(K,)``. Must be positive.
         weights: Optional nonnegative weights, shape ``(K,)``. If ``None``,
             equal weights are used. Weights do not need to sum to ``1``.
-        normalize: If ``True``, normalizes the curve to have integral 1 over ``z``.
+        normalize: If ``True``, normalizes the curve to have
+            integral 1 over ``z``.
 
     Returns:
         Gaussian mixture evaluated at ``z`` (normalized if requested).
 
     Raises:
-        ValueError: If shapes mismatch, any sigma is non-positive, or any weight
-            is negative.
+        ValueError: If shapes mismatch, any sigma is non-positive,
+            or any weight is negative.
     """
     z_arr = np.asarray(z, dtype=np.float64)
     mus_arr = np.asarray(mus, dtype=np.float64)
@@ -161,7 +163,6 @@ def gaussian_mixture_distribution(
         if np.any(w < 0):
             raise ValueError("weights must be nonnegative.")
 
-    # Broadcast over z. For scalar z this returns shape (1,), which is fine.
     z2 = np.atleast_1d(z_arr)
     t = (z2[None, :] - mus_arr[:, None]) / sigmas_arr[:, None]
     comps = exp(-0.5 * t**2)
@@ -191,7 +192,8 @@ def gamma_distribution(
         z: Redshift or array of redshifts.
         k: Shape parameter (must be positive).
         theta: Scale parameter (must be positive).
-        normalize: If ``True``, normalizes the curve to have integral 1 over ``z``.
+        normalize: If ``True``, normalizes the curve to have
+            integral 1 over ``z``.
 
     Returns:
         Gamma-shaped distribution evaluated at ``z`` (normalized if requested).
@@ -230,10 +232,11 @@ def schechter_like_distribution(
         z: Redshift or array of redshifts.
         z0: Characteristic redshift scale (must be positive).
         alpha: Power-law index.
-        normalize: If ``True``, normalizes the curve to have integral 1 over ``z``.
+        normalize: If ``True``, normalizes the curve to
+            have integral 1 over ``z``.
 
     Returns:
-        Schechter-like distribution evaluated at ``z`` (normalized if requested).
+        Schechter-like distribution evaluated at ``z``.
 
     Raises:
         ValueError: If ``z0`` is not positive.
@@ -258,14 +261,15 @@ def lognormal_distribution(
 
     This function defines an unnormalized lognormal shape::
 
-        n(z) approx (1/z) * exp[- (ln z - mu_ln)^2 / (2 sigma_ln^2)]    for z > 0
-        n(z) = 0                                                       for z <= 0
+        n(z) approx (1/z) * exp[- (ln z - mu_ln)^2 / (2 sigma_ln^2)]  for z > 0
+        n(z) = 0  for z <= 0
 
     Args:
         z: Redshift or array of redshifts.
         mu_ln: Mean of ``ln(z)``.
         sigma_ln: Std dev of ``ln(z)`` (must be positive).
-        normalize: If ``True``, normalizes the curve to have integral 1 over ``z``.
+        normalize: If ``True``, normalizes the curve to
+            have integral 1 over ``z``.
 
     Returns:
         Lognormal shape evaluated at ``z`` (normalized if requested).
@@ -303,7 +307,8 @@ def tophat_distribution(
         z: Redshift or array of redshifts.
         zmin: Lower edge.
         zmax: Upper edge (must be greater than ``zmin``).
-        normalize: If ``True``, normalizes the curve to have integral 1 over ``z``.
+        normalize: If ``True``, normalizes the curve to
+            have integral 1 over ``z``.
 
     Returns:
         Tophat evaluated at ``z`` (normalized if requested).
@@ -312,7 +317,7 @@ def tophat_distribution(
         ValueError: If ``zmax <= zmin``.
     """
     if zmax <= zmin:
-        raise ValueError("zmax must be greater than zmin.")
+        raise ValueError("``zmax`` must be greater than ``zmin``.")
 
     z_arr = np.asarray(z, dtype=np.float64)
     nz = ((z_arr >= zmin) & (z_arr <= zmax)).astype(np.float64)
@@ -341,10 +346,11 @@ def shifted_smail_distribution(
         alpha: Power-law index for low redshifts.
         beta: Exponential cutoff index for high redshifts.
         z_shift: Shift applied to redshift (domain cutoff at ``z_shift``).
-        normalize: If ``True``, normalizes the curve to have integral 1 over ``z``.
+        normalize: If ``True``, normalizes the curve to
+            have integral 1 over ``z``.
 
     Returns:
-        Shifted Smail-like distribution evaluated at ``z`` (normalized if requested).
+        Shifted Smail-like distribution evaluated at ``z``.
 
     Raises:
         ValueError: If ``z0`` is not positive.
@@ -374,15 +380,17 @@ def skew_normal_distribution(
 
         n(z) = exp[-0.5 * ((z - xi) / omega)^2] * Phi(alpha * (z - xi) / omega)
 
-    where ``Phi`` is the standard normal CDF approximated via ``tanh``. Parameters
-    are ``xi`` (location), ``omega > 0`` (scale), and ``alpha`` (shape/skewness).
+    where ``Phi`` is the standard normal CDF approximated via ``tanh``.
+    Parameters are ``xi`` (location), ``omega > 0`` (scale), and ``alpha``
+    (shape/skewness).
 
     Args:
         z: Redshift or array of redshifts.
         xi: Location parameter.
         omega: Scale parameter (must be positive).
         alpha: Shape (skewness) parameter.
-        normalize: If ``True``, normalizes the curve to have integral 1 over ``z``.
+        normalize: If ``True``, normalizes the curve to have
+            integral 1 over ``z``.
 
     Returns:
         Skew-normal-like shape evaluated at ``z`` (normalized if requested).
@@ -394,10 +402,13 @@ def skew_normal_distribution(
         raise ValueError("omega must be positive.")
 
     z_arr = np.asarray(z, dtype=np.float64)
-    t = (z_arr - xi) / omega
-    u = alpha * t
-    approx_phi = 0.5 * (1.0 + np.tanh(np.sqrt(2.0 / np.pi) * (u + 0.044715 * u**3)))
-    nz = exp(-0.5 * t**2) * approx_phi
+    x = (z_arr - xi) / omega
+    u = alpha * x
+
+    # Phi(u) = 0.5 * (1 + erf(u / sqrt(2)))
+    phi = 0.5 * (1.0 + np.vectorize(erf)(u / np.sqrt(2.0)))
+
+    nz = np.exp(-0.5 * x**2) * phi
     return _maybe_normalize(z_arr, nz, normalize)
 
 

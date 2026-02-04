@@ -1,4 +1,4 @@
-"""Conversion functions between different sky area units."""
+"""Conversion functions for sky areas and surface densities."""
 
 from __future__ import annotations
 
@@ -44,7 +44,7 @@ _ALLOWED_AREA_UNITS = {
     "steradians",
 }
 
-_ALLOWED_AREA_UNITS_MSG = "{'arcmin2','arcmin^2','deg2','deg^2','sr','steradian','steradians'}"
+_ALLOWED_AREA_UNITS_MSG = "{" + ",".join(f"{u!r}" for u in sorted(_ALLOWED_AREA_UNITS)) + "}"
 
 
 def deg2_to_f_sky(area_deg2: float) -> float:

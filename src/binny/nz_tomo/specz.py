@@ -1,78 +1,63 @@
-r"""Functions to build spectroscopic-redshift tomographic bins.
+r"""Build spectroscopic-redshift tomographic bins on a common true-z grid.
 
-This module constructs true-redshift tomographic-bin distributions for
-spectroscopic (true-z) binning, with optional survey-style bin-response effects
-that map true bins to observed bins.
+This module constructs tomographic-bin redshift distributions for **true-z
+(spectroscopic) binning**. The main entry point is :func:`build_specz_bins`,
+which returns a mapping from observed-bin index to an observed-bin distribution
+``n_obs_i(z)``, all evaluated on the same true-redshift grid ``z``.
 
-The main entry point is :func:`build_specz_bins`, which returns a dictionary
-mapping observed bin index -> observed-bin distribution ``n_obs_i(z)``, all
-evaluated on a common true-z grid ``z``.
+Selection model
+---------------
+True bins are defined by edges ``[z_j, z_{j+1}]`` and a per-bin completeness
+factor ``c_j``. The true-bin selection window is
 
-Model overview
---------------
-1) True-bin selection (top-hat in true z).
+    ``S_j(z) = c_j * 1_{[z_j, z_{j+1})}(z)``,
 
-For true bin ``j`` with edges ``[z_j, z_{j+1}]``, define a selection window
-``S_j(z)`` (left-closed, right-open by default) scaled by per-bin completeness
-``c_j``::
+and the corresponding true-bin distribution is
 
-    S_j(z) = c_j * 1_{[z_j, z_{j+1})}(z)
+    ``n_true_j(z) = n(z) * S_j(z)``.
 
-and build the true-bin distribution from the parent ``n(z)``::
+Bin-to-bin response (optional)
+------------------------------
+Observed bins may differ from true bins due to survey-style response effects.
+These are represented by a column-stochastic response matrix ``M`` with
 
-    n_true_j(z) = n(z) * S_j(z)
+    ``M[i, j] = P(i_obs | j_true)``,
+    ``sum_i M[i, j] = 1``  for every true bin ``j``,
 
-2) Bin-to-bin response (optional).
+which mixes true bins into observed bins via
 
-Observed bins are constructed by mixing the true bins with a column-stochastic
-response matrix ``M``::
+    ``n_obs_i(z) = sum_j M[i, j] * n_true_j(z)``.
 
-    M[i, j] = P(i_obs | j_true)
-    sum_i M[i, j] = 1  for every true bin j
+Two response components are supported:
 
-The observed-bin distributions are::
+1) Catastrophic reassignment (bin-level)
+   A per-bin fraction ``f_j`` is redistributed away from the diagonal according
+   to a leakage prescription (uniform, neighbor, or Gaussian in bin-index
+   space). If an explicit ``response_matrix`` is provided, it is used directly.
 
-    n_obs_i(z) = sum_j M[i, j] * n_true_j(z)
+2) Measurement scatter (optional)
+   A Gaussian measurement model for ``z_hat | z_true`` is integrated over
+   observed bin edges to form a response, then averaged within each true bin to
+   obtain a column-stochastic matrix ``M_scatter``.
 
-Supported response effects
---------------------------
-- Catastrophic response (bin-level).
-  A per-bin catastrophic fraction ``f_j`` is redistributed from the diagonal to
-  other observed bins using a leakage prescription (uniform, neighbor, or
-  Gaussian in bin-index space). If an explicit ``response_matrix`` is provided,
-  it is used directly and overrides the leakage model.
+If both are enabled, the total response is applied as
 
-- Finite spec-z measurement scatter (optional).
-  Builds a second response matrix by integrating a Gaussian measurement model
-  for ``z_hat | z_true`` over observed bin edges to get::
-
-      P(z_hat in bin_i | z_true)
-
-  then averages within each true bin to obtain a column-stochastic matrix
-  ``M_scatter``.
-
-  If both effects are enabled, the total response is applied as::
-
-      M_total = M_scatter @ M_cat
-
-  meaning catastrophic reassignment is applied first (at the bin level), followed
-  by additional mixing from measurement scatter.
+    ``M_total = M_scatter @ M_cat``.
 
 Normalization
 -------------
-- If ``normalize_input=True`` (default), the parent ``n(z)`` is normalized to
-  integrate to 1 over ``z`` before binning.
-- If ``normalize_bins=True`` (default), each output ``n_obs_i(z)`` is normalized
-  to integrate to 1 over ``z`` (for non-empty bins).
+- If ``normalize_input=True`` (default), the parent distribution ``n(z)`` is
+  normalized to integrate to 1 over the grid ``z`` before binning.
+- If ``normalize_bins=True`` (default), each returned ``n_obs_i(z)`` is
+  normalized to integrate to 1 over ``z`` when the bin has nonzero support.
 """
 
 from __future__ import annotations
 
 from collections.abc import Mapping, Sequence
-from typing import Any, Literal, TypeAlias
+from typing import Any, Literal
 
 import numpy as np
-from numpy.typing import NDArray
 from scipy.special import erf
 
 from binny.nz_tomo.binning_core import (
@@ -83,6 +68,7 @@ from binny.nz_tomo.binning_core import (
 )
 from binny.utils.broadcasting import as_per_bin
 from binny.utils.normalization import normalize_1d
+from binny.utils.types import BinningScheme, FloatArray1D, FloatArray2D
 from binny.utils.validators import (
     validate_axis_and_weights,
     validate_n_bins,
@@ -96,10 +82,6 @@ __all__ = [
     "apply_response_matrix",
     "specz_gaussian_response_matrix",
 ]
-
-FloatArray1D: TypeAlias = NDArray[np.float64]
-FloatArray2D: TypeAlias = NDArray[np.float64]
-BinningScheme: TypeAlias = str | Sequence[Mapping[str, Any]] | Mapping[str, Any]
 
 
 def build_specz_bins(
@@ -125,48 +107,57 @@ def build_specz_bins(
     include_metadata: bool = False,
     save_metadata_path: str | None = None,
 ) -> dict[int, FloatArray1D] | tuple[dict[int, FloatArray1D], dict[str, Any]]:
-    """Builds spectroscopic-redshift tomographic bins.
+    """Build spectroscopic-redshift tomographic bins on a common true-z grid.
+
+    Constructs per-bin true-redshift distributions from a parent ``n(z)`` using
+    true-redshift bin edges. Optionally applies survey-style bin-response effects
+    that mix true bins into observed bins via a column-stochastic response matrix.
+
+    If response effects are enabled, the returned bins correspond to *observed*
+    bins, each expressed as a distribution on the *true-z* grid.
 
     Args:
-        z: True-redshift grid where outputs are evaluated.
-        nz: Parent true-redshift distribution evaluated on ``z`` (raw or normalized).
-        bin_edges: True-redshift bin edges (length ``n_bins + 1``).
-            Mutually exclusive with ``binning_scheme`` / ``n_bins``.
-        binning_scheme: If ``bin_edges`` is None, scheme to build edges (e.g.
-            ``"equidistant"``, ``"equal_number"``), or a mixed binning specification
-            (sequence of segment dicts, or a dict with key ``"segments"``).
-        n_bins: Number of bins when using a string ``binning_scheme``.
-        bin_range: If provided, overrides ``bin_edges`` to build a range of bins.
-        completeness: Per-bin completeness factors (scalar or per-bin sequence).
-        catastrophic_frac: Per-bin catastrophic fractions (scalar or per-bin sequence).
-        leakage_model: Leakage prescription for catastrophes ("uniform",
-            "neighbor", "gaussian").
-        leakage_sigma: Width for Gaussian leakage in bin-index space.
-        response_matrix: Optional explicit catastrophic response matrix.
-            If provided, it overrides ``catastrophic_frac`` and leakage settings.
-        specz_scatter: Optional per-bin (or scalar) measurement scatter. If None,
-            scatter can be enabled via ``specz_scatter_model`` with
-            ``sigma0``/``sigma1``.
-        specz_scatter_model: Scatter parameterization used when ``specz_scatter``
-            is None.
+        z: True-redshift grid where all outputs are evaluated.
+        nz: Parent true-redshift distribution evaluated on ``z``.
+        bin_edges: Optional true-redshift bin edges. If provided, ``binning_scheme``
+            and ``n_bins`` are ignored.
+        binning_scheme: Scheme used to derive edges when ``bin_edges`` is not
+            provided. May be a simple scheme name or a mixed-segment specification.
+        n_bins: Number of bins for simple scheme names.
+        bin_range: Optional interval used when deriving equidistant edges.
+        completeness: Per-bin completeness factor(s) applied to the true-bin
+            selection (scalar or per-bin sequence).
+        catastrophic_frac: Per-bin fraction(s) reassigned to other observed bins
+            through the catastrophic response model (scalar or per-bin sequence).
+        leakage_model: Redistribution rule for catastrophic reassignment.
+        leakage_sigma: Width parameter for Gaussian leakage in bin-index space.
+        response_matrix: Optional explicit bin-response matrix overriding the
+            catastrophic leakage model.
+        specz_scatter: Optional measurement-scatter scale(s) used to build a
+            scatter response matrix (scalar or per-bin sequence).
+        specz_scatter_model: Scatter parameterization used when ``specz_scatter`` is
+            not provided.
         sigma0: Additive scatter component for ``specz_scatter_model``.
         sigma1: Redshift-dependent scatter component for ``specz_scatter_model``.
-        normalize_input: If True, normalize the parent ``nz`` before binning.
-        normalize_bins: If True, normalize each returned bin to integrate to 1 on ``z``.
-        norm_method: Normalization method passed to :func:`normalize_1d`.
-        include_metadata: If True, return metadata dict along with bins.
-        save_metadata_path: If provided, save metadata to this path as a text file.
+        normalize_input: Whether to normalize the parent ``nz`` before binning.
+        normalize_bins: Whether to normalize each returned bin to integrate to 1
+            on ``z`` when the bin has nonzero support.
+        norm_method: Integration method used for normalization.
+        include_metadata: Whether to return a metadata mapping alongside the bins.
+        save_metadata_path: Optional path where metadata is written in text form.
 
     Returns:
-        If ``include_metadata`` is False, returns a dict mapping observed bin index to
-        ``n_obs_i(z)`` evaluated on ``z``.
+        A dict mapping observed bin index to a true-z distribution ``n_obs_i(z)``.
+        If ``include_metadata=True``, returns ``(bins, metadata)``.
 
-        If ``include_metadata`` is True, returns ``(bins, metadata)``.
+    Raises:
+        ValueError: If edge inputs are inconsistent, response settings are invalid,
+            or any parameter constraints are violated.
     """
     z_arr, parent_arr0 = validate_axis_and_weights(z, nz)
     need_meta = include_metadata or (save_metadata_path is not None)
 
-    # --- resolve + validate true-z bin edges
+    # Resolve and validate true-z bin edges
     parent_for_edges = parent_arr0
     if normalize_input:
         parent_for_edges = normalize_1d(z_arr, parent_for_edges, method=norm_method)
@@ -192,19 +183,20 @@ def build_specz_bins(
     )
     n_bins_eff = int(bin_edges_arr.size - 1)
 
-    # --- scatter knobs: either explicit specz_scatter OR sigma0/sigma1 model, not both
+    # Scatter knobs: either explicit specz_scatter OR sigma0/sigma1 model,
+    # not both
     if specz_scatter is not None and (sigma0 != 0.0 or sigma1 != 0.0):
         raise ValueError("Provide either specz_scatter OR ``sigma0/sigma1``, not both.")
 
-    # --- normalize parent for true-bin construction if requested
+    # Normalize parent for true-bin construction if requested
     parent_arr = parent_arr0
     if normalize_input:
         parent_arr = normalize_1d(z_arr, parent_arr, method=norm_method)
 
-    # --- broadcast per-bin params
+    # Broadcast per-bin params
     completeness_arr = as_per_bin(completeness, n_bins_eff, "completeness")
 
-    # --- build response matrices (catastrophic + optional scatter)
+    # Build response matrices (catastrophic + optional scatter)
     matrix_cat = build_specz_response_matrix(
         n_bins_eff,
         catastrophic_frac=catastrophic_frac,
@@ -221,7 +213,7 @@ def build_specz_bins(
     )
 
     if scatter_enabled:
-        # Validate explicit per-bin scatter early (nice error message here).
+        # Validate explicit per-bin scatter early
         if specz_scatter is not None:
             sig = np.asarray(as_per_bin(specz_scatter, n_bins_eff, "specz_scatter"), dtype=float)
             if np.any(sig < 0.0):
@@ -242,8 +234,29 @@ def build_specz_bins(
     else:
         matrix_total = matrix_cat
 
-    # --- raw true-bin callback (top-hat * completeness)
+    # Raw true-bin callback (top-hat * completeness)
     def raw_true_bin_for_edge(j: int, zmin: float, zmax: float) -> FloatArray1D:
+        """Returns the unnormalized true-bin distribution for bin ``j``.
+
+        The true-bin distribution is constructed by applying the bin selection window
+        to the parent distribution,
+
+            ``n_true_j(z) = n(z) * S_j(z)``,
+
+        where
+
+            ``S_j(z) = c_j * 1_{[zmin, zmax)}(z)``
+
+        with completeness ``c_j``.
+
+        Args:
+            j: True-bin index.
+            zmin: Lower true-z edge of the bin.
+            zmax: Upper true-z edge of the bin.
+
+        Returns:
+            Unnormalized true-bin distribution evaluated on the common grid ``z_arr``.
+        """
         sel = specz_selection_in_bin(
             z_arr,
             float(zmin),
@@ -252,11 +265,27 @@ def build_specz_bins(
         )
         return (parent_arr * sel).astype(np.float64, copy=False)
 
-    # --- mixer: apply response matrix to raw true bins
+    # Mixer: apply response matrix to raw true bins
     def mixer(raw_bins: dict[int, FloatArray1D]) -> dict[int, FloatArray1D]:
+        """Applies the total bin-to-bin response to the set of true-bin distributions.
+
+        The input is a mapping of true-bin distributions ``n_true_j(z)``. The output is
+        a mapping of observed-bin distributions ``n_obs_i(z)`` obtained by mixing bins
+        with the total response matrix,
+
+            ``n_obs_i(z) = sum_j M_total[i, j] * n_true_j(z)``.
+
+        Args:
+            raw_bins: Mapping from true-bin index ``j`` to unnormalized true-bin
+                distribution ``n_true_j(z)``.
+
+        Returns:
+            Mapping from observed-bin index ``i`` to unnormalized observed-bin
+            distribution ``n_obs_i(z)``.
+        """
         return apply_response_matrix(raw_bins, matrix_total)
 
-    # --- build observed bins + norms + optional per-bin normalization
+    # Build observed bins + norms + optional per-bin normalization
     bins, bins_norms, parent_norm = build_bins_on_edges(
         z=z_arr,
         nz_parent_for_meta=parent_arr0,  # always record fractions relative to original parent
@@ -268,16 +297,14 @@ def build_specz_bins(
         need_meta=need_meta,
     )
 
-    # Optional: avoid normalizing empty bins (keep consistent with old behavior).
-    # If you want this globally, move the guard into build_bins_on_edges instead.
+    # Optional: avoid normalizing empty bins
     if normalize_bins:
         for i in range(n_bins_eff):
             area = float(np.trapezoid(bins[i], x=z_arr))
             if np.isclose(area, 0.0, atol=1e-12):
-                # keep as-is (all zeros)
                 continue
-            # build_bins_on_edges already normalized; nothing to do here.
 
+    # Optionally report metadata
     meta = finalize_tomo_metadata(
         kind="specz",
         z=z_arr,
@@ -320,7 +347,26 @@ def specz_selection_in_bin(
     *,
     inclusive_right: bool = False,
 ) -> FloatArray1D:
-    """Builds the spectroscopic (true-z) bin selection function on a redshift grid."""
+    """Evaluates a true-z bin selection window on a redshift grid.
+
+    Returns a top-hat selection function over ``[bin_min, bin_max)`` (or
+    ``[bin_min, bin_max]`` when ``inclusive_right=True``), scaled by a completeness
+    factor. This selection is multiplied by the parent ``n(z)`` to form a
+    true-bin distribution.
+
+    Args:
+        z: True-redshift grid.
+        bin_min: Lower edge of the true-z bin.
+        bin_max: Upper edge of the true-z bin.
+        completeness: Multiplicative completeness factor in [0, 1].
+        inclusive_right: Whether to include ``bin_max`` in the selection.
+
+    Returns:
+        Array of selection values on ``z``.
+
+    Raises:
+        ValueError: If ``completeness`` is outside [0, 1].
+    """
     z_arr = np.asarray(z, dtype=float)
 
     if not (0.0 <= completeness <= 1.0):
@@ -342,7 +388,26 @@ def build_specz_response_matrix(
     leakage_sigma: Sequence[float] | float = 1.0,
     response_matrix: FloatArray2D | None = None,
 ) -> FloatArray2D:
-    """Builds a catastrophic-response response matrix between tomographic bins."""
+    """Constructs a bin-to-bin response matrix for catastrophic reassignment.
+
+    Builds a column-stochastic matrix ``M`` with entries ``M[i, j] = P(i_obs|j_true)``
+    that describes reassignment of a fraction of objects in each true bin to other
+    observed bins. If an explicit ``response_matrix`` is provided, it is validated
+    and returned directly.
+
+    Args:
+        n_bins: Number of tomographic bins.
+        catastrophic_frac: Per-bin catastrophic fraction(s) in [0, 1].
+        leakage_model: Redistribution rule for the catastrophic fraction.
+        leakage_sigma: Width parameter for Gaussian leakage in bin-index space.
+        response_matrix: Optional explicit response matrix overriding the model.
+
+    Returns:
+        A float array of shape ``(n_bins, n_bins)`` that is column-stochastic.
+
+    Raises:
+        ValueError: If inputs are invalid or the resulting matrix fails validation.
+    """
     validate_n_bins(n_bins)
 
     if response_matrix is not None:
@@ -423,7 +488,23 @@ def apply_response_matrix(
     bins: Mapping[int, FloatArray1D],
     matrix: FloatArray2D,
 ) -> dict[int, FloatArray1D]:
-    """Applies a bin-to-bin response matrix to tomographic bin distributions."""
+    """Applies a bin-response matrix to a set of tomographic bin distributions.
+
+    Treats the input bins as a stacked array with shape ``(n_bins, ...)`` and
+    returns the mixed bins ``obs = M @ true``. The response matrix is expected to be
+    column-stochastic and compatible with the number of bins and array shapes.
+
+    Args:
+        bins: Mapping from bin index to bin distribution arrays. Must contain
+            exactly keys ``0..n_bins-1`` and all arrays must share the same shape.
+        matrix: Response matrix of shape ``(n_bins, n_bins)``.
+
+    Returns:
+        Dict mapping observed bin index to the mixed bin distribution.
+
+    Raises:
+        ValueError: If keys/shapes are inconsistent or the matrix is invalid.
+    """
     n_bins = int(len(bins))
     validate_response_matrix(matrix, n_bins)
 
@@ -458,7 +539,31 @@ def specz_gaussian_response_matrix(
     sigma0: float = 0.0,
     sigma1: float = 0.0,
 ) -> FloatArray2D:
-    """Builds a Gaussian measurement-scatter response matrix for spec-z binning."""
+    """Builds a Gaussian measurement-scatter response matrix for spec-z
+    binning.
+
+    Constructs a column-stochastic matrix that maps true bins to observed bins
+    under a Gaussian measurement model for ``z_hat`` at fixed true redshift.
+    Probabilities are computed by integrating the Gaussian over observed-bin edges
+    and then averaging within each true bin.
+
+    The scatter scale may be provided explicitly per bin, or derived from a simple
+    parameterization controlled by ``sigma0`` and ``sigma1``.
+
+    Args:
+        z_arr: True-redshift grid used to evaluate within-bin averaging.
+        bin_edges: True-redshift bin edges defining both true and observed bins.
+        specz_scatter: Optional scatter scale(s) (scalar or per-bin sequence).
+        model: Scatter parameterization used when ``specz_scatter`` is None.
+        sigma0: Additive scatter component for ``model``.
+        sigma1: Redshift-dependent scatter component for ``model``.
+
+    Returns:
+        A float array of shape ``(n_bins, n_bins)`` that is column-stochastic.
+
+    Raises:
+        ValueError: If scatter settings are inconsistent or invalid.
+    """
     z_arr = np.asarray(z_arr, dtype=float)
     bin_edges_arr = np.asarray(bin_edges, dtype=float)
     n_bins = int(bin_edges_arr.size - 1)

@@ -1,4 +1,4 @@
-"""Computes bin edges using different binning strategies per segment."""
+"""Module that constructs bin edges for mixed binning strategies."""
 
 from __future__ import annotations
 
@@ -25,7 +25,7 @@ EdgeFunc = Callable[..., np.ndarray]
 
 
 def _get(seg_i: int, params: Mapping[str, Any], key: str, fallback: Any) -> Any:
-    """Resolve a parameter value from segment params or global fallback.
+    """Resolves a parameter value from segment params or global fallback.
 
     Args:
         seg_i: Segment index (used for error messages).
@@ -84,7 +84,7 @@ def _call_with(
     required: tuple[str, ...],
     casts: Mapping[str, CastFunc] | None = None,
 ) -> np.ndarray:
-    """Call a bin-edge function using segment params with global fallbacks.
+    """Calls a bin-edge function using segment params with global fallbacks.
 
     Args:
         seg_i: Segment index (used for error messages).
@@ -165,15 +165,15 @@ def mixed_edges(
         - ``"method"``: Binning method name or alias (resolved via
           :func:`binny.utils.validators.resolve_binning_method`).
         - ``"n_bins"``: Number of bins in this segment (integer).
-        - ``"params"``: Optional mapping of method-specific parameters. Any missing
-          required parameter may be provided as a global keyword argument to
-          :func:`mixed_edges`.
+        - ``"params"``: Optional mapping of method-specific parameters.
+          Any missing required parameter may be provided as a global keyword
+          argument to :func:`mixed_edges`.
 
     Global inputs:
 
-        Some methods require arrays (e.g. ``x``/``weights``). You can provide them
-        globally, or per-segment via ``params``. If a required input is missing,
-        a ``ValueError`` is raised.
+        Some methods require arrays (e.g. ``x``/``weights``). These may be
+        provided globally or per segment via ``params``. A ``ValueError`` is
+        raised if a required input is missing.
 
     Args:
         segments: Sequence of segment specifications.

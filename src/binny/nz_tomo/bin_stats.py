@@ -21,7 +21,7 @@ from typing import Any
 
 import numpy as np
 
-from binny.utils.metadata import _round_floats
+from binny.utils.metadata import round_floats
 from binny.utils.normalization import cdf_from_curve, weighted_quantile_from_cdf
 from binny.utils.validators import validate_axis_and_weights
 
@@ -592,7 +592,7 @@ def shape_stats(
         edges_info["equidistant_score"] = _equidistant_score(widths)
         out["edges"] = edges_info
 
-    return _round_floats(out, decimal_places)
+    return round_floats(out, decimal_places)
 
 
 def population_stats(
@@ -686,4 +686,4 @@ def population_stats(
             out["survey_area"] = float(survey_area)
             out["count_per_bin"] = galaxy_count_per_bin(density_per_bin, float(survey_area))
 
-    return _round_floats(out, decimal_places)
+    return round_floats(out, decimal_places)

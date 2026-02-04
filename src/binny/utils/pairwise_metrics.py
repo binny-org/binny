@@ -7,8 +7,8 @@ from functools import partial
 from typing import Literal, TypeAlias
 
 import numpy as np
-from numpy.typing import NDArray
 
+from binny.utils.types import FloatArray1D
 from binny.utils.validators import (
     validate_axis_and_weights,
     validate_probability_vector,
@@ -18,7 +18,6 @@ from binny.utils.validators import (
 PrepMode: TypeAlias = Literal["curves", "segments_prob"]
 NormMode: TypeAlias = Literal["none", "normalize", "check"]
 MetricUnit: TypeAlias = Literal["fraction", "percent"]
-FloatArray = NDArray[np.float64]
 
 __all__ = [
     "pair_min",
@@ -34,7 +33,12 @@ __all__ = [
 ]
 
 
-def _pair_min_kernel(z: np.ndarray, curves: Mapping[int, np.ndarray], i: int, j: int) -> float:
+def _pair_min_kernel(
+    z: FloatArray1D,
+    curves: Mapping[int, FloatArray1D],
+    i: int,
+    j: int,
+) -> float:
     """Computes overlap as the integral of the pointwise minimum.
 
     This overlap score integrates ``min(p_i(z), p_j(z))`` over a shared grid
@@ -55,8 +59,8 @@ def _pair_min_kernel(z: np.ndarray, curves: Mapping[int, np.ndarray], i: int, j:
 
 
 def _pair_cosine_kernel(
-    z: np.ndarray,
-    curves: Mapping[int, np.ndarray],
+    z: FloatArray1D,
+    curves: Mapping[int, FloatArray1D],
     norms: Mapping[int, float],
     i: int,
     j: int,
@@ -91,7 +95,7 @@ def _pair_cosine_kernel(
     return float(num / denom)
 
 
-def _kl_base2(a: np.ndarray, b: np.ndarray) -> float:
+def _kl_base2(a: FloatArray1D, b: FloatArray1D) -> float:
     """Kullback–Leibler divergence D_KL(a || b) with base-2 logarithm.
 
     This computes the KL divergence from ``a`` to ``b`` using base-2 logarithms.
@@ -115,7 +119,7 @@ def _kl_base2(a: np.ndarray, b: np.ndarray) -> float:
     return float(np.sum(a[mask] * np.log2(a[mask] / b[mask])))
 
 
-def _pair_js_kernel(masses: Mapping[int, np.ndarray], i: int, j: int) -> float:
+def _pair_js_kernel(masses: Mapping[int, FloatArray1D], i: int, j: int) -> float:
     """Computes Jensen–Shannon distance between probability vectors.
 
     This distance compares two discrete probability vectors (e.g., per-segment
@@ -140,7 +144,7 @@ def _pair_js_kernel(masses: Mapping[int, np.ndarray], i: int, j: int) -> float:
     return float(np.sqrt(max(js_div, 0.0)))  # in [0, 1] for log base 2
 
 
-def _pair_hellinger_kernel(masses: Mapping[int, np.ndarray], i: int, j: int) -> float:
+def _pair_hellinger_kernel(masses: Mapping[int, FloatArray1D], i: int, j: int) -> float:
     """Computes Hellinger distance between probability vectors.
 
     Hellinger distance is a bounded, symmetric distance on discrete probability
@@ -164,7 +168,7 @@ def _pair_hellinger_kernel(masses: Mapping[int, np.ndarray], i: int, j: int) -> 
     return float(np.sqrt(max(h2, 0.0)))  # in [0, 1]
 
 
-def _pair_tv_kernel(masses: Mapping[int, np.ndarray], i: int, j: int) -> float:
+def _pair_tv_kernel(masses: Mapping[int, FloatArray1D], i: int, j: int) -> float:
     """Computes total variation distance between probability vectors.
 
     Total variation distance is half the L1 distance between two discrete
@@ -186,7 +190,10 @@ def _pair_tv_kernel(masses: Mapping[int, np.ndarray], i: int, j: int) -> float:
     return float(0.5 * np.sum(np.abs(a - b)))  # in [0, 1]
 
 
-def pair_min(z_arr: np.ndarray, p: Mapping[int, np.ndarray]) -> Callable[[int, int], float]:
+def pair_min(
+    z_arr: FloatArray1D,
+    p: Mapping[int, FloatArray1D],
+) -> Callable[[int, int], float]:
     """Computes overlap as the integral of the pointwise minimum.
 
     This overlap score integrates ``min(p_i(z), p_j(z))`` over a shared grid
@@ -215,7 +222,7 @@ def pair_min(z_arr: np.ndarray, p: Mapping[int, np.ndarray]) -> Callable[[int, i
     return partial(_pair_min_kernel, z, curves)
 
 
-def pair_cosine(z_arr: np.ndarray, p: Mapping[int, np.ndarray]) -> Callable[[int, int], float]:
+def pair_cosine(z_arr: FloatArray1D, p: Mapping[int, FloatArray1D]) -> Callable[[int, int], float]:
     """Computes cosine similarity under a trapezoid inner product.
 
     This similarity treats curves as functions on a shared grid and computes
@@ -254,7 +261,7 @@ def pair_cosine(z_arr: np.ndarray, p: Mapping[int, np.ndarray]) -> Callable[[int
     return partial(_pair_cosine_kernel, z, curves, norms)
 
 
-def pair_js(masses: Mapping[int, np.ndarray]) -> Callable[[int, int], float]:
+def pair_js(masses: Mapping[int, FloatArray1D]) -> Callable[[int, int], float]:
     """Computes Jensen–Shannon distance between probability vectors.
 
     This distance compares two discrete probability vectors (e.g., per-segment
@@ -281,7 +288,7 @@ def pair_js(masses: Mapping[int, np.ndarray]) -> Callable[[int, int], float]:
 
 
 def pair_hellinger(
-    masses: Mapping[int, np.ndarray],
+    masses: Mapping[int, FloatArray1D],
 ) -> Callable[[int, int], float]:
     """Computes Hellinger distance between probability vectors.
 
@@ -307,7 +314,7 @@ def pair_hellinger(
     return partial(_pair_hellinger_kernel, masses)
 
 
-def pair_tv(masses: Mapping[int, np.ndarray]) -> Callable[[int, int], float]:
+def pair_tv(masses: Mapping[int, FloatArray1D]) -> Callable[[int, int], float]:
     """Computes total variation distance between probability vectors.
 
     Total variation distance is half the L1 distance between two discrete
@@ -370,9 +377,9 @@ def fill_symmetric(
 
 
 def segment_mass_probs(
-    z_arr: np.ndarray,
-    p: Mapping[int, np.ndarray],
-) -> dict[int, np.ndarray]:
+    z_arr: FloatArray1D,
+    p: Mapping[int, FloatArray1D],
+) -> dict[int, FloatArray1D]:
     """Returns per-segment mass probability vectors derived from sampled curves.
 
     This converts each curve into trapezoid masses per segment using
@@ -394,7 +401,7 @@ def segment_mass_probs(
     """
     z, curves = prepare_metric_inputs(z_arr, p, mode="curves")
 
-    masses: dict[int, np.ndarray] = {}
+    masses: dict[int, FloatArray1D] = {}
     for i, curve in curves.items():
         m = mass_per_segment(z, curve)
         s = float(np.sum(m))
@@ -431,14 +438,14 @@ def apply_unit(
 
 
 def prepare_metric_inputs(
-    z_arr: np.ndarray,
-    p: Mapping[int, np.ndarray],
+    z_arr: FloatArray1D,
+    p: Mapping[int, FloatArray1D],
     *,
     mode: PrepMode,
     curve_norm: NormMode = "none",
     rtol: float = 1e-3,
     atol: float = 1e-6,
-) -> tuple[np.ndarray, dict[int, np.ndarray]]:
+) -> tuple[FloatArray1D, dict[int, FloatArray1D]]:
     """Prepares inputs for pairwise metrics (validate once; optionally normalize).
 
     This is a convenience wrapper that standardizes the common boilerplate for
@@ -448,8 +455,9 @@ def prepare_metric_inputs(
         :func:`validate_axis_and_weights`.
     - Optionally normalizes curves to unit trapezoid integral or
         checks they already are.
-    - Optionally converts curves to per-segment probability vectors (segment masses
-      normalized to sum to 1), suitable for discrete probability metrics.
+    - Optionally converts curves to per-segment probability vectors
+      (segment masses normalized to sum to 1), suitable for discrete
+      probability metrics.
 
     Args:
         z_arr: 1D strictly increasing grid of nodes.
@@ -480,7 +488,7 @@ def prepare_metric_inputs(
     """
     z_arr = np.asarray(z_arr, dtype=float)
 
-    curves: dict[int, np.ndarray] = {}
+    curves: dict[int, FloatArray1D] = {}
     for idx, curve in p.items():
         _, c = validate_axis_and_weights(z_arr, curve)
         area = float(np.trapezoid(c, x=z_arr))
@@ -509,7 +517,7 @@ def prepare_metric_inputs(
         return z_arr.astype(np.float64, copy=False), curves
 
     if mode == "segments_prob":
-        probs: dict[int, np.ndarray] = {}
+        probs: dict[int, FloatArray1D] = {}
         for idx, c in curves.items():
             m = mass_per_segment(z_arr, c)
             s = float(np.sum(m))
@@ -521,7 +529,10 @@ def prepare_metric_inputs(
     raise ValueError('mode must be "curves" or "segments_prob".')
 
 
-def mass_per_segment(z_arr: np.ndarray, p_arr: np.ndarray) -> FloatArray:
+def mass_per_segment(
+    z_arr: FloatArray1D,
+    p_arr: FloatArray1D,
+) -> FloatArray1D:
     """Returns trapezoid masses per grid segment for a curve sampled at nodes.
 
     This converts node values into per-interval masses using the trapezoid rule,

@@ -1,13 +1,7 @@
 """Axis grid builders.
 
-This module provides small helpers to construct 1D sampling grids for
-numerical work (e.g., k, ell, z). The grids include both endpoints and are
-returned as ``float64`` NumPy arrays.
-
-Functions
----------
-- ``linear_grid``: Uniform spacing in x.
-- ``log_grid``: Uniform spacing in log(x) (geometric progression).
+Small helpers for building 1D grids commonly used in numerical work
+(e.g. k, ell, z).
 """
 
 from __future__ import annotations

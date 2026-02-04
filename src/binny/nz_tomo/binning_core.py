@@ -1,34 +1,23 @@
-r"""Agnostic core utilities for building tomographic redshift bins.
+"""Shared utilities for tomographic redshift binning.
 
-This module factors out the shared mechanics of tomography builders:
-
-- resolving bin edges from explicit edges, simple schemes, or mixed segments
-- validating edges consistently
-- constructing per-bin curves via a callback on a common true-z grid
-- optional post-processing of raw bins (e.g. response-matrix mixing)
-- per-bin normalization and metadata bookkeeping
-
-It does **not** implement any survey- or model-specific physics. Photo-z and
-spec-z builders provide the bin-construction callback(s) and any extra modeling
-steps.
+This module contains the shared building blocks for creating tomographic bins
+from a parent redshift distribution. Photo-z and spec-z builders use these
+helpers to keep behavior consistent across binning methods.
 """
 
 from __future__ import annotations
 
 from collections.abc import Callable, Mapping, Sequence
-from typing import Any, Literal, TypeAlias
+from typing import Any, Literal
 
 import numpy as np
-from numpy.typing import NDArray
 
 from binny.axes.bin_edges import equal_number_edges, equidistant_edges
 from binny.nz_tomo.nz_tomo_utils import mixed_edges_from_segments
 from binny.utils.metadata import build_tomo_bins_metadata, save_metadata_txt
 from binny.utils.normalization import normalize_1d
+from binny.utils.types import BinningScheme, FloatArray
 from binny.utils.validators import validate_axis_and_weights, validate_n_bins
-
-FloatArray: TypeAlias = NDArray[np.float64]
-BinningScheme: TypeAlias = str | Sequence[Mapping[str, Any]] | Mapping[str, Any]
 
 __all__ = [
     "resolve_bin_edges",
@@ -46,40 +35,38 @@ def resolve_bin_edges(
     binning_scheme: BinningScheme | None,
     n_bins: int | None,
     bin_range: tuple[float, float] | None = None,
-    # equal-number needs some axis/weights; default is (z_axis, nz_axis)
     equal_number_axis: Any | None = None,
     equal_number_weights: Any | None = None,
-    # mixed edges may also want photo-z proxies
     z_ph: Any | None = None,
     nz_ph: Any | None = None,
     norm_method: Literal["trapezoid", "simpson"] = "trapezoid",
     normalize_equal_number_weights: bool = True,
 ) -> FloatArray:
-    """Resolves bin edges from explicit edges, a simple scheme, or a mixed spec.
+    """Returns tomographic bin edges.
 
     Args:
-        z_axis: Default axis used for equidistant edges and as a fallback for
-            equal-number edges.
-        nz_axis: Default weights used as a fallback for equal-number edges.
-        bin_edges: Explicit edges (mutually exclusive with scheme).
-        binning_scheme: String scheme name or mixed segments spec.
-        n_bins: Number of bins for string schemes.
-        bin_range: Range for equidistant edges (mutually exclusive with scheme).
-        equal_number_axis: Axis used for equal-number binning if provided.
-        equal_number_weights: Weights used for equal-number binning if provided.
-        z_ph: Optional photo-z axis used by mixed segments helper.
-        nz_ph: Optional photo-z weights used by mixed segments helper.
-        norm_method: Normalization method for :func:`normalize_1d` when
-            normalizing equal-number weights.
-        normalize_equal_number_weights: If True, normalize the weights used to
-            compute equal-number edges.
+        z_axis: Default axis used when edges are derived from the input range.
+        nz_axis: Default weights used when edges are derived from weights.
+        bin_edges: Explicit bin edges. Mutually exclusive with `binning_scheme`
+            and `n_bins`.
+        binning_scheme: Binning description. May be a scheme name (e.g.
+            `"equidistant"`, `"equal_number"`) or a mixed-segment specification.
+        n_bins: Number of bins for simple scheme names.
+        bin_range: Optional `(min, max)` range for equidistant binning.
+        equal_number_axis: Optional axis used for equal-number binning.
+        equal_number_weights: Optional weights used for equal-number binning.
+        z_ph: Optional axis used by mixed-segment specifications.
+        nz_ph: Optional weights used by mixed-segment specifications.
+        norm_method: Normalization method used when normalizing weights.
+        normalize_equal_number_weights: Whether to normalize the weights used
+            for equal-number binning.
 
     Returns:
-        One-dimensional float array of edges.
+        A 1D array of bin edges.
 
     Raises:
-        ValueError: If inputs are inconsistent (e.g. both edges and scheme).
-        ValueError: If scheme is unsupported or malformed.
+        ValueError: If inputs are inconsistent or the binning specification is
+            not supported.
     """
     z_arr, nz_arr = validate_axis_and_weights(z_axis, nz_axis)
 
@@ -91,7 +78,6 @@ def resolve_bin_edges(
     if binning_scheme is None:
         raise ValueError("bin_edges is None. You must provide binning_scheme.")
 
-    # --- string scheme
     if isinstance(binning_scheme, str):
         if n_bins is None:
             raise ValueError(
@@ -131,7 +117,6 @@ def resolve_bin_edges(
             "'equidistant' (eq/linear) and 'equal_number' (equipopulated/en)."
         )
 
-    # --- mixed segments (sequence or mapping with 'segments')
     if n_bins is not None:
         raise ValueError("In mixed binning mode, set n_bins per segment and leave n_bins=None.")
 
@@ -161,19 +146,19 @@ def validate_bin_edges(
     *,
     require_within: tuple[float, float] | None = None,
 ) -> FloatArray:
-    """Validates bin edges for tomography builders.
+    """Validates a bin-edge array.
 
     Args:
-        bin_edges: Candidate bin edge array.
-        require_within: Optional (min, max) interval that the edges must lie
-            within. Use this for true-z binning; leave None for photo-z edges.
+        bin_edges: Candidate bin edges.
+        require_within: Optional `(min, max)` interval that the edges must lie
+            within.
 
     Returns:
-        Validated bin edge array as float64.
+        A validated 1D array of bin edges as ``float64``.
 
     Raises:
-        ValueError: If edges are not 1D, finite, strictly increasing, or outside
-            the required interval.
+        ValueError: If the edges are not 1D, not finite, not strictly
+            increasing, or fall outside `require_within`.
     """
     be = np.asarray(bin_edges, dtype=float)
 
@@ -207,26 +192,26 @@ def build_bins_on_edges(
     mixer: Callable[[dict[int, FloatArray]], dict[int, FloatArray]] | None = None,
     need_meta: bool,
 ) -> tuple[dict[int, FloatArray], dict[int, float] | None, float | None]:
-    """Builds tomographic bins from edges using a raw-bin callback.
-
-    The callback must return the *raw* (pre-normalization) bin curve on the same
-    ``z`` grid.
+    """Builds tomographic bins on fixed edges.
 
     Args:
-        z: True-z grid.
-        nz_parent_for_meta: Parent curve used for metadata bookkeeping
-            (typically the original nz passed by the user, not per-builder
-            normalized variants).
-        bin_edges: Validated 1D edge array.
-        raw_bin_for_edge: Callback ``(i, zmin, zmax) -> raw_bin(z)``.
-        normalize_bins: Whether to normalize each returned bin.
-        norm_method: Normalization method.
-        mixer: Optional post-processing step applied to the dict of raw bins
-            *before* norms/normalization (e.g. response-matrix mixing).
-        need_meta: Whether to compute parent_norm and bins_norms.
+        z: Redshift grid for all returned curves.
+        nz_parent_for_meta: Parent distribution used for metadata.
+        bin_edges: Validated 1D array of bin edges.
+        raw_bin_for_edge: Callable that returns the raw bin curve for a bin
+            index and edge pair.
+        normalize_bins: Whether to normalize each bin curve.
+        norm_method: Normalization method used when `normalize_bins=True`.
+        mixer: Optional transformation applied to the set of raw bins.
+        need_meta: Whether to compute per-bin norms and the parent norm.
 
     Returns:
-        (bins, bins_norms, parent_norm)
+        A tuple `(bins, bins_norms, parent_norm)`, where `bins` is a mapping
+        of bin index to bin curve, `bins_norms` is the per-bin integral (or
+        `None`), and `parent_norm` is the parent integral (or `None`).
+
+    Raises:
+        ValueError: If a raw bin curve does not match the shape of `z`.
     """
     z_arr = np.asarray(z, dtype=float)
     parent_arr = np.asarray(nz_parent_for_meta, dtype=float)
@@ -284,9 +269,22 @@ def finalize_tomo_metadata(
     include_metadata: bool,
     save_metadata_path: str | None,
 ) -> dict[str, Any] | None:
-    """Build and optionally save tomography metadata.
+    """Builds tomography metadata and optionally writes it to disk.
 
-    Returns None if neither include_metadata nor save_metadata_path is set.
+    Args:
+        kind: Tomography kind label (e.g. `"photoz"`, `"specz"`).
+        z: Redshift grid.
+        parent_nz: Parent redshift distribution.
+        bin_edges: Bin-edge array used to construct the bins.
+        bins: Mapping of bin index to bin curve.
+        inputs: Input settings to record in the metadata.
+        parent_norm: Integral of the parent distribution, if available.
+        bins_norms: Per-bin integrals, if available.
+        include_metadata: Whether to return the metadata dictionary.
+        save_metadata_path: Optional path for writing a text metadata file.
+
+    Returns:
+        Metadata dictionary if requested, otherwise `None`.
     """
     need_meta = include_metadata or (save_metadata_path is not None)
     if not need_meta:

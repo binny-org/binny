@@ -554,7 +554,7 @@ def test_list_survey_presets_filters_suffix(monkeypatch):
         lambda: ["lsst_survey_specs.yaml", "README.txt", "hsc_survey_specs.yaml", "foo.yaml"],
         raising=True,
     )
-    assert NZTomography.list_survey_presets() == ["hsc", "lsst"]
+    assert NZTomography.list_surveys() == ["hsc", "lsst"]
 
 
 def test_registry_is_callable():

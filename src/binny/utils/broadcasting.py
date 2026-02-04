@@ -1,4 +1,4 @@
-"""Utility to broadcast parameters to per-bin arrays."""
+"""Utilities to broadcast parameters to per-bin arrays."""
 
 from __future__ import annotations
 
@@ -45,7 +45,7 @@ def as_per_bin(x: float | int | Sequence | None, n_bins: int, name: str) -> np.n
 
     # Case 3: sequence -> check length
     try:
-        seq = list(x)  # type: ignore[arg-type]
+        seq = list(x)
     except TypeError as err:
         raise TypeError(f"{name} must be scalar, None, or a sequence.") from err
 

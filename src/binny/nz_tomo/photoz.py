@@ -51,11 +51,10 @@ densities, or counts.
 
 from __future__ import annotations
 
-from collections.abc import Mapping, Sequence
-from typing import Any, Literal, TypeAlias
+from collections.abc import Sequence
+from typing import Any, Literal
 
 import numpy as np
-from numpy.typing import NDArray
 from scipy.special import erf
 
 from binny.nz_tomo.binning_core import (
@@ -66,10 +65,8 @@ from binny.nz_tomo.binning_core import (
 )
 from binny.utils.broadcasting import as_per_bin
 from binny.utils.normalization import normalize_1d
+from binny.utils.types import BinningScheme, FloatArray
 from binny.utils.validators import validate_axis_and_weights
-
-FloatArray: TypeAlias = NDArray[np.float64]
-BinningScheme: TypeAlias = str | Sequence[Mapping[str, Any]] | Mapping[str, Any]
 
 __all__ = [
     "build_photoz_bins",
@@ -100,7 +97,42 @@ def build_photoz_bins(
     include_metadata: bool = False,
     save_metadata_path: str | None = None,
 ) -> dict[int, FloatArray] | tuple[dict[int, FloatArray], dict[str, Any]]:
-    """Builds photo-z-selected true-redshift distributions per tomographic bin."""
+    """Builds photo-z-selected true-redshift distributions per tomographic bin.
+
+    Args:
+        z: True-redshift grid.
+        nz: Parent distribution evaluated on ``z``.
+        bin_edges: Optional photo-z bin edges. If not provided, edges are derived
+            from ``binning_scheme``.
+        scatter_scale: Per-bin (or constant scalar) photo-z scatter scale.
+        mean_offset: Per-bin (or constant scalar) photo-z mean offset.
+        binning_scheme: Scheme name or mixed segment specification used to derive
+            bin edges when ``bin_edges`` is not provided.
+        n_bins: Number of bins for simple scheme names.
+        bin_range: Optional photo-z interval used when deriving equidistant edges.
+        mean_scale: Per-bin (or constant scalar) photo-z mean scale.
+        outlier_frac: Per-bin (or constant scalar) outlier mixture fraction.
+        outlier_scatter_scale: Per-bin (or scalar) outlier scatter scale. When
+            provided, enables an outlier component.
+        outlier_mean_offset: Per-bin (or constant scalar) outlier mean offset.
+        outlier_mean_scale: Per-bin (or constant scalar) outlier mean scale.
+        z_ph: Optional photo-z axis used for edge derivation in population-based
+            schemes.
+        nz_ph: Optional photo-z weights evaluated on ``z_ph``.
+        normalize_input: Whether to normalize ``nz`` before computing bins.
+        normalize_bins: Whether to normalize each returned bin curve.
+        norm_method: Integration method used for normalization.
+        include_metadata: Whether to return metadata alongside the bins.
+        save_metadata_path: Optional path for writing metadata.
+
+    Returns:
+        Mapping from bin index to ``n_bin(z)``. If ``include_metadata=True``,
+        returns ``(bins, metadata)``.
+
+    Raises:
+        ValueError: If edge inputs are inconsistent, the binning specification
+            is invalid, or photo-z model parameters are invalid.
+    """
     z_arr, parent_arr0 = validate_axis_and_weights(z, nz)
     need_meta = include_metadata or (save_metadata_path is not None)
 
@@ -108,7 +140,7 @@ def build_photoz_bins(
     if normalize_input:
         parent_arr = normalize_1d(z_arr, parent_arr, method=norm_method)
 
-    # --- optional restriction: define bin edges only within a sub-range
+    # Optional restriction: define bin edges only within a sub-range.
     # Important: do NOT snap to the grid; pass the numeric range through so
     # edges match survey specs exactly (e.g. 0.2..1.2).
     edge_axis = z_ph if z_ph is not None else z_arr
@@ -125,10 +157,12 @@ def build_photoz_bins(
         binning_scheme=binning_scheme,
         n_bins=n_bins,
         bin_range=bin_range,
-        # equal-number in photo-z space if (z_ph, nz_ph) provided, else fallback to (z, nz)
+        # equal-number in photo-z space if (z_ph, nz_ph) provided,
+        # else fallback to (z, nz)
         equal_number_axis=z_ph,
         equal_number_weights=nz_ph,
-        # mixed segments equal-number should also use (z_ph, nz_ph) if provided
+        # mixed segments equal-number should also use (z_ph, nz_ph)
+        # if provided
         z_ph=z_ph,
         nz_ph=nz_ph,
         norm_method=norm_method,
@@ -139,7 +173,7 @@ def build_photoz_bins(
 
     n_bins_eff = int(bin_edges_arr.size - 1)
 
-    # 2) Broadcast per-bin model params (photoz-specific)
+    # 2) Broadcast per-bin model params
     scatter_scale_arr = as_per_bin(scatter_scale, n_bins_eff, "scatter_scale")
     mean_offset_arr = as_per_bin(mean_offset, n_bins_eff, "mean_offset")
     mean_scale_arr = as_per_bin(mean_scale, n_bins_eff, "mean_scale")
@@ -183,7 +217,7 @@ def build_photoz_bins(
         need_meta=need_meta,
     )
 
-    # 5) Metadata (agnostic)
+    # 5) Metadata
     meta = finalize_tomo_metadata(
         kind="photoz",
         z=z_arr,
@@ -231,24 +265,40 @@ def true_redshift_distribution(
     outlier_mean_offset: float = 0.0,
     outlier_mean_scale: float = 1.0,
 ) -> FloatArray:
-    """Computes ``n_bin(z) = n(z) * P(bin | z)`` for one photo-z bin.
+    """Computes the true-redshift distribution for a single photo-z bin.
 
-    ``P(bin | z)`` is computed from a Gaussian core photo-z model, optionally
-    including a second Gaussian outlier component with mixture fraction
-    outlier_frac when outlier_frac > 0 (requires outlier_scatter_scale, which
-    may be 0.0 for deterministic).
+    The photo-z-selected true-redshift distribution is
+    ``n_bin(z) = n(z) * P(bin | z)``,
+    where ``n(z)`` is the parent distribution and ``P(bin | z)` is the
+    probability that an object at true redshift ``z`` falls into the photo-z bin.
+    The probability is modeled with a Gaussian core photo-z relation, with an
+    optional Gaussian outlier component controlled by outlier_frac and the
+    corresponding outlier parameters..
+
+    Args:
+        z: True-redshift grid.
+        nz: Parent distribution evaluated on ``z``.
+        bin_min: Lower photo-z edge for the bin.
+        bin_max: Upper photo-z edge for the bin.
+        scatter_scale: Core photo-z scatter scale.
+        mean_offset: Core photo-z mean offset.
+        mean_scale: Core photo-z mean scale.
+        outlier_frac: Outlier mixture fraction.
+        outlier_scatter_scale: Outlier scatter scale.
+        outlier_mean_offset: Outlier mean offset.
+        outlier_mean_scale: Outlier mean scale.
 
     Returns:
         Photo-z-selected true-redshift distribution evaluated on ``z``.
 
     Raises:
-        ValueError: If mixture fraction is outside [0, 1] or any active scale
-            parameter is non-positive.
+        ValueError: If ``outlier_frac`` is outside [0, 1], if required outlier
+            parameters are missing, or if any active scale parameter is invalid.
     """
     z_arr = np.asarray(z, dtype=float)
     n_arr = np.asarray(nz, dtype=float)
 
-    # --- validate mixture weight
+    # Validate mixture weight
     if not (0.0 <= outlier_frac <= 1.0):
         raise ValueError("outlier_frac must lie in [0, 1].")
 
@@ -258,13 +308,13 @@ def true_redshift_distribution(
             "Use 0.0 for a deterministic (no-uncertainty) outlier component."
         )
 
-    # --- validate core params (always)
+    # Validate core params (always)
     if mean_scale <= 0.0:
         raise ValueError("mean_scale must be > 0.")
     if scatter_scale < 0.0:
         raise ValueError("scatter_scale must be >= 0.")
 
-    # --- validate outlier params ONLY when the outlier component is active
+    # Validate outlier params ONLY when the outlier component is active
     outliers_enabled = outlier_frac > 0.0
     if outliers_enabled:
         if outlier_mean_scale <= 0.0:
@@ -272,7 +322,7 @@ def true_redshift_distribution(
         if outlier_scatter_scale < 0.0:
             raise ValueError("outlier_scatter_scale must be >= 0.")
 
-    # --- core probability
+    # Core probability
     p_core = _bin_prob_gaussian_photoz(
         z_arr,
         bin_min=bin_min,
@@ -282,7 +332,7 @@ def true_redshift_distribution(
         mean_scale=mean_scale,
     )
 
-    # --- optional outliers
+    # Optionally include an outlier component
     if outliers_enabled:
         p_out = _bin_prob_gaussian_photoz(
             z_arr,
@@ -308,7 +358,25 @@ def _bin_prob_gaussian_photoz(
     mean_offset: float,
     mean_scale: float = 1.0,
 ) -> FloatArray:
-    """P(bin | z) for z_ph ~ N(mean_scale*z - mean_offset, scatter_scale*(1+z))."""
+    """Computes the photo-z bin-assignment probability as a function of true redshift.
+
+    Assumes a Gaussian photo-z model with mean ``mean_scale * z - mean_offset`` and
+    scatter ``scatter_scale * (1 + z)``.
+
+    Args:
+        z: True-redshift grid.
+        bin_min: Lower photo-z edge for the bin.
+        bin_max: Upper photo-z edge for the bin.
+        scatter_scale: Photo-z scatter scale.
+        mean_offset: Photo-z mean offset.
+        mean_scale: Photo-z mean scale.
+
+    Returns:
+        Probability of assignment to the photo-z bin for each value of ``z``.
+
+    Raises:
+        ValueError: If ``scatter_scale`` is negative.
+    """
     z_arr = np.asarray(z, dtype=float)
 
     if scatter_scale < 0.0:
@@ -317,7 +385,7 @@ def _bin_prob_gaussian_photoz(
     # Reference convention:
     mu = mean_scale * z_arr - mean_offset
 
-    # no-uncertainty limit: deterministic assignment in photo-z space
+    # No-uncertainty limit: deterministic assignment in photo-z space
     if scatter_scale == 0.0:
         return ((mu >= bin_min) & (mu < bin_max)).astype(np.float64)
 
