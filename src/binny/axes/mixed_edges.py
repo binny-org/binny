@@ -108,6 +108,70 @@ def _call_with(
     return func(**kwargs, n_bins=n_bins)
 
 
+def _maybe_get_range(params: Mapping[str, Any]) -> tuple[float, float] | None:
+    """Extracts a finite segment range from parameters if provided.
+
+    The function looks for ``x_min``/``x_max`` first and falls back to
+    ``z_min``/``z_max`` if needed. If no range keys are present, ``None``
+    is returned.
+
+    Args:
+        params: Segment-level parameter mapping.
+
+    Returns:
+        Tuple ``(lo, hi)`` of finite floats if a valid range is present,
+        otherwise ``None``.
+
+    Raises:
+        ValueError: If a range is provided but is not finite or does not
+            satisfy ``hi > lo``.
+    """
+    lo = params.get("x_min", params.get("z_min"))
+    hi = params.get("x_max", params.get("z_max"))
+    if lo is None or hi is None:
+        return None
+    lo_f = float(lo)
+    hi_f = float(hi)
+    if not np.isfinite(lo_f) or not np.isfinite(hi_f) or not (hi_f > lo_f):
+        raise ValueError(f"Invalid segment range x_min/x_max: ({lo}, {hi}).")
+    return lo_f, hi_f
+
+
+def _slice_axis_weights(
+    seg_i: int,
+    x: np.ndarray,
+    w: np.ndarray,
+    lo: float,
+    hi: float,
+) -> tuple[np.ndarray, np.ndarray]:
+    """Slices a 1D axis and matching weights to an inclusive segment range.
+
+    Args:
+        seg_i: Segment index (used for error messages).
+        x: 1D axis values.
+        w: 1D weights aligned with ``x``.
+        lo: Inclusive lower bound.
+        hi: Inclusive upper bound.
+
+    Returns:
+        Tuple ``(x_s, w_s)`` restricted to ``lo <= x <= hi``.
+
+    Raises:
+        ValueError: If inputs are not 1D and aligned, or the sliced range
+            contains fewer than two points.
+    """
+    x = np.asarray(x, dtype=float)
+    w = np.asarray(w, dtype=float)
+    if x.ndim != 1 or w.ndim != 1 or x.size != w.size:
+        raise ValueError(f"Segment {seg_i}: x/weights must be 1D and same length.")
+    m = (x >= lo) & (x <= hi)
+    xs = x[m]
+    ws = w[m]
+    if xs.size < 2:
+        raise ValueError(f"Segment {seg_i}: range [{lo}, {hi}] contains fewer than 2 x points.")
+    return xs, ws
+
+
 def _validate_segment_edges(
     seg_i: int,
     edges: np.ndarray,
@@ -151,7 +215,8 @@ def mixed_edges(
     chi: Any | None = None,
     total_n_bins: int | None = None,
 ) -> np.ndarray:
-    """Compute bin edges for a mixed binning strategy across multiple segments.
+    """Computes bin edges for a mixed binning strategy across multiple
+    segments.
 
     Each segment specifies a binning method and a number of bins. Segment edge
     arrays are concatenated in order; shared boundaries are de-duplicated (the
@@ -210,12 +275,41 @@ def mixed_edges(
     for i, seg in enumerate(segments):
         method = resolve_binning_method(seg["method"])
         n_bins = int(seg["n_bins"])
-        params: Mapping[str, Any] = seg.get("params", {}) or {}
+
+        # Start from per-segment params, but also allow common range keys to be
+        # provided at the top-level of the segment mapping (robust to adapters).
+        params = dict(seg.get("params", {}) or {})
+        for k in ("x_min", "x_max", "z_min", "z_max"):
+            if k in seg and k not in params:
+                params[k] = seg[k]
 
         spec = _MIXED_SPEC.get(method)
         func = _FUNCS.get(method)
         if spec is None or func is None:
             raise ValueError(f"Unknown binning method {method!r} in mixed_edges.")
+
+        # Restrict equal-number / equal-information methods to the segment range
+        # if the segment provides x_min/x_max (or z_min/z_max).
+        if method in {"equal_number", "equal_information"}:
+            xr = _maybe_get_range(params)
+            if xr is not None:
+                lo, hi = xr
+
+                if method == "equal_number":
+                    x_in = _get(i, params, "x", g.get("x"))
+                    w_in = _get(i, params, "weights", g.get("weights"))
+                    xs, ws = _slice_axis_weights(i, x_in, w_in, lo, hi)
+
+                    params["x"] = xs
+                    params["weights"] = ws
+
+                else:  # equal_information
+                    x_in = _get(i, params, "x", g.get("x"))
+                    info_in = _get(i, params, "info_density", g.get("info_density"))
+                    xs, infos = _slice_axis_weights(i, x_in, info_in, lo, hi)
+
+                    params["x"] = xs
+                    params["info_density"] = infos
 
         edges = _call_with(
             i,
@@ -233,7 +327,6 @@ def mixed_edges(
         all_edges.append(edges if i == 0 else edges[1:])
 
     out = np.concatenate(all_edges, axis=0)
-    # Final sanity check: strictly increasing combined edges
     if out.ndim != 1 or not np.all(np.diff(out) > 0):
         raise ValueError("Combined mixed edges are not strictly increasing.")
     return out

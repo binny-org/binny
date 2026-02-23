@@ -319,7 +319,7 @@ def peak_flags(
     nz_bin: Any,
     *,
     min_rel_height: float = 0.1,
-) -> dict[str, float]:
+) -> dict[str, float | None]:
     """Compute simple peak diagnostics for a single bin curve.
 
     A point is treated as a peak if it is greater than its immediate neighbors.
@@ -330,80 +330,70 @@ def peak_flags(
         - ``"mode_height"``: curve value at the mode.
         - ``"num_peaks"``: number of detected peaks passing the height cut.
         - ``"second_peak_ratio"``: second-highest peak height divided by the highest
-          (0 if no second peak).
-
-    Args:
-        z: One-dimensional redshift grid.
-        nz_bin: Bin curve values evaluated on ``z``.
-        min_rel_height: Minimum peak height as a fraction of the global maximum.
-
-    Returns:
-        Dictionary of peak diagnostics.
-
-    Raises:
-        ValueError: If inputs are invalid.
+          (None if no second peak).
     """
     z_arr, nz_arr = validate_axis_and_weights(z, nz_bin)
 
-    if nz_arr.size < 3:
-        mode = float(z_arr[int(np.nanargmax(nz_arr))])
-        height = float(np.nanmax(nz_arr))
-        return {
-            "mode": mode,
-            "mode_height": height,
-            "num_peaks": 1.0,
-            "second_peak_ratio": 0.0,
-        }
+    i0 = int(np.nanargmax(nz_arr))
+    mode = float(z_arr[i0])
+    maxv = float(nz_arr[i0])
 
-    maxv = float(np.nanmax(nz_arr))
+    # Degenerate / invalid
     if not np.isfinite(maxv) or maxv <= 0.0:
-        mode = float(z_arr[int(np.nanargmax(nz_arr))])
         return {
             "mode": mode,
             "mode_height": float(maxv),
             "num_peaks": 0.0,
-            "second_peak_ratio": 0.0,
+            "second_peak_ratio": None,
         }
 
+    # Too short to define local maxima robustly; treat as single-peaked.
+    if nz_arr.size < 3:
+        return {
+            "mode": mode,
+            "mode_height": float(maxv),
+            "num_peaks": 1.0,
+            "second_peak_ratio": None,
+        }
+
+    # Candidate local maxima indices (1..n-2)
     left = nz_arr[1:-1] > nz_arr[:-2]
     right = nz_arr[1:-1] >= nz_arr[2:]
     peak_idx = np.where(left & right)[0] + 1
 
     if peak_idx.size == 0:
-        i0 = int(np.nanargmax(nz_arr))
         return {
-            "mode": float(z_arr[i0]),
-            "mode_height": float(nz_arr[i0]),
+            "mode": mode,
+            "mode_height": float(maxv),
             "num_peaks": 0.0,
-            "second_peak_ratio": 0.0,
+            "second_peak_ratio": None,
         }
 
     heights = nz_arr[peak_idx]
+
+    # Height cut relative to global maximum (safe under normalization)
     keep = heights >= float(min_rel_height) * maxv
     heights = heights[keep]
 
     if heights.size == 0:
-        i0 = int(np.nanargmax(nz_arr))
         return {
-            "mode": float(z_arr[i0]),
-            "mode_height": float(nz_arr[i0]),
+            "mode": mode,
+            "mode_height": float(maxv),
             "num_peaks": 0.0,
-            "second_peak_ratio": 0.0,
+            "second_peak_ratio": None,
         }
 
     heights_sorted = np.sort(heights)[::-1]
-    i0 = int(np.nanargmax(nz_arr))
-    second_ratio = (
-        float(heights_sorted[1] / heights_sorted[0])
-        if heights_sorted.size >= 2 and heights_sorted[0] > 0.0
-        else 0.0
-    )
+
+    second_ratio: float | None = None
+    if heights_sorted.size >= 2 and heights_sorted[0] > 0.0:
+        second_ratio = float(heights_sorted[1] / heights_sorted[0])
 
     return {
-        "mode": float(z_arr[i0]),
-        "mode_height": float(nz_arr[i0]),
+        "mode": mode,
+        "mode_height": float(maxv),
         "num_peaks": float(heights_sorted.size),
-        "second_peak_ratio": float(second_ratio),
+        "second_peak_ratio": second_ratio,
     }
 
 
@@ -412,7 +402,7 @@ def peak_flags_per_bin(
     bins: Mapping[int, Any],
     *,
     min_rel_height: float = 0.1,
-) -> dict[int, dict[str, float]]:
+) -> dict[int, dict[str, float | None]]:
     """Compute peak diagnostics for each bin curve."""
     return {
         int(i): peak_flags(z, bins[i], min_rel_height=min_rel_height) for i in sorted(bins.keys())
@@ -559,11 +549,19 @@ def shape_stats(
     for i in indices:
         mom = bin_moments(z_arr, bins[i])
         qs = bin_quantiles(z_arr, bins[i], quantiles)
+
+        tail_asymmetry: float | None = None
+        if 0.16 in qs and 0.5 in qs and 0.84 in qs:
+            left = float(qs[0.5] - qs[0.16])
+            right = float(qs[0.84] - qs[0.5])
+            tail_asymmetry = float(right / max(left, 1e-12))
+
         per_bin[i] = {
             "moments": mom,
             "center": float(centers[i]),
             "quantiles": qs,
             "peaks": peaks[i],
+            "tail_asymmetry": tail_asymmetry,
         }
 
     out: dict[str, Any] = {

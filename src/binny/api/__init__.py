@@ -14,3 +14,6 @@ for mod_name in _API_MODULES:
     for name in names:
         globals()[name] = getattr(mod, name)
     __all__.extend(names)
+
+# remove duplicates and make ordering stable
+__all__ = sorted(set(__all__))

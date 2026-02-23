@@ -40,7 +40,7 @@ tomography:
       mean_scale:  [1.00, 1.00, 1.00, 1.00]
 
       # optional outlier mixture (enabled when outlier_scatter_scale is not null)
-      outlier_frac: [0.00, 0.02, 0.03, 0.05]
+      outlier_frac:  [0.00, 0.02, 0.03, 0.05]
 
       # outlier scatter amplitude (null disables per-bin outliers)
       outlier_scatter_scale: [null, 0.20, 0.25, 0.30]

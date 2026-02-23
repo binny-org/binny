@@ -30,6 +30,7 @@ def _raw_bin_tophat(z: np.ndarray):
     z_arr = np.asarray(z, dtype=float)
 
     def raw_bin_for_edge(i: int, zmin: float, zmax: float) -> np.ndarray:
+        _ = i
         mask = (z_arr >= zmin) & (z_arr < zmax)
         return mask.astype(np.float64)
 
@@ -383,6 +384,7 @@ def test_build_bins_on_edges_normalize_bins_yields_unit_integrals_for_nonempty()
     edges = _edges_4bins()
 
     def raw_cb(i: int, a: float, b: float) -> np.ndarray:
+        _ = i
         mask = (z >= a) & (z < b)
         return (nz * mask.astype(float)).astype(np.float64)
 
@@ -431,6 +433,7 @@ def test_build_bins_on_edges_mixer_is_applied_before_norms_and_normalization():
     edges = _edges_4bins()
 
     def raw_cb(i: int, a: float, b: float) -> np.ndarray:
+        _ = i
         mask = (z >= a) & (z < b)
         return (nz * mask.astype(float)).astype(np.float64)
 
@@ -596,3 +599,152 @@ def test_finalize_tomo_metadata_frac_per_bin_none_when_missing_norms_or_parent()
     assert meta1["parent_nz"]["norm"] == pytest.approx(parent_norm)
     assert meta1["bins"]["bins_norms"] is None
     assert meta1["bins"]["frac_per_bin"] is None
+
+
+def test_resolve_bin_edges_equal_number_produces_equal_parent_mass_per_bin():
+    """Tests that equal_number edges equalize the parent integral per bin."""
+    z, nz = _toy_z_nz(n=4001)
+    n_bins = 5
+
+    edges = resolve_bin_edges(
+        z_axis=z,
+        nz_axis=nz,
+        bin_edges=None,
+        binning_scheme="equal_number",
+        n_bins=n_bins,
+    )
+    edges = validate_bin_edges(edges, require_within=(float(z[0]), float(z[-1])))
+
+    total = float(np.trapezoid(nz, x=z))
+    fracs = []
+    for a, b in zip(edges[:-1], edges[1:], strict=False):
+        m = (z >= a) & (z <= b)
+        assert m.sum() >= 2
+        fracs.append(float(np.trapezoid(nz[m], x=z[m]) / total))
+
+    fracs = np.asarray(fracs, dtype=float)
+
+    assert fracs.sum() == pytest.approx(1.0, rel=2e-3)
+    assert np.allclose(fracs, np.full(n_bins, 1.0 / n_bins), atol=2e-3)
+
+
+def test_finalize_tomo_metadata_uniform_parent_tophat_bins_gives_uniform_frac_per_bin():
+    """Tests that uniform parent tophat bins give uniform frac_per_bin."""
+    z = np.linspace(0.0, 2.0, 4001)
+    nz = np.ones_like(z, dtype=float)  # uniform parent
+    n_bins = 4
+    edges = np.linspace(0.0, 2.0, n_bins + 1)
+
+    raw_cb = _raw_bin_tophat(z)
+
+    bins, bins_norms, parent_norm = build_bins_on_edges(
+        z=z,
+        nz_parent_for_meta=nz,
+        bin_edges=edges,
+        raw_bin_for_edge=raw_cb,
+        normalize_bins=True,
+        norm_method="trapezoid",
+        mixer=None,
+        need_meta=True,
+    )
+
+    meta = finalize_tomo_metadata(
+        kind="photoz",
+        z=z,
+        parent_nz=nz,
+        bin_edges=edges,
+        bins=bins,
+        inputs={"binning_scheme": "equidistant", "n_bins": n_bins},
+        parent_norm=parent_norm,
+        bins_norms=bins_norms,
+        include_metadata=True,
+        save_metadata_path=None,
+    )
+
+    frac = meta["bins"]["frac_per_bin"]
+    for i in range(n_bins):
+        assert frac[i] == pytest.approx(1.0 / n_bins, rel=2e-3)
+
+
+def test_resolve_bin_edges_mixed_eq_then_equal_number_segment_properties():
+    z, nz = _toy_z_nz(n=6001)
+
+    segments = [
+        {"scheme": "equidistant", "n_bins": 2, "z_min": 0.0, "z_max": 1.0},
+        {"scheme": "equal_number", "n_bins": 2, "z_min": 1.0, "z_max": 2.0},
+    ]
+
+    edges = resolve_bin_edges(
+        z_axis=z,
+        nz_axis=nz,
+        bin_edges=None,
+        binning_scheme=segments,
+        n_bins=None,
+    )
+    edges = validate_bin_edges(edges, require_within=(0.0, 2.0))
+
+    assert edges.size == 5
+    assert edges[0] == pytest.approx(0.0, abs=1e-12)
+    assert edges[-1] == pytest.approx(2.0, abs=1e-12)
+
+    # Segment 1 widths
+    w0 = edges[1] - edges[0]
+    w1 = edges[2] - edges[1]
+    assert w0 == pytest.approx(0.5, rel=0.0, abs=1e-10)
+    assert w1 == pytest.approx(0.5, rel=0.0, abs=1e-10)
+
+    # Segment 2 equal mass within [1,2]
+    def seg_int(a: float, b: float) -> float:
+        m = (z >= a) & (z <= b)
+        if m.sum() < 2:
+            return 0.0
+        return float(np.trapezoid(nz[m], x=z[m]))
+
+    Iseg = seg_int(1.0, 2.0)
+    Ibin0 = seg_int(edges[2], edges[3])
+    Ibin1 = seg_int(edges[3], edges[4])
+
+    assert Ibin0 / Iseg == pytest.approx(0.5, rel=0.0, abs=2e-3)
+    assert Ibin1 / Iseg == pytest.approx(0.5, rel=0.0, abs=2e-3)
+
+
+def test_resolve_bin_edges_mixed_equal_number_then_eq_segment_properties():
+    z, nz = _toy_z_nz(n=6001)
+
+    segments = [
+        {"scheme": "equal_number", "n_bins": 3, "z_min": 0.0, "z_max": 1.2},
+        {"scheme": "equidistant", "n_bins": 2, "z_min": 1.2, "z_max": 2.0},
+    ]
+
+    edges = resolve_bin_edges(
+        z_axis=z,
+        nz_axis=nz,
+        bin_edges=None,
+        binning_scheme=segments,
+        n_bins=None,
+    )
+    edges = validate_bin_edges(edges, require_within=(0.0, 2.0))
+
+    assert edges.size == 6
+    assert edges[0] == pytest.approx(0.0, abs=1e-12)
+    assert edges[-1] == pytest.approx(2.0, abs=1e-12)
+
+    # locate join robustly
+    j = int(np.argmin(np.abs(edges - 1.2)))
+    assert edges[j] == pytest.approx(1.2, rel=0.0, abs=1e-10)
+
+    wA = edges[j + 1] - edges[j]
+    wB = edges[j + 2] - edges[j + 1]
+    assert wA == pytest.approx(wB, rel=0.0, abs=1e-10)
+
+    # Segment 1 equal mass within [0,1.2]
+    def seg_int(a: float, b: float) -> float:
+        m = (z >= a) & (z <= b)
+        if m.sum() < 2:
+            return 0.0
+        return float(np.trapezoid(nz[m], x=z[m]))
+
+    Iseg = seg_int(0.0, 1.2)
+    ints = [seg_int(edges[i], edges[i + 1]) for i in range(3)]
+    for Ii in ints:
+        assert Ii / Iseg == pytest.approx(1.0 / 3.0, rel=0.0, abs=2e-3)

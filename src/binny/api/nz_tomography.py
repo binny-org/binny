@@ -12,7 +12,7 @@ repeating the setup.
 
 from __future__ import annotations
 
-from collections.abc import Mapping
+from collections.abc import Callable, Mapping, Sequence
 from pathlib import Path
 from typing import Any
 
@@ -20,16 +20,32 @@ import numpy as np
 
 import binny.nz_tomo.bin_similarity as _bin_sim
 import binny.surveys.config_utils as cu
+from binny.correlations.bin_combo_filter import (
+    BinComboFilter,
+    _available_metric_kernels,
+    _register_metric_kernel,
+)
 from binny.nz.registry import available_models as _available_nz_models
 from binny.nz.registry import nz_model as _nz_model
+from binny.nz_tomo._tomography_bins import TomographyBins
 from binny.nz_tomo.bin_stats import population_stats as _population_stats
 from binny.nz_tomo.bin_stats import shape_stats as _shape_stats
 
-__all__ = ["NZTomography"]
+__all__ = [
+    "NZTomography",
+    "available_metric_kernels",
+    "register_metric_kernel",
+]
 
 
 class NZTomography:
-    """User-facing tomography wrapper with minimal surface area."""
+    """Builds and caches tomographic n(z) bins with a small public API.
+
+    An instance caches the most recent parent distribution (z, nz),
+    the tomography settings used to build the bins, the constructed bin curves,
+    and optional metadata. This lets follow-up calls (stats, comparisons,
+    combo filtering) reuse the same build without re-parsing inputs.
+    """
 
     def __init__(self) -> None:
         """Initialize an empty cache."""
@@ -38,31 +54,34 @@ class NZTomography:
 
     @staticmethod
     def nz_model(name: str, z: Any, /, **params: Any) -> np.ndarray:
-        """Evaluates a registered parent redshift-distribution model.
+        """Computes a registered parent n(z) model on a redshift grid.
 
-        This is a convenience wrapper around the n(z) registry. It evaluates the named
-        model on the provided redshift grid and returns the resulting array.
+        This is a convenience wrapper around the n(z) registry. It computes the
+        named model on the provided redshift grid and returns the resulting
+        array.
 
         Args:
             name: Name of a registered n(z) model.
-            z: Redshift grid (array-like) where the model is evaluated.
-            **params: Model-specific parameters forwarded to the registered implementation.
+            z: Redshift grid (array-like) to compute the model on.
+            **params: Model-specific parameters passed to the registered
+                implementation.
 
         Returns:
-            Array of model values evaluated on ``z``.
+            Model values on ``z``.
 
         Raises:
-            ValueError: If the model name is unknown or the provided parameters are invalid
-                for the requested model.
+            ValueError: If the model name is unknown or the provided parameters
+                are invalid for the requested model.
         """
         return _nz_model(name, z, **params)
 
     @staticmethod
     def list_nz_models() -> list[str]:
-        """List available registered n(z) model names.
+        """Lists available registered n(z) model names.
 
-        Returns the set of model identifiers currently registered with the n(z) registry.
-        This is useful for discovery and for validating configuration inputs.
+        Returns the set of model identifiers currently registered with the n(z)
+        registry. This is useful for discovery and for validating
+        configuration inputs.
 
         Returns:
             A sorted list of registered n(z) model names.
@@ -73,10 +92,10 @@ class NZTomography:
     def list_surveys() -> list[str]:
         """List available shipped survey preset names.
 
-        Survey presets are YAML configuration files shipped with the package, following
-        the naming convention ``<preset>_survey_specs.yaml``. This method returns the
-        available preset base names (without the suffix), suitable for passing to
-        :meth:`build_survey_bins`.
+        Survey presets are YAML configuration files shipped with the package,
+        following the naming convention ``<preset>_survey_specs.yaml``. This
+        method returns the available preset base names (without the suffix),
+        suitable for passing to :meth:`build_survey_bins`.
 
         Returns:
             A sorted list of available survey preset base names.
@@ -88,8 +107,34 @@ class NZTomography:
                 presets.append(s.removesuffix("_survey_specs.yaml"))
         return sorted(set(presets))
 
+    @property
+    def z(self) -> np.ndarray:
+        """True-redshift grid from the most recent build.
+
+        Returns:
+            The cached redshift grid used to build the parent n(z) and bins.
+
+        Raises:
+            ValueError: If no build has been performed yet.
+        """
+        self._require_state()
+        return self._parent["z"]
+
+    @property
+    def nz(self) -> np.ndarray:
+        """Parent n(z) from the most recent build.
+
+        Returns:
+            The cached parent distribution evaluated on :attr:`z`.
+
+        Raises:
+            ValueError: If no build has been performed yet.
+        """
+        self._require_state()
+        return self._parent["nz"]
+
     def clear(self) -> None:
-        """Clears the internal cache."""
+        """Clears the cached parent distribution, spec, bins, and metadata."""
         self._parent = None
         self._state = None
 
@@ -108,12 +153,12 @@ class NZTomography:
         overrides: Mapping[str, Any] | None = None,
         include_survey_metadata: bool = False,
         include_tomo_metadata: bool = False,
-    ) -> dict[str, Any]:
-        """Build tomographic bins from a config, mapping, or explicit arrays.
+    ) -> TomographyBins:
+        """Builds tomographic bins from a config, mapping, or explicit arrays.
 
-        Given either a survey configuration or direct ``(z, nz)`` arrays, this method
-        constructs the corresponding tomographic bins and returns the resulting bin
-        distributions along with the relevant inputs.
+        Given either a survey configuration or direct ``(z, nz)`` arrays, this
+        method constructs the corresponding tomographic bins and returns the
+        resulting bin distributions along with the relevant inputs.
 
         Exactly one of the following input modes must be used:
         - ``config_file=...`` (optionally with ``key=...``),
@@ -121,21 +166,26 @@ class NZTomography:
         - ``(z=..., nz=..., tomo_spec=...)`` (explicit arrays plus a spec mapping).
 
         Args:
-            config_file: Path to a YAML config file. If provided, the tomography entry is
-                selected from the file (optionally using ``key``).
+            config_file: Path to a YAML config file. If provided, the
+                tomography entry is selected from the file
+                (optionally using ``key``).
             cfg: In-memory config mapping using the same schema as the YAML files.
             z: True-redshift grid. Used only in the explicit arrays mode.
-            nz: Parent distribution evaluated on ``z``. Used only in the explicit arrays mode.
+            nz: Parent distribution evaluated on ``z``. Used only in the
+                explicit arrays mode.
             tomo_spec: Tomography specification mapping for the explicit arrays mode.
             key: Optional entry key when selecting an item from a config file.
-            role: Optional selector for a tomography entry (e.g., "lens" or "source").
+            role: Optional selector for a tomography entry
+                (e.g., "lens" or "source").
             year: Optional selector for a tomography entry (e.g., "1", "10").
             kind: Optional tomography kind override ("photoz" or "specz").
-            overrides: Optional mapping of values merged into the resolved tomography spec.
+            overrides: Optional mapping of values merged into the resolved
+                tomography spec.
                 Nested mappings are merged shallowly at the first level.
-            include_survey_metadata: Whether to include survey-level metadata in the output
-                when building from a config file or mapping.
-            include_tomo_metadata: Whether to request tomography metadata from the builder.
+            include_survey_metadata: Whether to include survey-level metadata
+                in the output when building from a config file or mapping.
+            include_tomo_metadata: Whether to request tomography metadata
+                from the builder.
 
         Returns:
             A dictionary with keys:
@@ -206,14 +256,15 @@ class NZTomography:
         self._state["tomo_spec"] = spec
 
         # 6) Return output
-        return {
-            "z": self._parent["z"],
-            "nz": self._parent["nz"],
-            "spec": dict(spec),
-            "bins": bins,
-            "tomo_meta": tomo_meta,
-            "survey_meta": self._parent.get("survey_meta") if include_survey_metadata else None,
-        }
+        return TomographyBins(
+            z=self._parent["z"],
+            nz=self._parent["nz"],
+            spec=dict(spec),
+            bins=bins,
+            tomo_meta=tomo_meta,
+            survey_meta=self._parent.get("survey_meta") if include_survey_metadata else None,
+            survey=None,
+        )
 
     def build_survey_bins(
         self,
@@ -225,10 +276,9 @@ class NZTomography:
         overrides: Mapping[str, Any] | None = None,
         include_survey_metadata: bool = False,
         include_tomo_metadata: bool = False,
-        include_stats: bool = False,
         config_file: str | Path | None = None,
-    ) -> dict[str, Any]:
-        """Build tomographic bins from a shipped survey preset.
+    ) -> TomographyBins:
+        """Builds tomographic bins from a built-in survey preset.
 
         This method loads the configuration for a given survey preset, builds the
         corresponding tomographic bins, and returns the resulting bin distributions.
@@ -241,14 +291,11 @@ class NZTomography:
             overrides: Optional mapping merged into the resolved tomography spec.
             include_survey_metadata: Whether to include survey-level metadata in the output.
             include_tomo_metadata: Whether to include tomography metadata in the output.
-            include_stats: Whether to compute and include shape/population statistics.
             config_file: Optional explicit path to a survey-spec YAML file. If provided, it
                 is used instead of resolving a shipped preset.
 
         Returns:
-            A output dictionary as returned by :meth:`build_bins`, with additional keys:
-            - ``"survey"``: normalized survey name,
-            - ``"shape_stats"`` and ``"population_stats"`` when ``include_stats=True``.
+            Returns a TomographyBins handle which has shape_stats() and population_stats() methods.
 
         Raises:
             FileNotFoundError: If the requested preset name does not resolve to a shipped file.
@@ -265,11 +312,7 @@ class NZTomography:
                     f"Expected {filename!r}. Available: {cu.list_configs()}"
                 ) from e
 
-        # If user wants stats, we must have tomo_meta.
-        if include_stats:
-            include_tomo_metadata = True
-
-        output = self.build_bins(
+        result = self.build_bins(
             config_file=config_file,
             role=role,
             year=year,
@@ -278,19 +321,14 @@ class NZTomography:
             include_survey_metadata=include_survey_metadata,
             include_tomo_metadata=include_tomo_metadata,
         )
-        output["survey"] = _norm_str(survey)
-
-        if include_stats:
-            output["shape_stats"] = self.shape_stats()
-            output["population_stats"] = self.population_stats()
-
-        return output
+        return result.with_survey(_norm_str(survey))
 
     def shape_stats(self, **kwargs: Any) -> dict[str, Any]:
-        """Compute shape statistics for the cached bins.
+        """Computes shape statistics for the cached bins.
 
-        This is a thin wrapper around :func:`binny.nz_tomo.bin_stats.shape_stats` using
-        the cached parent redshift grid and bins from the most recent build.
+        Shape statistics summarize the structure of each bin’s redshift distribution
+        (e.g. bin moments, centers, etc.) using the parent
+        redshift grid and the most recently built bins.
 
         Args:
             **kwargs: Additional keyword arguments forwarded to the underlying stats
@@ -308,9 +346,9 @@ class NZTomography:
     def population_stats(self, **kwargs: Any) -> dict[str, Any]:
         """Compute population statistics for the cached bins.
 
-        Population statistics require tomography metadata (e.g., per-bin raw integrals
-        and parent normalization). This method uses the cached bins and cached metadata
-        from the most recent build.
+        Population statistics describe how galaxies are distributed across bins,
+        including quantities related to bin occupancy and normalization relative
+        to the parent redshift distribution.
 
         Args:
             **kwargs: Additional keyword arguments forwarded to the underlying stats
@@ -340,8 +378,9 @@ class NZTomography:
     ) -> dict[str, Any]:
         """Compute a bundle of cross-bin similarity and diagnostic matrices.
 
-        This method operates on the cached bins and returns any requested matrices,
-        skipping sections whose argument is ``None``.
+        This returns quantitative comparisons between tomographic bins, such as how
+        much two bins overlap in redshift, how strongly their shapes co-vary, and
+        (optionally) how much probability mass leaks across a set of bin edges.
 
         Args:
             overlap: Keyword arguments for overlap metrics, or ``None`` to skip.
@@ -351,7 +390,7 @@ class NZTomography:
             pearson: Keyword arguments for Pearson correlation computation, or ``None`` to skip.
 
         Returns:
-            A dictionary containing a subset of keys ``"overlap"``, ``"pairs"``,
+            A dictionary containing a subset of keys ``"overlap"``, ``"correlations"``,
             ``"leakage"``, and ``"pearson"``.
 
         Raises:
@@ -368,7 +407,7 @@ class NZTomography:
             out["overlap"] = _bin_sim.bin_overlap(z, bins, **dict(overlap))
 
         if pairs is not None:
-            out["pairs"] = _bin_sim.overlap_pairs(z, bins, **dict(pairs))
+            out["correlations"] = _bin_sim.overlap_pairs(z, bins, **dict(pairs))
 
         if leakage is not None:
             kw = dict(leakage)
@@ -381,6 +420,113 @@ class NZTomography:
             out["pearson"] = _bin_sim.pearson_matrix(z, bins, **dict(pearson))
 
         return out
+
+    def _make_bin_combo_filter(
+        self,
+        other: NZTomography | None = None,
+        *,
+        curves: Sequence[Mapping[int, Any]] | None = None,
+    ) -> BinComboFilter:
+        """Create a bin-combination filter on the cached redshift grid.
+
+        This constructs a :class:`~binny.correlations.bin_combo_filter.BinComboFilter`
+        preloaded with a shared redshift grid and one bin-curve mapping per tuple
+        position (slot). The resulting filter can generate index combinations
+        (pairs, triplets, …) and apply curve-based selections (scores, overlaps,
+        custom metrics).
+
+        By default, the filter is wired for within-sample comparisons using this
+        instance’s cached bins in both slots. If ``other`` is provided, the filter
+        is wired for cross-sample comparisons with ``self`` in slot 0 and ``other``
+        in slot 1. Advanced callers may pass ``curves`` to explicitly control the
+        per-slot curve mappings.
+
+        Args:
+            other: Optional second tomography instance to compare against.
+            curves: Optional explicit per-slot mapping(s) from bin index to curve.
+
+        Returns:
+            A configured :class:`~binny.correlations.bin_combo_filter.BinComboFilter`
+            ready for topology building and filtering.
+
+        Raises:
+            ValueError: If bins are not cached, or if cross-sample filtering is
+                requested but the two instances do not share the same redshift grid.
+        """
+        self._require_bins()
+        z = self._parent["z"]
+        bins_a = self._state["bins"]
+
+        if curves is not None:
+            return BinComboFilter(z=z, curves=list(curves))
+
+        if other is None:
+            return BinComboFilter(z=z, curves=[bins_a, bins_a])
+
+        other._require_bins()
+        z2 = other._parent["z"]
+        if np.asarray(z).shape != np.asarray(z2).shape or not np.allclose(z, z2):
+            raise ValueError("Combo filter requires a shared z grid; build both on the same z.")
+
+        bins_b = other._state["bins"]
+        return BinComboFilter(z=z, curves=[bins_a, bins_b])
+
+    def bin_combo_filter(
+        self,
+        spec: Mapping[str, Any],
+        other: NZTomography | None = None,
+    ) -> list[tuple[int, ...]]:
+        """Select bin-index combinations using a combo-filter specification.
+
+        This is a high-level entry point for “give me the bin pairs/tuples that
+        satisfy these criteria.” It constructs a
+        :class:`~binny.correlations.bin_combo_filter.BinComboFilter` on the
+        cached bins (optionally using a second tomography instance for
+        cross-sample comparisons), applies the provided selection spec, and returns
+        the resulting index tuples.
+
+        Args:
+            spec: Selection specification for topology + ordered filters.
+            other: Optional second tomography instance for cross-sample selections.
+
+        Returns:
+            A list of index tuples representing the selected bin combinations.
+
+        Raises:
+            ValueError: If bins are not cached, or if cross-sample filtering is
+                requested but the two instances do not share the same redshift grid.
+            KeyError: If the selection spec references an unknown topology, filter,
+                or metric kernel.
+            TypeError: If the selection spec has an unexpected structure.
+        """
+        f = self._make_bin_combo_filter(other)
+        return f.select(spec).values()
+
+    @property
+    def bins(self) -> Mapping[int, np.ndarray]:
+        """Mapping of bin index to bin curve from the most recent build.
+
+        Returns:
+            Mapping from integer bin index to the corresponding bin n(z) array.
+
+        Raises:
+            ValueError: If bins have not been built yet (call :meth:`build_bins`).
+        """
+        self._require_bins()
+        return self._state["bins"]
+
+    @property
+    def bin_keys(self) -> list[int]:
+        """Bin indices for the most recent build, in mapping insertion order.
+
+        Returns:
+            List of integer bin indices in the same order they appear in ``bins``.
+
+        Raises:
+            ValueError: If bins have not been built yet (call :meth:`build_bins`).
+        """
+        self._require_bins()
+        return list(self._state["bins"].keys())
 
     def _load_parent_and_spec(
         self,
@@ -535,6 +681,28 @@ class NZTomography:
 
             return build_specz_bins
         raise ValueError(f"Unknown tomography kind {k!r}.")
+
+
+def available_metric_kernels() -> list[str]:
+    """List registered metric-kernel names for combo-filter specs."""
+    return _available_metric_kernels()
+
+
+def register_metric_kernel(name: str, func: Callable[..., float]) -> None:
+    """Register a metric kernel for use in combo-filter specs.
+
+    The name is referenced in selection specs via::
+
+        {"name": "metric", "metric": "<name>", "threshold": ..., "compare": ...}
+
+    Args:
+        name: Kernel identifier used in selection specs.
+        func: Callable that receives one curve per slot and returns a float.
+
+    Raises:
+        ValueError: If ``name`` is already registered.
+    """
+    _register_metric_kernel(name, func)
 
 
 def _norm_str(x: Any) -> str:

@@ -124,7 +124,7 @@ def test_overlap_pairs_rejects_bad_direction():
 
 
 def test_overlap_pairs_high_threshold_returns_sorted_pairs():
-    """Tests that overlap_pairs returns sorted pairs for direction='high'."""
+    """Tests that overlap_pairs returns sorted correlations for direction='high'."""
     z, bins = _z_and_bins()
     out = overlap_pairs(
         z,
@@ -140,7 +140,7 @@ def test_overlap_pairs_high_threshold_returns_sorted_pairs():
 
 
 def test_overlap_pairs_low_threshold_returns_sorted_pairs():
-    """Tests that overlap_pairs returns sorted pairs for direction='low'."""
+    """Tests that overlap_pairs returns sorted correlations for direction='low'."""
     z, bins = _z_and_bins()
     out = overlap_pairs(
         z,
@@ -180,7 +180,7 @@ def test_leakage_matrix_from_edges_array_expected_values():
 
 
 def test_leakage_matrix_from_edges_mapping_expected_values():
-    """Tests that leakage_matrix accepts explicit mapping of edge pairs."""
+    """Tests that leakage_matrix accepts explicit mapping of edge correlations."""
     z, bins = _z_and_bins()
     edges = {0: (0.0, 1.0), 1: (1.0, 2.0), 2: (2.0, 3.0)}
     leak = leakage_matrix(z, bins, edges, unit="fraction")

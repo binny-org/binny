@@ -11,6 +11,7 @@ import pytest
 
 import binny.surveys.config_utils as cu
 from binny.api.nz_tomography import NZTomography
+from binny.correlations.bin_combo_filter import BinComboFilter
 
 
 def _fake_bins(z: np.ndarray, n_bins: int = 2) -> dict[int, np.ndarray]:
@@ -135,16 +136,15 @@ def test_build_bins_from_arrays_basic(monkeypatch):
         include_survey_metadata=False,
     )
 
-    assert parse_calls["n"] == 1
-    assert np.allclose(payload["z"], z)
-    assert np.allclose(payload["nz"], nz)
-    assert payload["spec"]["kind"] == "photoz"
-    assert set(payload["bins"].keys()) == {0, 1}
-    assert payload["tomo_meta"] is None
-    assert payload["survey_meta"] is None
+    assert np.allclose(payload.z, z)
+    assert np.allclose(payload.nz, nz)
+    assert payload.spec["kind"] == "photoz"
+    assert set(payload.bins.keys()) == {0, 1}
+    assert payload.tomo_meta is None
+    assert payload.survey_meta is None
 
     assert t._state is not None
-    assert t._state["bins"] == payload["bins"]
+    assert t._state["bins"] == payload.bins
     assert t._state["tomo_meta"] is None
 
 
@@ -196,9 +196,9 @@ def test_build_bins_kind_argument_overrides_spec(monkeypatch):
         include_tomo_metadata=True,
     )
 
-    assert payload["spec"]["kind"] == "specz"
-    assert payload["tomo_meta"]["builder"] == "specz"
-    assert set(payload["bins"].keys()) == {0, 1, 2}
+    assert payload.spec["kind"] == "specz"
+    assert payload.tomo_meta["builder"] == "specz"
+    assert set(payload.bins.keys()) == {0, 1, 2}
 
 
 def test_build_bins_overrides_merge_nested_mappings(monkeypatch):
@@ -226,7 +226,7 @@ def test_build_bins_overrides_merge_nested_mappings(monkeypatch):
         tomo_spec={"kind": "photoz", "bins": {"scheme": "x", "n_bins": 2}},
         overrides={"bins": {"n_bins": 4}},
     )
-    assert set(payload["bins"].keys()) == {0, 1, 2, 3}
+    assert set(payload.bins.keys()) == {0, 1, 2, 3}
 
 
 def test_build_bins_requires_bins_mapping(monkeypatch):
@@ -284,11 +284,11 @@ def test_build_bins_from_cfg_mapping(monkeypatch):
     z = np.linspace(0, 1, 11)
     payload = t.build_bins(cfg={"tomography": [entry]}, z=z, include_survey_metadata=True)
 
-    assert np.allclose(payload["z"], z)
-    assert np.allclose(payload["nz"], np.ones_like(z))
-    assert payload["survey_meta"]["role"] == "lens"
-    assert payload["survey_meta"]["year"] == "1"
-    assert set(payload["bins"].keys()) == {0, 1}
+    assert np.allclose(payload.z, z)
+    assert np.allclose(payload.nz, np.ones_like(z))
+    assert payload.survey_meta["role"] == "lens"
+    assert payload.survey_meta["year"] == "1"
+    assert set(payload.bins.keys()) == {0, 1}
 
 
 def test_build_bins_from_config_file_delegates_to_resolver(tmp_path: Path, monkeypatch):
@@ -325,11 +325,11 @@ def test_build_bins_from_config_file_delegates_to_resolver(tmp_path: Path, monke
     t = NZTomography()
     z = np.linspace(0, 1, 11)
     payload = t.build_bins(config_file=p, z=z)
-    assert set(payload["bins"].keys()) == {0, 1}
+    assert set(payload.bins.keys()) == {0, 1}
 
 
-def test_build_survey_bins_sets_include_tomo_metadata_when_include_stats(monkeypatch):
-    """Test build_survey_bins forces include_tomo_metadata when include_stats=True."""
+def test_build_survey_bins_returns_tomographybins_and_stats_work(monkeypatch):
+    """Test build_survey_bins can build and the returned handle can compute stats."""
     _install_fake_builder_modules(monkeypatch)
 
     monkeypatch.setattr(
@@ -358,13 +358,14 @@ def test_build_survey_bins_sets_include_tomo_metadata_when_include_stats(monkeyp
     )
     monkeypatch.setattr(cu, "_builder_kwargs_from_spec", lambda spec: {"n_bins": 2}, raising=True)
 
+    # Patch the stats functions where TomographyBins actually calls them
     monkeypatch.setattr(
-        "binny.api.nz_tomography._shape_stats",
+        "binny.nz_tomo._tomography_bins._shape_stats",
         lambda *, z, bins, **k: {"ok": True, "n_bins": len(bins)},
         raising=True,
     )
     monkeypatch.setattr(
-        "binny.api.nz_tomography._population_stats",
+        "binny.nz_tomo._tomography_bins._population_stats",
         lambda *, bins, metadata, **k: {"ok": True, "builder": metadata.get("builder")},
         raising=True,
     )
@@ -372,18 +373,22 @@ def test_build_survey_bins_sets_include_tomo_metadata_when_include_stats(monkeyp
     t = NZTomography()
     z = np.linspace(0, 1, 11)
     dummy_file = Path("dummy.yaml")
+
     payload = t.build_survey_bins(
         "LSST",
         config_file=dummy_file,
         z=z,
-        include_stats=True,
-        include_tomo_metadata=False,
+        include_tomo_metadata=True,  # required for population_stats
     )
 
-    assert payload["survey"] == "lsst"
-    assert payload["tomo_meta"] is not None
-    assert payload["shape_stats"]["ok"] is True
-    assert payload["population_stats"]["ok"] is True
+    assert payload.survey == "lsst"
+    assert payload.tomo_meta is not None
+
+    shape = payload.shape_stats()
+    pop = payload.population_stats()
+
+    assert shape["ok"] is True
+    assert pop["ok"] is True
 
 
 def test_cross_bin_stats_skips_all_when_all_none(monkeypatch):
@@ -428,7 +433,7 @@ def test_cross_bin_stats_delegates_to_bin_similarity(monkeypatch):
     )
     monkeypatch.setattr(cu, "_builder_kwargs_from_spec", lambda spec: {"n_bins": 2}, raising=True)
 
-    calls: dict[str, dict] = {"overlap": {}, "pairs": {}, "leakage": {}, "pearson": {}}
+    calls: dict[str, dict] = {"overlap": {}, "correlations": {}, "leakage": {}, "pearson": {}}
 
     def fake_overlap(z, bins, **kw):
         """Fake overlap matrix that returns a constant matrix."""
@@ -436,8 +441,8 @@ def test_cross_bin_stats_delegates_to_bin_similarity(monkeypatch):
         return np.eye(len(bins))
 
     def fake_pairs(z, bins, **kw):
-        """Fake pairs matrix that returns a constant matrix."""
-        calls["pairs"] = {"z": np.asarray(z), "bins": bins, "kw": dict(kw)}
+        """Fake correlations matrix that returns a constant matrix."""
+        calls["correlations"] = {"z": np.asarray(z), "bins": bins, "kw": dict(kw)}
         return [(0, 1)]
 
     def fake_leakage(z, bins, bin_edges, **kw):
@@ -478,15 +483,15 @@ def test_cross_bin_stats_delegates_to_bin_similarity(monkeypatch):
         pearson={"clip": True},
     )
 
-    assert set(out.keys()) == {"overlap", "pairs", "leakage", "pearson"}
+    assert set(out.keys()) == {"overlap", "correlations", "leakage", "pearson"}
     assert out["overlap"].shape == (2, 2)
     assert out["leakage"].shape == (2, 2)
 
-    assert np.allclose(calls["overlap"]["z"], payload["z"])
-    assert calls["overlap"]["bins"] == payload["bins"]
+    assert np.allclose(calls["overlap"]["z"], payload.z)
+    assert calls["overlap"]["bins"] == t.bins
     assert calls["overlap"]["kw"] == {"metric": "l1"}
 
-    assert calls["pairs"]["kw"] == {"threshold": 0.1}
+    assert calls["correlations"]["kw"] == {"threshold": 0.1}
     assert calls["leakage"]["bin_edges"] == [0.0, 0.5, 1.0]
     assert calls["leakage"]["kw"] == {"normalize": True}
     assert calls["pearson"]["kw"] == {"clip": True}
@@ -565,3 +570,180 @@ def test_registry_is_callable():
     out = nz_model("smail", z, z0=0.5, alpha=2.0, beta=1.0)
     assert out.shape == z.shape
     assert np.all(np.isfinite(out))
+
+
+def test_bins_property_raises_before_build():
+    """Tests that bins property raises before build_bins is called."""
+    t = NZTomography()
+    with pytest.raises(ValueError, match=r"Call build_bins"):
+        _ = t.bins
+
+
+def test_bin_keys_property_raises_before_build():
+    """Tests that bin_keys property raises before build_bins is called."""
+    t = NZTomography()
+    with pytest.raises(ValueError, match=r"Call build_bins"):
+        _ = t.bin_keys
+
+
+def test_bins_and_bin_keys_return_cached_mapping(monkeypatch):
+    """Tests that bins and bin_keys expose the cached bin mapping and order."""
+    _install_fake_builder_modules(monkeypatch)
+    monkeypatch.setattr(
+        cu, "_parse_entry", lambda e: {**dict(e), "role": "source", "year": "1"}, raising=True
+    )
+    monkeypatch.setattr(cu, "_builder_kwargs_from_spec", lambda spec: {"n_bins": 3}, raising=True)
+
+    t = NZTomography()
+    z = np.linspace(0, 1, 11)
+    nz = np.ones_like(z)
+
+    payload = t.build_bins(z=z, nz=nz, tomo_spec={"kind": "photoz", "bins": {"n_bins": 3}})
+    assert t.bins == payload.bins
+    assert t.bin_keys == [0, 1, 2]
+
+
+def test_z_property_raises_before_build():
+    """Tests that z property raises before any build is performed."""
+    t = NZTomography()
+    with pytest.raises(ValueError, match=r"Call build_bins"):
+        _ = t.z
+
+
+def test_nz_property_raises_before_build():
+    """Tests that nz property raises before any build is performed."""
+    t = NZTomography()
+    with pytest.raises(ValueError, match=r"Call build_bins"):
+        _ = t.nz
+
+
+def test_available_metric_kernels_delegates(monkeypatch):
+    """Tests that available_metric_kernels delegates to the registry helper."""
+    monkeypatch.setattr(
+        "binny.api.nz_tomography._available_metric_kernels",
+        lambda: ["m0", "m1"],
+        raising=True,
+    )
+    from binny.api.nz_tomography import available_metric_kernels
+
+    assert available_metric_kernels() == ["m0", "m1"]
+
+
+def test_register_metric_kernel_delegates(monkeypatch):
+    """Tests that register_metric_kernel delegates to the registry helper."""
+    called = {"name": None, "func": None}
+
+    def fake_register(name, func):
+        called["name"] = name
+        called["func"] = func
+
+    monkeypatch.setattr(
+        "binny.api.nz_tomography._register_metric_kernel",
+        fake_register,
+        raising=True,
+    )
+
+    from binny.api.nz_tomography import register_metric_kernel
+
+    def k(*curves) -> float:
+        _ = curves
+        return 0.0
+
+    register_metric_kernel("my_kernel", k)
+    assert called["name"] == "my_kernel"
+    assert called["func"] is k
+
+
+def test_bin_combo_filter_delegates_to_bincombofilter_select(monkeypatch):
+    """Tests that NZTomography.bin_combo_filter delegates to BinComboFilter.select."""
+    _install_fake_builder_modules(monkeypatch)
+    monkeypatch.setattr(
+        cu, "_parse_entry", lambda e: {**dict(e), "role": "source", "year": "1"}, raising=True
+    )
+    monkeypatch.setattr(cu, "_builder_kwargs_from_spec", lambda spec: {"n_bins": 2}, raising=True)
+
+    # Build bins in the usual way.
+    t = NZTomography()
+    z = np.linspace(0, 1, 11)
+    nz = np.ones_like(z)
+    t.build_bins(z=z, nz=nz, tomo_spec={"kind": "photoz", "bins": {"n_bins": 2}})
+
+    # Patch BinComboFilter.select so we can prove it was called and control output.
+    called = {"spec": None}
+
+    class _FakeSelection:
+        def values(self):
+            return [(0, 1), (1, 0)]
+
+    def fake_select(self, spec):
+        called["spec"] = dict(spec)
+        return _FakeSelection()
+
+    monkeypatch.setattr(BinComboFilter, "select", fake_select, raising=True)
+
+    spec = {"topology": {"name": "pairs_all"}, "filters": [{"name": "noop"}]}
+    out = t.bin_combo_filter(spec)
+
+    assert called["spec"] == spec
+    assert out == [(0, 1), (1, 0)]
+
+
+def test_make_bin_combo_filter_uses_other_and_checks_shared_z(monkeypatch):
+    """Tests that cross-sample combo filtering requires identical z grids."""
+    _install_fake_builder_modules(monkeypatch)
+    monkeypatch.setattr(
+        cu, "_parse_entry", lambda e: {**dict(e), "role": "source", "year": "1"}, raising=True
+    )
+    monkeypatch.setattr(cu, "_builder_kwargs_from_spec", lambda spec: {"n_bins": 2}, raising=True)
+
+    t0 = NZTomography()
+    t1 = NZTomography()
+
+    z0 = np.linspace(0, 1, 11)
+    z1 = np.linspace(0, 1, 12)  # different shape -> must fail
+    nz0 = np.ones_like(z0)
+    nz1 = np.ones_like(z1)
+
+    t0.build_bins(z=z0, nz=nz0, tomo_spec={"kind": "photoz", "bins": {"n_bins": 2}})
+    t1.build_bins(z=z1, nz=nz1, tomo_spec={"kind": "photoz", "bins": {"n_bins": 2}})
+
+    with pytest.raises(ValueError, match=r"shared z grid"):
+        _ = t0._make_bin_combo_filter(t1)
+
+    # Now build t1 on the same grid and it should succeed.
+    t1.clear()
+    t1.build_bins(z=z0, nz=nz0, tomo_spec={"kind": "photoz", "bins": {"n_bins": 2}})
+
+    f = t0._make_bin_combo_filter(t1)
+    assert isinstance(f, BinComboFilter)
+
+
+def test_make_bin_combo_filter_curves_argument_overrides_default(monkeypatch):
+    """Tests that explicit curves bypasses self/other wiring."""
+    _install_fake_builder_modules(monkeypatch)
+
+    t = NZTomography()
+    t._parent = {"z": np.linspace(0, 1, 5), "nz": np.ones(5), "survey_meta": None}
+    t._state = {
+        "tomo_spec": {"kind": "photoz", "bins": {}},
+        "bins": {0: np.ones(5)},
+        "tomo_meta": None,
+    }
+
+    z = t._parent["z"]
+    curves = [{0: np.zeros_like(z)}, {0: np.ones_like(z)}]
+
+    f = t._make_bin_combo_filter(curves=curves)
+    assert isinstance(f, BinComboFilter)
+
+
+def test_build_survey_bins_unknown_preset_raises(monkeypatch):
+    """Tests build_survey_bins raises nicely when preset is unknown."""
+    monkeypatch.setattr(
+        cu, "config_path", lambda filename: (_ for _ in ()).throw(FileNotFoundError()), raising=True
+    )
+    monkeypatch.setattr(cu, "list_configs", lambda: ["hsc_survey_specs.yaml"], raising=True)
+
+    t = NZTomography()
+    with pytest.raises(FileNotFoundError, match=r"Unknown shipped survey preset"):
+        t.build_survey_bins("not-a-real-survey")

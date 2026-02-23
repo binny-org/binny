@@ -444,7 +444,7 @@ def test_validate_grid_spec_rejects_non_int_like_n_valueerror_from_int():
 
 
 def test_edge_coercion_mapping_happy_path_returns_float_pairs():
-    """Tests that edge_coercion mapping case returns float-valued edge pairs."""
+    """Tests that edge_coercion mapping case returns float-valued edge correlations."""
     edges = {0: ("0.0", "1.0"), 2: (2, 3)}
     out = edge_coercion([0, 2], edges)
     assert out == {0: (0.0, 1.0), 2: (2.0, 3.0)}
