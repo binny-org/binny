@@ -10,6 +10,7 @@ from binny.nz_tomo.bin_stats import (
     bin_moments,
     bin_quantiles,
     galaxy_count_per_bin,
+    galaxy_density_per_bin,
     galaxy_fraction_per_bin,
     in_range_fraction,
     in_range_fraction_per_bin,
@@ -147,7 +148,8 @@ def test_shape_stats_per_bin_entries_have_expected_fields() -> None:
 
     for i in (0, 1):
         entry = out["per_bin"][i]
-        assert set(entry.keys()) == {"moments", "center", "quantiles", "peaks"}
+        assert set(entry.keys()) == {"moments", "center", "quantiles", "peaks", "tail_asymmetry"}
+        assert (entry["tail_asymmetry"] is None) or isinstance(entry["tail_asymmetry"], float)
         assert set(entry["moments"].keys()) >= {"mean", "median", "mode", "std"}
         assert isinstance(entry["center"], float)
         assert set(entry["quantiles"].keys()) == {0.16, 0.5, 0.84}
@@ -337,7 +339,7 @@ def test_peak_flags_single_peak_has_one_peak_and_second_ratio_zero() -> None:
     out = peak_flags(z, nz, min_rel_height=0.1)
 
     assert out["num_peaks"] == pytest.approx(1.0)
-    assert out["second_peak_ratio"] == pytest.approx(0.0)
+    assert out["second_peak_ratio"] is None
     assert np.isclose(out["mode"], 1.0, atol=2e-3)
 
 
@@ -421,7 +423,7 @@ def test_peak_flags_short_curve_branch_returns_one_peak() -> None:
     nz = np.array([0.0, 2.0], dtype=float)
     out = peak_flags(z, nz, min_rel_height=0.1)
     assert out["num_peaks"] == pytest.approx(1.0)
-    assert out["second_peak_ratio"] == pytest.approx(0.0)
+    assert out["second_peak_ratio"] is None
     assert out["mode"] == pytest.approx(1.0)
 
 
@@ -431,7 +433,7 @@ def test_peak_flags_nonpositive_max_returns_zero_peaks() -> None:
     nz = np.zeros_like(z)
     out = peak_flags(z, nz, min_rel_height=0.1)
     assert out["num_peaks"] == pytest.approx(0.0)
-    assert out["second_peak_ratio"] == pytest.approx(0.0)
+    assert out["second_peak_ratio"] is None
 
 
 def test_peak_flags_height_filter_can_remove_all_peaks() -> None:
@@ -443,7 +445,7 @@ def test_peak_flags_height_filter_can_remove_all_peaks() -> None:
     out = peak_flags(z, nz, min_rel_height=0.5)  # threshold = 5.0
 
     assert out["num_peaks"] == pytest.approx(0.0)
-    assert out["second_peak_ratio"] == pytest.approx(0.0)
+    assert out["second_peak_ratio"] is None
 
 
 def test_population_stats_normalize_frac_false_rejects_not_sum_one(
@@ -628,7 +630,7 @@ def test_peak_flags_height_filter_removes_detected_peaks_branch() -> None:
 
     out = peak_flags(z, nz, min_rel_height=0.05)  # threshold = 0.5, peak=0.2 filtered out
     assert out["num_peaks"] == pytest.approx(0.0)
-    assert out["second_peak_ratio"] == pytest.approx(0.0)
+    assert out["second_peak_ratio"] is None
 
 
 def test_shape_stats_edges_mapping_includes_edges_info() -> None:
@@ -643,3 +645,81 @@ def test_shape_stats_edges_mapping_includes_edges_info() -> None:
     assert out["edges"]["widths_per_bin"][0] == pytest.approx(1.0)
     assert out["edges"]["widths_per_bin"][1] == pytest.approx(1.0)
     assert out["edges"]["equidistant_score"] == pytest.approx(0.0)
+
+
+def _dummy_bins(n_bins: int = 5) -> dict[int, np.ndarray]:
+    """Mock bins for testing."""
+    z = np.linspace(0.0, 2.0, 10)
+    return {i: np.ones_like(z) for i in range(n_bins)}
+
+
+def test_galaxy_fraction_per_bin_equipopulated_known() -> None:
+    """Test that galaxy_fraction_per_bin returns known values for equipopulated bins."""
+    meta = {"frac_per_bin": {0: 1.0, 1: 1.0, 2: 1.0, 3: 1.0, 4: 1.0}}
+    fr = galaxy_fraction_per_bin(meta)
+
+    assert set(fr) == {0, 1, 2, 3, 4}
+    assert sum(fr.values()) == pytest.approx(1.0)
+    for i in range(5):
+        assert fr[i] == pytest.approx(0.2)
+
+
+def test_population_stats_counts_known_500_over_5_bins() -> None:
+    """Test that population_stats returns known values for known counts."""
+    bins = _dummy_bins(5)
+    meta = {"frac_per_bin": {i: 1.0 for i in range(5)}}
+
+    N_total = 500.0
+    survey_area = 1.0
+    density_total = N_total / survey_area  # so counts sum to 500
+
+    out = population_stats(bins, meta, density_total=density_total, survey_area=survey_area)
+
+    assert out["density_total"] == pytest.approx(density_total)
+    assert out["survey_area"] == pytest.approx(survey_area)
+    assert sum(out["fractions"].values()) == pytest.approx(1.0)
+    assert sum(out["count_per_bin"].values()) == pytest.approx(N_total)
+
+    for i in range(5):
+        assert out["fractions"][i] == pytest.approx(0.2)
+        assert out["count_per_bin"][i] == pytest.approx(100.0)
+
+
+def test_population_stats_weighted_known_split() -> None:
+    """Tests that population_stats returns known values for known counts and weights."""
+    bins = _dummy_bins(2)
+    meta = {"frac_per_bin": {0: 1.0, 1: 3.0}}
+
+    N_total = 400.0
+    survey_area = 2.0
+    density_total = N_total / survey_area  # 200 per arcmin^2 if area=2 arcmin^2
+
+    out = population_stats(bins, meta, density_total=density_total, survey_area=survey_area)
+
+    assert out["fractions"][0] == pytest.approx(0.25)
+    assert out["fractions"][1] == pytest.approx(0.75)
+    assert out["count_per_bin"][0] == pytest.approx(100.0)
+    assert out["count_per_bin"][1] == pytest.approx(300.0)
+
+
+def test_galaxy_density_and_count_helpers_known_numbers() -> None:
+    """Tests that galaxy_density_per_bin and galaxy_count_per_bin return known values."""
+    meta = {"frac_per_bin": {0: 1.0, 1: 3.0}}  # normalized -> 0.25, 0.75
+
+    dens = galaxy_density_per_bin(meta, density_total=40.0)
+    assert dens[0] == pytest.approx(10.0)
+    assert dens[1] == pytest.approx(30.0)
+
+    counts = galaxy_count_per_bin(dens, survey_area=100.0)
+    assert counts[0] == pytest.approx(1000.0)
+    assert counts[1] == pytest.approx(3000.0)
+
+
+def test_galaxy_fraction_per_bin_reads_nested_bins_block_known() -> None:
+    """Tests that galaxy_fraction_per_bin reads nested bins block."""
+    meta = {"bins": {"frac_per_bin": {"0": 2.0, 1: 2.0}}}
+    fr = galaxy_fraction_per_bin(meta)
+
+    assert set(fr) == {0, 1}
+    assert fr[0] == pytest.approx(0.5)
+    assert fr[1] == pytest.approx(0.5)

@@ -7,6 +7,8 @@ import binny.axes.mixed_edges as memod
 from binny.axes.mixed_edges import (
     _call_with,
     _get,
+    _maybe_get_range,
+    _slice_axis_weights,
     _validate_segment_edges,
     mixed_edges,
 )
@@ -295,3 +297,97 @@ def test_mixed_edges_final_sanity_check_catches_nonincreasing_combined_edges(
 
     with pytest.raises(ValueError, match=r"Combined mixed edges are not strictly increasing"):
         memod.mixed_edges(segments)
+
+
+def test_maybe_get_range_prefers_x_min_x_max_over_z_min_z_max():
+    """Tests that _maybe_get_range prefers x_min/x_max when both are present."""
+    params = {"x_min": 0.2, "x_max": 1.1, "z_min": 0.0, "z_max": 2.0}
+    lo, hi = _maybe_get_range(params)
+    assert lo == pytest.approx(0.2)
+    assert hi == pytest.approx(1.1)
+
+
+def test_maybe_get_range_accepts_z_min_z_max_fallback():
+    """Tests that _maybe_get_range falls back to z_min/z_max when x keys are missing."""
+    params = {"z_min": 0.3, "z_max": 1.7}
+    lo, hi = _maybe_get_range(params)
+    assert lo == pytest.approx(0.3)
+    assert hi == pytest.approx(1.7)
+
+
+def test_maybe_get_range_returns_none_when_missing():
+    """Tests that _maybe_get_range returns None when no range keys are present."""
+    assert _maybe_get_range({}) is None
+
+
+def test_maybe_get_range_rejects_invalid_range():
+    """Tests that _maybe_get_range raises when hi <= lo or non-finite."""
+    with pytest.raises(ValueError, match=r"Invalid segment range"):
+        _maybe_get_range({"x_min": 1.0, "x_max": 1.0})
+    with pytest.raises(ValueError, match=r"Invalid segment range"):
+        _maybe_get_range({"x_min": np.nan, "x_max": 2.0})
+
+
+def test_slice_axis_weights_slices_inclusive_and_preserves_alignment():
+    """Tests that _slice_axis_weights applies inclusive bounds and preserves pairing."""
+    x = np.array([0.0, 1.0, 2.0, 3.0])
+    w = np.array([10.0, 11.0, 12.0, 13.0])
+    xs, ws = _slice_axis_weights(0, x, w, 1.0, 2.0)
+    assert np.allclose(xs, np.array([1.0, 2.0]))
+    assert np.allclose(ws, np.array([11.0, 12.0]))
+
+
+def test_slice_axis_weights_rejects_mismatched_shapes():
+    """Tests that _slice_axis_weights rejects non-aligned x and weights."""
+    x = np.linspace(0.0, 1.0, 5)
+    w = np.ones(4)
+    with pytest.raises(ValueError, match=r"x/weights must be 1D and same length"):
+        _slice_axis_weights(0, x, w, 0.0, 1.0)
+
+
+def test_slice_axis_weights_rejects_too_few_points_in_range():
+    """Tests that _slice_axis_weights raises when the sliced range has < 2 points."""
+    x = np.array([0.0, 1.0, 2.0])
+    w = np.ones_like(x)
+    with pytest.raises(ValueError, match=r"contains fewer than 2 x points"):
+        _slice_axis_weights(0, x, w, 1.0, 1.0)  # only one point (x==1)
+
+
+def test_mixed_edges_accepts_top_level_range_keys_without_params():
+    """Tests that mixed_edges accepts x_min/x_max at the segment top-level."""
+    segments = [
+        {"method": "equidistant", "n_bins": 2, "x_min": 0.0, "x_max": 2.0},
+        {"method": "equidistant", "n_bins": 2, "x_min": 2.0, "x_max": 4.0},
+    ]
+    edges = mixed_edges(segments)
+    assert np.allclose(edges, np.array([0.0, 1.0, 2.0, 3.0, 4.0]))
+    assert np.all(np.diff(edges) > 0)
+
+
+def test_mixed_edges_equal_information_slices_to_segment_range():
+    """Tests that equal_information uses only the segment range when provided."""
+    x = np.linspace(0.0, 10.0, 2001)
+    info = 1.0 + x  # strictly positive, varying
+
+    segments = [
+        {
+            "method": "equal_information",
+            "n_bins": 2,
+            "x_min": 2.0,
+            "x_max": 6.0,
+        }
+    ]
+    edges = mixed_edges(segments, x=x, info_density=info)
+
+    assert edges.shape == (3,)
+    assert edges[0] == pytest.approx(2.0, abs=1e-12)
+    assert edges[-1] == pytest.approx(6.0, abs=1e-12)
+    assert np.all(np.diff(edges) > 0)
+
+
+def test_maybe_get_range_raises_on_invalid_range():
+    """Tests that _maybe_get_range rejects non-finite or non-increasing ranges."""
+    with pytest.raises(ValueError, match=r"Invalid segment range"):
+        memod._maybe_get_range({"x_min": 1.0, "x_max": 1.0})
+    with pytest.raises(ValueError, match=r"Invalid segment range"):
+        memod._maybe_get_range({"x_min": np.nan, "x_max": 2.0})

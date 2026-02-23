@@ -77,10 +77,9 @@ def test_lsst_nztomography_matches_reference(preset: str, year: int, role: str) 
         z=z,
         include_survey_metadata=False,
         include_tomo_metadata=False,
-        include_stats=False,
     )
 
-    got_bins = _stack_bins(dict(payload["bins"]))
+    got_bins = _stack_bins(dict(payload.bins))
     assert got_bins.shape == ref_bins.shape
 
     np.testing.assert_allclose(got_bins, ref_bins, rtol=1e-10, atol=1e-12)

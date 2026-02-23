@@ -20,11 +20,7 @@ from __future__ import annotations
 from collections.abc import Sequence
 from itertools import combinations_with_replacement, product
 
-Pair = tuple[int, int]
-Pairs = list[Pair]
-
-IndexTuple = tuple[int, ...]
-IndexTuples = list[IndexTuple]
+from binny.utils.types import IndexTuples, Pairs
 
 __all__ = [
     "pairs_all",

@@ -61,8 +61,8 @@ def test_examples_load_and_build_bins(fname: str) -> None:
                 include_tomo_metadata=True,  # needed for population_stats()
             )
 
-            z = payload["z"]
-            bins = payload["bins"]
+            z = payload.z
+            bins = payload.bins
 
             assert isinstance(z, np.ndarray)
             assert z.ndim == 1
@@ -75,8 +75,8 @@ def test_examples_load_and_build_bins(fname: str) -> None:
                 assert v.shape == z.shape
                 assert np.all(np.isfinite(v))
 
-            out = t.shape_stats()
+            out = payload.shape_stats()
             assert isinstance(out, dict)
 
-            pop = t.population_stats()
+            pop = payload.population_stats()
             assert isinstance(pop, dict)

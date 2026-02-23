@@ -11,13 +11,11 @@ slot within the tuple (0-based) rather than any physical meaning.
 from __future__ import annotations
 
 from collections.abc import Callable, Mapping, Sequence
-from typing import Literal, TypeAlias
+from typing import Literal
 
-IndexTuple: TypeAlias = tuple[int, ...]
-IndexTuples: TypeAlias = list[IndexTuple]
+from binny.utils.types import IndexTuple, IndexTuples
 
-Relation = Literal["lt", "le", "gt", "ge"]
-Compare = Literal["lt", "le", "gt", "ge"]
+Relations = Literal["lt", "le", "gt", "ge"]
 
 __all__ = [
     "filter_by_score_relation",
@@ -62,6 +60,7 @@ def _apply_comparator(a: float, b: float, op: str) -> bool:
 
 
 def _require_pos(scores: Sequence[Mapping[int, float]], pos: int) -> None:
+    """Check that a position is valid for a sequence of score mappings."""
     if pos < 0 or pos >= len(scores):
         raise ValueError(f"pos={pos} is out of range for scores with {len(scores)} positions.")
 
@@ -77,7 +76,7 @@ def filter_by_score_relation(
     scores: Sequence[Mapping[int, float]],
     pos_a: int = 0,
     pos_b: int = 1,
-    relation: Relation = "lt",
+    relation: Relations = "lt",
 ) -> IndexTuples:
     """Filter index tuples by a relation between two position scores.
 
@@ -127,7 +126,7 @@ def filter_by_metric_threshold(
     *,
     metric: Callable[..., float],
     threshold: float,
-    compare: Compare = "le",
+    compare: Relations = "le",
 ) -> IndexTuples:
     """Filter index tuples using an n-ary metric threshold.
 
@@ -291,7 +290,7 @@ def filter_by_score_consistency(
     scores2: Sequence[Mapping[int, float]],
     pos_a: int = 0,
     pos_b: int = 1,
-    relation: Relation = "lt",
+    relation: Relations = "lt",
 ) -> IndexTuples:
     """Filter tuples that satisfy the same ordering under two score definitions.
 
@@ -300,8 +299,8 @@ def filter_by_score_consistency(
     as peak and mean locations.
 
     For each tuple `t`, apply the requested relation to the scores at `t[pos_a]`
-    and `t[pos_b]` under both `scores1` and `scores2`. The tuple is kept only when
-    the relation holds for both score definitions.
+    and `t[pos_b]` under both `scores1` and `scores2`. The tuple is kept only
+    when the relation holds for both score definitions.
 
     Args:
         tuples: Sequence of index tuples to be filtered.
@@ -419,7 +418,7 @@ def filter_by_curve_norm_threshold(
     *,
     norms: Sequence[Mapping[int, float]],
     threshold: float,
-    compare: Compare = "ge",
+    compare: Relations = "ge",
     mode: Literal["all", "any"] = "all",
 ) -> IndexTuples:
     """Filter tuples based on per-position curve norms.

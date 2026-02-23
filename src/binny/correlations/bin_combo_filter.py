@@ -12,7 +12,7 @@ per-position score maps or writing custom tuple metrics.
 from __future__ import annotations
 
 from collections.abc import Callable, Mapping, Sequence
-from typing import Literal
+from typing import Any, Literal
 
 import numpy as np
 
@@ -73,6 +73,27 @@ _SCORE_FNS: dict[str, Callable[..., dict[int, float]]] = {
     "width": score_credible_width,
 }
 
+__all__ = [
+    "BinComboFilter",
+    "_register_metric_kernel",
+    "_available_metric_kernels",
+]
+
+
+METRIC_KERNELS: dict[str, Callable[..., float]] = {}
+
+
+def _available_metric_kernels() -> list[str]:
+    """Returns a sorted list of registered metric kernels."""
+    return sorted(METRIC_KERNELS)
+
+
+def _register_metric_kernel(name: str, func: Callable[..., float]) -> None:
+    """Registers a new metric kernel for use with :meth:`BinComboFilter.keep_if_metric`."""
+    if name in METRIC_KERNELS:
+        raise ValueError(f"Metric kernel {name!r} already registered.")
+    METRIC_KERNELS[name] = func
+
 
 class BinComboFilter:
     """Builds and filters tuples using stored curves.
@@ -110,6 +131,155 @@ class BinComboFilter:
         self.curves = list(curves)
         tuples_in = tuples or []
         self._tuples: IndexTuples = [tuple(int(x) for x in t) for t in tuples_in]
+
+    def select(self, spec: Mapping[str, Any]) -> BinComboFilter:
+        """Apply a YAML-friendly selection spec (topology + ordered filters).
+
+        Spec schema (informal):
+
+            spec:
+              topology: {name: <TopologyName>, keys?: ...}
+              filters:
+                - {name: overlap_fraction, threshold: float, compare?: lt/le/gt/ge}
+                - {name: overlap_coefficient, threshold: float, compare?: ...}
+                - {name: score_relation, score: peak/mean/median/width,
+                   pos_a?: int, pos_b?: int, relation?: ...}
+                - {name: score_separation, score: ..., min_sep?: float,
+                   max_sep?: float, absolute?: bool, ...}
+                - {name: score_difference, score: ..., min_diff?: float,
+                   max_diff?: float, ...}
+                - {name: score_consistency, score1: ..., score2: ...,
+                   relation?: ..., ...}
+                - {name: width_ratio, max_ratio?: float, symmetric?: bool,
+                   pos_a?: int, pos_b?: int, ...}
+                - {name: curve_norm_threshold, threshold: float, compare?: ...,
+                   mode?: all/any}
+                - {name: metric, metric: <kernel_name>, threshold: float,
+                   compare?: ...}
+
+        Returns:
+            Self, for chaining.
+        """
+        # 0) basic validation
+        if not isinstance(spec, Mapping):
+            raise TypeError("spec must be a mapping.")
+
+        # 1) topology
+        topo = spec.get("topology", None)
+        if topo is not None and not isinstance(topo, Mapping):
+            raise TypeError("spec['topology'] must be a mapping.")
+
+        if topo:
+            name = topo["name"]
+            keys = topo.get("keys", None)
+
+            if keys is None:
+                self.set_topology(name)
+            elif isinstance(keys, list) and keys and isinstance(keys[0], list | tuple):
+                self.set_topology(name, *keys)
+            else:
+                self.set_topology(name, keys)
+
+        # 2) filters (ordered)
+        fs = spec.get("filters", [])
+        if fs is None:
+            fs = []
+        if not isinstance(fs, Sequence):
+            raise TypeError("spec['filters'] must be a sequence.")
+
+        for f in fs:
+            if not isinstance(f, Mapping):
+                raise TypeError("Each filter entry in spec['filters'] must be a mapping.")
+
+            fname = f["name"]
+
+            match fname:
+                case "overlap_fraction":
+                    self.keep_if_overlap_fraction(
+                        threshold=float(f["threshold"]),
+                        compare=f.get("compare", "ge"),
+                    )
+
+                case "overlap_coefficient":
+                    self.keep_if_overlap_coefficient(
+                        threshold=float(f["threshold"]),
+                        compare=f.get("compare", "ge"),
+                    )
+
+                case "metric":
+                    metric_name = f["metric"]
+                    if metric_name not in METRIC_KERNELS:
+                        raise KeyError(
+                            f"Unknown metric kernel {metric_name!r}. "
+                            f"Available: {sorted(METRIC_KERNELS)}"
+                        )
+                    self.keep_if_metric(
+                        kernel=METRIC_KERNELS[metric_name],
+                        threshold=float(f["threshold"]),
+                        compare=f.get("compare", "le"),
+                    )
+
+                case "score_relation":
+                    self.keep_if_score_relation(
+                        score=f["score"],
+                        pos_a=int(f.get("pos_a", 0)),
+                        pos_b=int(f.get("pos_b", 1)),
+                        relation=f.get("relation", "lt"),
+                        mass=float(f.get("mass", 0.68)),
+                    )
+
+                case "score_separation":
+                    self.keep_if_score_separation(
+                        score=f["score"],
+                        pos_a=int(f.get("pos_a", 0)),
+                        pos_b=int(f.get("pos_b", 1)),
+                        min_sep=f.get("min_sep", None),
+                        max_sep=f.get("max_sep", None),
+                        absolute=bool(f.get("absolute", True)),
+                        mass=float(f.get("mass", 0.68)),
+                    )
+
+                case "score_difference":
+                    self.keep_if_score_difference(
+                        score=f["score"],
+                        pos_a=int(f.get("pos_a", 0)),
+                        pos_b=int(f.get("pos_b", 1)),
+                        min_diff=f.get("min_diff", None),
+                        max_diff=f.get("max_diff", None),
+                        mass=float(f.get("mass", 0.68)),
+                    )
+
+                case "score_consistency":
+                    self.keep_if_score_consistency(
+                        score1=f["score1"],
+                        score2=f["score2"],
+                        pos_a=int(f.get("pos_a", 0)),
+                        pos_b=int(f.get("pos_b", 1)),
+                        relation=f.get("relation", "lt"),
+                        mass=float(f.get("mass", 0.68)),
+                        mass2=f.get("mass2", None),
+                    )
+
+                case "width_ratio":
+                    self.keep_if_width_ratio(
+                        pos_a=int(f.get("pos_a", 0)),
+                        pos_b=int(f.get("pos_b", 1)),
+                        max_ratio=float(f.get("max_ratio", 2.0)),
+                        symmetric=bool(f.get("symmetric", True)),
+                        mass=float(f.get("mass", 0.68)),
+                    )
+
+                case "curve_norm_threshold":
+                    self.keep_if_curve_norm_threshold(
+                        threshold=float(f["threshold"]),
+                        compare=f.get("compare", "ge"),
+                        mode=f.get("mode", "all"),
+                    )
+
+                case _:
+                    raise KeyError(f"Unknown filter name {fname!r}.")
+
+        return self
 
     def set_topology(self, name: TopologyName, *args, **kwargs) -> BinComboFilter:
         """Builds and stores a tuple collection using a named topology.
@@ -178,7 +348,7 @@ class BinComboFilter:
 
                 case "tuples_nondecreasing":
                     args = (self._slot_keys(0),)
-                    kwargs.setdefault("r", len(self.curves))
+                    kwargs.setdefault("n", len(self.curves))
 
                 case "tuples_cartesian":
                     args = tuple(self._slot_keys(p) for p in range(len(self.curves)))
