@@ -67,7 +67,7 @@ BINNY_PURPLE, BINNY_BLUE, BINNY_GREEN, BINNY_YELLOW = get_binny_theme_colors()
 # -----------------------------------------------------------------------------
 # Project information
 # -----------------------------------------------------------------------------
-project = "binny"
+project = "Binny"
 copyright = "2026, Nikolina Šarčević, Matthijs van der Wild"
 author = "Nikolina Šarčević"
 
