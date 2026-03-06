@@ -13,9 +13,9 @@ workflows.
 .. toctree::
    :maxdepth: 2
 
+   nz_modelling
    basic_binning
-   photoz_tomography
-   specz_tomography
-   comparing_schemes
+   nz_uncertainties
+   tomography
    diagnostics
    survey_presets

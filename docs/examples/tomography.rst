@@ -1,5 +1,5 @@
-Photometric redshift tomography
-===============================
+tomography
+==========
 
 Photometric redshift tomography is a technique used in cosmology to divide
 a sample of galaxies into redshift bins based on their photometric redshift estimates.
