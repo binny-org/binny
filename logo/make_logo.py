@@ -12,16 +12,17 @@ from binny.api.nz_tomography import NZTomography
 
 OUTDIR = Path(__file__).resolve().parent
 SWEEP_OUTDIR = OUTDIR / "cmap_sweep"
+DOCS_ASSETS_OUTDIR = Path(__file__).resolve().parents[1] / "docs" / "_static" / "assets"
 
 DEFAULT_CMAP = "viridis"
 DEFAULT_CMAP_RANGE = (0, 1)
 
 
-def make_binny_logo(
+def _build_binny_curves(
     cmap: str = DEFAULT_CMAP,
     cmap_range: tuple[float, float] = DEFAULT_CMAP_RANGE,
-) -> tuple[plt.Figure, plt.Axes]:
-    """Construct the Binny logo figure and axes."""
+) -> tuple[np.ndarray, np.ndarray, list[np.ndarray], list[str]]:
+    """Build the parent n(z), tomographic curves, and colors."""
     z = np.linspace(0.0, 1.0, 1000)
 
     nz = NZTomography.nz_model(
@@ -38,7 +39,7 @@ def make_binny_logo(
         "nz": {"model": "arrays"},
         "bins": {
             "scheme": "equipopulated",
-            "n_bins": 3,
+            "n_bins": 4,
         },
         "uncertainties": {
             "scatter_scale": 0.03,
@@ -55,8 +56,6 @@ def make_binny_logo(
     )
     bins = result.bins
 
-    fig, ax = plt.subplots(figsize=(10, 5))
-
     keys = sorted(bins.keys())
     colors = cmr.take_cmap_colors(
         cmap,
@@ -70,15 +69,31 @@ def make_binny_logo(
         b_sum += np.asarray(bins[k], dtype=float)
 
     eps = 1e-30
-    shrink = 0.88
-    fill_alpha = 0.65
-    lw = 5
+    shrink = 0.8
+    scaled_bins: list[np.ndarray] = []
 
-    for i, (k, color) in enumerate(zip(keys, colors, strict=True)):
+    for k in keys:
         b = np.asarray(bins[k], dtype=float)
         frac = b / np.maximum(b_sum, eps)
         b_scaled = shrink * nz * frac
+        scaled_bins.append(b_scaled)
 
+    return z, nz, scaled_bins, colors
+
+
+def make_binny_logo(
+    cmap: str = DEFAULT_CMAP,
+    cmap_range: tuple[float, float] = DEFAULT_CMAP_RANGE,
+) -> tuple[plt.Figure, plt.Axes]:
+    """Construct the Binny logo figure and axes."""
+    z, _, scaled_bins, colors = _build_binny_curves(cmap=cmap, cmap_range=cmap_range)
+
+    fig, ax = plt.subplots(figsize=(5, 5))
+
+    fill_alpha = 0.65
+    lw = 5
+
+    for i, (b_scaled, color) in enumerate(zip(scaled_bins, colors, strict=True)):
         ax.fill_between(
             z,
             0.0,
@@ -106,8 +121,61 @@ def make_binny_logo(
     )
 
     ax.set_xlim(0.0, 0.6)
+    ax.set_ylim(0.0, None)
+    ymax = max(np.max(b) for b in scaled_bins)
+    ax.set_ylim(-0.01, ymax * 1.15)
     ax.axis("off")
     fig.tight_layout(pad=0.1)
+
+    return fig, ax
+
+
+def make_binny_favicon(
+    cmap: str = DEFAULT_CMAP,
+    cmap_range: tuple[float, float] = DEFAULT_CMAP_RANGE,
+) -> tuple[plt.Figure, plt.Axes]:
+    """Construct a square favicon version of the Binny logo."""
+    z, _, scaled_bins, colors = _build_binny_curves(cmap=cmap, cmap_range=cmap_range)
+
+    fig, ax = plt.subplots(figsize=(4, 4))
+
+    fill_alpha = 0.85
+    lw = 3.0
+
+    for i, (b_scaled, color) in enumerate(zip(scaled_bins, colors, strict=True)):
+        ax.fill_between(
+            z,
+            0.0,
+            b_scaled,
+            color=color,
+            alpha=fill_alpha,
+            linewidth=0,
+            zorder=10 + i,
+        )
+        ax.plot(
+            z,
+            b_scaled,
+            color="k",
+            linewidth=lw,
+            zorder=10 + i,
+        )
+
+    ax.plot(
+        z,
+        np.zeros_like(z),
+        color="k",
+        linewidth=lw,
+        zorder=1000,
+        solid_capstyle="butt",
+    )
+
+    # ax.set_xlim(0.02, 0.48)
+    ymax = max(float(np.max(b)) for b in scaled_bins)
+    ax.set_ylim(-0.01, ymax * 1.05)
+    ax.set_xlim(0.1, 0.42)
+
+    ax.axis("off")
+    fig.tight_layout(pad=0.02)
 
     return fig, ax
 
@@ -117,13 +185,35 @@ def save_logo(
     cmap: str,
     cmap_range: tuple[float, float],
 ) -> None:
-    """Build and save one logo to SVG and PNG."""
+    """Build and save one logo to SVG, PNG, and PDF."""
     fig, _ = make_binny_logo(cmap=cmap, cmap_range=cmap_range)
 
-    suffix = [".svg", ".png", ".pdf"]
+    for suffix in [".svg", ".png", ".pdf"]:
+        fig.savefig(
+            outbase.with_suffix(suffix),
+            transparent=True,
+            bbox_inches="tight",
+            pad_inches=0.02,
+        )
 
-    for s in suffix:
-        fig.savefig(outbase.with_suffix(s), transparent=True, bbox_inches="tight", pad_inches=0.02)
+    plt.close(fig)
+
+
+def save_favicon(
+    outfile: Path,
+    cmap: str,
+    cmap_range: tuple[float, float],
+) -> None:
+    """Build and save a favicon PNG."""
+    fig, _ = make_binny_favicon(cmap=cmap, cmap_range=cmap_range)
+
+    fig.savefig(
+        outfile,
+        dpi=256,
+        transparent=True,
+        bbox_inches="tight",
+        pad_inches=0.02,
+    )
 
     plt.close(fig)
 
@@ -152,11 +242,18 @@ def sweep_cmaps() -> None:
 
 
 def main() -> None:
-    """Build the default logo and a colormap sweep."""
+    """Build the default logo, favicon, and a colormap sweep."""
     OUTDIR.mkdir(parents=True, exist_ok=True)
+    DOCS_ASSETS_OUTDIR.mkdir(parents=True, exist_ok=True)
 
     save_logo(
-        outbase=OUTDIR / "binny_logo",
+        outbase=DOCS_ASSETS_OUTDIR / "logo",
+        cmap=DEFAULT_CMAP,
+        cmap_range=DEFAULT_CMAP_RANGE,
+    )
+
+    save_favicon(
+        outfile=DOCS_ASSETS_OUTDIR / "favicon.png",
         cmap=DEFAULT_CMAP,
         cmap_range=DEFAULT_CMAP_RANGE,
     )

@@ -11,6 +11,7 @@ dependencies = [
   "numpy",
   "pyyaml",
   "scipy",
+  "cmasher",
 ]
 
 [project.optional-dependencies]
@@ -23,9 +24,11 @@ dev = [
 ]
 docs = [
   "sphinx[doctest]",
+  "sphinx-copybutton",
   "sphinx-design",
   "sphinx-multiversion",
   "sphinxawesome-theme",
+  "furo",
 ]
 
 [build-system]

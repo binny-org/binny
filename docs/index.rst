@@ -1,5 +1,10 @@
-Binny
+binny
 =====
+
+.. image:: _static/assets/logo.png
+   :alt: DerivKit logo
+   :width: 150px
+   :align: right
 
 **Binny** is a Python library providing flexible, explicit, and well-tested
 tomographic binning algorithms for cosmology and related scientific workflows.
