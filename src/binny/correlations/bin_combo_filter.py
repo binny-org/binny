@@ -135,7 +135,7 @@ class BinComboFilter:
     def select(self, spec: Mapping[str, Any]) -> BinComboFilter:
         """Apply a YAML-friendly selection spec (topology + ordered filters).
 
-        Spec schema (informal):
+        Informal spec schema::
 
             spec:
               topology: {name: <TopologyName>, keys?: ...}
@@ -157,8 +157,16 @@ class BinComboFilter:
                 - {name: metric, metric: <kernel_name>, threshold: float,
                    compare?: ...}
 
+        Args:
+            spec: Mapping containing an optional topology block and an optional
+                ordered list of filter blocks.
+
         Returns:
             Self, for chaining.
+
+        Raises:
+            TypeError: If ``spec`` or one of its subentries has the wrong type.
+            KeyError: If a requested filter name or metric kernel is unknown.
         """
         # 0) basic validation
         if not isinstance(spec, Mapping):

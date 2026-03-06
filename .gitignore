@@ -27,3 +27,4 @@ docs/binny.*.rst
 # local scratch
 check.ipynb
 photoz_binning_demo.py
+/check_bin_filters.ipynb

@@ -134,13 +134,13 @@ def filter_by_metric_threshold(
     the resulting value satisfies the requested comparison against the given
     threshold.
 
-    The metric is called as metric(*t), where t is the tuple.
+    The metric is called as ``metric(*t)``, where ``t`` is the tuple.
 
     Args:
         tuples: Sequence of index tuples to be filtered.
         metric: Callable returning a scalar metric value for a given tuple.
         threshold: Reference value used for filtering.
-        compare: Comparison operator applied as metric(*t) op threshold.
+        compare: Comparison operator applied as ``metric(*t) op threshold``.
 
     Returns:
         List of index tuples that satisfy the metric threshold condition.

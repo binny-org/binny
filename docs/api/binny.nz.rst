@@ -7,6 +7,7 @@ Submodules
 .. toctree::
    :maxdepth: 4
 
+   binny.nz.calibration
    binny.nz.models
    binny.nz.registry
 

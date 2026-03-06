@@ -9,6 +9,7 @@ Subpackages
 
    binny.api
    binny.axes
+   binny.correlations
    binny.nz
    binny.nz_tomo
    binny.surveys

@@ -26,7 +26,7 @@ def load_nz(
     key: str | None = None,
     delimiter: str | None = None,
 ) -> tuple[np.ndarray, np.ndarray]:
-    """Load a 1D redshift grid z and corresponding n(z) from file.
+    """Load a 1D redshift grid ``z`` and corresponding ``n(z)`` from file.
 
     Supported formats:
       - .npy  : either shape (N, 2) array (z, n(z)) or separate dict-like with fields
@@ -53,8 +53,8 @@ def load_nz(
             If None, numpy will try to guess.
 
     Returns:
-        (z, nz):
-            Two 1D arrays with the same length, sorted in ascending z.
+        Two 1D arrays, ``z`` and ``nz``, with the same length, sorted in
+            ascending ``z``.
 
     Raises:
         ValueError:
