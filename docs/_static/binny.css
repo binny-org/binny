@@ -333,48 +333,37 @@ div.figure img {
   padding: 0.15rem 0 !important;
 }
 
-/* H1 */
-.content h1 {
-    color: var(--binny-purple);
-}
-
-/* H2+ */
-.content h2,
-.content h3,
-.content h4,
-.content h5,
-.content h6 {
-    color: var(--binny-blue);
-}
-
 /* -----------------------------
-   H1 — Binny blue underline
+   H1 — Binny purple
 -------------------------------- */
 
 .content h1 {
+    color: var(--binny-purple);
     border-bottom: 3px solid var(--binny-purple);
     padding-bottom: 0.3em;
 }
 
 
 /* -----------------------------
-   H2 — Binny purple underline
+   H2 — Binny blue
 -------------------------------- */
 
 .content h2 {
+    color: var(--binny-blue);
     border-bottom: 2px solid var(--binny-blue);
     padding-bottom: 0.25em;
 }
 
 
 /* -----------------------------
-   H3 and below — subtle purple
+   H3–H6 — Binny green
 -------------------------------- */
 
 .content h3,
 .content h4,
 .content h5,
 .content h6 {
-    border-bottom: 1px solid var(--binny-blue);
+    color: var(--binny-green);
+    border-bottom: 2px solid var(--binny-green);
     padding-bottom: 0.15em;
 }
