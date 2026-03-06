@@ -82,9 +82,14 @@ extensions = [
     "sphinx_design",
     "sphinx_multiversion",
     "sphinx_copybutton",
+    "matplotlib.sphinxext.plot_directive",
 ]
 
 autoclass_content = "both"
+
+autodoc_default_options = {
+    "members": True,
+}
 
 templates_path = ["_templates"]
 exclude_patterns = ["_build", "Thumbs.db", ".DS_Store", "binny.core.rst"]

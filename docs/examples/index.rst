@@ -14,8 +14,8 @@ workflows.
    :maxdepth: 2
 
    nz_modelling
-   basic_binning
-   nz_uncertainties
-   tomography
+   nz_calibration
+   photoz_bins
+   specz_bins
    diagnostics
    survey_presets
