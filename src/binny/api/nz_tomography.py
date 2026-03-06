@@ -171,25 +171,17 @@ class NZTomography:
         redshift distributions and galaxy densities for survey forecasts.
 
         Args:
-            z_true (np.ndarray):
-                True redshifts of galaxies in the mock catalog.
-            mag (np.ndarray):
-                Apparent magnitudes of the same galaxies.
-            maglims (np.ndarray):
-                Limiting magnitudes defining magnitude-limited samples.
-            area_deg2 (float):
-                Survey area of the mock catalog in square degrees.
-            infer_alpha_beta_from (Literal["deep_cut", "all_selected_at_maglim"], optional):
-                Strategy used to determine the shape parameters of the Smail
-                distribution.
-            alpha_beta_maglim (float | None, optional):
-                Magnitude limit defining the deep sample used to infer the
-                Smail shape parameters.
-            z_max (float | None, optional):
-                Maximum redshift included when fitting redshift distributions.
+            z_true: True redshifts of galaxies in the mock catalog.
+            mag: Apparent magnitudes of the same galaxies.
+            maglims: Limiting magnitudes defining magnitude-limited samples.
+            area_deg2: Survey area of the mock catalog in square degrees.
+            infer_alpha_beta_from:Strategy used to determine the shape
+                parameters of the Smail distribution.
+            alpha_beta_maglim: Magnitude limit defining the deep sample used to
+                infer the Smail shape parameters.
+            z_max: Maximum redshift included when fitting redshift distributions.
 
         Returns:
-            dict[str, Any]:
                 Dictionary containing the calibrated Smail parameters,
                 the fitted z0–magnitude relation, and the galaxy density
                 calibration.

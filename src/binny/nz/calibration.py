@@ -109,23 +109,16 @@ def fit_smail_params_from_mock(
     forecasting or survey modeling.
 
     Args:
-        z_samples (np.ndarray):
-            Array of galaxy redshifts drawn from a mock or simulated catalog.
-        alpha_bounds (tuple[float, float], optional):
-            Allowed range for the alpha parameter.
-        beta_bounds (tuple[float, float], optional):
-            Allowed range for the beta parameter.
-        z0_bounds (tuple[float, float], optional):
-            Allowed range for the z0 parameter.
-        x0 (tuple[float, float, float] | None, optional):
-            Initial parameter guess for the fit.
-        z_max (float | None, optional):
-            Maximum redshift used when fitting the distribution.
-        min_n (int, optional):
-            Minimum number of redshift samples required to perform the fit.
+        z_samples:Array of galaxy redshifts drawn from a mock or simulated
+            catalog.
+        alpha_bounds: Allowed range for the alpha parameter.
+        beta_bounds: Allowed range for the beta parameter.
+        z0_bounds: Allowed range for the z0 parameter.
+        x0: Initial parameter guess for the fit.
+        z_max: Maximum redshift used when fitting the distribution.
+        min_n: Minimum number of redshift samples required to perform the fit.
 
     Returns:
-        dict[str, Any]:
             Dictionary containing the fitted parameters, fit status, and
             summary information about the calibration sample.
     """
@@ -208,28 +201,19 @@ def fit_z0_of_maglim_from_mock(
     relation between the magnitude limit and the redshift scale.
 
     Args:
-        z_true (np.ndarray):
-            True redshifts of galaxies in the mock catalog.
-        mag (np.ndarray):
-            Apparent magnitudes of galaxies in the same catalog.
-        maglims (np.ndarray):
-            Limiting magnitudes at which the calibration should be evaluated.
-        alpha (float):
-            Fixed alpha parameter of the Smail distribution.
-        beta (float):
-            Fixed beta parameter of the Smail distribution.
-        z0_law (Literal["linear", "poly2"], optional):
-            Functional form used to model the z0–magnitude relation.
-        z0_bounds (tuple[float, float], optional):
-            Allowed range for the fitted z0 values.
-        z_max (float | None, optional):
-            Maximum redshift considered when fitting the distribution.
-        min_n_per_cut (int, optional):
-            Minimum number of galaxies required for a magnitude selection
-            to be included in the calibration.
+        z_true: True redshifts of galaxies in the mock catalog.
+        mag: Apparent magnitudes of galaxies in the same catalog.
+        maglims: Limiting magnitudes at which the calibration should be
+            evaluated.
+        alpha: Fixed alpha parameter of the Smail distribution.
+        beta: Fixed beta parameter of the Smail distribution.
+        z0_law: Functional form used to model the z0–magnitude relation.
+        z0_bounds: Allowed range for the fitted z0 values.
+        z_max: Maximum redshift considered when fitting the distribution.
+        min_n_per_cut: Minimum number of galaxies required for a magnitude
+            selection to be included in the calibration.
 
     Returns:
-        dict[str, Any]:
             Dictionary containing the measured z0 values at each magnitude
             limit and the parameters of the fitted z0–magnitude relation.
     """
@@ -300,13 +284,10 @@ def eval_z0_of_maglim(maglim: np.ndarray, fit: dict[str, Any]) -> np.ndarray:
     relation.
 
     Args:
-        maglim (np.ndarray):
-            Limiting magnitudes at which the relation should be evaluated.
-        fit (dict[str, Any]):
-            Calibration result describing the fitted z0–magnitude relation.
+        maglim: Limiting magnitudes at which the relation should be evaluated.
+        fit: Calibration result describing the fitted z0–magnitude relation.
 
     Returns:
-        np.ndarray:
             Predicted z0 values corresponding to the input magnitude limits.
     """
     m = np.asarray(maglim, dtype=float)
@@ -335,17 +316,12 @@ def fit_ngal_of_maglim_from_mock(
     density expected for different magnitude limits in survey forecasts.
 
     Args:
-        mag (np.ndarray):
-            Apparent magnitudes of galaxies in the mock catalog.
-        maglims (np.ndarray):
-            Limiting magnitudes used to define magnitude-limited samples.
-        area_deg2 (float):
-            Survey area of the mock catalog in square degrees.
-        ngal_law (Literal["linear", "loglinear"], optional):
-            Functional form used to model the density–magnitude relation.
+        mag: Apparent magnitudes of galaxies in the mock catalog.
+        maglims: Limiting magnitudes used to define magnitude-limited samples.
+        area_deg2: Survey area of the mock catalog in square degrees.
+        ngal_law: Functional form used to model the density–magnitude relation.
 
     Returns:
-        dict[str, Any]:
             Dictionary containing measured galaxy densities at each magnitude
             limit and the parameters of the fitted density relation.
     """
@@ -393,13 +369,10 @@ def eval_ngal_of_maglim(maglim: np.ndarray, fit: dict[str, Any]) -> np.ndarray:
     magnitude limits using a previously calibrated density relation.
 
     Args:
-        maglim (np.ndarray):
-            Limiting magnitudes at which the density should be evaluated.
-        fit (dict[str, Any]):
-            Calibration result describing the fitted galaxy density relation.
+        maglim: Limiting magnitudes at which the density should be evaluated.
+        fit: Calibration result describing the fitted galaxy density relation.
 
     Returns:
-        np.ndarray:
             Predicted galaxy number densities in galaxies per arcmin².
     """
     m = np.asarray(maglim, dtype=float)
@@ -436,25 +409,17 @@ def calibrate_depth_smail_from_mock(
     redshift distributions and galaxy densities for survey forecasts.
 
     Args:
-        z_true (np.ndarray):
-            True redshifts of galaxies in the mock catalog.
-        mag (np.ndarray):
-            Apparent magnitudes of the same galaxies.
-        maglims (np.ndarray):
-            Limiting magnitudes defining magnitude-limited samples.
-        area_deg2 (float):
-            Survey area of the mock catalog in square degrees.
-        infer_alpha_beta_from (Literal["deep_cut", "all_selected_at_maglim"], optional):
-            Strategy used to determine the shape parameters of the Smail
-            distribution.
-        alpha_beta_maglim (float | None, optional):
-            Magnitude limit defining the deep sample used to infer the
-            Smail shape parameters.
-        z_max (float | None, optional):
-            Maximum redshift included when fitting redshift distributions.
+        z_true: True redshifts of galaxies in the mock catalog.
+        mag: Apparent magnitudes of the same galaxies.
+        maglims: Limiting magnitudes defining magnitude-limited samples.
+        area_deg2: Survey area of the mock catalog in square degrees.
+        infer_alpha_beta_from:Strategy used to determine the shape
+            parameters of the Smail distribution.
+        alpha_beta_maglim: Magnitude limit defining the deep sample used to
+            infer the Smail shape parameters.
+        z_max: Maximum redshift included when fitting redshift distributions.
 
     Returns:
-        dict[str, Any]:
             Dictionary containing the calibrated Smail parameters,
             the fitted z0–magnitude relation, and the galaxy density
             calibration.
