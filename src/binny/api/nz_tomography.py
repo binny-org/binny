@@ -14,7 +14,7 @@ from __future__ import annotations
 
 from collections.abc import Callable, Mapping, Sequence
 from pathlib import Path
-from typing import Any
+from typing import Any, Literal
 
 import numpy as np
 
@@ -24,6 +24,9 @@ from binny.correlations.bin_combo_filter import (
     BinComboFilter,
     _available_metric_kernels,
     _register_metric_kernel,
+)
+from binny.nz.calibration import (
+    calibrate_depth_smail_from_mock as _calibrate_depth_smail_from_mock,
 )
 from binny.nz.registry import available_models as _available_nz_models
 from binny.nz.registry import nz_model as _nz_model
@@ -137,6 +140,69 @@ class NZTomography:
         """Clears the cached parent distribution, spec, bins, and metadata."""
         self._parent = None
         self._state = None
+
+    @staticmethod
+    def calibrate_smail_from_mock(
+        z_true: np.ndarray,
+        mag: np.ndarray,
+        *,
+        maglims: np.ndarray,
+        area_deg2: float,
+        infer_alpha_beta_from: Literal[
+            "deep_cut",
+            "all_selected_at_maglim",
+        ] = "deep_cut",
+        alpha_beta_maglim: float | None = None,  # used for deep_cut
+        z_max: float | None = None,
+    ) -> dict[str, Any]:
+        """
+        Run an end-to-end calibration of survey depth scaling relations.
+
+        This routine performs a complete calibration of the relations linking
+        survey limiting magnitude to both the redshift distribution and the
+        galaxy number density of a sample.
+
+        The procedure estimates the shape parameters of the Smail redshift
+        distribution from a representative galaxy sample, calibrates how the
+        redshift scale parameter varies with magnitude limit, and measures the
+        corresponding galaxy number density.
+
+        The resulting calibration can be used to construct realistic analytic
+        redshift distributions and galaxy densities for survey forecasts.
+
+        Args:
+            z_true (np.ndarray):
+                True redshifts of galaxies in the mock catalog.
+            mag (np.ndarray):
+                Apparent magnitudes of the same galaxies.
+            maglims (np.ndarray):
+                Limiting magnitudes defining magnitude-limited samples.
+            area_deg2 (float):
+                Survey area of the mock catalog in square degrees.
+            infer_alpha_beta_from (Literal["deep_cut", "all_selected_at_maglim"], optional):
+                Strategy used to determine the shape parameters of the Smail
+                distribution.
+            alpha_beta_maglim (float | None, optional):
+                Magnitude limit defining the deep sample used to infer the
+                Smail shape parameters.
+            z_max (float | None, optional):
+                Maximum redshift included when fitting redshift distributions.
+
+        Returns:
+            dict[str, Any]:
+                Dictionary containing the calibrated Smail parameters,
+                the fitted z0–magnitude relation, and the galaxy density
+                calibration.
+        """
+        return _calibrate_depth_smail_from_mock(
+            z_true=z_true,
+            mag=mag,
+            maglims=maglims,
+            area_deg2=area_deg2,
+            infer_alpha_beta_from=infer_alpha_beta_from,
+            alpha_beta_maglim=alpha_beta_maglim,
+            z_max=z_max,
+        )
 
     def build_bins(
         self,

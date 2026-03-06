@@ -31,6 +31,17 @@ try:
 except Exception:  # pragma: no cover
     minimize = None
 
+from binny.surveys.sky import deg2_to_arcmin2
+
+__all__ = [
+    "fit_smail_params_from_mock",
+    "fit_z0_of_maglim_from_mock",
+    "eval_z0_of_maglim",
+    "fit_ngal_of_maglim_from_mock",
+    "eval_ngal_of_maglim",
+    "calibrate_depth_smail_from_mock",
+]
+
 
 def _smail_logpdf(z: np.ndarray, z0: float, alpha: float, beta: float) -> np.ndarray:
     """
@@ -74,11 +85,6 @@ def _smail_logpdf(z: np.ndarray, z0: float, alpha: float, beta: float) -> np.nda
     out = logC + log_pow + expo
     out = np.where(z >= 0, out, -np.inf)
     return out
-
-
-# ---------------------------------------------------------------------
-# (1) Infer alpha, beta, z0 from a mock z sample (MLE)
-# ---------------------------------------------------------------------
 
 
 def fit_smail_params_from_mock(
@@ -349,7 +355,7 @@ def fit_ngal_of_maglim_from_mock(
 
     if area_deg2 <= 0:
         raise ValueError("area_deg2 must be > 0")
-    area_arcmin2 = float(area_deg2) * 60.0 * 60.0
+    area_arcmin2 = deg2_to_arcmin2(area_deg2)
 
     ngal_pts = np.zeros_like(maglims, dtype=float)
     nsel_pts = np.zeros_like(maglims, dtype=int)

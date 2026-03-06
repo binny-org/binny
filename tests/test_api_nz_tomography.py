@@ -747,3 +747,87 @@ def test_build_survey_bins_unknown_preset_raises(monkeypatch):
     t = NZTomography()
     with pytest.raises(FileNotFoundError, match=r"Unknown shipped survey preset"):
         t.build_survey_bins("not-a-real-survey")
+
+
+def test_calibrate_smail_from_mock_delegates(monkeypatch):
+    """Tests that calibrate_smail_from_mock delegates to calibration helper."""
+    called = {}
+
+    def fake_calibrate_depth_smail_from_mock(
+        *,
+        z_true,
+        mag,
+        maglims,
+        area_deg2,
+        infer_alpha_beta_from,
+        alpha_beta_maglim,
+        z_max,
+    ):
+        called["z_true"] = z_true
+        called["mag"] = mag
+        called["maglims"] = maglims
+        called["area_deg2"] = area_deg2
+        called["infer_alpha_beta_from"] = infer_alpha_beta_from
+        called["alpha_beta_maglim"] = alpha_beta_maglim
+        called["z_max"] = z_max
+        return {"ok": True, "source": "fake"}
+
+    monkeypatch.setattr(
+        "binny.api.nz_tomography._calibrate_depth_smail_from_mock",
+        fake_calibrate_depth_smail_from_mock,
+        raising=True,
+    )
+
+    z_true = np.array([0.1, 0.2, 0.3])
+    mag = np.array([24.1, 24.5, 25.0])
+    maglims = np.array([24.5, 25.0, 25.5])
+
+    out = NZTomography.calibrate_smail_from_mock(
+        z_true=z_true,
+        mag=mag,
+        maglims=maglims,
+        area_deg2=5.0,
+        infer_alpha_beta_from="deep_cut",
+        alpha_beta_maglim=25.5,
+        z_max=3.0,
+    )
+
+    assert out == {"ok": True, "source": "fake"}
+    assert np.allclose(called["z_true"], z_true)
+    assert np.allclose(called["mag"], mag)
+    assert np.allclose(called["maglims"], maglims)
+    assert called["area_deg2"] == 5.0
+    assert called["infer_alpha_beta_from"] == "deep_cut"
+    assert called["alpha_beta_maglim"] == 25.5
+    assert called["z_max"] == 3.0
+
+
+def test_calibrate_smail_from_mock_uses_defaults(monkeypatch):
+    """Tests that calibrate_smail_from_mock forwards default optional arguments."""
+    called = {}
+
+    def fake_calibrate_depth_smail_from_mock(**kwargs):
+        called.update(kwargs)
+        return {"ok": True}
+
+    monkeypatch.setattr(
+        "binny.api.nz_tomography._calibrate_depth_smail_from_mock",
+        fake_calibrate_depth_smail_from_mock,
+        raising=True,
+    )
+
+    z_true = np.array([0.1, 0.2])
+    mag = np.array([24.0, 24.3])
+    maglims = np.array([24.5, 25.0])
+
+    out = NZTomography.calibrate_smail_from_mock(
+        z_true=z_true,
+        mag=mag,
+        maglims=maglims,
+        area_deg2=1.5,
+    )
+
+    assert out == {"ok": True}
+    assert called["infer_alpha_beta_from"] == "deep_cut"
+    assert called["alpha_beta_maglim"] is None
+    assert called["z_max"] is None
