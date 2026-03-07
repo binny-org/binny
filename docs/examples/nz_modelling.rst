@@ -88,9 +88,9 @@ forecasting studies.
    ax.plot(z, nz_smail, color="k", linewidth=2.5, zorder=20)
    ax.plot(z, np.zeros_like(z), color="k", linewidth=2.5, zorder=100)
 
-   ax.set_xlabel("Redshift $z$", fontsize=15)
-   ax.set_ylabel(r"Normalized $n(z)$", fontsize=15)
-   ax.set_title("Smail parent redshift distribution", fontsize=15)
+   ax.set_xlabel("Redshift $z$")
+   ax.set_ylabel(r"Normalized $n(z)$")
+   ax.set_title("Smail parent redshift distribution")
 
    plt.tight_layout()
 
@@ -176,10 +176,10 @@ peak and support move to larger redshift.
    ax.plot(z, nz_shifted, color="k", linewidth=2.5, zorder=21)
    ax.plot(z, np.zeros_like(z), color="k", linewidth=2.5, zorder=100)
 
-   ax.set_xlabel("Redshift $z$", fontsize=15)
-   ax.set_ylabel(r"Normalized $n(z)$", fontsize=15)
-   ax.set_title("Standard vs shifted Smail distribution", fontsize=15)
-   ax.legend(frameon=False, fontsize=15, loc="upper right")
+   ax.set_xlabel("Redshift $z$")
+   ax.set_ylabel(r"Normalized $n(z)$")
+   ax.set_title("Standard vs shifted Smail distribution")
+   ax.legend(frameon=False, loc="upper right")
 
    plt.tight_layout()
 
@@ -234,9 +234,9 @@ for testing and visual comparisons.
    ax.plot(z, nz_tophat, color="k", linewidth=2.5, zorder=20)
    ax.plot(z, np.zeros_like(z), color="k", linewidth=2.5, zorder=100)
 
-   ax.set_xlabel("Redshift $z$", fontsize=15)
-   ax.set_ylabel(r"Normalized $n(z)$", fontsize=15)
-   ax.set_title("Top-hat parent redshift distribution", fontsize=15)
+   ax.set_xlabel("Redshift $z$")
+   ax.set_ylabel(r"Normalized $n(z)$")
+   ax.set_title("Top-hat parent redshift distribution")
 
    plt.tight_layout()
 
@@ -292,10 +292,10 @@ showing simpler toy or mixture-based examples.
 
        ax.plot(z, np.zeros_like(z), color="k", linewidth=2.5, zorder=1000)
 
-       ax.set_title(title, fontsize=15)
-       ax.set_xlabel("Redshift $z$", fontsize=15)
-       ax.set_ylabel(r"Normalized $n(z)$", fontsize=15)
-       ax.legend(frameon=False, fontsize=15, loc="best")
+       ax.set_title(title)
+       ax.set_xlabel("Redshift $z$")
+       ax.set_ylabel(r"Normalized $n(z)$")
+       ax.legend(frameon=False, loc="best")
 
    z = np.linspace(0.0, 1.5, 500)
 

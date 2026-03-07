@@ -71,9 +71,9 @@ scatter term.
            )
 
        ax.plot(z, np.zeros_like(z), color="k", linewidth=2.2, zorder=1000)
-       ax.set_title(title, fontsize=15)
-       ax.set_xlabel("Redshift $z$", fontsize=15)
-       ax.set_ylabel(r"Normalized $n_i(z)$", fontsize=15)
+       ax.set_title(title)
+       ax.set_xlabel("Redshift $z$")
+       ax.set_ylabel(r"Normalized $n_i(z)$")
 
    tomo = NZTomography()
 
@@ -146,8 +146,8 @@ using the same parent distribution and photo-z uncertainty model.
            ax.plot(z, curve, color="k", linewidth=2.2, zorder=20 + i)
 
        ax.plot(z, np.zeros_like(z), color="k", linewidth=2.2, zorder=1000)
-       ax.set_title(title, fontsize=15)
-       ax.set_xlabel("Redshift $z$", fontsize=15)
+       ax.set_title(title)
+       ax.set_xlabel("Redshift $z$")
 
    tomo = NZTomography()
 
@@ -188,7 +188,7 @@ using the same parent distribution and photo-z uncertainty model.
    fig, axes = plt.subplots(1, 2, figsize=(11.0, 4.6), sharey=True)
 
    plot_bins(axes[0], z, equidistant_result.bins, "Equidistant bins")
-   axes[0].set_ylabel(r"Normalized $n_i(z)$", fontsize=15)
+   axes[0].set_ylabel(r"Normalized $n_i(z)$")
 
    plot_bins(axes[1], z, equipopulated_result.bins, "Equipopulated bins")
 
@@ -229,8 +229,8 @@ keeping the parent distribution and uncertainty model fixed.
            ax.plot(z, curve, color="k", linewidth=2.2, zorder=20 + i)
 
        ax.plot(z, np.zeros_like(z), color="k", linewidth=2.2, zorder=1000)
-       ax.set_title(title, fontsize=15)
-       ax.set_xlabel("Redshift $z$", fontsize=15)
+       ax.set_title(title)
+       ax.set_xlabel("Redshift $z$")
 
    tomo = NZTomography()
 
@@ -267,7 +267,7 @@ keeping the parent distribution and uncertainty model fixed.
    fig, axes = plt.subplots(1, 2, figsize=(11.0, 4.6), sharey=True)
 
    plot_bins(axes[0], z, three_bin_result.bins, "3 bins")
-   axes[0].set_ylabel(r"Normalized $n_i(z)$", fontsize=15)
+   axes[0].set_ylabel(r"Normalized $n_i(z)$")
 
    plot_bins(axes[1], z, five_bin_result.bins, "5 bins")
 
@@ -319,8 +319,8 @@ edges look less sharp.
            ax.plot(z, curve, color="k", linewidth=2.2, zorder=20 + i)
 
        ax.plot(z, np.zeros_like(z), color="k", linewidth=2.2, zorder=1000)
-       ax.set_title(title, fontsize=15)
-       ax.set_xlabel("Redshift $z$", fontsize=15)
+       ax.set_title(title)
+       ax.set_xlabel("Redshift $z$")
 
    tomo = NZTomography()
    z = np.linspace(0.0, 2.0, 500)
@@ -354,7 +354,7 @@ edges look less sharp.
    fig, axes = plt.subplots(1, 2, figsize=(11.0, 4.6), sharey=True)
 
    plot_bins(axes[0], z, low_scatter_result.bins, "scatter_scale = 0.03")
-   axes[0].set_ylabel(r"Normalized $n_i(z)$", fontsize=15)
+   axes[0].set_ylabel(r"Normalized $n_i(z)$")
 
    plot_bins(axes[1], z, high_scatter_result.bins, "scatter_scale = 0.08")
 
@@ -394,8 +394,8 @@ move them lower.
            ax.plot(z, curve, color="k", linewidth=2.2, zorder=20 + i)
 
        ax.plot(z, np.zeros_like(z), color="k", linewidth=2.2, zorder=1000)
-       ax.set_title(title, fontsize=15)
-       ax.set_xlabel("Redshift $z$", fontsize=15)
+       ax.set_title(title)
+       ax.set_xlabel("Redshift $z$")
 
    tomo = NZTomography()
    z = np.linspace(0.0, 2.0, 500)
@@ -435,7 +435,7 @@ move them lower.
    fig, axes = plt.subplots(1, 2, figsize=(11.0, 4.6), sharey=True)
 
    plot_bins(axes[0], z, zero_offset_result.bins, "mean_offset = 0.00")
-   axes[0].set_ylabel(r"Normalized $n_i(z)$", fontsize=15)
+   axes[0].set_ylabel(r"Normalized $n_i(z)$")
 
    plot_bins(axes[1], z, shifted_offset_result.bins, "mean_offset = 0.15")
 
@@ -474,8 +474,8 @@ with true redshift, while values below ``1`` make that increase weaker.
            ax.plot(z, curve, color="k", linewidth=2.2, zorder=20 + i)
 
        ax.plot(z, np.zeros_like(z), color="k", linewidth=2.2, zorder=1000)
-       ax.set_title(title, fontsize=15)
-       ax.set_xlabel("Redshift $z$", fontsize=15)
+       ax.set_title(title)
+       ax.set_xlabel("Redshift $z$")
 
    tomo = NZTomography()
    z = np.linspace(0.0, 2.0, 500)
@@ -515,7 +515,7 @@ with true redshift, while values below ``1`` make that increase weaker.
    fig, axes = plt.subplots(1, 2, figsize=(11.0, 4.6), sharey=True)
 
    plot_bins(axes[0], z, unit_scale_result.bins, "mean_scale=1.0")
-   axes[0].set_ylabel(r"Normalized $n_i(z)$", fontsize=15)
+   axes[0].set_ylabel(r"Normalized $n_i(z)$")
 
    plot_bins(axes[1], z, stretched_scale_result.bins, "mean_scale=1.5")
 
@@ -555,8 +555,8 @@ which creates broader tails and stronger leakage between bins.
            ax.plot(z, curve, color="k", linewidth=2.2, zorder=20 + i)
 
        ax.plot(z, np.zeros_like(z), color="k", linewidth=2.2, zorder=1000)
-       ax.set_title(title, fontsize=15)
-       ax.set_xlabel("Redshift $z$", fontsize=15)
+       ax.set_title(title)
+       ax.set_xlabel("Redshift $z$")
 
    tomo = NZTomography()
    z = np.linspace(0.0, 2.0, 500)
@@ -598,7 +598,7 @@ which creates broader tails and stronger leakage between bins.
    fig, axes = plt.subplots(1, 2, figsize=(11.0, 4.6), sharey=True)
 
    plot_bins(axes[0], z, no_outliers_result.bins, "outlier_frac = 0.00")
-   axes[0].set_ylabel(r"Normalized $n_i(z)$", fontsize=15)
+   axes[0].set_ylabel(r"Normalized $n_i(z)$")
 
    plot_bins(axes[1], z, with_outliers_result.bins, "outlier_frac = 0.08")
 
@@ -638,8 +638,8 @@ contaminates more bins.
            ax.plot(z, curve, color="k", linewidth=2.2, zorder=20 + i)
 
        ax.plot(z, np.zeros_like(z), color="k", linewidth=2.2, zorder=1000)
-       ax.set_title(title, fontsize=15)
-       ax.set_xlabel("Redshift $z$", fontsize=15)
+       ax.set_title(title)
+       ax.set_xlabel("Redshift $z$")
 
    tomo = NZTomography()
    z = np.linspace(0.0, 2.0, 500)
@@ -685,7 +685,7 @@ contaminates more bins.
    fig, axes = plt.subplots(1, 2, figsize=(11.0, 4.6), sharey=True)
 
    plot_bins(axes[0], z, narrow_outlier_result.bins, "outlier_scatter_scale = 0.15")
-   axes[0].set_ylabel(r"Normalized $n_i(z)$", fontsize=15)
+   axes[0].set_ylabel(r"Normalized $n_i(z)$")
 
    plot_bins(axes[1], z, broad_outlier_result.bins, "outlier_scatter_scale = 0.35")
 
@@ -725,8 +725,8 @@ from the redshift range occupied by the main population.
            ax.plot(z, curve, color="k", linewidth=2.2, zorder=20 + i)
 
        ax.plot(z, np.zeros_like(z), color="k", linewidth=2.2, zorder=1000)
-       ax.set_title(title, fontsize=15)
-       ax.set_xlabel("Redshift $z$", fontsize=15)
+       ax.set_title(title)
+       ax.set_xlabel("Redshift $z$")
 
    tomo = NZTomography()
    z = np.linspace(0.0, 2.0, 500)
@@ -772,7 +772,7 @@ from the redshift range occupied by the main population.
    fig, axes = plt.subplots(1, 2, figsize=(11.0, 4.6), sharey=True)
 
    plot_bins(axes[0], z, small_outlier_shift_result.bins, "outlier_mean_offset = 0.02")
-   axes[0].set_ylabel(r"Normalized $n_i(z)$", fontsize=15)
+   axes[0].set_ylabel(r"Normalized $n_i(z)$")
 
    plot_bins(axes[1], z, large_outlier_shift_result.bins, "outlier_mean_offset = 0.12")
 
@@ -812,8 +812,8 @@ more quickly or more slowly with redshift.
            ax.plot(z, curve, color="k", linewidth=2.2, zorder=20 + i)
 
        ax.plot(z, np.zeros_like(z), color="k", linewidth=2.2, zorder=1000)
-       ax.set_title(title, fontsize=15)
-       ax.set_xlabel("Redshift $z$", fontsize=15)
+       ax.set_title(title)
+       ax.set_xlabel("Redshift $z$")
 
    tomo = NZTomography()
    z = np.linspace(0.0, 2.0, 500)
@@ -859,7 +859,7 @@ more quickly or more slowly with redshift.
    fig, axes = plt.subplots(1, 2, figsize=(11.0, 4.6), sharey=True)
 
    plot_bins(axes[0], z, unit_outlier_scale_result.bins, "outlier_mean_scale = 1.00")
-   axes[0].set_ylabel(r"Normalized $n_i(z)$", fontsize=15)
+   axes[0].set_ylabel(r"Normalized $n_i(z)$")
 
    plot_bins(axes[1], z, stretched_outlier_scale_result.bins, "outlier_mean_scale = 1.15")
 
@@ -918,8 +918,8 @@ assigned its own scatter level.
            )
 
        ax.plot(z, np.zeros_like(z), color="k", linewidth=2.2, zorder=1000)
-       ax.set_title(title, fontsize=15)
-       ax.set_xlabel("Redshift $z$", fontsize=15)
+       ax.set_title(title)
+       ax.set_xlabel("Redshift $z$")
 
    tomo = NZTomography()
    z = np.linspace(0.0, 2.0, 500)
@@ -957,7 +957,7 @@ assigned its own scatter level.
    fig, axes = plt.subplots(1, 2, figsize=(11.0, 4.6), sharey=True)
 
    plot_bins(axes[0], z, shared_result.bins, "Shared scatter_scale = 0.05")
-   axes[0].set_ylabel(r"Normalized $n_i(z)$", fontsize=15)
+   axes[0].set_ylabel(r"Normalized $n_i(z)$")
 
    plot_bins(
        axes[1],
@@ -1022,9 +1022,9 @@ for all uncertainty ingredients.
            )
 
        ax.plot(z, np.zeros_like(z), color="k", linewidth=1.8, zorder=1000)
-       ax.set_title(title, fontsize=15)
-       ax.set_xlabel("Redshift $z$", fontsize=15)
-       ax.set_ylabel(r"Normalized $n_i(z)$", fontsize=15)
+       ax.set_title(title)
+       ax.set_xlabel("Redshift $z$")
+       ax.set_ylabel(r"Normalized $n_i(z)$")
 
    tomo = NZTomography()
 

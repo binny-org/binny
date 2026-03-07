@@ -212,10 +212,10 @@ the mock distribution.
        label="Fitted Smail model",
    )
 
-   plt.xlabel("Redshift $z$", fontsize=15)
-   plt.ylabel(r"Normalized $n(z)$", fontsize=15)
-   plt.title("Mock redshift sample and calibrated Smail fit", fontsize=15)
-   plt.legend(frameon=False, fontsize=15)
+   plt.xlabel("Redshift $z$")
+   plt.ylabel(r"Normalized $n(z)$")
+   plt.title("Mock redshift sample and calibrated Smail fit")
+   plt.legend(frameon=False)
    plt.tight_layout()
 
 
@@ -307,9 +307,9 @@ models reproduce the behavior measured directly from the mock catalog.
        linewidth=2.0,
        zorder=20,
    )
-   axes[0].set_xlabel(r"Limiting magnitude $m_{\rm lim}$", fontsize=15)
-   axes[0].set_ylabel(r"Fitted $z_0$", fontsize=15)
-   axes[0].set_title(r"Calibrated $z_0(m_{\rm lim})$", fontsize=15)
+   axes[0].set_xlabel(r"Limiting magnitude $m_{\rm lim}$")
+   axes[0].set_ylabel(r"Fitted $z_0$")
+   axes[0].set_title(r"Calibrated $z_0(m_{\rm lim})$")
 
    axes[1].plot(mfit, ngal_curve, lw=3, color=c2, alpha=0.6)
    axes[1].scatter(
@@ -321,9 +321,9 @@ models reproduce the behavior measured directly from the mock catalog.
        linewidth=2.0,
        zorder=20,
    )
-   axes[1].set_xlabel(r"Limiting magnitude $m_{\rm lim}$", fontsize=15)
-   axes[1].set_ylabel(r"$n_{\rm gal}$ [arcmin$^{-2}$]", fontsize=15)
-   axes[1].set_title(r"Calibrated $n_{\rm gal}(m_{\rm lim})$", fontsize=15)
+   axes[1].set_xlabel(r"Limiting magnitude $m_{\rm lim}$")
+   axes[1].set_ylabel(r"$n_{\rm gal}$ [arcmin$^{-2}$]")
+   axes[1].set_title(r"Calibrated $n_{\rm gal}(m_{\rm lim})$")
 
    plt.tight_layout()
 

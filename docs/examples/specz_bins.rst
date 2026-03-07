@@ -72,9 +72,9 @@ scatter term.
            )
 
        ax.plot(z, np.zeros_like(z), color="k", linewidth=2.2, zorder=1000)
-       ax.set_title(title, fontsize=15)
-       ax.set_xlabel("Redshift $z$", fontsize=15)
-       ax.set_ylabel(r"Normalized $n_i(z)$", fontsize=15)
+       ax.set_title(title)
+       ax.set_xlabel("Redshift $z$")
+       ax.set_ylabel(r"Normalized $n_i(z)$")
        ax.set_xlim(xmin, xmax)
 
    tomo = NZTomography()
@@ -145,8 +145,8 @@ equipopulated spectroscopic bins using the same uncertainty setup.
            ax.plot(z, curve, color="k", linewidth=2.2, zorder=20 + i)
 
        ax.plot(z, np.zeros_like(z), color="k", linewidth=2.2, zorder=1000)
-       ax.set_title(title, fontsize=15)
-       ax.set_xlabel("Redshift $z$", fontsize=15)
+       ax.set_title(title)
+       ax.set_xlabel("Redshift $z$")
        ax.set_xlim(xmin, xmax)
 
    tomo = NZTomography()
@@ -196,7 +196,7 @@ equipopulated spectroscopic bins using the same uncertainty setup.
    fig, axes = plt.subplots(1, 2, figsize=(11.0, 4.6), sharey=True)
 
    plot_bins(axes[0], z, equidistant_result.bins, "Equidistant")
-   axes[0].set_ylabel(r"Normalized $n_i(z)$", fontsize=15)
+   axes[0].set_ylabel(r"Normalized $n_i(z)$")
 
    plot_bins(axes[1], z, equipopulated_result.bins, "Equipopulated", xmax=0.5)
 
@@ -235,8 +235,8 @@ the photo-z case because the redshift uncertainties are much smaller.
            ax.plot(z, curve, color="k", linewidth=2.2, zorder=20 + i)
 
        ax.plot(z, np.zeros_like(z), color="k", linewidth=2.2, zorder=1000)
-       ax.set_title(title, fontsize=15)
-       ax.set_xlabel("Redshift $z$", fontsize=15)
+       ax.set_title(title)
+       ax.set_xlabel("Redshift $z$")
        ax.set_xlim(xmin, xmax)
 
    tomo = NZTomography()
@@ -284,7 +284,7 @@ the photo-z case because the redshift uncertainties are much smaller.
    fig, axes = plt.subplots(1, 2, figsize=(11.0, 4.6))
 
    plot_bins(axes[0], z, three_bin_result.bins, "3 bins", xmax=0.5)
-   axes[0].set_ylabel(r"Normalized $n_i(z)$", fontsize=15)
+   axes[0].set_ylabel(r"Normalized $n_i(z)$")
 
    plot_bins(axes[1], z, five_bin_result.bins, "5 bins", xmax=0.5)
 
@@ -332,8 +332,8 @@ overlap between neighboring tomographic bins.
            ax.plot(z, curve, color="k", linewidth=2.2, zorder=20 + i)
 
        ax.plot(z, np.zeros_like(z), color="k", linewidth=2.2, zorder=1000)
-       ax.set_title(title, fontsize=15)
-       ax.set_xlabel("Redshift $z$", fontsize=15)
+       ax.set_title(title)
+       ax.set_xlabel("Redshift $z$")
        ax.set_xlim(xmin, xmax)
 
    tomo = NZTomography()
@@ -385,7 +385,7 @@ overlap between neighboring tomographic bins.
    fig, axes = plt.subplots(1, 2, figsize=(11.0, 4.6), sharey=True)
 
    plot_bins(axes[0], z, low_scatter.bins, "Low spec-z scatter", xmax=0.5)
-   axes[0].set_ylabel(r"Normalized $n_i(z)$", fontsize=15)
+   axes[0].set_ylabel(r"Normalized $n_i(z)$")
 
    plot_bins(axes[1], z, high_scatter.bins, "High spec-z scatter", xmax=0.5)
 
@@ -426,8 +426,8 @@ distribution to reflect incomplete sampling.
            ax.plot(z, curve, color="k", linewidth=2.2, zorder=20 + i)
 
        ax.plot(z, np.zeros_like(z), color="k", linewidth=2.2, zorder=1000)
-       ax.set_title(title, fontsize=15)
-       ax.set_xlabel("Redshift $z$", fontsize=15)
+       ax.set_title(title)
+       ax.set_xlabel("Redshift $z$")
        ax.set_xlim(xmin, xmax)
 
    tomo = NZTomography()
@@ -483,7 +483,7 @@ distribution to reflect incomplete sampling.
       "Completeness: all unity",
       xmax=0.5
    )
-   axes[0].set_ylabel(r"Normalized $n_i(z)$", fontsize=15)
+   axes[0].set_ylabel(r"Normalized $n_i(z)$")
 
    plot_bins(
       axes[1],
@@ -530,8 +530,8 @@ otherwise well-separated tomographic bins.
            ax.plot(z, curve, color="k", linewidth=2.2, zorder=20 + i)
 
        ax.plot(z, np.zeros_like(z), color="k", linewidth=2.2, zorder=1000)
-       ax.set_title(title, fontsize=15)
-       ax.set_xlabel("Redshift $z$", fontsize=15)
+       ax.set_title(title)
+       ax.set_xlabel("Redshift $z$")
        ax.set_xlim(xmin, xmax)
 
    tomo = NZTomography()
@@ -596,7 +596,7 @@ otherwise well-separated tomographic bins.
        "No catastrophic reassignment",
        xmax=0.5
    )
-   axes[0].set_ylabel(r"Normalized $n_i(z)$", fontsize=15)
+   axes[0].set_ylabel(r"Normalized $n_i(z)$")
 
    plot_bins(
        axes[1],
@@ -642,8 +642,8 @@ spreads them across all bins with equal probability.
            ax.plot(z, curve, color="k", linewidth=2.2, zorder=20 + i)
 
        ax.plot(z, np.zeros_like(z), color="k", linewidth=2.2, zorder=1000)
-       ax.set_title(title, fontsize=15)
-       ax.set_xlabel("Redshift $z$", fontsize=15)
+       ax.set_title(title)
+       ax.set_xlabel("Redshift $z$")
        ax.set_xlim(xmin, xmax)
 
    tomo = NZTomography()
@@ -695,7 +695,7 @@ spreads them across all bins with equal probability.
    fig, axes = plt.subplots(1, 2, figsize=(11.0, 4.6), sharey=True)
 
    plot_bins(axes[0], z, neighbor_result.bins, "Leakage model: neighbor", xmax=0.5)
-   axes[0].set_ylabel(r"Normalized $n_i(z)$", fontsize=15)
+   axes[0].set_ylabel(r"Normalized $n_i(z)$")
 
    plot_bins(axes[1], z, uniform_result.bins, "Leakage model: uniform", xmax=0.5)
 
@@ -752,8 +752,8 @@ completeness model with a per-bin version of the same setup.
            )
 
        ax.plot(z, np.zeros_like(z), color="k", linewidth=2.2, zorder=1000)
-       ax.set_title(title, fontsize=15)
-       ax.set_xlabel("Redshift $z$", fontsize=15)
+       ax.set_title(title)
+       ax.set_xlabel("Redshift $z$")
        ax.set_xlim(xmin, xmax)
 
    tomo = NZTomography()
@@ -813,7 +813,7 @@ completeness model with a per-bin version of the same setup.
    fig, axes = plt.subplots(1, 2, figsize=(11.0, 4.6), sharey=True)
 
    plot_bins(axes[0], z, shared_result.bins, "Shared uncertainty values", xmax=0.5)
-   axes[0].set_ylabel(r"Normalized $n_i(z)$", fontsize=15)
+   axes[0].set_ylabel(r"Normalized $n_i(z)$")
 
    plot_bins(axes[1], z, per_bin_result.bins, "Per-bin uncertainty values", xmax=0.5)
 
@@ -872,9 +872,9 @@ The example below uses per-bin values for completeness,
            )
 
        ax.plot(z, np.zeros_like(z), color="k", linewidth=1.8, zorder=1000)
-       ax.set_title(title, fontsize=15)
-       ax.set_xlabel("Redshift $z$", fontsize=15)
-       ax.set_ylabel(r"Normalized $n_i(z)$", fontsize=15)
+       ax.set_title(title)
+       ax.set_xlabel("Redshift $z$")
+       ax.set_ylabel(r"Normalized $n_i(z)$")
        ax.set_xlim(xmin, xmax)
 
    tomo = NZTomography()

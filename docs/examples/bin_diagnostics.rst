@@ -94,8 +94,8 @@ rather than to changes in the underlying uncertainty assumptions.
            )
 
        ax.plot(z, np.zeros_like(z), color="k", linewidth=2.2, zorder=1000)
-       ax.set_title(title, fontsize=15)
-       ax.set_xlabel("Redshift $z$", fontsize=15)
+       ax.set_title(title)
+       ax.set_xlabel("Redshift $z$")
 
    z = np.linspace(0.0, 2.0, 500)
 
@@ -154,7 +154,7 @@ rather than to changes in the underlying uncertainty assumptions.
    fig, axes = plt.subplots(1, 2, figsize=(11.0, 4.6), sharey=True)
 
    plot_bins(axes[0], z, equipopulated_result.bins, "Equipopulated bins")
-   axes[0].set_ylabel(r"Normalized $n_i(z)$", fontsize=15)
+   axes[0].set_ylabel(r"Normalized $n_i(z)$")
 
    plot_bins(axes[1], z, equidistant_result.bins, "Equidistant bins")
 
@@ -258,13 +258,13 @@ photo-z example.
 
    for ax, (keys, matrix, title, xlabel, ylabel) in zip(axes, matrices, strict=True):
        ax.imshow(matrix, origin="lower", aspect="auto")
-       ax.set_title(title, fontsize=15)
+       ax.set_title(title)
        ax.set_xticks(np.arange(len(keys)))
        ax.set_yticks(np.arange(len(keys)))
-       ax.set_xticklabels(keys, fontsize=11)
-       ax.set_yticklabels(keys, fontsize=11)
-       ax.set_xlabel(xlabel, fontsize=13)
-       ax.set_ylabel(ylabel, fontsize=13)
+       ax.set_xticklabels(keys)
+       ax.set_yticklabels(keys)
+       ax.set_xlabel(xlabel)
+       ax.set_ylabel(ylabel)
 
        for i in range(matrix.shape[0]):
            for j in range(matrix.shape[1]):
@@ -400,13 +400,13 @@ across definitions and which depend more strongly on the chosen metric.
    for ax, (title, metric_dict) in zip(axes, metric_specs):
        keys, matrix = nested_dict_to_matrix(metric_dict)
        ax.imshow(matrix, origin="lower", aspect="auto")
-       ax.set_title(title, fontsize=14)
+       ax.set_title(title)
        ax.set_xticks(np.arange(len(keys)))
        ax.set_yticks(np.arange(len(keys)))
-       ax.set_xticklabels(keys, fontsize=11)
-       ax.set_yticklabels(keys, fontsize=11)
-       ax.set_xlabel("Bin index", fontsize=12)
-       ax.set_ylabel("Bin index", fontsize=12)
+       ax.set_xticklabels(keys)
+       ax.set_yticklabels(keys)
+       ax.set_xlabel("Bin index")
+       ax.set_ylabel("Bin index")
 
        for i in range(matrix.shape[0]):
            for j in range(matrix.shape[1]):
@@ -502,9 +502,9 @@ four-bin photo-z example.
 
    plt.figure(figsize=(7.8, 4.8))
    plt.barh(y, values, edgecolor="k", linewidth=1.2)
-   plt.yticks(y, labels, fontsize=12)
-   plt.xlabel("Min overlap [%]", fontsize=13)
-   plt.title("Pairwise overlap ranking", fontsize=14)
+   plt.yticks(y, labels)
+   plt.xlabel("Min overlap [%]")
+   plt.title("Pairwise overlap ranking")
    plt.gca().invert_yaxis()
    plt.tight_layout()
 
@@ -599,10 +599,10 @@ mixing with neighboring bins.
        linewidth=1.2,
        label="Contamination",
    )
-   plt.xticks(x, [f"Bin {key}" for key in keys], fontsize=12)
-   plt.ylabel("Percent", fontsize=13)
-   plt.title("Leakage-based completeness and contamination", fontsize=14)
-   plt.legend(frameon=False, fontsize=12)
+   plt.xticks(x, [f"Bin {key}" for key in keys])
+   plt.ylabel("Percent")
+   plt.title("Leakage-based completeness and contamination")
+   plt.legend(frameon=False)
    plt.tight_layout()
 
 
@@ -700,10 +700,10 @@ longer-range tails and outlier-driven transfers across more distant bins.
        )
        bottoms += np.array(values)
 
-   plt.xticks(x, [f"Source bin {key}" for key in keys], fontsize=12)
-   plt.ylabel("Percent of source-bin mass", fontsize=13)
-   plt.title("Leakage composition", fontsize=14)
-   plt.legend(frameon=False, fontsize=10)
+   plt.xticks(x, [f"Source bin {key}" for key in keys])
+   plt.ylabel("Percent of source-bin mass")
+   plt.title("Leakage composition")
+   plt.legend(frameon=False)
    plt.tight_layout()
 
 
@@ -793,9 +793,9 @@ for all unique off-diagonal bin pairs.
    for x, y, label in zip(x_vals, y_vals, labels, strict=True):
        plt.text(x, y, label, fontsize=10, ha="left", va="bottom")
 
-   plt.xlabel("Min overlap [fraction]", fontsize=13)
-   plt.ylabel("Pearson correlation", fontsize=13)
-   plt.title("Pearson correlation versus overlap", fontsize=14)
+   plt.xlabel("Min overlap [fraction]")
+   plt.ylabel("Pearson correlation")
+   plt.title("Pearson correlation versus overlap")
    plt.tight_layout()
 
 If the points lie close to a monotonic trend, the two metrics are giving
@@ -960,13 +960,13 @@ between-sample overlap, interval-mass, and Pearson correlation.
        strict=True,
    ):
        ax.imshow(matrix, origin="lower", aspect="auto")
-       ax.set_title(title, fontsize=14)
+       ax.set_title(title)
        ax.set_xticks(np.arange(len(col_keys)))
        ax.set_yticks(np.arange(len(row_keys)))
-       ax.set_xticklabels(col_keys, fontsize=11)
-       ax.set_yticklabels(row_keys, fontsize=11)
-       ax.set_xlabel(xlabel, fontsize=12)
-       ax.set_ylabel(ylabel, fontsize=12)
+       ax.set_xticklabels(col_keys)
+       ax.set_yticklabels(row_keys)
+       ax.set_xlabel(xlabel)
+       ax.set_ylabel(ylabel)
 
        for i in range(matrix.shape[0]):
            for j in range(matrix.shape[1]):
@@ -1102,9 +1102,9 @@ min-overlap score.
 
    plt.figure(figsize=(8.2, 5.0))
    plt.barh(y, values, edgecolor="k", linewidth=1.2)
-   plt.yticks(y, labels, fontsize=11)
-   plt.xlabel("Between-sample min overlap [%]", fontsize=13)
-   plt.title("Cross-sample pair ranking", fontsize=14)
+   plt.yticks(y, labels)
+   plt.xlabel("Between-sample min overlap [%]")
+   plt.title("Cross-sample pair ranking")
    plt.gca().invert_yaxis()
    plt.tight_layout()
 
