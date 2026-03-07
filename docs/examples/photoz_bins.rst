@@ -72,7 +72,7 @@ Smail distribution, equal-number binning, and a single scalar scatter term.
 
    tomo = NZTomography()
 
-   z = np.linspace(0.0, 3.0, 500)
+   z = np.linspace(0.0, 2.0, 500)
 
    nz = NZTomography.nz_model(
        "smail",
@@ -102,7 +102,7 @@ Smail distribution, equal-number binning, and a single scalar scatter term.
        ax,
        z,
        photoz_result.bins,
-       title="Photo-z binning: 4 equal-number bins",
+       title="Photo-z binning: 4 equipopulated bins",
    )
    plt.tight_layout()
 
@@ -140,7 +140,7 @@ Changing the binning scheme
 
    tomo = NZTomography()
 
-   z = np.linspace(0.0, 3.0, 500)
+   z = np.linspace(0.0, 2.0, 500)
 
    nz = NZTomography.nz_model(
        "smail",
@@ -213,7 +213,7 @@ Changing the number of bins
 
    tomo = NZTomography()
 
-   z = np.linspace(0.0, 3.0, 500)
+   z = np.linspace(0.0, 2.0, 500)
 
    nz = NZTomography.nz_model(
        "smail",
@@ -299,7 +299,7 @@ and the bin edges look less sharp.
        ax.set_xlabel("Redshift $z$", fontsize=13)
 
    tomo = NZTomography()
-   z = np.linspace(0.0, 3.0, 500)
+   z = np.linspace(0.0, 2.0, 500)
 
    nz = NZTomography.nz_model(
        "smail",
@@ -373,7 +373,7 @@ true redshift, while a negative value would move them lower.
        ax.set_xlabel("Redshift $z$", fontsize=13)
 
    tomo = NZTomography()
-   z = np.linspace(0.0, 3.0, 500)
+   z = np.linspace(0.0, 2.0, 500)
 
    nz = NZTomography.nz_model(
        "smail",
@@ -453,7 +453,7 @@ redshift grows faster with true redshift, while values below ``1`` compress it.
        ax.set_xlabel("Redshift $z$", fontsize=13)
 
    tomo = NZTomography()
-   z = np.linspace(0.0, 3.0, 500)
+   z = np.linspace(0.0, 2.0, 500)
 
    nz = NZTomography.nz_model(
        "smail",
@@ -534,7 +534,7 @@ broader tails and stronger leakage between bins.
        ax.set_xlabel("Redshift $z$", fontsize=13)
 
    tomo = NZTomography()
-   z = np.linspace(0.0, 3.0, 500)
+   z = np.linspace(0.0, 2.0, 500)
 
    nz = NZTomography.nz_model(
        "smail",
@@ -617,7 +617,7 @@ contaminates more bins.
        ax.set_xlabel("Redshift $z$", fontsize=13)
 
    tomo = NZTomography()
-   z = np.linspace(0.0, 3.0, 500)
+   z = np.linspace(0.0, 2.0, 500)
 
    nz = NZTomography.nz_model(
        "smail",
@@ -703,7 +703,7 @@ farther away from where the correctly assigned galaxies would lie.
        ax.set_xlabel("Redshift $z$", fontsize=13)
 
    tomo = NZTomography()
-   z = np.linspace(0.0, 3.0, 500)
+   z = np.linspace(0.0, 2.0, 500)
 
    nz = NZTomography.nz_model(
        "smail",
@@ -790,7 +790,7 @@ or compressed with redshift.
        ax.set_xlabel("Redshift $z$", fontsize=13)
 
    tomo = NZTomography()
-   z = np.linspace(0.0, 3.0, 500)
+   z = np.linspace(0.0, 2.0, 500)
 
    nz = NZTomography.nz_model(
        "smail",
@@ -898,7 +898,7 @@ for all uncertainty ingredients.
 
    tomo = NZTomography()
 
-   z = np.linspace(0.0, 3.0, 500)
+   z = np.linspace(0.0, 2.0, 500)
 
    nz = NZTomography.nz_model(
        "smail",
@@ -954,7 +954,7 @@ Inspecting the returned bins
 
    tomo = NZTomography()
 
-   z = np.linspace(0.0, 3.0, 500)
+   z = np.linspace(0.0, 2.0, 500)
 
    nz = NZTomography.nz_model(
        "smail",

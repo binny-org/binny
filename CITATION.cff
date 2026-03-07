@@ -1,6 +1,6 @@
 cff-version: 1.2.0
 message: >
-  If you use this software in your research, please cite it using the
+  If you use this software in your research, cite it using the
   metadata below.
 
 title: "binny: Flexible binning algorithms for cosmology"
