@@ -831,3 +831,203 @@ def test_calibrate_smail_from_mock_uses_defaults(monkeypatch):
     assert called["infer_alpha_beta_from"] == "deep_cut"
     assert called["alpha_beta_maglim"] is None
     assert called["z_max"] is None
+
+
+def test_between_sample_stats_raises_before_build():
+    """Tests that between_sample_stats raises before build_bins is called."""
+    t0 = NZTomography()
+    t1 = NZTomography()
+
+    with pytest.raises(ValueError, match=r"Call build_bins"):
+        t0.between_sample_stats(t1, overlap={})
+
+
+def test_between_sample_stats_skips_all_when_all_none(monkeypatch):
+    """Tests that between_sample_stats returns an empty dict when all inputs are None."""
+    _install_fake_builder_modules(monkeypatch)
+    monkeypatch.setattr(
+        cu, "_parse_entry", lambda e: {**dict(e), "role": "source", "year": "1"}, raising=True
+    )
+    monkeypatch.setattr(cu, "_builder_kwargs_from_spec", lambda spec: {"n_bins": 2}, raising=True)
+
+    t0 = NZTomography()
+    t1 = NZTomography()
+
+    z = np.linspace(0, 1, 11)
+    nz0 = np.ones_like(z)
+    nz1 = np.linspace(1.0, 2.0, z.size)
+
+    t0.build_bins(z=z, nz=nz0, tomo_spec={"kind": "photoz", "bins": {"n_bins": 2}})
+    t1.build_bins(z=z, nz=nz1, tomo_spec={"kind": "photoz", "bins": {"n_bins": 2}})
+
+    out = t0.between_sample_stats(t1)
+    assert out == {}
+
+
+def test_between_sample_stats_requires_shared_z_grid(monkeypatch):
+    """Tests that between_sample_stats requires both instances to share the same z grid."""
+    _install_fake_builder_modules(monkeypatch)
+    monkeypatch.setattr(
+        cu, "_parse_entry", lambda e: {**dict(e), "role": "source", "year": "1"}, raising=True
+    )
+    monkeypatch.setattr(cu, "_builder_kwargs_from_spec", lambda spec: {"n_bins": 2}, raising=True)
+
+    t0 = NZTomography()
+    t1 = NZTomography()
+
+    z0 = np.linspace(0, 1, 11)
+    z1 = np.linspace(0, 1, 12)
+    nz0 = np.ones_like(z0)
+    nz1 = np.ones_like(z1)
+
+    t0.build_bins(z=z0, nz=nz0, tomo_spec={"kind": "photoz", "bins": {"n_bins": 2}})
+    t1.build_bins(z=z1, nz=nz1, tomo_spec={"kind": "photoz", "bins": {"n_bins": 2}})
+
+    with pytest.raises(ValueError, match=r"share the same z grid"):
+        t0.between_sample_stats(t1, overlap={})
+
+
+def test_between_sample_stats_interval_mass_requires_target_edges(monkeypatch):
+    """Tests that between_sample_stats requires target_edges for interval_mass."""
+    _install_fake_builder_modules(monkeypatch)
+    monkeypatch.setattr(
+        cu, "_parse_entry", lambda e: {**dict(e), "role": "source", "year": "1"}, raising=True
+    )
+    monkeypatch.setattr(cu, "_builder_kwargs_from_spec", lambda spec: {"n_bins": 2}, raising=True)
+
+    t0 = NZTomography()
+    t1 = NZTomography()
+
+    z = np.linspace(0, 1, 11)
+    nz0 = np.ones_like(z)
+    nz1 = np.linspace(1.0, 2.0, z.size)
+
+    t0.build_bins(z=z, nz=nz0, tomo_spec={"kind": "photoz", "bins": {"n_bins": 2}})
+    t1.build_bins(z=z, nz=nz1, tomo_spec={"kind": "photoz", "bins": {"n_bins": 2}})
+
+    with pytest.raises(ValueError, match=r"interval_mass requires interval_mass=\{'target_edges':"):
+        t0.between_sample_stats(t1, interval_mass={"normalize": True})
+
+
+def test_between_sample_stats_delegates_to_between_sample_metrics(monkeypatch):
+    """Tests that between_sample_stats delegates to between_sample_metrics."""
+    _install_fake_builder_modules(monkeypatch)
+    monkeypatch.setattr(
+        cu, "_parse_entry", lambda e: {**dict(e), "role": "source", "year": "1"}, raising=True
+    )
+    monkeypatch.setattr(cu, "_builder_kwargs_from_spec", lambda spec: {"n_bins": 2}, raising=True)
+
+    calls: dict[str, dict] = {
+        "overlap": {},
+        "correlations": {},
+        "interval_mass": {},
+        "pearson": {},
+    }
+
+    def fake_between_overlap(z, bins_a, bins_b, **kw):
+        """Fake between-sample overlap matrix that returns a constant matrix."""
+        calls["overlap"] = {
+            "z": np.asarray(z),
+            "bins_a": bins_a,
+            "bins_b": bins_b,
+            "kw": dict(kw),
+        }
+        return np.eye(len(bins_a))
+
+    def fake_between_pairs(z, bins_a, bins_b, **kw):
+        """Fake between-sample pair summaries that return a simple list."""
+        calls["correlations"] = {
+            "z": np.asarray(z),
+            "bins_a": bins_a,
+            "bins_b": bins_b,
+            "kw": dict(kw),
+        }
+        return [(0, 0), (1, 1)]
+
+    def fake_between_interval_mass(z, bins_a, target_edges, **kw):
+        """Fake between-sample interval-mass matrix that returns a constant matrix."""
+        calls["interval_mass"] = {
+            "z": np.asarray(z),
+            "bins_a": bins_a,
+            "target_edges": target_edges,
+            "kw": dict(kw),
+        }
+        return np.ones((len(bins_a), len(target_edges) - 1))
+
+    def fake_between_pearson(z, bins_a, bins_b, **kw):
+        """Fake between-sample pearson matrix that returns a constant matrix."""
+        calls["pearson"] = {
+            "z": np.asarray(z),
+            "bins_a": bins_a,
+            "bins_b": bins_b,
+            "kw": dict(kw),
+        }
+        return np.zeros((len(bins_a), len(bins_b)))
+
+    monkeypatch.setattr(
+        "binny.api.nz_tomography._between_metrics.between_bin_overlap",
+        fake_between_overlap,
+        raising=True,
+    )
+    monkeypatch.setattr(
+        "binny.api.nz_tomography._between_metrics.between_overlap_pairs",
+        fake_between_pairs,
+        raising=True,
+    )
+    monkeypatch.setattr(
+        "binny.api.nz_tomography._between_metrics.between_interval_mass_matrix",
+        fake_between_interval_mass,
+        raising=True,
+    )
+    monkeypatch.setattr(
+        "binny.api.nz_tomography._between_metrics.between_pearson_matrix",
+        fake_between_pearson,
+        raising=True,
+    )
+
+    t0 = NZTomography()
+    t1 = NZTomography()
+
+    z = np.linspace(0, 1, 11)
+    nz0 = np.ones_like(z)
+    nz1 = np.linspace(1.0, 2.0, z.size)
+
+    payload0 = t0.build_bins(
+        z=z,
+        nz=nz0,
+        tomo_spec={"kind": "photoz", "bins": {"scheme": "x", "n_bins": 2}},
+    )
+    payload1 = t1.build_bins(
+        z=z,
+        nz=nz1,
+        tomo_spec={"kind": "photoz", "bins": {"scheme": "x", "n_bins": 2}},
+    )
+
+    out = t0.between_sample_stats(
+        t1,
+        overlap={"metric": "l1"},
+        pairs={"threshold": 0.2},
+        interval_mass={"target_edges": [0.0, 0.5, 1.0], "normalize": True},
+        pearson={"clip": True},
+    )
+
+    assert set(out.keys()) == {"overlap", "correlations", "interval_mass", "pearson"}
+    assert out["overlap"].shape == (2, 2)
+    assert out["interval_mass"].shape == (2, 2)
+    assert out["pearson"].shape == (2, 2)
+
+    assert np.allclose(calls["overlap"]["z"], payload0.z)
+    assert calls["overlap"]["bins_a"] == t0.bins
+    assert calls["overlap"]["bins_b"] == t1.bins
+    assert calls["overlap"]["kw"] == {"metric": "l1"}
+
+    assert np.allclose(calls["correlations"]["z"], payload1.z)
+    assert calls["correlations"]["kw"] == {"threshold": 0.2}
+
+    assert calls["interval_mass"]["target_edges"] == [0.0, 0.5, 1.0]
+    assert calls["interval_mass"]["bins_a"] == t0.bins
+    assert calls["interval_mass"]["kw"] == {"normalize": True}
+
+    assert calls["pearson"]["bins_a"] == t0.bins
+    assert calls["pearson"]["bins_b"] == t1.bins
+    assert calls["pearson"]["kw"] == {"clip": True}
