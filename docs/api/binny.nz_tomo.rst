@@ -7,6 +7,7 @@ Submodules
 .. toctree::
    :maxdepth: 4
 
+   binny.nz_tomo.between_sample_metrics
    binny.nz_tomo.bin_similarity
    binny.nz_tomo.bin_stats
    binny.nz_tomo.binning_core

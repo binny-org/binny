@@ -9,13 +9,13 @@ Once tomographic bins have been built, it is often useful to inspect
 their statistical properties before using them in a forecast or analysis.
 
 Binny provides several diagnostics through :class:`binny.NZTomography`
-that quantify three complementary aspects of a tomographic binning
+that quantify several complementary aspects of a tomographic binning
 scheme: the **shape of the bin curves**, the **distribution of galaxies
-across bins**, and the **degree of coupling between bins** through
-overlap, leakage, or correlated structure. Together, these diagnostics
-help assess whether the resulting bins are well separated, well
-populated, and suitable for downstream forecasting or cosmological
-analysis.
+across bins**, and the **degree of coupling within or between bin
+families** through overlap, leakage, interval-based mass transfer, or
+correlated structure. Together, these diagnostics help assess whether
+the resulting bins are well separated, well populated, and suitable for
+downstream forecasting or cosmological analysis.
 
 This page illustrates these diagnostics for a simple four-bin
 photometric example and compares two common binning schemes:
@@ -25,19 +25,21 @@ photometric example and compares two common binning schemes:
 - **equidistant binning**, where the redshift interval is divided into
   bins of similar width.
 
-The examples below focus on three families of diagnostics, each probing
+The examples below focus on four families of diagnostics, each probing
 a different aspect of tomographic-bin quality:
 
 - **shape statistics**, such as bin centers, widths, quantiles, and peaks,
 - **population statistics**, such as the fraction of galaxies per bin,
-- **cross-bin diagnostics**, such as overlap, leakage, and Pearson correlation.
+- **within-sample diagnostics**, such as overlap, leakage, pair rankings,
+  and Pearson correlation between bins from the same sample,
+- **between-sample diagnostics**, such as overlap, interval-mass
+  summaries, pair rankings, and Pearson correlation between bins from
+  different samples.
 
-The diagnostics on this page compare bins within a single tomographic
-sample. In joint analyses, it is often also useful to compare bins
-between different samples, for example lens and source bins in
-galaxy-galaxy lensing. Such between-sample diagnostics can be used to
-quantify redshift separation, overlap, and potential foreground
-contamination across sample families.
+Together, these quantities provide a practical way to inspect both the
+internal structure of a single tomographic sample and the relationship
+between two different tomographic samples, for example lens and source
+bins in galaxy-galaxy lensing.
 
 All examples below are executable via ``.. plot::``.
 
@@ -160,8 +162,8 @@ rather than to changes in the underlying uncertainty assumptions.
 
 
 
-Cross-bin diagnostics
----------------------
+Within-sample cross-bin diagnostics
+-----------------------------------
 
 In addition to per-bin summaries, it is often useful to quantify how
 strongly different tomographic bins are coupled to one another. Binny
@@ -802,24 +804,327 @@ such a trend indicate bin pairs whose relationship depends more strongly
 on whether one emphasizes shared support or overall shape similarity.
 
 
+Between-sample diagnostics
+--------------------------
+
+In joint analyses it is often useful to compare tomographic bins between
+two different samples rather than only within a single sample. A common
+example is comparing **lens bins** and **source bins** in a
+galaxy-galaxy lensing setup.
+
+Binny provides :meth:`binny.NZTomography.between_sample_stats` for this
+purpose. These diagnostics can be used to quantify how strongly bins
+from one sample overlap or correlate with bins from another sample, and
+how much of one sample falls inside the nominal redshift intervals of
+the other.
+
+The example below constructs a simple lens-like and source-like
+photo-z setup on the same redshift grid, then compares them using
+between-sample overlap, interval-mass, and Pearson correlation.
+
+.. plot::
+   :include-source: True
+   :width: 980
+
+   import matplotlib.pyplot as plt
+   import numpy as np
+
+   from binny import NZTomography
+
+   def nested_rect_dict_to_matrix(nested_dict):
+       row_keys = sorted(nested_dict.keys())
+       col_keys = sorted(nested_dict[row_keys[0]].keys())
+       matrix = np.array(
+           [[nested_dict[row_key][col_key] for col_key in col_keys] for row_key in row_keys],
+           dtype=float,
+       )
+       return row_keys, col_keys, matrix
+
+   z = np.linspace(0.0, 2.5, 600)
+
+   lens_nz = NZTomography.nz_model(
+       "smail",
+       z,
+       z0=0.18,
+       alpha=2.0,
+       beta=1.0,
+       normalize=True,
+   )
+
+   source_nz = NZTomography.nz_model(
+       "smail",
+       z,
+       z0=0.32,
+       alpha=2.0,
+       beta=1.0,
+       normalize=True,
+   )
+
+   lens_spec = {
+       "kind": "photoz",
+       "bins": {
+           "scheme": "equidistant",
+           "n_bins": 4,
+           "range": (0.2, 1.2),
+       },
+       "uncertainties": {
+           "scatter_scale": 0.03,
+           "mean_offset": 0.00,
+           "outlier_frac": 0.01,
+           "outlier_scatter_scale": 0.10,
+           "outlier_mean_offset": 0.03,
+       },
+       "normalize_bins": True,
+   }
+
+   source_spec = {
+       "kind": "photoz",
+       "bins": {
+           "scheme": "equipopulated",
+           "n_bins": 4,
+       },
+       "uncertainties": {
+           "scatter_scale": 0.06,
+           "mean_offset": 0.01,
+           "outlier_frac": 0.04,
+           "outlier_scatter_scale": 0.25,
+           "outlier_mean_offset": 0.06,
+       },
+       "normalize_bins": True,
+   }
+
+   lens = NZTomography()
+   lens.build_bins(
+       z=z,
+       nz=lens_nz,
+       tomo_spec=lens_spec,
+       include_tomo_metadata=True,
+   )
+
+   source = NZTomography()
+   source.build_bins(
+       z=z,
+       nz=source_nz,
+       tomo_spec=source_spec,
+       include_tomo_metadata=True,
+   )
+
+   target_edges = [0.2, 0.45, 0.70, 0.95, 1.20]
+
+   stats = lens.between_sample_stats(
+       source,
+       overlap={"method": "min", "unit": "percent", "normalize": True, "decimal_places": 3},
+       interval_mass={"target_edges": target_edges, "unit": "percent", "decimal_places": 3},
+       pearson={"normalize": True, "decimal_places": 3},
+   )
+
+   overlap_rows, overlap_cols, overlap_matrix = nested_rect_dict_to_matrix(stats["overlap"])
+   interval_rows, interval_cols, interval_matrix = nested_rect_dict_to_matrix(stats["interval_mass"])
+   pearson_rows, pearson_cols, pearson_matrix = nested_rect_dict_to_matrix(stats["pearson"])
+
+   fig, axes = plt.subplots(1, 3, figsize=(15.2, 4.8))
+
+   matrices = [
+       (
+           overlap_rows,
+           overlap_cols,
+           overlap_matrix,
+           "Between-sample overlap",
+           "Source bin",
+           "Lens bin",
+           "{:.1f}",
+       ),
+       (
+           interval_rows,
+           interval_cols,
+           interval_matrix,
+           "Source mass in lens intervals",
+           "Lens nominal interval",
+           "Source bin",
+           "{:.1f}",
+       ),
+       (
+           pearson_rows,
+           pearson_cols,
+           pearson_matrix,
+           "Between-sample Pearson",
+           "Source bin",
+           "Lens bin",
+           "{:.2f}",
+       ),
+   ]
+
+   for ax, (row_keys, col_keys, matrix, title, xlabel, ylabel, fmt) in zip(
+       axes,
+       matrices,
+       strict=True,
+   ):
+       ax.imshow(matrix, origin="lower", aspect="auto")
+       ax.set_title(title, fontsize=14)
+       ax.set_xticks(np.arange(len(col_keys)))
+       ax.set_yticks(np.arange(len(row_keys)))
+       ax.set_xticklabels(col_keys, fontsize=11)
+       ax.set_yticklabels(row_keys, fontsize=11)
+       ax.set_xlabel(xlabel, fontsize=12)
+       ax.set_ylabel(ylabel, fontsize=12)
+
+       for i in range(matrix.shape[0]):
+           for j in range(matrix.shape[1]):
+               ax.text(
+                   j,
+                   i,
+                   fmt.format(matrix[i, j]),
+                   ha="center",
+                   va="center",
+                   fontsize=8,
+                   color="k",
+               )
+
+   plt.tight_layout()
+
+These matrices are generally rectangular rather than square because the
+two samples need not have the same binning scheme, bin edges, or parent
+redshift distribution. The only requirement is that both tomographic
+realizations are evaluated on the same redshift grid. In practice, large
+values usually identify lens-source bin combinations that are less cleanly
+separated in redshift and may therefore deserve closer inspection in a
+joint analysis.
+
+
+Ranking the strongest cross-sample pairs
+----------------------------------------
+
+Between-sample pair rankings provide a compact way to identify which bin
+combinations across two tomographic samples are most strongly coupled
+according to a chosen metric.
+
+This is often useful in joint analyses, for example when identifying
+which lens-source bin combinations are most strongly overlapping in
+redshift. Such rankings can help diagnose where sample separation is
+cleanest and where additional care may be needed in downstream analysis.
+
+The example below ranks lens-source bin pairs by their between-sample
+min-overlap score.
+
+.. plot::
+   :include-source: True
+   :width: 760
+
+   import matplotlib.pyplot as plt
+   import numpy as np
+
+   from binny import NZTomography
+
+   z = np.linspace(0.0, 2.5, 600)
+
+   lens_nz = NZTomography.nz_model(
+       "smail",
+       z,
+       z0=0.18,
+       alpha=2.0,
+       beta=1.0,
+       normalize=True,
+   )
+
+   source_nz = NZTomography.nz_model(
+       "smail",
+       z,
+       z0=0.32,
+       alpha=2.0,
+       beta=1.0,
+       normalize=True,
+   )
+
+   lens_spec = {
+       "kind": "photoz",
+       "bins": {
+           "scheme": "equidistant",
+           "n_bins": 4,
+           "range": (0.2, 1.2),
+       },
+       "uncertainties": {
+           "scatter_scale": 0.03,
+           "mean_offset": 0.00,
+           "outlier_frac": 0.01,
+           "outlier_scatter_scale": 0.10,
+           "outlier_mean_offset": 0.03,
+       },
+       "normalize_bins": True,
+   }
+
+   source_spec = {
+       "kind": "photoz",
+       "bins": {
+           "scheme": "equipopulated",
+           "n_bins": 4,
+       },
+       "uncertainties": {
+           "scatter_scale": 0.06,
+           "mean_offset": 0.01,
+           "outlier_frac": 0.04,
+           "outlier_scatter_scale": 0.25,
+           "outlier_mean_offset": 0.06,
+       },
+       "normalize_bins": True,
+   }
+
+   lens = NZTomography()
+   lens.build_bins(
+       z=z,
+       nz=lens_nz,
+       tomo_spec=lens_spec,
+       include_tomo_metadata=True,
+   )
+
+   source = NZTomography()
+   source.build_bins(
+       z=z,
+       nz=source_nz,
+       tomo_spec=source_spec,
+       include_tomo_metadata=True,
+   )
+
+   pair_list = lens.between_sample_stats(
+       source,
+       pairs={
+           "method": "min",
+           "unit": "percent",
+           "threshold": 0.0,
+           "direction": "high",
+           "normalize": True,
+           "decimal_places": 3,
+       },
+   )["correlations"]
+
+   labels = [f"(lens {i}, source {j})" for i, j, _ in pair_list]
+   values = [value for _, _, value in pair_list]
+   y = np.arange(len(labels))
+
+   plt.figure(figsize=(8.2, 5.0))
+   plt.barh(y, values, edgecolor="k", linewidth=1.2)
+   plt.yticks(y, labels, fontsize=11)
+   plt.xlabel("Between-sample min overlap [%]", fontsize=13)
+   plt.title("Cross-sample pair ranking", fontsize=14)
+   plt.gca().invert_yaxis()
+   plt.tight_layout()
+
 Notes
 -----
 
-- **Shape statistics** summarize the internal structure of each bin
-  curve, such as its center, width, skewness, or peak structure. They
-  are useful for understanding how individual bins sample the parent
-  redshift distribution.
-- **Population statistics** summarize how the galaxy sample is divided
-  across bins. These quantities require tomography metadata and
-  therefore require rebuilding with ``include_tomo_metadata=True``.
-- **Cross-bin diagnostics** summarize how strongly bins are coupled to
-  one another. Large overlap, large off-diagonal leakage, or strong
-  off-diagonal correlations generally indicate weaker practical
-  separation between tomographic bins.
+- **Within-sample diagnostics** summarize how strongly bins from the
+  same tomographic sample are coupled to one another. Large overlap,
+  large off-diagonal leakage, or strong off-diagonal correlations
+  generally indicate weaker practical separation between tomographic
+  bins.
+- **Between-sample diagnostics** compare bins from two different
+  tomographic samples, such as lens and source populations. They are
+  useful for assessing redshift separation, cross-sample similarity,
+  interval-based overlap, and possible foreground contamination in joint
+  analyses.
 - Equipopulated and equidistant binning can lead to noticeably different
-  population balances and cross-bin coupling patterns, even when they
-  are constructed from the same parent distribution and photo-z
-  uncertainty model.
+  population balances and coupling patterns, even when they are
+  constructed from the same parent distribution and photo-z uncertainty
+  model.
 - The diagnostics returned by :class:`binny.NZTomography` are ordinary
   Python dictionaries, so the quantities shown here can be inspected,
   saved, or reused directly in downstream analysis workflows.
