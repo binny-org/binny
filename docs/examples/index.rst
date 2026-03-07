@@ -1,5 +1,9 @@
-Examples
-========
+.. |logo| image:: ../_static/assets/logo.png
+   :alt: logo
+   :width: 32px
+
+|logo| Examples
+===============
 
 This section provides practical examples demonstrating how to use **binny**
 to construct and evaluate tomographic binning schemes in realistic workflows.

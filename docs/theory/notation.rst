@@ -1,5 +1,9 @@
-Notation
-========
+.. |logo| image:: ../_static/assets/logo.png
+   :alt: logo
+   :width: 32px
+
+|logo| Notation
+===============
 
 Throughout the documentation, we use the following notation:
 

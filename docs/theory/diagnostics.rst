@@ -1,5 +1,9 @@
-Diagnostics and validation
-==========================
+.. |logo| image:: ../_static/assets/logo.png
+   :alt: logo
+   :width: 32px
+
+|logo| Diagnostics and validation
+=================================
 
 To compare and validate binning schemes, Binny provides several diagnostic
 quantities, including:

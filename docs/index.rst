@@ -1,4 +1,4 @@
-binny
+Binny
 =====
 
 .. image:: _static/assets/logo.png

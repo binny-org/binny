@@ -1,5 +1,9 @@
-Parent n(z) from mocks
-======================
+.. |logo| image:: ../_static/assets/logo.png
+   :alt: logo
+   :width: 32px
+
+|logo| Parent n(z) from mocks
+=============================
 
 In many realistic workflows, the parent redshift distribution is not chosen
 purely by hand. Instead, it is useful to infer an effective analytic model

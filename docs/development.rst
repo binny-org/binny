@@ -1,5 +1,9 @@
-Development and CI
-==================
+.. |logo| image:: _static/assets/logo.png
+   :alt: logo
+   :width: 32px
+
+|logo| Development and CI
+=========================
 
 Continuous Integration
 ----------------------

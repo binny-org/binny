@@ -1,5 +1,9 @@
-Parent n(z) models
-==================
+.. |logo| image:: ../_static/assets/logo.png
+   :alt: logo
+   :width: 32px
+
+|logo| Parent n(z) models
+=========================
 
 This page provides basic, executable examples showing how to use
 :class:`binny.NZTomography` to inspect and evaluate theoretical parent

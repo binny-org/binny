@@ -1,5 +1,9 @@
-Photometric bins
-================
+.. |logo| image:: ../_static/assets/logo.png
+   :alt: logo
+   :width: 32px
+
+|logo| Photometric bins
+=======================
 
 This page shows simple, executable examples of how to build
 **photometric tomographic redshift bins** from a parent distribution

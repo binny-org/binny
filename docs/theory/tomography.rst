@@ -1,5 +1,9 @@
-Tomographic binning
-===================
+.. |logo| image:: ../_static/assets/logo.png
+   :alt: logo
+   :width: 32px
+
+|logo| Tomographic binning
+==========================
 
 Tomography in cosmological analyses refers to the practice of subdividing a
 galaxy sample into redshift bins and measuring correlations both within and

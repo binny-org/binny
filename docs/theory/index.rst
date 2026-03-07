@@ -1,5 +1,9 @@
-Theoretical background
-======================
+.. |logo| image:: ../_static/assets/logo.png
+   :alt: logo
+   :width: 32px
+
+|logo| Theoretical background
+=============================
 
 This section documents the mathematical definitions and assumptions underlying
 the tomographic binning utilities provided by Binny.

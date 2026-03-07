@@ -1,5 +1,9 @@
-Spectroscopic bins
-==================
+.. |logo| image:: ../_static/assets/logo.png
+   :alt: logo
+   :width: 32px
+
+|logo| Spectroscopic bins
+=========================
 
 This page shows simple, executable examples of how to build
 **spectroscopic tomographic redshift bins** from a parent distribution

@@ -1,5 +1,9 @@
-Citation
-========
+.. |logo| image:: _static/assets/logo.png
+   :alt: logo
+   :width: 32px
+
+|logo| Citation
+===============
 
 If you use **binny** in academic work, please cite it.
 
