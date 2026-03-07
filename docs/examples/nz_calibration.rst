@@ -28,6 +28,25 @@ catalog, the calibration estimates:
 The example below generates a simple synthetic mock catalog, runs the
 calibration, and prints the fitted relations.
 
+Synthetic mock catalog
+----------------------
+
+For demonstration purposes we construct a small **synthetic galaxy catalog**
+that mimics the basic ingredients of a survey sample. Each mock galaxy is
+assigned a true redshift and an apparent magnitude. The distribution is chosen
+to resemble a typical magnitude-limited galaxy survey: most galaxies lie at
+moderate redshift, while progressively fewer objects appear at higher redshift.
+
+The apparent magnitudes are generated so that galaxies tend to appear fainter
+at larger distances, with additional scatter representing intrinsic galaxy
+diversity and observational noise. This produces a mock population whose
+properties roughly follow the trends expected in real survey data.
+
+From this synthetic catalog we then define a set of limiting magnitudes that
+represent surveys of different depths. For each limiting magnitude we select
+the galaxies that would be observable and use them to calibrate the analytic
+Smail redshift distribution.
+
 .. plot::
    :include-source: True
    :width: 620
@@ -73,14 +92,36 @@ calibration, and prints the fitted relations.
    print(result["ngal_of_maglim"])
 
 
+Conceptually, the calibration step measures how the redshift distribution of
+the galaxy sample changes as the survey becomes deeper. A deeper magnitude
+limit allows fainter galaxies to enter the sample, which typically increases
+both the total galaxy number density and the characteristic redshift scale of
+the population.
+
+The calibration procedure therefore infers three quantities:
+
+- the overall shape of the redshift distribution,
+- how the characteristic redshift scale changes with survey depth,
+- and how the galaxy surface density increases as fainter galaxies are included.
+
+These relations provide a compact analytic summary of the mock galaxy sample
+and can later be used to generate survey-motivated parent redshift distributions.
+
+
 Visualizing the calibrated parent distribution
 ----------------------------------------------
 
-Once the calibration has been run, you can evaluate the inferred Smail model
-on a redshift grid and compare it to the normalized mock redshift histogram.
+After the calibration step, the fitted Smail model represents an analytic
+approximation to the redshift distribution implied by the mock catalog.
 
-This is useful for checking whether the fitted analytic parent distribution
-provides a reasonable summary of the underlying mock sample.
+To illustrate this, we compare the analytic model with the empirical
+redshift distribution of the galaxies that satisfy a chosen magnitude limit.
+The histogram represents the normalized redshift distribution of the mock
+sample, while the smooth curve shows the calibrated analytic model.
+
+If the calibration has captured the main statistical properties of the
+sample, the analytic curve should closely follow the overall shape of
+the mock distribution.
 
 .. plot::
    :include-source: True
@@ -181,12 +222,18 @@ provides a reasonable summary of the underlying mock sample.
 Inspecting the calibrated depth relations
 -----------------------------------------
 
-In addition to reconstructing a parent redshift distribution, the calibration
-also returns fitted relations describing how the Smail scale parameter and the
-galaxy number density vary with limiting magnitude.
+The calibration also returns relations that describe how key survey
+properties evolve with limiting magnitude.
 
-The example below visualizes both sets of calibration points together with
-their fitted trends.
+In practice, deeper surveys detect more galaxies and probe higher
+redshifts. This behavior appears in two fitted trends:
+
+- the characteristic redshift scale :math:`z_0`, which increases with depth,
+- and the galaxy surface density :math:`n_{\rm gal}`, which grows as fainter
+  galaxies are included.
+
+Plotting these relations provides a simple way to verify that the fitted
+models reproduce the behavior measured directly from the mock catalog.
 
 .. plot::
    :include-source: True
@@ -284,13 +331,39 @@ their fitted trends.
 When to use calibration
 -----------------------
 
-Calibration is helpful when you have access to a mock catalog or simulation
-and want to derive an analytic parent redshift distribution that captures the
-statistical properties of the mock sample.
+Calibration is useful when you have access to a mock catalog or simulation
+and want to construct an analytic parent redshift distribution that reflects
+the statistical properties of that galaxy sample.
 
-This differs from the simpler direct-evaluation examples, where model
-parameters are chosen by hand. In practice, both approaches are useful:
+In this approach, the parameters of the analytic model are inferred from the
+mock population rather than being specified directly. This makes the resulting
+distribution more representative of a survey-like galaxy sample.
 
-- direct evaluation is convenient for quick testing and controlled examples,
-- calibration is more appropriate when building survey-motivated parent
-  distributions from realistic mock data.
+Both approaches are useful in practice:
+
+- direct specification of model parameters is convenient for quick tests
+  and controlled demonstrations,
+- calibration is more appropriate when constructing survey-motivated
+  parent redshift distributions from realistic mock catalogs.
+
+
+Notes
+-----
+
+- The synthetic catalog used in this example is intended only for demonstration
+  purposes. Real survey forecasts typically rely on more detailed mock
+  catalogs that incorporate selection effects, survey geometry, and realistic
+  galaxy population models.
+
+- The fitted analytic model is not expected to reproduce every feature of the
+  mock redshift histogram. Instead, it provides a smooth approximation that
+  captures the main statistical properties of the galaxy sample.
+
+- As the limiting magnitude becomes deeper, the observed galaxy population
+  generally extends to higher redshift while the total galaxy number density
+  increases. The calibrated relations returned by the procedure describe this
+  behavior.
+
+- In practice, such calibrated relations are often used in survey forecasting
+  pipelines to generate parent redshift distributions that are consistent
+  with the depth and selection of a given survey.
