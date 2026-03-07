@@ -18,6 +18,7 @@ from typing import Any, Literal
 
 import numpy as np
 
+import binny.nz_tomo.between_sample_metrics as _between_metrics
 import binny.nz_tomo.bin_similarity as _bin_sim
 import binny.surveys.config_utils as cu
 from binny.correlations.bin_combo_filter import (
@@ -175,7 +176,7 @@ class NZTomography:
             mag: Apparent magnitudes of the same galaxies.
             maglims: Limiting magnitudes defining magnitude-limited samples.
             area_deg2: Survey area of the mock catalog in square degrees.
-            infer_alpha_beta_from:Strategy used to determine the shape
+            infer_alpha_beta_from: Strategy used to determine the shape
                 parameters of the Smail distribution.
             alpha_beta_maglim: Magnitude limit defining the deep sample used to
                 infer the Smail shape parameters.
@@ -246,13 +247,10 @@ class NZTomography:
                 from the builder.
 
         Returns:
-            A dictionary with keys:
-            - ``"z"``: the true-redshift grid,
-            - ``"nz"``: the parent distribution on ``z``,
-            - ``"spec"``: the resolved tomography spec used for the build,
-            - ``"bins"``: mapping from bin index to bin distribution arrays,
-            - ``"tomo_meta"``: tomography metadata if requested, otherwise ``None``,
-            - ``"survey_meta"``: survey metadata if requested, otherwise ``None``.
+            A :class:`~binny.nz_tomo._tomography_bins.TomographyBins` object
+            containing the true-redshift grid, parent distribution, resolved
+            tomography spec, constructed bins, and optional tomography and
+            survey metadata.
 
         Raises:
             ValueError: If inputs are inconsistent, no unique entry can be selected, the
@@ -353,7 +351,9 @@ class NZTomography:
                 is used instead of resolving a shipped preset.
 
         Returns:
-            Returns a TomographyBins handle which has shape_stats() and population_stats() methods.
+            A :class:`~binny.nz_tomo._tomography_bins.TomographyBins` object,
+            which provides convenience methods such as ``shape_stats()`` and
+            ``population_stats()``.
 
         Raises:
             FileNotFoundError: If the requested preset name does not resolve to a shipped file.
@@ -479,6 +479,100 @@ class NZTomography:
 
         return out
 
+    def between_sample_stats(
+        self,
+        other: NZTomography,
+        *,
+        overlap: Mapping[str, Any] | None = None,
+        pairs: Mapping[str, Any] | None = None,
+        interval_mass: Mapping[str, Any] | None = None,
+        pearson: Mapping[str, Any] | None = None,
+    ) -> dict[str, Any]:
+        """Compute a bundle of between-sample comparison and diagnostic matrices.
+
+        This returns quantitative comparisons between bins from two different
+        tomographic samples, such as lens and source bins used in galaxy-galaxy
+        lensing. The returned quantities can be used to assess overlap,
+        similarity, ordering, and interval-based contamination across sample
+        families.
+
+        Args:
+            other: Second tomography instance to compare against. Both instances
+                must be built on the same redshift grid.
+            overlap: Keyword arguments for between-sample overlap metrics, or
+                ``None`` to skip.
+            pairs: Keyword arguments for between-sample pair summaries, or
+                ``None`` to skip.
+            interval_mass: Keyword arguments for interval-mass computation, or
+                ``None`` to skip. Must include ``"target_edges"``.
+            pearson: Keyword arguments for between-sample Pearson correlation
+                computation, or ``None`` to skip.
+
+        Returns:
+            A dictionary containing a subset of keys ``"overlap"``,
+            ``"correlations"``, ``"interval_mass"``, and ``"pearson"``.
+
+        Raises:
+            ValueError: If bins are not cached, if the two instances do not
+                share the same redshift grid, or if interval-mass computation
+                is requested without providing ``target_edges``.
+        """
+        self._require_bins()
+        other._require_bins()
+
+        z = self._parent["z"]
+        z2 = other._parent["z"]
+        if np.asarray(z).shape != np.asarray(z2).shape or not np.allclose(z, z2):
+            raise ValueError(
+                "between_sample_stats requires both instances "
+                "to share the same z grid. This means only the redshift "
+                "grid needs to be shared while the parent redshift distribution "
+                "need not be."
+            )
+
+        bins_a = self._state["bins"]
+        bins_b = other._state["bins"]
+
+        out: dict[str, Any] = {}
+
+        if overlap is not None:
+            out["overlap"] = _between_metrics.between_bin_overlap(
+                z,
+                bins_a,
+                bins_b,
+                **dict(overlap),
+            )
+
+        if pairs is not None:
+            out["correlations"] = _between_metrics.between_overlap_pairs(
+                z,
+                bins_a,
+                bins_b,
+                **dict(pairs),
+            )
+
+        if interval_mass is not None:
+            kw = dict(interval_mass)
+            if "target_edges" not in kw:
+                raise ValueError("interval_mass requires interval_mass={'target_edges': ...}.")
+            target_edges = kw.pop("target_edges")
+            out["interval_mass"] = _between_metrics.between_interval_mass_matrix(
+                z,
+                bins_a,
+                target_edges,
+                **kw,
+            )
+
+        if pearson is not None:
+            out["pearson"] = _between_metrics.between_pearson_matrix(
+                z,
+                bins_a,
+                bins_b,
+                **dict(pearson),
+            )
+
+        return out
+
     def _make_bin_combo_filter(
         self,
         other: NZTomography | None = None,
@@ -558,7 +652,7 @@ class NZTomography:
             TypeError: If the selection spec has an unexpected structure.
         """
         f = self._make_bin_combo_filter(other)
-        return f.select(spec).values()
+        return list(f.select(spec).values())
 
     @property
     def bins(self) -> Mapping[int, np.ndarray]:
