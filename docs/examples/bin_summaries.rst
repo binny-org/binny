@@ -29,6 +29,9 @@ The examples below focus on two families of summaries:
 - **population statistics**, such as the fraction of galaxies per bin.
 
 All plotting examples below are executable via ``.. plot::``.
+To keep the page compact, the plotting code is hidden by default.
+Click the ``Source code`` button above a plot to open the corresponding code
+in a new tab.
 
 
 Building a representative photo-z example
@@ -42,7 +45,7 @@ Both cases use the same photo-z uncertainty model, so the comparison
 isolates the effect of the binning strategy itself.
 
 .. plot::
-   :include-source: True
+   :include-source: False
    :width: 760
 
    import cmasher as cmr
@@ -95,11 +98,11 @@ isolates the effect of the binning strategy itself.
    )
 
    common_uncertainties = {
-       "scatter_scale": 0.05,
-       "mean_offset": 0.01,
-       "outlier_frac": 0.03,
-       "outlier_scatter_scale": 0.20,
-       "outlier_mean_offset": 0.05,
+       "scatter_scale": [0.010, 0.012, 0.015, 0.018],
+       "mean_offset": 0.0,
+       "outlier_frac": [0.02, 0.05, 0.15, 0.26],
+       "outlier_scatter_scale": [0.008, 0.010, 0.012, 0.015],
+       "outlier_mean_offset": [0.35, 0.40, 0.45, 0.50],
    }
 
    equipopulated_spec = {
@@ -184,11 +187,11 @@ bins.
    )
 
    common_uncertainties = {
-       "scatter_scale": 0.05,
-       "mean_offset": 0.01,
-       "outlier_frac": 0.03,
-       "outlier_scatter_scale": 0.20,
-       "outlier_mean_offset": 0.05,
+       "scatter_scale": [0.010, 0.012, 0.015, 0.018],
+       "mean_offset": 0.0,
+       "outlier_frac": [0.02, 0.05, 0.15, 0.26],
+       "outlier_scatter_scale": [0.008, 0.010, 0.012, 0.015],
+       "outlier_mean_offset": [0.35, 0.40, 0.45, 0.50],
    }
 
    equipopulated_spec = {
@@ -262,7 +265,10 @@ to a small set of representative redshift summaries, such as the
 Although these summaries do not capture the full bin shape, they provide
 a simple way to compare how different binning schemes place their bins
 across the redshift range of the parent sample and how sensitive the
-notion of a “bin center” is to the chosen definition.
+notion of a “bin center” is to the chosen definition. When the mean,
+median, and mode lie close together, the bin is usually fairly compact
+and only weakly skewed; when they differ more noticeably, the bin shape
+is typically more asymmetric or more affected by tails and outliers.
 
 Representative bin centers also play an important role in many
 cosmological analyses. In weak lensing, galaxy clustering, and
@@ -279,7 +285,7 @@ downstream modeling assumptions.
 
 
 .. plot::
-   :include-source: True
+   :include-source: False
    :width: 760
 
    import cmasher as cmr
@@ -301,11 +307,11 @@ downstream modeling assumptions.
    )
 
    common_uncertainties = {
-       "scatter_scale": [0.06, 0.08, 0.10, 0.12],
-       "mean_offset": [0.03, 0.05, 0.07, 0.10],
-       "outlier_frac": [0.08, 0.10, 0.12, 0.15],
-       "outlier_scatter_scale": [0.30, 0.35, 0.40, 0.45],
-       "outlier_mean_offset": [0.15, 0.20, 0.25, 0.30],
+       "scatter_scale": [0.010, 0.012, 0.015, 0.018],
+       "mean_offset": 0.0,
+       "outlier_frac": [0.02, 0.05, 0.15, 0.26],
+       "outlier_scatter_scale": [0.008, 0.010, 0.012, 0.015],
+       "outlier_mean_offset": [0.35, 0.40, 0.45, 0.50],
    }
 
    equipopulated_spec = {
@@ -430,14 +436,23 @@ binning schemes. Equipopulated binning is designed to place a similar
 fraction of galaxies into each bin, whereas equidistant binning is
 instead controlled by redshift width.
 
-In practice, the equipopulated fractions may not be exactly identical,
-because photometric redshift uncertainties scatter galaxies across bin
-boundaries and slightly modify the final observed-bin populations.
+For four bins, a perfectly balanced population split would correspond to
+a fraction of ``0.25`` in each bin. In practice, the equipopulated
+fractions may not be exactly identical, because photometric redshift
+uncertainties scatter galaxies across bin boundaries and slightly modify
+the final observed-bin populations.
+
+Values closer to equal fractions generally indicate a more balanced use
+of the galaxy sample, which is often desirable for maintaining similar
+statistical weight across bins. Larger deviations from equal fractions
+are not necessarily problematic, but they show that some bins carry more
+galaxies than others and may therefore contribute differently to later
+tomographic analyses.
 
 The bar chart below compares the resulting per-bin fractions.
 
 .. plot::
-   :include-source: True
+   :include-source: False
    :width: 700
 
    import cmasher as cmr
@@ -459,11 +474,11 @@ The bar chart below compares the resulting per-bin fractions.
    )
 
    common_uncertainties = {
-       "scatter_scale": 0.05,
-       "mean_offset": 0.01,
-       "outlier_frac": 0.03,
-       "outlier_scatter_scale": 0.20,
-       "outlier_mean_offset": 0.05,
+       "scatter_scale": [0.010, 0.012, 0.015, 0.018],
+       "mean_offset": 0.0,
+       "outlier_frac": [0.02, 0.05, 0.15, 0.26],
+       "outlier_scatter_scale": [0.008, 0.010, 0.012, 0.015],
+       "outlier_mean_offset": [0.35, 0.40, 0.45, 0.50],
    }
 
    equipopulated_spec = {
@@ -552,18 +567,20 @@ effective width and characteristic peak location of each tomographic bin.
 The **central 68% width** provides a robust summary of the redshift spread
 within a bin. Unlike a simple standard deviation, it is directly tied to
 the inner percentile range of the distribution and is therefore easier to
-interpret for skewed or slightly non-Gaussian bin shapes. Narrower widths
-usually indicate better redshift localization, while broader widths can
-signal stronger photometric smearing or more leakage across nominal bin
-boundaries.
+interpret for skewed or slightly non-Gaussian bin shapes. There is no
+single universal target value, since the preferred width depends on the
+survey, the science case, and the available redshift precision. Still,
+smaller values generally indicate tighter redshift localization, while
+larger values indicate broader bins, stronger photometric smearing, or
+more leakage across nominal bin boundaries.
 
 The **peak-location summaries** describe where the bin is most strongly
 concentrated in redshift. Here we compare the **mean**, **median**, and
 **mode** for each bin. Looking at these together is useful because they
 respond differently to skewness, extended tails, and secondary structure.
 If these three summaries lie close together, the bin is usually fairly
-compact and symmetric. If they separate, that often indicates skewness,
-leakage, or outlier-driven distortions in the bin shape.
+compact and symmetric. If they separate noticeably, that often indicates
+skewness, leakage, or outlier-driven distortions in the bin shape.
 
 These quantities are useful in cosmological investigations because many
 downstream ingredients are attached to a characteristic bin redshift.
@@ -589,6 +606,7 @@ bin.
    import matplotlib.pyplot as plt
    import numpy as np
    from matplotlib.colors import to_rgba
+   from matplotlib.lines import Line2D
 
    from binny import NZTomography
 
@@ -604,11 +622,11 @@ bin.
    )
 
    common_uncertainties = {
-       "scatter_scale": 0.05,
-       "mean_offset": 0.01,
-       "outlier_frac": 0.03,
-       "outlier_scatter_scale": 0.20,
-       "outlier_mean_offset": 0.05,
+       "scatter_scale": [0.010, 0.012, 0.015, 0.018],
+       "mean_offset": 0.0,
+       "outlier_frac": [0.02, 0.05, 0.15, 0.26],
+       "outlier_scatter_scale": [0.008, 0.010, 0.012, 0.015],
+       "outlier_mean_offset": [0.35, 0.40, 0.45, 0.50],
    }
 
    equipopulated_spec = {
@@ -669,7 +687,7 @@ bin.
    marker_map = {
        "mean": "o",
        "median": "s",
-       "mode": "v",
+       "mode": "^",
    }
 
    offset_map = {
@@ -681,7 +699,7 @@ bin.
    fig, axes = plt.subplots(1, 2, figsize=(10.8, 4.8))
 
    axes[0].bar(
-       x - width/2,
+       x - width / 2,
        widths_eqpop,
        width=width,
        color=fill_eqpop,
@@ -691,7 +709,7 @@ bin.
    )
 
    axes[0].bar(
-       x + width/2,
+       x + width / 2,
        widths_eqdist,
        width=width,
        color=fill_eqdist,
@@ -708,7 +726,6 @@ bin.
    axes[0].legend(frameon=False)
 
    for m in center_methods:
-
        axes[1].scatter(
            x + offset_map[m] - 0.02,
            [centers_eqpop[m][k] for k in keys],
@@ -717,7 +734,7 @@ bin.
            color=fill_eqpop,
            edgecolor="k",
            linewidth=1.5,
-           label=f"{m.capitalize()} (Equipopulated)",
+           zorder=3,
        )
 
        axes[1].scatter(
@@ -728,15 +745,80 @@ bin.
            color=fill_eqdist,
            edgecolor="k",
            linewidth=1.5,
-           label=f"{m.capitalize()} (Equidistant)",
+           zorder=3,
        )
+
+   scheme_handles = [
+       Line2D(
+           [0], [0],
+           marker="o",
+           linestyle="None",
+           markerfacecolor=fill_eqpop,
+           markeredgecolor="k",
+           markersize=10,
+           label="Equipopulated",
+       ),
+       Line2D(
+           [0], [0],
+           marker="o",
+           linestyle="None",
+           markerfacecolor=fill_eqdist,
+           markeredgecolor="k",
+           markersize=10,
+           label="Equidistant",
+       ),
+   ]
+
+   shape_handles = [
+       Line2D(
+           [0], [0],
+           marker=marker_map["mean"],
+           linestyle="None",
+           color="k",
+           markerfacecolor="k",
+           markersize=8,
+           label="Mean",
+       ),
+       Line2D(
+           [0], [0],
+           marker=marker_map["median"],
+           linestyle="None",
+           color="k",
+           markerfacecolor="k",
+           markersize=8,
+           label="Median",
+       ),
+       Line2D(
+           [0], [0],
+           marker=marker_map["mode"],
+           linestyle="None",
+           color="k",
+           markerfacecolor="k",
+           markersize=8,
+           label="Mode",
+       ),
+   ]
+
+   legend1 = axes[1].legend(
+       handles=scheme_handles,
+       title="Binning scheme",
+       loc="upper left",
+       frameon=True,
+   )
+   axes[1].add_artist(legend1)
+
+   axes[1].legend(
+       handles=shape_handles,
+       title="Summary",
+       loc="lower right",
+       frameon=True,
+   )
 
    axes[1].set_title("Peak-location summaries")
    axes[1].set_xlabel("Tomographic bin")
    axes[1].set_ylabel("Representative redshift")
    axes[1].set_xticks(x)
    axes[1].set_xticklabels([f"{k+1}" for k in keys])
-   axes[1].legend(frameon=True)
 
    plt.tight_layout()
 
@@ -747,18 +829,25 @@ Tail asymmetry per bin
 Tail asymmetry compares the upper and lower spread around the median,
 using the 16th, 50th, and 84th percentiles.
 
-Values above unity indicate that the distribution extends further toward
-higher redshift than toward lower redshift, while values below unity
-indicate the opposite. Strong asymmetries can signal leakage from
-neighboring bins or skewness introduced by the photo-z model.
+A value of **1** corresponds to perfectly symmetric upper and lower
+tails around the median. Values **above 1** indicate that the
+distribution extends further toward higher redshift than toward lower
+redshift, while values **below 1** indicate the opposite.
+
+Values close to 1 therefore suggest a fairly balanced bin shape,
+whereas larger departures from 1 indicate increasing skewness. This does
+not automatically mean that a bin is unusable, but strong asymmetries
+can signal leakage from neighboring bins, outlier contamination, or
+shape distortions introduced by the photo-z model.
 
 .. plot::
-   :include-source: True
+   :include-source: False
    :width: 760
 
    import cmasher as cmr
    import matplotlib.pyplot as plt
    import numpy as np
+   from matplotlib.colors import to_rgba
 
    from binny import NZTomography
 
@@ -774,11 +863,11 @@ neighboring bins or skewness introduced by the photo-z model.
    )
 
    common_uncertainties = {
-       "scatter_scale": 0.05,
-       "mean_offset": 0.01,
-       "outlier_frac": 0.03,
-       "outlier_scatter_scale": 0.20,
-       "outlier_mean_offset": 0.05,
+       "scatter_scale": [0.010, 0.012, 0.015, 0.018],
+       "mean_offset": 0.0,
+       "outlier_frac": [0.02, 0.05, 0.15, 0.26],
+       "outlier_scatter_scale": [0.008, 0.010, 0.012, 0.015],
+       "outlier_mean_offset": [0.35, 0.40, 0.45, 0.50],
    }
 
    equipopulated_spec = {
@@ -835,33 +924,38 @@ neighboring bins or skewness introduced by the photo-z model.
 
    colors = cmr.take_cmap_colors(
        "viridis",
-       2,
-       cmap_range=(0.2, 0.8),
+       3,
+       cmap_range=(0.0, 1.0),
        return_fmt="hex",
    )
+
+   _, c_eqpop, c_eqdist = colors
+   fill_eqpop = to_rgba(c_eqpop, 0.6)
+   fill_eqdist = to_rgba(c_eqdist, 0.6)
 
    plt.figure(figsize=(7.8, 4.8))
    plt.bar(
        x - width / 2,
        values_equipopulated,
        width=width,
-       color=colors[0],
+       color=fill_eqpop,
        edgecolor="k",
-       linewidth=1.2,
+       linewidth=2.5,
        label="Equipopulated",
    )
    plt.bar(
        x + width / 2,
        values_equidistant,
        width=width,
-       color=colors[1],
+       color=fill_eqdist,
        edgecolor="k",
-       linewidth=1.2,
+       linewidth=2.5,
        label="Equidistant",
    )
 
-   plt.axhline(1.0, linewidth=1.4)
-   plt.xticks(x, [f"Bin {key}" for key in keys])
+   plt.axhline(1.0, color="k", linewidth=2.0)
+   plt.xticks(x, [f"{key+1}" for key in keys])
+   plt.xlabel("Tomographic bin")
    plt.ylabel("Tail asymmetry")
    plt.title("Tail asymmetry by bin")
    plt.legend(frameon=False)
@@ -874,9 +968,10 @@ Secondary peak strength
 Secondary peak strength measures how important the second-highest peak
 is relative to the primary peak in each bin curve.
 
-Larger values indicate stronger multimodality or more pronounced
-secondary structure, which can arise from photo-z outliers or leakage
-from neighboring bins.
+A value of **0** means that no secondary peak is identified, so the bin
+appears effectively single-peaked. Larger values indicate stronger
+multimodality or more pronounced secondary structure, which can arise
+from photo-z outliers or leakage from neighboring bins.
 
 A nonzero value does not necessarily indicate a pathological binning
 scheme. In many cases it simply shows that a subset of galaxies is being
@@ -885,19 +980,21 @@ secondary bump. This can happen more strongly in some bins than in
 others, depending on the local bin width, the shape of the parent
 distribution, and the adopted uncertainty model.
 
-In practice, this diagnostic is most useful as a flag for bins that may
-deserve closer inspection. Small values usually indicate weak secondary
-structure, whereas larger values suggest that the bin contains a more
-clearly separated subpopulation and may be more strongly affected by
-outliers or cross-bin leakage.
+For this reason, the diagnostic is best interpreted as a flag for
+possible multimodality or substructure rather than as a direct statement
+about the physical cause. Values near **0** usually indicate weak or
+absent secondary structure, whereas larger values suggest that the bin
+contains a more clearly separated subpopulation and may be more strongly
+affected by outliers or cross-bin leakage.
 
 .. plot::
-   :include-source: True
+   :include-source: False
    :width: 760
 
    import cmasher as cmr
    import matplotlib.pyplot as plt
    import numpy as np
+   from matplotlib.colors import to_rgba
 
    from binny import NZTomography
 
@@ -915,7 +1012,7 @@ outliers or cross-bin leakage.
    common_uncertainties = {
        "scatter_scale": [0.010, 0.012, 0.015, 0.018],
        "mean_offset": 0.0,
-       "outlier_frac": [0.20, 0.22, 0.24, 0.26],
+       "outlier_frac": [0.02, 0.05, 0.15, 0.26],
        "outlier_scatter_scale": [0.008, 0.010, 0.012, 0.015],
        "outlier_mean_offset": [0.35, 0.40, 0.45, 0.50],
    }
@@ -974,32 +1071,37 @@ outliers or cross-bin leakage.
 
    colors = cmr.take_cmap_colors(
        "viridis",
-       2,
-       cmap_range=(0.2, 0.8),
+       3,
+       cmap_range=(0.0, 1.0),
        return_fmt="hex",
    )
+
+   _, c_eqpop, c_eqdist = colors
+   fill_eqpop = to_rgba(c_eqpop, 0.6)
+   fill_eqdist = to_rgba(c_eqdist, 0.6)
 
    plt.figure(figsize=(7.8, 4.8))
    plt.bar(
        x - width / 2,
        values_equipopulated,
        width=width,
-       color=colors[0],
+       color=fill_eqpop,
        edgecolor="k",
-       linewidth=1.2,
+       linewidth=2.5,
        label="Equipopulated",
    )
    plt.bar(
        x + width / 2,
        values_equidistant,
        width=width,
-       color=colors[1],
+       color=fill_eqdist,
        edgecolor="k",
-       linewidth=1.2,
+       linewidth=2.5,
        label="Equidistant",
    )
 
-   plt.xticks(x, [f"Bin {key}" for key in keys])
+   plt.xticks(x, [f"{key+1}" for key in keys])
+   plt.xlabel("Tomographic bin")
    plt.ylabel("Second peak / first peak")
    plt.title("Secondary peak strength")
    plt.legend(frameon=False)
@@ -1009,20 +1111,32 @@ outliers or cross-bin leakage.
 In-range fraction per bin
 -------------------------
 
-The in-range fraction measures how much of each bin curve lies inside
-its own nominal redshift interval.
+The in-range fraction measures how much of the redshift distribution assigned
+to a tomographic bin remains inside that bin’s intended redshift interval.
 
-This provides a direct summary of how well each bin remains confined to
-the redshift interval it was intended to represent. Lower values indicate
-stronger leakage outside the nominal bin boundaries.
+In a cosmological context, this is a simple way to quantify how cleanly a bin
+isolates galaxies from the redshift range it is supposed to represent. A value
+of **1** would mean that the full bin distribution lies inside its nominal
+redshift boundaries, so the bin is perfectly localized with respect to that
+interval. Values close to 1 therefore indicate clean bin localization. Lower
+values indicate that a larger fraction of the bin distribution spills outside
+those boundaries because of photometric-redshift scatter, outliers, or leakage
+from neighboring bins.
+
+This matters because tomographic analyses in weak lensing, galaxy clustering,
+and galaxy-galaxy lensing rely on each bin tracing a relatively well-defined
+slice of cosmic structure along the line of sight. If too much of a bin lies
+outside its nominal range, the interpretation of that bin becomes less clean and
+overlap between neighboring bins becomes more important.
 
 .. plot::
-   :include-source: True
+   :include-source: False
    :width: 760
 
    import cmasher as cmr
    import matplotlib.pyplot as plt
    import numpy as np
+   from matplotlib.colors import to_rgba
 
    from binny import NZTomography
 
@@ -1038,11 +1152,18 @@ stronger leakage outside the nominal bin boundaries.
    )
 
    common_uncertainties = {
-       "scatter_scale": 0.05,
-       "mean_offset": 0.01,
-       "outlier_frac": 0.03,
-       "outlier_scatter_scale": 0.20,
-       "outlier_mean_offset": 0.05,
+       "scatter_scale": [0.010, 0.012, 0.015, 0.018],
+       "mean_offset": 0.0,
+       "outlier_frac": [0.02, 0.05, 0.15, 0.26],
+       "outlier_scatter_scale": [0.008, 0.010, 0.012, 0.015],
+       "outlier_mean_offset": [0.35, 0.40, 0.45, 0.50],
+   }
+
+   equipopulated_spec = {
+       "kind": "photoz",
+       "bins": {"scheme": "equipopulated", "n_bins": 4},
+       "uncertainties": common_uncertainties,
+       "normalize_bins": True,
    }
 
    equidistant_spec = {
@@ -1052,64 +1173,114 @@ stronger leakage outside the nominal bin boundaries.
        "normalize_bins": True,
    }
 
-   bin_edges = [0.2, 0.45, 0.70, 0.95, 1.20]
+   equipopulated_edges = [0.20, 0.33, 0.49, 0.72, 1.20]
+   equidistant_edges = [0.20, 0.45, 0.70, 0.95, 1.20]
 
-   tomo = NZTomography()
-   tomo.build_bins(
+   tomo_equipopulated = NZTomography()
+   tomo_equipopulated.build_bins(
+       z=z,
+       nz=nz,
+       tomo_spec=equipopulated_spec,
+       include_tomo_metadata=True,
+   )
+
+   tomo_equidistant = NZTomography()
+   tomo_equidistant.build_bins(
        z=z,
        nz=nz,
        tomo_spec=equidistant_spec,
        include_tomo_metadata=True,
    )
 
-   shape = tomo.shape_stats(
+   shape_equipopulated = tomo_equipopulated.shape_stats(
        center_method="median",
        decimal_places=4,
-       bin_edges=bin_edges,
+       bin_edges=equipopulated_edges,
    )
 
-   fractions = shape["in_range_fraction"]
-   keys = sorted(fractions.keys())
+   shape_equidistant = tomo_equidistant.shape_stats(
+       center_method="median",
+       decimal_places=4,
+       bin_edges=equidistant_edges,
+   )
+
+   fractions_equipopulated = shape_equipopulated["in_range_fraction"]
+   fractions_equidistant = shape_equidistant["in_range_fraction"]
+
+   keys = sorted(fractions_equipopulated.keys())
    x = np.arange(len(keys))
+   width = 0.36
 
    colors = cmr.take_cmap_colors(
        "viridis",
-       len(keys),
-       cmap_range=(0.1, 0.9),
+       3,
+       cmap_range=(0.0, 1.0),
        return_fmt="hex",
    )
 
-   plt.figure(figsize=(7.6, 4.7))
+   _, c_eqpop, c_eqdist = colors
+   fill_eqpop = to_rgba(c_eqpop, 0.6)
+   fill_eqdist = to_rgba(c_eqdist, 0.6)
+
+   plt.figure(figsize=(7.8, 4.8))
    plt.bar(
-       x,
-       [100.0 * fractions[key] for key in keys],
-       color=colors,
+       x - width / 2,
+       [100.0 * fractions_equipopulated[key] for key in keys],
+       width=width,
+       color=fill_eqpop,
        edgecolor="k",
-       linewidth=1.2,
+       linewidth=2.5,
+       label="Equipopulated",
    )
-   plt.xticks(x, [f"Bin {key}" for key in keys])
+   plt.bar(
+       x + width / 2,
+       [100.0 * fractions_equidistant[key] for key in keys],
+       width=width,
+       color=fill_eqdist,
+       edgecolor="k",
+       linewidth=2.5,
+       label="Equidistant",
+   )
+
+   plt.xticks(x, [f"{key+1}" for key in keys])
+   plt.xlabel("Tomographic bin")
    plt.ylabel("In-range fraction [%]")
    plt.title("Fraction of each bin inside its nominal range")
+   plt.legend(frameon=True)
    plt.tight_layout()
 
 
 Nominal bin widths
 ------------------
 
-Nominal bin widths provide a direct summary of the binning strategy.
+Nominal bin widths describe the redshift span assigned to each tomographic
+bin by the binning scheme itself, before considering any additional broadening
+from photometric-redshift scatter or leakage.
 
-Equipopulated binning typically produces bins with different redshift
-widths because the edges are chosen to equalize the galaxy counts,
-whereas equidistant binning keeps the redshift intervals similar but
-allows the number of galaxies per bin to vary.
+In cosmological analyses, these widths determine how finely the galaxy sample
+is divided along the line of sight. There is no single preferred numerical
+value in isolation: narrower bins probe structure in thinner redshift slices
+and can preserve more radial information, while broader bins mix galaxies
+across a wider range of cosmic distances and therefore smooth over some of
+that information.
+
+This is useful when comparing binning strategies because equipopulated and
+equidistant binning optimize different goals. Equipopulated binning adjusts the
+bin edges so that each bin contains a similar fraction of galaxies, which often
+leads to uneven redshift widths. Equidistant binning instead keeps the redshift
+intervals similar, but allows the galaxy counts per bin to vary. Looking at the
+nominal widths therefore helps clarify what each scheme is prioritizing and how
+that choice may affect later tomographic analyses in weak lensing, galaxy
+clustering, or galaxy-galaxy lensing.
 
 .. plot::
-   :include-source: True
+   :include-source: False
    :width: 760
 
    import cmasher as cmr
    import matplotlib.pyplot as plt
    import numpy as np
+   from matplotlib.colors import to_rgba
 
    equipopulated_edges = np.array([0.20, 0.33, 0.49, 0.72, 1.20])
    equidistant_edges = np.array([0.20, 0.45, 0.70, 0.95, 1.20])
@@ -1122,34 +1293,39 @@ allows the number of galaxies per bin to vary.
 
    colors = cmr.take_cmap_colors(
        "viridis",
-       2,
-       cmap_range=(0.2, 0.8),
+       3,
+       cmap_range=(0.0, 1.0),
        return_fmt="hex",
    )
+
+   _, c_eqpop, c_eqdist = colors
+   fill_eqpop = to_rgba(c_eqpop, 0.6)
+   fill_eqdist = to_rgba(c_eqdist, 0.6)
 
    plt.figure(figsize=(7.8, 4.8))
    plt.bar(
        x - width / 2,
        widths_equipopulated,
        width=width,
-       color=colors[0],
+       color=fill_eqpop,
        edgecolor="k",
-       linewidth=1.2,
+       linewidth=2.5,
        label="Equipopulated",
    )
    plt.bar(
        x + width / 2,
        widths_equidistant,
        width=width,
-       color=colors[1],
+       color=fill_eqdist,
        edgecolor="k",
-       linewidth=1.2,
+       linewidth=2.5,
        label="Equidistant",
    )
 
-   plt.xticks(x, [f"Bin {i}" for i in x])
+   plt.xticks(x, [f"{i+1}" for i in x])
+   plt.xlabel("Tomographic bin")
    plt.ylabel("Nominal width in redshift")
-   plt.title("Nominal bin widths")
+   plt.title("Nominal bin widths by scheme")
    plt.legend(frameon=False)
    plt.tight_layout()
 
@@ -1161,6 +1337,12 @@ Notes
   and are safe to compute even when each bin is normalized.
 - Population statistics depend on tomography metadata and therefore
   require rebuilding with ``include_tomo_metadata=True``.
+- Some summaries have a clear reference value: tail asymmetry is easiest
+  to interpret relative to ``1``, in-range fraction relative to ``1``,
+  and secondary peak strength relative to ``0``.
+- Other summaries, such as widths or nominal bin spans, do not have a
+  single universally optimal value and should be interpreted in the
+  context of the binning strategy and science application.
 - Equipopulated and equidistant binning can produce noticeably different
   bin centers, widths, and population fractions, even when they are
   built from the same parent distribution and uncertainty model.
