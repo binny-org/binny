@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import warnings
+
 import numpy as np
 import pytest
 
@@ -692,3 +694,78 @@ def test_build_specz_bins_writes_metadata_when_save_path_provided(
     assert outpath.exists()
     text = outpath.read_text(encoding="utf-8")
     assert "kind" in text or "specz" in text
+
+
+def test_response_warns_when_zero_catastrophic_frac_and_nondefault_leakage_params() -> None:
+    """Tests that zero catastrophic_frac warns when leakage parameters are also provided."""
+    with pytest.warns(
+        RuntimeWarning,
+        match=r"catastrophic_frac is zero for all bins, so catastrophic leakage parameters",
+    ):
+        matrix = build_specz_response_matrix(
+            4,
+            catastrophic_frac=0.0,
+            leakage_model="gaussian",
+            leakage_sigma=2.5,
+        )
+
+    assert np.allclose(matrix, np.eye(4))
+    _assert_col_stochastic(matrix)
+
+
+def test_response_does_not_warn_when_zero_catastrophic_frac_and_default_leakage_params() -> None:
+    """Tests that zero catastrophic_frac does not warn for default leakage settings."""
+    with warnings.catch_warnings(record=True) as record:
+        warnings.simplefilter("always")
+        matrix = build_specz_response_matrix(
+            4,
+            catastrophic_frac=0.0,
+            leakage_model="neighbor",
+            leakage_sigma=1.0,
+        )
+
+    assert len(record) == 0
+    assert np.allclose(matrix, np.eye(4))
+    _assert_col_stochastic(matrix)
+
+
+def test_response_warns_when_zero_catastrophic_frac_and_per_bin_nondefault_leakage_sigma() -> None:
+    """Tests that zero catastrophic_frac warns when per-bin leakage_sigma is non-default."""
+    with pytest.warns(
+        RuntimeWarning,
+        match=r"catastrophic_frac is zero for all bins, so catastrophic leakage parameters",
+    ):
+        matrix = build_specz_response_matrix(
+            4,
+            catastrophic_frac=[0.0, 0.0, 0.0, 0.0],
+            leakage_model="neighbor",
+            leakage_sigma=[1.0, 1.0, 2.0, 1.0],
+        )
+
+    assert np.allclose(matrix, np.eye(4))
+    _assert_col_stochastic(matrix)
+
+
+def test_build_specz_bins_warns_when_zero_catastrophic_frac_and_leakage_params_passed() -> None:
+    """Tests that build_specz_bins propagates the zero-catastrophic leakage warning."""
+    z, nz = _toy_z_nz()
+    edges = _edges_4bins()
+
+    with pytest.warns(
+        RuntimeWarning,
+        match=r"catastrophic_frac is zero for all bins, so catastrophic leakage parameters",
+    ):
+        bins = build_specz_bins(
+            z,
+            nz,
+            edges,
+            catastrophic_frac=0.0,
+            leakage_model="uniform",
+            leakage_sigma=3.0,
+            normalize_input=True,
+            normalize_bins=False,
+        )
+
+    assert list(bins.keys()) == [0, 1, 2, 3]
+    for i in range(4):
+        assert bins[i].shape == z.shape

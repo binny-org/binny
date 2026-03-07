@@ -53,6 +53,7 @@ Normalization
 
 from __future__ import annotations
 
+import warnings
 from collections.abc import Mapping, Sequence
 from typing import Any, Literal
 
@@ -418,11 +419,18 @@ def build_specz_response_matrix(
     if np.any((f < 0.0) | (f > 1.0)):
         raise ValueError("catastrophic_frac must be in [0, 1].")
 
-    matrix = np.eye(n_bins, dtype=float)
-
     if np.allclose(f, 0.0):
-        return matrix.astype(np.float64, copy=False)
+        sigma_arr = np.asarray(as_per_bin(leakage_sigma, n_bins, "leakage_sigma"), dtype=float)
+        if leakage_model != "neighbor" or not np.allclose(sigma_arr, 1.0):
+            warnings.warn(
+                "catastrophic_frac is zero for all bins, so catastrophic leakage "
+                "parameters (leakage_model, leakage_sigma) are ignored.",
+                RuntimeWarning,
+                stacklevel=2,
+            )
+        return np.eye(n_bins, dtype=np.float64)
 
+    matrix = np.eye(n_bins, dtype=float)
     q = np.zeros((n_bins, n_bins), dtype=float)
 
     leakage_model = leakage_model.lower()
@@ -455,7 +463,7 @@ def build_specz_response_matrix(
             idx = np.arange(n_bins, dtype=float)
             for j in range(n_bins):
                 t = (idx - float(j)) / float(sig[j])
-                t = np.clip(t, -50.0, 50.0)  # prevent overflow in t*t;
+                t = np.clip(t, -50.0, 50.0)
                 w = np.exp(-0.5 * t * t)
 
                 w[j] = 0.0
