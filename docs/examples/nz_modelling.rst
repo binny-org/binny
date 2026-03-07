@@ -56,7 +56,7 @@ forecasting studies.
 
    from binny import NZTomography
 
-   z = np.linspace(0.0, 2.5, 500)
+   z = np.linspace(0.0, 2.0, 500)
 
    nz_smail = NZTomography.nz_model(
        "smail",
