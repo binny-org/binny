@@ -56,7 +56,7 @@ resulting diagnostics can be attributed primarily to the binning scheme
 rather than to changes in the underlying uncertainty assumptions.
 
 .. plot::
-   :include-source: True
+   :include-source: False
    :width: 760
 
    import cmasher as cmr
@@ -109,11 +109,11 @@ rather than to changes in the underlying uncertainty assumptions.
    )
 
    common_uncertainties = {
-       "scatter_scale": 0.05,
-       "mean_offset": 0.01,
-       "outlier_frac": 0.03,
-       "outlier_scatter_scale": 0.20,
-       "outlier_mean_offset": 0.05,
+       "scatter_scale": [0.010, 0.012, 0.015, 0.018],
+       "mean_offset": 0.0,
+       "outlier_frac": [0.02, 0.05, 0.15, 0.26],
+       "outlier_scatter_scale": [0.008, 0.010, 0.012, 0.015],
+       "outlier_mean_offset": [0.35, 0.40, 0.45, 0.50],
    }
 
    equipopulated_spec = {
@@ -159,7 +159,6 @@ rather than to changes in the underlying uncertainty assumptions.
    plot_bins(axes[1], z, equidistant_result.bins, "Equidistant bins")
 
    plt.tight_layout()
-
 
 
 Within-sample cross-bin diagnostics
@@ -257,24 +256,40 @@ photo-z example.
    ]
 
    for ax, (keys, matrix, title, xlabel, ylabel) in zip(axes, matrices, strict=True):
-       ax.imshow(matrix, origin="lower", aspect="auto")
+       n_rows, n_cols = matrix.shape
+       x_edges = np.arange(n_cols + 1)
+       y_edges = np.arange(n_rows + 1)
+
+       ax.pcolormesh(
+           x_edges,
+           y_edges,
+           matrix,
+           cmap="viridis",
+           shading="flat",
+           alpha=0.6,
+           edgecolors="k",
+           linewidth=2.2,
+       )
+
        ax.set_title(title)
-       ax.set_xticks(np.arange(len(keys)))
-       ax.set_yticks(np.arange(len(keys)))
+       ax.set_xticks(np.arange(n_cols) + 0.5)
+       ax.set_yticks(np.arange(n_rows) + 0.5)
        ax.set_xticklabels(keys)
        ax.set_yticklabels(keys)
        ax.set_xlabel(xlabel)
        ax.set_ylabel(ylabel)
+       ax.set_xlim(0, n_cols)
+       ax.set_ylim(0, n_rows)
 
        for i in range(matrix.shape[0]):
            for j in range(matrix.shape[1]):
                ax.text(
-                   j,
-                   i,
+                   j + 0.5,
+                   i + 0.5,
                    f"{matrix[i, j]:.1f}",
                    ha="center",
                    va="center",
-                   fontsize=9,
+                   fontsize=15,
                    color="k",
                )
 

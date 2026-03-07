@@ -95,7 +95,7 @@ plot_rcparams = {
     # global font sizes
     "font.size": 15,
     "axes.labelsize": 15,
-    "axes.titlesize": 15,
+    "axes.titlesize": 17,
     "legend.fontsize": 15,
     # tick label sizes
     "xtick.labelsize": 13,
