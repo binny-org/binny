@@ -5,12 +5,20 @@
 |logo| Parent n(z) from mocks
 =============================
 
-In many realistic workflows, the parent redshift distribution is not chosen
-purely by hand. Instead, it is useful to infer an effective analytic model
-from a mock or simulated galaxy sample.
+In realistic forecasting or survey-design workflows, the parameters of analytic
+redshift distributions are not chosen arbitrarily. Instead, they are
+usually inferred from simulations or mock catalogs that reflect the
+expected survey selection, depth, and galaxy population.
 
-Binny provides :meth:`binny.NZTomography.calibrate_smail_from_mock` for this
-purpose. Given true galaxy redshifts and apparent magnitudes from a mock
+For example, parameters of the widely used Smail model are commonly
+calibrated using mock galaxy samples constructed to match survey
+characteristics such as limiting magnitude, redshift completeness,
+and selection effects. The resulting analytic distribution then serves
+as a convenient summary of the underlying mock population.
+
+Binny provides :meth:`binny.NZTomography.calibrate_smail_from_mock`
+to perform this type of calibration directly from simulated galaxy
+samples. Given true galaxy redshifts and apparent magnitudes from a mock
 catalog, the calibration estimates:
 
 - the effective Smail shape parameters,
@@ -29,10 +37,6 @@ calibration, and prints the fitted relations.
    from binny import NZTomography
 
    rng = np.random.default_rng(42)
-
-   # ------------------------------------------------------------------
-   # Build a simple synthetic mock catalog
-   # ------------------------------------------------------------------
    n_gal = 30000
 
    z_true = rng.gamma(shape=2.4, scale=0.32, size=n_gal)
@@ -41,16 +45,14 @@ calibration, and prints the fitted relations.
    # Make magnitudes loosely correlated with redshift, with scatter
    mag = 22.0 + 2.2 * z_true + rng.normal(0.0, 0.45, size=z_true.size)
 
+   # Define magnitude limits for calibration
    maglims = np.array([22.5, 23.0, 23.5, 24.0, 24.5])
 
-   # ------------------------------------------------------------------
-   # Run calibration
-   # ------------------------------------------------------------------
    result = NZTomography.calibrate_smail_from_mock(
        z_true=z_true,
        mag=mag,
        maglims=maglims,
-       area_deg2=5.0,
+       area_deg2=100.0,
        infer_alpha_beta_from="deep_cut",
        alpha_beta_maglim=24.5,
        z_max=3.0,
@@ -86,15 +88,13 @@ provides a reasonable summary of the underlying mock sample.
 
    import numpy as np
    import matplotlib.pyplot as plt
+   from matplotlib.colors import to_rgba
    import cmasher as cmr
 
    from binny import NZTomography
 
    rng = np.random.default_rng(42)
 
-   # ------------------------------------------------------------------
-   # Synthetic mock catalog
-   # ------------------------------------------------------------------
    n_gal = 30000
 
    z_true = rng.gamma(shape=2.4, scale=0.32, size=n_gal)
@@ -105,9 +105,6 @@ provides a reasonable summary of the underlying mock sample.
    maglim = 24.5
    sel = mag <= maglim
 
-   # ------------------------------------------------------------------
-   # Calibration
-   # ------------------------------------------------------------------
    result = NZTomography.calibrate_smail_from_mock(
        z_true=z_true,
        mag=mag,
@@ -139,26 +136,45 @@ provides a reasonable summary of the underlying mock sample.
        normalize=True,
    )
 
-   cmap = "viridis"
-   c_hist = cmr.take_cmap_colors(cmap, 3, cmap_range=(0.10, 0.35))[1]
-   c_fit = cmr.take_cmap_colors(cmap, 3, cmap_range=(0.65, 0.90))[1]
+   colors = cmr.take_cmap_colors(
+       "viridis",
+       4,
+       cmap_range=(0, 1),
+       return_fmt="hex"
+   )
+   _, c_hist, _, c_fit = colors
+
+   hist_fill = to_rgba(c_hist, 0.6)  # alpha applied only to fill
+   fit_fill = to_rgba(c_fit, 0.6)  # alpha only on fill
 
    plt.figure(figsize=(8.0, 5.2))
    plt.hist(
        z_true[sel],
-       bins=50,
+       bins=20,
        range=(0.0, 3.0),
        density=True,
-       alpha=0.45,
-       color=c_hist,
+       edgecolor="k",
+       linewidth=3,
+       color=hist_fill,
        label="Mock sample",
    )
-   plt.plot(z, nz_fit, lw=3, color=c_fit, label="Fitted Smail model")
+
+   # filled analytic model
+   plt.fill_between(
+       z,
+       0.0,
+       nz_fit,
+       color=fit_fill,
+       edgecolor="k",
+       linewidth=3.0,
+       zorder=20,
+       label="Fitted Smail model",
+   )
 
    plt.xlabel("Redshift $z$", fontsize=15)
    plt.ylabel(r"Normalized $n(z)$", fontsize=15)
    plt.title("Mock redshift sample and calibrated Smail fit", fontsize=15)
-   plt.legend(frameon=True, fontsize=12)
+   plt.legend(frameon=False, fontsize=15)
    plt.tight_layout()
 
 
@@ -178,6 +194,7 @@ their fitted trends.
 
    import numpy as np
    import matplotlib.pyplot as plt
+   from matplotlib.colors import to_rgba
    import cmasher as cmr
 
    from binny import NZTomography
@@ -228,20 +245,38 @@ their fitted trends.
    cmap = "viridis"
    c1 = cmr.take_cmap_colors(cmap, 3, cmap_range=(0.15, 0.35))[1]
    c2 = cmr.take_cmap_colors(cmap, 3, cmap_range=(0.65, 0.85))[1]
+   fill1 = to_rgba(c1, 0.6)
+   fill2 = to_rgba(c2, 0.6)
 
    fig, axes = plt.subplots(1, 2, figsize=(10.5, 4.6))
 
-   axes[0].plot(mfit, z0_curve, lw=3, color=c1)
-   axes[0].scatter(z0_points["maglim"], z0_points["z0"], s=45, color=c1)
-   axes[0].set_xlabel("Limiting magnitude", fontsize=13)
-   axes[0].set_ylabel(r"Fitted $z_0$", fontsize=13)
-   axes[0].set_title(r"Calibrated $z_0(m_{\rm lim})$", fontsize=13)
+   axes[0].plot(mfit, z0_curve, lw=3, color=c1, alpha=0.6)
+   axes[0].scatter(
+       z0_points["maglim"],
+       z0_points["z0"],
+       s=150,
+       facecolor=fill1,
+       edgecolors="k",
+       linewidth=2.0,
+       zorder=20,
+   )
+   axes[0].set_xlabel(r"Limiting magnitude $m_{\rm lim}$", fontsize=15)
+   axes[0].set_ylabel(r"Fitted $z_0$", fontsize=15)
+   axes[0].set_title(r"Calibrated $z_0(m_{\rm lim})$", fontsize=15)
 
-   axes[1].plot(mfit, ngal_curve, lw=3, color=c2)
-   axes[1].scatter(ngal_points["maglim"], ngal_points["ngal_arcmin2"], s=45, color=c2)
-   axes[1].set_xlabel("Limiting magnitude", fontsize=13)
-   axes[1].set_ylabel(r"$n_{\rm gal}$ [arcmin$^{-2}$]", fontsize=13)
-   axes[1].set_title(r"Calibrated $n_{\rm gal}(m_{\rm lim})$", fontsize=13)
+   axes[1].plot(mfit, ngal_curve, lw=3, color=c2, alpha=0.6)
+   axes[1].scatter(
+       ngal_points["maglim"],
+       ngal_points["ngal_arcmin2"],
+       s=150,
+       facecolor=fill2,
+       edgecolors="k",
+       linewidth=2.0,
+       zorder=20,
+   )
+   axes[1].set_xlabel(r"Limiting magnitude $m_{\rm lim}$", fontsize=15)
+   axes[1].set_ylabel(r"$n_{\rm gal}$ [arcmin$^{-2}$]", fontsize=15)
+   axes[1].set_title(r"Calibrated $n_{\rm gal}(m_{\rm lim})$", fontsize=15)
 
    plt.tight_layout()
 
@@ -250,8 +285,8 @@ When to use calibration
 -----------------------
 
 Calibration is helpful when you have access to a mock catalog or simulation
-and want to derive an analytic parent redshift distribution that reflects the
-statistical properties of that sample.
+and want to derive an analytic parent redshift distribution that captures the
+statistical properties of the mock sample.
 
 This differs from the simpler direct-evaluation examples, where model
 parameters are chosen by hand. In practice, both approaches are useful:
