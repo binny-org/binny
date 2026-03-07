@@ -85,6 +85,27 @@ extensions = [
     "matplotlib.sphinxext.plot_directive",
 ]
 
+# General plot settings
+plot_rcparams = {
+    # tick style
+    "xtick.direction": "in",
+    "ytick.direction": "in",
+    "xtick.top": True,
+    "ytick.right": True,
+    # global font sizes
+    "font.size": 15,
+    "axes.labelsize": 15,
+    "axes.titlesize": 15,
+    "legend.fontsize": 15,
+    # tick label sizes
+    "xtick.labelsize": 13,
+    "ytick.labelsize": 13,
+    # nice defaults
+    "axes.linewidth": 1.5,
+    "xtick.major.width": 1.2,
+    "ytick.major.width": 1.2,
+}
+
 autoclass_content = "both"
 
 autodoc_default_options = {
