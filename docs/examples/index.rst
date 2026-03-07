@@ -11,7 +11,7 @@ They range from minimal, self-contained scripts to more survey-specific
 workflows.
 
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 1
 
    nz_modelling
    nz_calibration
