@@ -41,6 +41,7 @@ see :doc:`examples/index`.
    :caption: Contents
 
    theory/index
+   workflow
    examples/index
    installation
    citation
