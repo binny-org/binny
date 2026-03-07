@@ -297,7 +297,7 @@ binning.
 Spectroscopic scatter
 ~~~~~~~~~~~~~~~~~~~~~
 
-TThis parameter sets the width of the measurement uncertainty in the
+This parameter sets the width of the measurement uncertainty in the
 spectroscopic redshift estimate. Although spectroscopic redshifts are typically
 very precise, a nonzero ``specz_scatter`` slightly broadens the observed
 redshift distribution, which smooths the bin edges and introduces a small
@@ -353,8 +353,6 @@ overlap between neighboring tomographic bins.
        },
        "uncertainties": {
            "completeness": [1.0, 1.0, 1.0, 1.0],
-           "catastrophic_frac": [0.0, 0.0, 0.0, 0.0],
-           "leakage_model": "neighbor",
            "specz_scatter": [0.0005, 0.0005, 0.00075, 0.001],
        },
        "normalize_bins": True,
@@ -368,8 +366,6 @@ overlap between neighboring tomographic bins.
        },
        "uncertainties": {
            "completeness": [1.0, 1.0, 1.0, 1.0],
-           "catastrophic_frac": [0.0, 0.0, 0.0, 0.0],
-           "leakage_model": "neighbor",
            "specz_scatter": [0.003, 0.003, 0.004, 0.005],
        },
        "normalize_bins": True,
@@ -450,10 +446,7 @@ distribution to reflect incomplete sampling.
            "n_bins": 4,
        },
        "uncertainties": {
-           "completeness": [1.0, 1.0, 1.0, 1.0],
-           "catastrophic_frac": [0.0, 0.0, 0.0, 0.0],
-           "leakage_model": "neighbor",
-           "specz_scatter": [0.001, 0.001, 0.0015, 0.002],
+           "completeness": 1,  # all bins have full completeness
        },
        "normalize_bins": True,
    }
@@ -465,10 +458,7 @@ distribution to reflect incomplete sampling.
            "n_bins": 4,
        },
        "uncertainties": {
-           "completeness": [1.0, 0.95, 0.9, 0.8],
-           "catastrophic_frac": [0.0, 0.0, 0.0, 0.0],
-           "leakage_model": "neighbor",
-           "specz_scatter": [0.001, 0.001, 0.0015, 0.002],
+           "completeness": [1.0, 0.9, 0.75, 0.7],
        },
        "normalize_bins": True,
    }
@@ -560,9 +550,8 @@ otherwise well-separated tomographic bins.
            "n_bins": 4,
        },
        "uncertainties": {
-           "completeness": [1.0, 1.0, 1.0, 1.0],
+           "completeness": 1,
            "catastrophic_frac": [0.0, 0.0, 0.0, 0.0],
-           "leakage_model": "neighbor",
            "specz_scatter": [0.001, 0.001, 0.0015, 0.002],
        },
        "normalize_bins": True,
@@ -575,8 +564,8 @@ otherwise well-separated tomographic bins.
            "n_bins": 4,
        },
        "uncertainties": {
-           "completeness": [1.0, 1.0, 1.0, 1.0],
-           "catastrophic_frac": [0.0, 0.05, 0.1, 0.15],
+           "completeness": 1,
+           "catastrophic_frac": [0.05, 0.1, 0.15, 0.2],
            "leakage_model": "neighbor",
            "specz_scatter": [0.001, 0.001, 0.0015, 0.002],
        },
@@ -907,7 +896,7 @@ The example below uses per-bin values for completeness,
            "completeness": [1.0, 0.97, 0.92, 0.85],
            "catastrophic_frac": [0.0, 0.02, 0.05, 0.08],
            "leakage_model": "neighbor",
-           "specz_scatter": [0.0008, 0.001, 0.0015, 0.002],
+           "specz_scatter": [0.008, 0.01, 0.015, 0.052],
        },
        "normalize_bins": True,
    }
