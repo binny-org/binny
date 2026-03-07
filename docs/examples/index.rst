@@ -21,5 +21,6 @@ workflows.
    nz_calibration
    photoz_bins
    specz_bins
-   diagnostics
+   bin_summaries
+   bin_diagnostics
    survey_presets
