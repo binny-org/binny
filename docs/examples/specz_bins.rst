@@ -6,9 +6,10 @@ This page shows simple, executable examples of how to build
 using :class:`binny.NZTomography`.
 
 Compared with photometric binning, spectroscopic binning usually assumes
-much smaller redshift uncertainties. This makes the tomographic bins
-closer to their ideal boundaries, while still allowing controlled
-broadening or bin mixing when a spectroscopic uncertainty model is included.
+much smaller redshift uncertainties. As a result, the tomographic bins
+stay much closer to their ideal boundaries, while still allowing small
+amounts of broadening or bin mixing when a spectroscopic uncertainty
+model is included.
 
 The main ideas illustrated are:
 
@@ -24,8 +25,9 @@ All plotting examples below are executable via ``.. plot::``.
 Basic spectroscopic binning
 ---------------------------
 
-We begin with a simple spectroscopic tomographic setup using a Smail parent
-distribution, equal-number binning, and a small spectroscopic scatter term.
+We begin with a simple spectroscopic tomographic setup using a Smail
+parent distribution, equipopulated binning, and a small spectroscopic
+scatter term.
 
 .. plot::
    :include-source: True
@@ -37,12 +39,12 @@ distribution, equal-number binning, and a small spectroscopic scatter term.
 
    from binny import NZTomography
 
-   def plot_bins(ax, z, bin_dict, title, cmap="viridis", cmap_range=(0.0, 1.0)):
+   def plot_bins(ax, z, bin_dict, title, xmin=0, xmax=1):
        keys = sorted(bin_dict.keys())
        colors = cmr.take_cmap_colors(
-           cmap,
+           "viridis",
            len(keys),
-           cmap_range=cmap_range,
+           cmap_range=(0.0, 1.0),
            return_fmt="hex",
        )
 
@@ -66,20 +68,21 @@ distribution, equal-number binning, and a small spectroscopic scatter term.
            )
 
        ax.plot(z, np.zeros_like(z), color="k", linewidth=2.2, zorder=1000)
-       ax.set_title(title, fontsize=13)
-       ax.set_xlabel("Redshift $z$", fontsize=13)
-       ax.set_ylabel(r"$n_i(z)$", fontsize=13)
+       ax.set_title(title, fontsize=15)
+       ax.set_xlabel("Redshift $z$", fontsize=15)
+       ax.set_ylabel(r"$n_i(z)$", fontsize=15)
+       ax.set_xlim(xmin, xmax)
 
    tomo = NZTomography()
 
-   z = np.linspace(0.0, 2.0, 501)
+   z = np.linspace(0.0, 1.0, 500)
 
    nz = NZTomography.nz_model(
        "smail",
        z,
-       z0=0.2,
+       z0=0.12,
        alpha=2.0,
-       beta=1.0,
+       beta=1.5,
        normalize=True,
    )
 
@@ -87,13 +90,8 @@ distribution, equal-number binning, and a small spectroscopic scatter term.
        "kind": "specz",
        "bins": {
            "scheme": "equipopulated",
-           "n_bins": 4,
-       },
-       "uncertainties": {
-           "completeness": [1.0, 1.0, 1.0, 1.0],
-           "catastrophic_frac": [0.0, 0.0, 0.0, 0.0],
-           "leakage_model": "neighbor",
-           "specz_scatter": [0.001, 0.001, 0.0015, 0.002],
+           "n_bins": 6,
+           "range": (0.05, 0.8),
        },
        "normalize_bins": True,
    }
@@ -105,7 +103,8 @@ distribution, equal-number binning, and a small spectroscopic scatter term.
        ax,
        z,
        specz_result.bins,
-       title="Spec-z binning: 4 equal-number bins",
+       title="Spec-z binning: 6 equipopulated bins",
+       xmax=0.5
    )
    plt.tight_layout()
 
@@ -113,9 +112,9 @@ distribution, equal-number binning, and a small spectroscopic scatter term.
 Changing the binning scheme
 ---------------------------
 
-As in the photometric case, the choice of binning scheme affects where the
-tomographic boundaries are placed. Below we compare equidistant and
-equal-number spectroscopic bins using the same uncertainty setup.
+As in the photometric case, the choice of binning scheme affects where
+the tomographic boundaries are placed. Below we compare equidistant and
+equipopulated spectroscopic bins using the same uncertainty setup.
 
 .. plot::
    :include-source: True
@@ -127,12 +126,12 @@ equal-number spectroscopic bins using the same uncertainty setup.
 
    from binny import NZTomography
 
-   def plot_bins(ax, z, bin_dict, title, cmap="viridis", cmap_range=(0.0, 1.0)):
+   def plot_bins(ax, z, bin_dict, title, xmin=0, xmax=1):
        keys = sorted(bin_dict.keys())
        colors = cmr.take_cmap_colors(
-           cmap,
+           "viridis",
            len(keys),
-           cmap_range=cmap_range,
+           cmap_range=(0.0, 1.0),
            return_fmt="hex",
        )
 
@@ -142,36 +141,30 @@ equal-number spectroscopic bins using the same uncertainty setup.
            ax.plot(z, curve, color="k", linewidth=2.2, zorder=20 + i)
 
        ax.plot(z, np.zeros_like(z), color="k", linewidth=2.2, zorder=1000)
-       ax.set_title(title, fontsize=13)
-       ax.set_xlabel("Redshift $z$", fontsize=13)
+       ax.set_title(title, fontsize=15)
+       ax.set_xlabel("Redshift $z$", fontsize=15)
+       ax.set_xlim(xmin, xmax)
 
    tomo = NZTomography()
 
-   z = np.linspace(0.0, 2.0, 501)
+   z = np.linspace(0.0, 1.0, 500)
 
    nz = NZTomography.nz_model(
        "smail",
        z,
-       z0=0.2,
+       z0=0.12,
        alpha=2.0,
-       beta=1.0,
+       beta=1.5,
        normalize=True,
    )
-
-   common_uncertainties = {
-       "completeness": [1.0, 1.0, 1.0, 1.0],
-       "catastrophic_frac": [0.0, 0.0, 0.0, 0.0],
-       "leakage_model": "neighbor",
-       "specz_scatter": [0.001, 0.001, 0.0015, 0.002],
-   }
 
    equidistant_spec = {
        "kind": "specz",
        "bins": {
            "scheme": "equidistant",
-           "n_bins": 4,
+           "n_bins": 6,
+           "range": (0.05, 0.8),
        },
-       "uncertainties": common_uncertainties,
        "normalize_bins": True,
    }
 
@@ -179,9 +172,9 @@ equal-number spectroscopic bins using the same uncertainty setup.
        "kind": "specz",
        "bins": {
            "scheme": "equipopulated",
-           "n_bins": 4,
+           "n_bins": 6,
+           "range": (0.05, 0.8),
        },
-       "uncertainties": common_uncertainties,
        "normalize_bins": True,
    }
 
@@ -199,9 +192,9 @@ equal-number spectroscopic bins using the same uncertainty setup.
    fig, axes = plt.subplots(1, 2, figsize=(11.0, 4.6), sharey=True)
 
    plot_bins(axes[0], z, equidistant_result.bins, "Equidistant")
-   axes[0].set_ylabel(r"$n_i(z)$", fontsize=13)
+   axes[0].set_ylabel(r"$n_i(z)$", fontsize=15)
 
-   plot_bins(axes[1], z, equipopulated_result.bins, "Equal-number")
+   plot_bins(axes[1], z, equipopulated_result.bins, "Equipopulated", xmax=0.5)
 
    plt.tight_layout()
 
@@ -209,9 +202,9 @@ equal-number spectroscopic bins using the same uncertainty setup.
 Changing the number of bins
 ---------------------------
 
-As before, increasing ``n_bins`` gives a finer tomographic partition.
-For spectroscopic binning, the boundaries remain sharper because the
-uncertainty model is much narrower than in the photo-z case.
+Increasing ``n_bins`` gives a finer tomographic partition.
+For spectroscopic binning, the bin edges remain much sharper than in
+the photo-z case because the redshift uncertainties are much smaller.
 
 .. plot::
    :include-source: True
@@ -223,12 +216,12 @@ uncertainty model is much narrower than in the photo-z case.
 
    from binny import NZTomography
 
-   def plot_bins(ax, z, bin_dict, title, cmap="viridis", cmap_range=(0.0, 1.0)):
+   def plot_bins(ax, z, bin_dict, title, xmin=0, xmax=1):
        keys = sorted(bin_dict.keys())
        colors = cmr.take_cmap_colors(
-           cmap,
+           "viridis",
            len(keys),
-           cmap_range=cmap_range,
+           cmap_range=(0.0, 1.0),
            return_fmt="hex",
        )
 
@@ -238,34 +231,25 @@ uncertainty model is much narrower than in the photo-z case.
            ax.plot(z, curve, color="k", linewidth=2.2, zorder=20 + i)
 
        ax.plot(z, np.zeros_like(z), color="k", linewidth=2.2, zorder=1000)
-       ax.set_title(title, fontsize=13)
-       ax.set_xlabel("Redshift $z$", fontsize=13)
+       ax.set_title(title, fontsize=15)
+       ax.set_xlabel("Redshift $z$", fontsize=15)
+       ax.set_xlim(xmin, xmax)
 
    tomo = NZTomography()
 
-   z = np.linspace(0.0, 2.0, 501)
+   z = np.linspace(0.0, 1.0, 500)
 
    nz = NZTomography.nz_model(
        "smail",
        z,
-       z0=0.2,
+       z0=0.12,
        alpha=2.0,
-       beta=1.0,
+       beta=1.5,
        normalize=True,
    )
 
-   common_three_bin_uncertainties = {
-       "completeness": [1.0, 1.0, 1.0],
-       "catastrophic_frac": [0.0, 0.0, 0.0],
-       "leakage_model": "neighbor",
-       "specz_scatter": [0.001, 0.0015, 0.002],
-   }
-
-   common_five_bin_uncertainties = {
-       "completeness": [1.0, 1.0, 1.0, 1.0, 1.0],
-       "catastrophic_frac": [0.0, 0.0, 0.0, 0.0, 0.0],
-       "leakage_model": "neighbor",
-       "specz_scatter": [0.001, 0.001, 0.0015, 0.0015, 0.002],
+   common_bin_uncertainties = {
+       "completeness": 1.0,
    }
 
    three_bin_spec = {
@@ -273,8 +257,9 @@ uncertainty model is much narrower than in the photo-z case.
        "bins": {
            "scheme": "equipopulated",
            "n_bins": 3,
+           "range": (0.05, 0.8),
        },
-       "uncertainties": common_three_bin_uncertainties,
+       "uncertainties": common_bin_uncertainties,
        "normalize_bins": True,
    }
 
@@ -283,20 +268,21 @@ uncertainty model is much narrower than in the photo-z case.
        "bins": {
            "scheme": "equipopulated",
            "n_bins": 5,
+           "range": (0.05, 0.8),
        },
-       "uncertainties": common_five_bin_uncertainties,
+       "uncertainties": common_bin_uncertainties,
        "normalize_bins": True,
    }
 
    three_bin_result = tomo.build_bins(z=z, nz=nz, tomo_spec=three_bin_spec)
    five_bin_result = tomo.build_bins(z=z, nz=nz, tomo_spec=five_bin_spec)
 
-   fig, axes = plt.subplots(1, 2, figsize=(11.0, 4.6), sharey=True)
+   fig, axes = plt.subplots(1, 2, figsize=(11.0, 4.6))
 
-   plot_bins(axes[0], z, three_bin_result.bins, "3 bins")
-   axes[0].set_ylabel(r"$n_i(z)$", fontsize=13)
+   plot_bins(axes[0], z, three_bin_result.bins, "3 bins", xmax=0.5)
+   axes[0].set_ylabel(r"$n_i(z)$", fontsize=15)
 
-   plot_bins(axes[1], z, five_bin_result.bins, "5 bins")
+   plot_bins(axes[1], z, five_bin_result.bins, "5 bins", xmax=0.5)
 
    plt.tight_layout()
 
@@ -304,17 +290,18 @@ uncertainty model is much narrower than in the photo-z case.
 Spectroscopic uncertainties
 ---------------------------
 
-The uncertainty block can also be used in the spectroscopic case, even if
-the corresponding values are usually much smaller than for photo-z binning.
+The uncertainty parameters can also be used in the spectroscopic case, even
+though the corresponding values are usually much smaller than in photo-z
+binning.
 
 Spectroscopic scatter
 ~~~~~~~~~~~~~~~~~~~~~
 
-This parameter sets the width of the measurement uncertainty in the
-spectroscopic redshift estimate. Although spectroscopic redshifts are
-typically very precise, a nonzero ``specz_scatter`` broadens the observed
-redshift distribution slightly, which smooths the bin edges and produces
-a small overlap between neighboring tomographic bins.
+TThis parameter sets the width of the measurement uncertainty in the
+spectroscopic redshift estimate. Although spectroscopic redshifts are typically
+very precise, a nonzero ``specz_scatter`` slightly broadens the observed
+redshift distribution, which smooths the bin edges and introduces a small
+overlap between neighboring tomographic bins.
 
 .. plot::
    :include-source: True
@@ -326,12 +313,12 @@ a small overlap between neighboring tomographic bins.
 
    from binny import NZTomography
 
-   def plot_bins(ax, z, bin_dict, title, cmap="viridis", cmap_range=(0.0, 1.0)):
+   def plot_bins(ax, z, bin_dict, title, xmin=0, xmax=1):
        keys = sorted(bin_dict.keys())
        colors = cmr.take_cmap_colors(
-           cmap,
+           "viridis",
            len(keys),
-           cmap_range=cmap_range,
+           cmap_range=(0.0, 1.0),
            return_fmt="hex",
        )
 
@@ -341,19 +328,20 @@ a small overlap between neighboring tomographic bins.
            ax.plot(z, curve, color="k", linewidth=2.2, zorder=20 + i)
 
        ax.plot(z, np.zeros_like(z), color="k", linewidth=2.2, zorder=1000)
-       ax.set_title(title, fontsize=13)
-       ax.set_xlabel("Redshift $z$", fontsize=13)
+       ax.set_title(title, fontsize=15)
+       ax.set_xlabel("Redshift $z$", fontsize=15)
+       ax.set_xlim(xmin, xmax)
 
    tomo = NZTomography()
 
-   z = np.linspace(0.0, 2.0, 501)
+   z = np.linspace(0.0, 1.0, 500)
 
    nz = NZTomography.nz_model(
        "smail",
        z,
-       z0=0.2,
+       z0=0.12,
        alpha=2.0,
-       beta=1.0,
+       beta=1.5,
        normalize=True,
    )
 
@@ -387,8 +375,8 @@ a small overlap between neighboring tomographic bins.
        "normalize_bins": True,
    }
 
-   low_scatter_result = tomo.build_bins(z=z, nz=nz, tomo_spec=low_scatter_spec)
-   high_scatter_result = tomo.build_bins(
+   low_scatter = tomo.build_bins(z=z, nz=nz, tomo_spec=low_scatter_spec)
+   high_scatter = tomo.build_bins(
        z=z,
        nz=nz,
        tomo_spec=high_scatter_spec,
@@ -396,10 +384,10 @@ a small overlap between neighboring tomographic bins.
 
    fig, axes = plt.subplots(1, 2, figsize=(11.0, 4.6), sharey=True)
 
-   plot_bins(axes[0], z, low_scatter_result.bins, "Low spec-z scatter")
-   axes[0].set_ylabel(r"$n_i(z)$", fontsize=13)
+   plot_bins(axes[0], z, low_scatter.bins, "Low spec-z scatter", xmax=0.5)
+   axes[0].set_ylabel(r"$n_i(z)$", fontsize=15)
 
-   plot_bins(axes[1], z, high_scatter_result.bins, "High spec-z scatter")
+   plot_bins(axes[1], z, high_scatter.bins, "High spec-z scatter", xmax=0.5)
 
    plt.tight_layout()
 
@@ -407,10 +395,10 @@ a small overlap between neighboring tomographic bins.
 Completeness
 ~~~~~~~~~~~~
 
-This parameter describes the fraction of galaxies that are successfully
-observed and assigned a reliable spectroscopic redshift in each bin.
-A value of ``1`` means that all galaxies in the true bin are retained,
-while lower values reduce the amplitude of the corresponding tomographic
+This parameter gives the fraction of galaxies in each bin that are
+successfully observed and assigned a reliable spectroscopic redshift.
+A value of ``1`` means that all galaxies in the bin are retained, while
+lower values reduce the amplitude of the corresponding tomographic
 distribution to reflect incomplete sampling.
 
 .. plot::
@@ -423,12 +411,12 @@ distribution to reflect incomplete sampling.
 
    from binny import NZTomography
 
-   def plot_bins(ax, z, bin_dict, title, cmap="viridis", cmap_range=(0.0, 1.0)):
+   def plot_bins(ax, z, bin_dict, title, xmin=0, xmax=1):
        keys = sorted(bin_dict.keys())
        colors = cmr.take_cmap_colors(
-           cmap,
+           "viridis",
            len(keys),
-           cmap_range=cmap_range,
+           cmap_range=(0.0, 1.0),
            return_fmt="hex",
        )
 
@@ -438,19 +426,20 @@ distribution to reflect incomplete sampling.
            ax.plot(z, curve, color="k", linewidth=2.2, zorder=20 + i)
 
        ax.plot(z, np.zeros_like(z), color="k", linewidth=2.2, zorder=1000)
-       ax.set_title(title, fontsize=13)
-       ax.set_xlabel("Redshift $z$", fontsize=13)
+       ax.set_title(title, fontsize=15)
+       ax.set_xlabel("Redshift $z$", fontsize=15)
+       ax.set_xlim(xmin, xmax)
 
    tomo = NZTomography()
 
-   z = np.linspace(0.0, 2.0, 501)
+   z = np.linspace(0.0, 1.0, 500)
 
    nz = NZTomography.nz_model(
        "smail",
        z,
-       z0=0.2,
+       z0=0.12,
        alpha=2.0,
-       beta=1.0,
+       beta=1.5,
        normalize=True,
    )
 
@@ -493,10 +482,22 @@ distribution to reflect incomplete sampling.
 
    fig, axes = plt.subplots(1, 2, figsize=(11.0, 4.6), sharey=True)
 
-   plot_bins(axes[0], z, complete_result.bins, "Completeness: all unity")
-   axes[0].set_ylabel(r"$n_i(z)$", fontsize=13)
+   plot_bins(
+      axes[0],
+      z,
+      complete_result.bins,
+      "Completeness: all unity",
+      xmax=0.5
+   )
+   axes[0].set_ylabel(r"$n_i(z)$", fontsize=15)
 
-   plot_bins(axes[1], z, reduced_result.bins, "Lower completeness at high $z$")
+   plot_bins(
+      axes[1],
+      z,
+      reduced_result.bins,
+      "Lower completeness at high $z$",
+      xmax=0.5
+   )
 
    plt.tight_layout()
 
@@ -505,7 +506,7 @@ Catastrophic misassignment
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 This parameter sets the fraction of galaxies whose spectroscopic
-redshift assignment fails catastrophically. These galaxies are
+redshift assignment fails catastrophically. These galaxies are then
 redistributed into other bins according to the chosen leakage model.
 Increasing ``catastrophic_frac`` therefore increases mixing between
 otherwise well-separated tomographic bins.
@@ -520,12 +521,12 @@ otherwise well-separated tomographic bins.
 
    from binny import NZTomography
 
-   def plot_bins(ax, z, bin_dict, title, cmap="viridis", cmap_range=(0.0, 1.0)):
+   def plot_bins(ax, z, bin_dict, title, xmin=0, xmax=1):
        keys = sorted(bin_dict.keys())
        colors = cmr.take_cmap_colors(
-           cmap,
+           "viridis",
            len(keys),
-           cmap_range=cmap_range,
+           cmap_range=(0.0, 1.0),
            return_fmt="hex",
        )
 
@@ -535,19 +536,20 @@ otherwise well-separated tomographic bins.
            ax.plot(z, curve, color="k", linewidth=2.2, zorder=20 + i)
 
        ax.plot(z, np.zeros_like(z), color="k", linewidth=2.2, zorder=1000)
-       ax.set_title(title, fontsize=13)
-       ax.set_xlabel("Redshift $z$", fontsize=13)
+       ax.set_title(title, fontsize=15)
+       ax.set_xlabel("Redshift $z$", fontsize=15)
+       ax.set_xlim(xmin, xmax)
 
    tomo = NZTomography()
 
-   z = np.linspace(0.0, 2.0, 501)
+   z = np.linspace(0.0, 1.0, 500)
 
    nz = NZTomography.nz_model(
        "smail",
        z,
-       z0=0.2,
+       z0=0.12,
        alpha=2.0,
-       beta=1.0,
+       beta=1.5,
        normalize=True,
    )
 
@@ -594,10 +596,22 @@ otherwise well-separated tomographic bins.
 
    fig, axes = plt.subplots(1, 2, figsize=(11.0, 4.6), sharey=True)
 
-   plot_bins(axes[0], z, no_catastrophic_result.bins, "No catastrophic reassignment")
-   axes[0].set_ylabel(r"$n_i(z)$", fontsize=13)
+   plot_bins(
+       axes[0],
+       z,
+       no_catastrophic_result.bins,
+       "No catastrophic reassignment",
+       xmax=0.5
+   )
+   axes[0].set_ylabel(r"$n_i(z)$", fontsize=15)
 
-   plot_bins(axes[1], z, catastrophic_result.bins, "Increasing catastrophic fraction")
+   plot_bins(
+       axes[1],
+       z,
+       catastrophic_result.bins,
+       "Increasing catastrophic fraction",
+       xmax=0.5
+   )
 
    plt.tight_layout()
 
@@ -607,7 +621,7 @@ Leakage model
 
 This parameter defines how galaxies affected by catastrophic redshift
 failures are redistributed across bins. The ``neighbor`` model moves
-misassigned galaxies primarily into adjacent bins, while ``uniform``
+misassigned galaxies mainly into adjacent bins, while ``uniform``
 spreads them across all bins with equal probability.
 
 .. plot::
@@ -620,12 +634,12 @@ spreads them across all bins with equal probability.
 
    from binny import NZTomography
 
-   def plot_bins(ax, z, bin_dict, title, cmap="viridis", cmap_range=(0.0, 1.0)):
+   def plot_bins(ax, z, bin_dict, title, xmin=0, xmax=1):
        keys = sorted(bin_dict.keys())
        colors = cmr.take_cmap_colors(
-           cmap,
+           "viridis",
            len(keys),
-           cmap_range=cmap_range,
+           cmap_range=(0.0, 1.0),
            return_fmt="hex",
        )
 
@@ -635,19 +649,20 @@ spreads them across all bins with equal probability.
            ax.plot(z, curve, color="k", linewidth=2.2, zorder=20 + i)
 
        ax.plot(z, np.zeros_like(z), color="k", linewidth=2.2, zorder=1000)
-       ax.set_title(title, fontsize=13)
-       ax.set_xlabel("Redshift $z$", fontsize=13)
+       ax.set_title(title, fontsize=15)
+       ax.set_xlabel("Redshift $z$", fontsize=15)
+       ax.set_xlim(xmin, xmax)
 
    tomo = NZTomography()
 
-   z = np.linspace(0.0, 2.0, 501)
+   z = np.linspace(0.0, 1.0, 500)
 
    nz = NZTomography.nz_model(
        "smail",
        z,
-       z0=0.2,
+       z0=0.12,
        alpha=2.0,
-       beta=1.0,
+       beta=1.5,
        normalize=True,
    )
 
@@ -686,20 +701,241 @@ spreads them across all bins with equal probability.
 
    fig, axes = plt.subplots(1, 2, figsize=(11.0, 4.6), sharey=True)
 
-   plot_bins(axes[0], z, neighbor_result.bins, "Leakage model: neighbor")
-   axes[0].set_ylabel(r"$n_i(z)$", fontsize=13)
+   plot_bins(axes[0], z, neighbor_result.bins, "Leakage model: neighbor", xmax=0.5)
+   axes[0].set_ylabel(r"$n_i(z)$", fontsize=15)
 
-   plot_bins(axes[1], z, uniform_result.bins, "Leakage model: uniform")
+   plot_bins(axes[1], z, uniform_result.bins, "Leakage model: uniform", xmax=0.5)
 
    plt.tight_layout()
 
 
-Inspecting the returned bins directly
--------------------------------------
+Per-bin versus shared uncertainties
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Spectroscopic uncertainty parameters can also be supplied either as a
+single value applied across all tomographic bins or as a list with one
+value per bin. This is useful when comparing a simplified global model
+with a more realistic bin-dependent one.
+
+The example below compares a shared spectroscopic scatter and
+completeness model with a per-bin version of the same setup.
+
+.. plot::
+   :include-source: True
+   :width: 760
+
+   import cmasher as cmr
+   import matplotlib.pyplot as plt
+   import numpy as np
+
+   from binny import NZTomography
+
+   def plot_bins(ax, z, bin_dict, title, xmin=0, xmax=1):
+       keys = sorted(bin_dict.keys())
+       colors = cmr.take_cmap_colors(
+           "viridis",
+           len(keys),
+           cmap_range=(0.0, 1.0),
+           return_fmt="hex",
+       )
+
+       for i, (color, key) in enumerate(zip(colors, keys, strict=True)):
+           curve = np.asarray(bin_dict[key], dtype=float)
+           ax.fill_between(
+               z,
+               0.0,
+               curve,
+               color=color,
+               alpha=0.65,
+               linewidth=0.0,
+               zorder=10 + i,
+           )
+           ax.plot(
+               z,
+               curve,
+               color="k",
+               linewidth=2.2,
+               zorder=20 + i,
+           )
+
+       ax.plot(z, np.zeros_like(z), color="k", linewidth=2.2, zorder=1000)
+       ax.set_title(title, fontsize=15)
+       ax.set_xlabel("Redshift $z$", fontsize=15)
+       ax.set_xlim(xmin, xmax)
+
+   tomo = NZTomography()
+
+   z = np.linspace(0.0, 1.0, 500)
+
+   nz = NZTomography.nz_model(
+       "smail",
+       z,
+       z0=0.12,
+       alpha=2.0,
+       beta=1.5,
+       normalize=True,
+   )
+
+   shared_uncertainty_spec = {
+       "kind": "specz",
+       "bins": {
+           "scheme": "equipopulated",
+           "n_bins": 4,
+       },
+       "uncertainties": {
+           "completeness": 0.95,
+           "catastrophic_frac": 0.05,
+           "leakage_model": "neighbor",
+           "specz_scatter": 0.0015,
+       },
+       "normalize_bins": True,
+   }
+
+   per_bin_uncertainty_spec = {
+       "kind": "specz",
+       "bins": {
+           "scheme": "equipopulated",
+           "n_bins": 4,
+       },
+       "uncertainties": {
+           "completeness": [1.0, 0.98, 0.92, 0.85],
+           "catastrophic_frac": [0.0, 0.02, 0.05, 0.08],
+           "leakage_model": "neighbor",
+           "specz_scatter": [0.0008, 0.001, 0.0015, 0.002],
+       },
+       "normalize_bins": True,
+   }
+
+   shared_result = tomo.build_bins(
+       z=z,
+       nz=nz,
+       tomo_spec=shared_uncertainty_spec,
+   )
+   per_bin_result = tomo.build_bins(
+       z=z,
+       nz=nz,
+       tomo_spec=per_bin_uncertainty_spec,
+   )
+
+   fig, axes = plt.subplots(1, 2, figsize=(11.0, 4.6), sharey=True)
+
+   plot_bins(axes[0], z, shared_result.bins, "Shared uncertainty values", xmax=0.5)
+   axes[0].set_ylabel(r"$n_i(z)$", fontsize=15)
+
+   plot_bins(axes[1], z, per_bin_result.bins, "Per-bin uncertainty values", xmax=0.5)
+
+   plt.tight_layout()
+
+
+Unified spectroscopic uncertainty model
+---------------------------------------
+
+This example combines several spectroscopic uncertainty terms in one
+setup: per-bin completeness, catastrophic redshift failures, a leakage
+model, and small spectroscopic scatter. In practice, this is often a
+more realistic configuration than varying one ingredient at a time,
+because real spectroscopic samples can be affected by several effects
+simultaneously.
+
+The example below uses per-bin values for completeness,
+``catastrophic_frac``, and ``specz_scatter``.
+
+.. plot::
+   :include-source: True
+   :width: 700
+
+   import cmasher as cmr
+   import matplotlib.pyplot as plt
+   import numpy as np
+
+   from binny import NZTomography
+
+   def plot_bins(ax, z, bin_dict, title, xmin=0, xmax=1):
+       keys = sorted(bin_dict.keys())
+       colors = cmr.take_cmap_colors(
+           "viridis",
+           len(keys),
+           cmap_range=(0.0, 1.0),
+           return_fmt="hex",
+       )
+
+       for i, (color, key) in enumerate(zip(colors, keys, strict=True)):
+           curve = np.asarray(bin_dict[key], dtype=float)
+           ax.fill_between(
+               z,
+               0.0,
+               curve,
+               color=color,
+               alpha=0.65,
+               linewidth=0.0,
+               zorder=10 + i,
+           )
+           ax.plot(
+               z,
+               curve,
+               color="k",
+               linewidth=1.8,
+               zorder=20 + i,
+           )
+
+       ax.plot(z, np.zeros_like(z), color="k", linewidth=1.8, zorder=1000)
+       ax.set_title(title, fontsize=15)
+       ax.set_xlabel("Redshift $z$", fontsize=15)
+       ax.set_ylabel(r"$n_i(z)$", fontsize=15)
+       ax.set_xlim(xmin, xmax)
+
+   tomo = NZTomography()
+
+   z = np.linspace(0.0, 1.0, 500)
+
+   nz = NZTomography.nz_model(
+       "smail",
+       z,
+       z0=0.12,
+       alpha=2.0,
+       beta=1.5,
+       normalize=True,
+   )
+
+   unified_uncertainty_spec = {
+       "kind": "specz",
+       "bins": {
+           "scheme": "equipopulated",
+           "n_bins": 4,
+       },
+       "uncertainties": {
+           "completeness": [1.0, 0.97, 0.92, 0.85],
+           "catastrophic_frac": [0.0, 0.02, 0.05, 0.08],
+           "leakage_model": "neighbor",
+           "specz_scatter": [0.0008, 0.001, 0.0015, 0.002],
+       },
+       "normalize_bins": True,
+   }
+
+   unified_result = tomo.build_bins(
+       z=z,
+       nz=nz,
+       tomo_spec=unified_uncertainty_spec,
+   )
+
+   fig, ax = plt.subplots(figsize=(8.6, 4.9))
+   plot_bins(
+       ax,
+       z,
+       unified_result.bins,
+       title="Unified spec-z uncertainty model",
+       xmax=0.5
+   )
+   plt.tight_layout()
+
+
+Inspecting the returned bins
+----------------------------
 
 The object returned by :meth:`binny.NZTomography.build_bins` stores the
-parent distribution, the resolved specification, and the bin curves.
-You can inspect the contents directly before using the result elsewhere.
+parent distribution, the resolved specification, and the tomographic bin
+curves. You can inspect these contents directly before using the result
+elsewhere.
 
 .. plot::
    :include-source: True
@@ -711,14 +947,14 @@ You can inspect the contents directly before using the result elsewhere.
 
    tomo = NZTomography()
 
-   z = np.linspace(0.0, 2.0, 501)
+   z = np.linspace(0.0, 1.0, 500)
 
    nz = NZTomography.nz_model(
        "smail",
        z,
-       z0=0.2,
+       z0=0.12,
        alpha=2.0,
-       beta=1.0,
+       beta=1.5,
        normalize=True,
    )
 
@@ -743,7 +979,8 @@ You can inspect the contents directly before using the result elsewhere.
    print(list(specz_result.bins.keys()))
    print()
    print("Parent shape:", specz_result.nz.shape)
-   print("Bin 0 shape:", specz_result.bins[0].shape)
+   first_key = sorted(specz_result.bins.keys())[0]
+   print("First bin shape:", specz_result.bins[first_key].shape)
    print("Resolved kind:", specz_result.spec["kind"])
    print("Resolved scheme:", specz_result.spec["bins"]["scheme"])
    print("Resolved n_bins:", specz_result.spec["bins"]["n_bins"])
