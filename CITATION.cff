@@ -8,10 +8,14 @@ version: 0.1.0
 date-released: 2026-01-01
 
 authors:
-  - family-names: "Sarcevic"
-    given-names: "Nikolina"
+  - given-names: "Nikolina"
+    family-names: "Šarčević"
     email: "nikolina.sarcevic@gmail.com"
-    orcid: "https://orcid.org/0000-0001-7301-6415"
+    orcid: "0000-0001-7301-6415"
+  - given-names: "Matthijs"
+    family-names: "van der Wild"
+    email: "matthijs@vanderwild.com"
+    orcid: "0000-0002-3949-3063"
 
 repository-code: "https://github.com/binny-org/binny"
 url: "https://github.com/binny-org/binny"
