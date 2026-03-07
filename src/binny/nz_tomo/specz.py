@@ -13,7 +13,6 @@ factor ``c_j``. The true-bin selection window is
     ``S_j(z) = c_j * 1_{[z_j, z_{j+1})}(z)``,
 
 and the corresponding true-bin distribution is
-
     ``n_true_j(z) = n(z) * S_j(z)``.
 
 Bin-to-bin response (optional)
