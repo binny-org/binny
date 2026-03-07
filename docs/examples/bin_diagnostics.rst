@@ -295,6 +295,7 @@ photo-z example.
 
    plt.tight_layout()
 
+
 In all three matrices, values near the diagonal typically indicate the
 strongest self-association, while off-diagonal structure reveals
 coupling between different bins. Large off-diagonal overlap or leakage

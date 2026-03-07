@@ -101,7 +101,7 @@ plot_rcparams = {
     "xtick.labelsize": 13,
     "ytick.labelsize": 13,
     # nice defaults
-    "axes.linewidth": 1.5,
+    "axes.linewidth": 2,
     "xtick.major.width": 1.2,
     "ytick.major.width": 1.2,
 }
