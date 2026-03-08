@@ -1,14 +1,6 @@
 <p align="center">
-  <img src="docs/_static/assets/logo.png" width="160">
+  <img src="docs/_static/animations/binny_logo.gif" width="420">
 </p>
-
-<h1 align="center">binny</h1>
-
-<p align="center">
-Flexible tomographic binning tools for cosmology
-</p>
-
-<p align="center">
 
 # binny
 

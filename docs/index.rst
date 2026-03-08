@@ -1,29 +1,36 @@
 Binny
 =====
 
-.. image:: _static/assets/logo.png
-   :alt: Binny logo
-   :width: 150px
-   :align: right
+.. grid:: 2
+   :gutter: 3
 
-**Binny** is a Python library providing flexible, explicit, and well-tested
-tomographic binning algorithms for cosmology and related scientific workflows.
+   .. grid-item::
 
-It is designed to integrate easily into forecasting, inference, and
-data-processing pipelines, with an emphasis on clarity, reproducibility,
-and robust validation.
+      **Binny** is a Python library providing flexible, explicit, and well-tested
+      tomographic binning algorithms for cosmology and related scientific workflows.
 
-Binny provides tools for constructing and validating tomographic binning
-schemes commonly used in cosmology and large-scale structure analyses.
-The package focuses on explicit bin definitions, reproducible binning
-strategies, and diagnostics that help compare different tomographic choices.
+      It is designed to integrate easily into forecasting, inference, and
+      data-processing pipelines, with an emphasis on clarity, reproducibility,
+      and robust validation.
 
-Typical use cases include:
+      Binny provides tools for constructing and validating tomographic binning
+      schemes commonly used in cosmology and large-scale structure analyses.
+      The package focuses on explicit bin definitions, reproducible binning
+      strategies, and diagnostics that help compare different tomographic choices.
 
-- photometric-redshift tomography
-- spectroscopic-redshift binning
-- cosmological forecasting studies
-- survey-specific bin definitions
+      Typical use cases include:
+
+      - photometric-redshift tomography
+      - spectroscopic-redshift binning
+      - cosmological forecasting studies
+      - survey-specific bin definitions
+
+   .. grid-item::
+      :class: sd-text-center
+
+      .. image:: _static/animations/binny_logo.gif
+         :width: 260px
+         :alt: Binny logo
 
 
 Explore the documentation
