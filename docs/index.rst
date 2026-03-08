@@ -26,6 +26,42 @@ Typical use cases include:
 - survey-specific bin definitions
 
 
+Explore the documentation
+-------------------------
+
+.. grid:: 2
+   :gutter: 4
+
+   .. grid-item-card:: Theory
+      :link: theory/index
+      :link-type: doc
+      :class-card: sd-card-hover
+
+      Mathematical background and definitions behind tomographic
+      binning in cosmology.
+
+      Topics include:
+
+      - redshift distributions :math:`n(z)`
+      - photometric and spectroscopic selection
+      - tomographic bin construction
+      - overlap and leakage diagnostics
+
+   .. grid-item-card:: Examples
+      :link: examples/index
+      :link-type: doc
+      :class-card: sd-card-hover
+
+      Practical demonstrations of Binny workflows.
+
+      Includes:
+
+      - building redshift distributions
+      - constructing tomographic bins
+      - survey configurations
+      - diagnostics and summaries
+
+
 Example gallery
 ---------------
 
@@ -113,13 +149,6 @@ The examples below illustrate common Binny workflows.
 
 Documentation
 -------------
-
-The documentation is organized into three main parts:
-
-- :doc:`theory/index` — theoretical background and mathematical definitions
-- :doc:`workflow` — recommended analysis workflow using Binny
-- :doc:`examples/index` — practical examples and tutorials
-
 
 .. toctree::
    :maxdepth: 1
