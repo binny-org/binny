@@ -37,7 +37,6 @@ def blend_bin_dict(bin_dict_a, bin_dict_b, t):
     keys_b = set(bin_dict_b.keys())
     all_keys = sorted(keys_a | keys_b)
 
-    template = None
     if bin_dict_a:
         template = np.asarray(next(iter(bin_dict_a.values())), dtype=float)
     elif bin_dict_b:

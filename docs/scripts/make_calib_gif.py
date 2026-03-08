@@ -272,13 +272,13 @@ z_true = z_true[(z_true >= 0.0) & (z_true <= 3.0)]
 
 mag = 22.0 + 2.2 * z_true + rng.normal(0.0, 0.45, size=z_true.size)
 
-maglims = np.array([22.5, 23.0, 23.5, 24.0, 24.5])
+maglims = np.array([22.5, 23.0, 23.5, 24.0, 24.5, 25])
 
 result = NZTomography.calibrate_smail_from_mock(
     z_true=z_true,
     mag=mag,
     maglims=maglims,
-    area_deg2=1000.0,
+    area_deg2=2000.0,
     infer_alpha_beta_from="deep_cut",
     alpha_beta_maglim=24.5,
     z_max=3.0,
