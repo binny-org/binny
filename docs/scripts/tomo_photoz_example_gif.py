@@ -21,6 +21,11 @@ def replace_fill(ax, old_fill, x, y, color, alpha=0.6):
     )
 
 
+def ordered_curves(bin_dict):
+    keys = sorted(bin_dict.keys())
+    return [np.asarray(bin_dict[k], dtype=float) for k in keys]
+
+
 def top_hat_window(z, zmin, zmax):
     return ((z >= zmin) & (z < zmax)).astype(float)
 
@@ -28,7 +33,9 @@ def top_hat_window(z, zmin, zmax):
 HERE = Path(__file__).resolve().parent
 OUTDIR = HERE.parent / "_static" / "animations"
 OUTDIR.mkdir(parents=True, exist_ok=True)
-OUTFILE = OUTDIR / "tomo_specz_hard_bins.gif"
+OUTFILE = OUTDIR / "tomo_photoz_example.gif"
+
+tomo = NZTomography()
 
 z = np.linspace(0.0, 2.0, 500)
 
@@ -45,17 +52,28 @@ n_bins = 4
 bin_range = (0.2, 1.2)
 edges = np.linspace(bin_range[0], bin_range[1], n_bins + 1)
 
+# Top panel: hard-cut parent pieces
 hard_curves = []
-norm_curves = []
-
 for i in range(n_bins):
     w = top_hat_window(z, edges[i], edges[i + 1])
-    hard = nz * w
-    hard_curves.append(hard)
+    hard_curves.append(nz * w)
 
-    area = np.trapezoid(hard, z)
-    norm = hard / area if area > 0.0 else hard
-    norm_curves.append(norm)
+# Bottom panel: one fixed photo-z bin construction
+spec = {
+    "kind": "photoz",
+    "bins": {
+        "scheme": "equidistant",
+        "n_bins": n_bins,
+        "range": bin_range,
+    },
+    "uncertainties": {
+        "scatter_scale": 0.05,
+    },
+    "normalize_bins": True,
+}
+
+result = tomo.build_bins(z=z, nz=nz, tomo_spec=spec)
+photoz_curves = ordered_curves(result.bins)
 
 colors = cmr.take_cmap_colors(
     "viridis",
@@ -67,7 +85,7 @@ colors = cmr.take_cmap_colors(
 reveal_vals = np.linspace(z.min(), z.max(), 50)
 
 ymax_parent = 1.08 * np.max(nz)
-ymax_bins = 1.08 * max(np.max(c) for c in norm_curves)
+ymax_bins = 1.08 * max(np.max(c) for c in photoz_curves)
 
 fig, axes = plt.subplots(2, 1, figsize=(9.0, 7.2), sharex=True)
 
@@ -77,7 +95,7 @@ tick_fs = 15
 annot_fs = 15
 lw = 2.0
 
-titles = ["Parent distribution with hard cuts", "Spectroscopic tomographic bins"]
+titles = ["Parent distribution with top-hat cuts", "Photometric tomographic bins"]
 
 for ax, title in zip(axes, titles, strict=True):
     ax.set_title(title, fontsize=title_fs)
@@ -107,7 +125,6 @@ axes[0].set_ylabel(r"$n(z)$", fontsize=label_fs)
 axes[1].set_ylabel(r"$n_i(z)$", fontsize=label_fs)
 axes[1].set_xlabel("Redshift $z$", fontsize=label_fs)
 
-# top panel: parent curve
 axes[0].plot(z, nz, color="k", linewidth=lw, zorder=20)
 
 fills_parent, fills_bins = [], []
@@ -141,7 +158,7 @@ for _i, color in enumerate(colors):
     lines_bins.append(lb)
 
 text_top = axes[0].text(
-    0.6,
+    0.60,
     0.93,
     "",
     transform=axes[0].transAxes,
@@ -171,12 +188,12 @@ def init():
         fills_parent[i] = replace_fill(axes[0], fills_parent[i], z, y_parent, colors[i])
         lines_parent[i].set_data(z, y_parent)
 
-        y_bin = np.where(z <= zcut, norm_curves[i], 0.0)
+        y_bin = np.where(z <= zcut, photoz_curves[i], 0.0)
         fills_bins[i] = replace_fill(axes[1], fills_bins[i], z, y_bin, colors[i])
         lines_bins[i].set_data(z, y_bin)
 
     text_top.set_text("Sharp, non-overlapping redshift intervals")
-    text_bottom.set_text("Sharp, non-overlapping spec-z bins")
+    text_bottom.set_text(r"Smooth, overlapping photo-z bins")
     return *lines_parent, *lines_bins, text_top, text_bottom
 
 
@@ -190,12 +207,12 @@ def update(i):
         fills_parent[b] = replace_fill(axes[0], fills_parent[b], z, y_parent, colors[b])
         lines_parent[b].set_data(z, y_parent)
 
-        y_bin = np.where(z <= zcut, norm_curves[b], 0.0)
+        y_bin = np.where(z <= zcut, photoz_curves[b], 0.0)
         fills_bins[b] = replace_fill(axes[1], fills_bins[b], z, y_bin, colors[b])
         lines_bins[b].set_data(z, y_bin)
 
-    text_top.set_text(rf"Hard bins over $z \in [{bin_range[0]:.1f},\, {bin_range[1]:.1f}]$")
-    text_bottom.set_text("Sharp, non-overlapping spec-z bins")
+    text_top.set_text(rf"Bins over $z \in [{bin_range[0]:.1f},\, {bin_range[1]:.1f}]$")
+    text_bottom.set_text(r"Smooth, overlapping photo-z bins")
     return *lines_parent, *lines_bins, text_top, text_bottom
 
 

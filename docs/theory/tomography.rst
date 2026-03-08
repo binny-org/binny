@@ -118,7 +118,7 @@ In photometric surveys, redshifts are estimated from galaxy colors rather than
 spectral lines. The resulting bins are typically broader in true redshift and
 may overlap even when the nominal bin edges are well separated.
 
-.. image:: ../_static/animations/tomo_photoz_hard_bins.gif
+.. image:: ../_static/animations/tomo_photoz_example.gif
    :width: 560
    :align: center
    :alt: Comparison of hard redshift bins and photometric bins with overlap
@@ -131,7 +131,7 @@ In spectroscopic surveys, redshifts are measured with high precision.
 Tomographic bins can therefore be defined with minimal overlap in true redshift,
 and the corresponding window functions are often treated as sharply bounded.
 
-.. image:: ../_static/animations/tomo_specz_hard_bins.gif
+.. image:: ../_static/animations/tomo_specz_example.gif
    :width: 560
    :align: center
    :alt: Comparison of hard redshift bins and spectroscopic bins with overlap

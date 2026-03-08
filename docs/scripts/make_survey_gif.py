@@ -8,6 +8,19 @@ from matplotlib.animation import FuncAnimation, PillowWriter
 
 from binny import NZTomography
 
+DEFAULT_FONTSIZE = 19
+plt.rcParams.update(
+    {
+        "font.size": DEFAULT_FONTSIZE,
+        "axes.titlesize": DEFAULT_FONTSIZE,
+        "axes.labelsize": DEFAULT_FONTSIZE,
+        "xtick.labelsize": DEFAULT_FONTSIZE,
+        "ytick.labelsize": DEFAULT_FONTSIZE,
+        "legend.fontsize": DEFAULT_FONTSIZE,
+        "figure.titlesize": DEFAULT_FONTSIZE,
+    }
+)
+
 FPS = 8
 PAUSE_FRAMES = 6
 TRANSITION_FRAMES = 8
@@ -43,7 +56,7 @@ def blend_bin_dict(bin_dict_a, bin_dict_b, t):
     return blended
 
 
-def plot_bins(ax, z, bin_dict, title, xlim=None):
+def plot_bins(ax, z, bin_dict, title, label=None, xlim=None):
     ax.cla()
 
     keys = sorted(bin_dict.keys())
@@ -87,6 +100,17 @@ def plot_bins(ax, z, bin_dict, title, xlim=None):
         default=1.0,
     )
     ax.set_ylim(0.0, 1.08 * ymax)
+
+    if label is not None:
+        ax.text(
+            0.97,
+            0.92,
+            label,
+            transform=ax.transAxes,
+            ha="right",
+            va="top",
+            fontsize=DEFAULT_FONTSIZE,
+        )
 
     ax.set_title(title)
     ax.set_xlabel("Redshift $z$")
@@ -198,15 +222,6 @@ fig, axes = plt.subplots(
 
 ax_lens, ax_source = axes
 
-year_text = fig.text(
-    0.93,
-    0.50,
-    "",
-    ha="center",
-    va="center",
-    fontsize=16,
-)
-
 
 def update(frame):
     mode, idx, t = timeline[frame]
@@ -230,6 +245,7 @@ def update(frame):
         z,
         lens_bins,
         title="LSST lens sample",
+        label=label,
         xlim=(0.0, 1.5),
     )
 
@@ -238,12 +254,11 @@ def update(frame):
         z,
         source_bins,
         title="LSST source sample",
+        label=label,
         xlim=(0.0, z.max()),
     )
 
-    year_text.set_text(label)
-
-    return [year_text]
+    return []
 
 
 anim = FuncAnimation(

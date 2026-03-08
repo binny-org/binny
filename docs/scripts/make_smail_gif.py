@@ -7,6 +7,19 @@ from matplotlib.animation import FuncAnimation, PillowWriter
 
 from binny import NZTomography
 
+DEFAULT_FONTSIZE = 19
+plt.rcParams.update(
+    {
+        "font.size": DEFAULT_FONTSIZE,
+        "axes.titlesize": DEFAULT_FONTSIZE,
+        "axes.labelsize": DEFAULT_FONTSIZE,
+        "xtick.labelsize": DEFAULT_FONTSIZE,
+        "ytick.labelsize": DEFAULT_FONTSIZE,
+        "legend.fontsize": DEFAULT_FONTSIZE,
+        "figure.titlesize": DEFAULT_FONTSIZE,
+    }
+)
+
 
 def smail(z, z0, alpha, beta):
     return NZTomography.nz_model(
@@ -19,18 +32,11 @@ def smail(z, z0, alpha, beta):
     )
 
 
-# -------------------------------------------------------------------
-# Output path: this script lives in docs/scripts/
-# GIF will be saved to docs/_static/animations/
-# -------------------------------------------------------------------
 HERE = Path(__file__).resolve().parent
 OUTDIR = HERE.parent / "_static" / "animations"
 OUTDIR.mkdir(parents=True, exist_ok=True)
 OUTFILE = OUTDIR / "smail_parameter_sweep.gif"
 
-# -------------------------------------------------------------------
-# Redshift grid and baseline parameters
-# -------------------------------------------------------------------
 z = np.linspace(0.0, 3.0, 500)
 
 alpha0 = 2.0
@@ -43,9 +49,6 @@ alpha_vals = np.linspace(0.5, 4.0, n_frames)
 beta_vals = np.linspace(0.6, 2.5, n_frames)
 z0_vals = np.linspace(0.15, 0.8, n_frames)
 
-# -------------------------------------------------------------------
-# Niko-style colors
-# -------------------------------------------------------------------
 colors = cmr.take_cmap_colors(
     "viridis",
     3,
@@ -65,9 +68,6 @@ for zz in z0_vals:
 
 ymax = 1.08 * max(np.max(curve) for curve in all_curves)
 
-# -------------------------------------------------------------------
-# Figure setup
-# -------------------------------------------------------------------
 fig, axes = plt.subplots(1, 3, figsize=(13.5, 4.6), sharey=True)
 
 titles = [
@@ -76,14 +76,10 @@ titles = [
     r"Varying $z_0$",
 ]
 
-title_fs = 19
-label_fs = 17
-tick_fs = 15
-annot_fs = 15
 
 for ax, title in zip(axes, titles, strict=True):
-    ax.set_title(title, fontsize=title_fs)
-    ax.set_xlabel("Redshift $z$", fontsize=label_fs)
+    ax.set_title(title)
+    ax.set_xlabel("Redshift $z$")
     ax.set_xlim(0.0, 3.0)
     ax.set_ylim(0.0, ymax)
 
@@ -97,13 +93,12 @@ for ax, title in zip(axes, titles, strict=True):
         direction="in",
         top=True,
         right=True,
-        labelsize=tick_fs,
         width=2.0,
         length=6,
     )
     ax.grid(False)
 
-axes[0].set_ylabel(r"Normalized $n(z)$", fontsize=label_fs)
+axes[0].set_ylabel(r"Normalized $n(z)$")
 
 # Baseline text under titles
 axes[0].text(
@@ -113,7 +108,6 @@ axes[0].text(
     transform=axes[0].transAxes,
     ha="right",
     va="top",
-    fontsize=annot_fs,
 )
 axes[1].text(
     0.97,
@@ -122,7 +116,6 @@ axes[1].text(
     transform=axes[1].transAxes,
     ha="right",
     va="top",
-    fontsize=annot_fs,
 )
 axes[2].text(
     0.97,
@@ -131,12 +124,34 @@ axes[2].text(
     transform=axes[2].transAxes,
     ha="right",
     va="top",
-    fontsize=annot_fs,
 )
 
-text_alpha = axes[0].text(0.05, 0.88, "", transform=axes[0].transAxes, fontsize=annot_fs)
-text_beta = axes[1].text(0.05, 0.88, "", transform=axes[1].transAxes, fontsize=annot_fs)
-text_z0 = axes[2].text(0.05, 0.88, "", transform=axes[2].transAxes, fontsize=annot_fs)
+text_alpha = axes[0].text(
+    0.97,
+    0.84,
+    "",
+    transform=axes[0].transAxes,
+    ha="right",
+    va="top",
+)
+
+text_beta = axes[1].text(
+    0.97,
+    0.84,
+    "",
+    transform=axes[1].transAxes,
+    ha="right",
+    va="top",
+)
+
+text_z0 = axes[2].text(
+    0.97,
+    0.84,
+    "",
+    transform=axes[2].transAxes,
+    ha="right",
+    va="top",
+)
 
 # Black baselines
 for ax in axes:

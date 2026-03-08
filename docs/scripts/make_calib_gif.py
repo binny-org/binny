@@ -8,11 +8,24 @@ from matplotlib.colors import to_rgba
 
 from binny import NZTomography
 
+DEFAULT_FONTSIZE = 19
+plt.rcParams.update(
+    {
+        "font.size": DEFAULT_FONTSIZE,
+        "axes.titlesize": DEFAULT_FONTSIZE,
+        "axes.labelsize": DEFAULT_FONTSIZE,
+        "xtick.labelsize": DEFAULT_FONTSIZE,
+        "ytick.labelsize": DEFAULT_FONTSIZE,
+        "legend.fontsize": DEFAULT_FONTSIZE,
+        "figure.titlesize": DEFAULT_FONTSIZE,
+    }
+)
+
 # Animation controls
 FPS = 8
 PAUSE_FRAMES = 6
 TRANSITION_FRAMES = 7
-FIGSIZE = (12.0, 7.8)
+FIGSIZE = (12.0, 9.8)
 
 # If True, smoothly interpolate between consecutive magnitude limits.
 USE_CROSSFADE = True
@@ -63,9 +76,10 @@ def plot_hist_and_fit(
     nz_fit,
     hist_color,
     fit_color,
-    maglim,
 ):
     ax.cla()
+
+    ax.set_title("Calibrating a parent Smail $n(z)$ from mock galaxies")
 
     widths = np.diff(edges)
     ax.bar(
@@ -95,7 +109,6 @@ def plot_hist_and_fit(
     ax.set_xlim(z_grid.min(), z_grid.max())
     ax.set_xlabel("Redshift $z$")
     ax.set_ylabel(r"Normalized $n(z)$")
-    ax.set_title(rf"Mock sample and fitted Smail model at $m_{{\rm lim}} = {maglim:.2f}$")
     ax.legend(frameon=False, loc="upper right")
 
 
@@ -151,6 +164,7 @@ def plot_relations(
     ax_z0.axvline(current_maglim, color="k", lw=1.8, ls="--", alpha=0.8, zorder=1)
     ax_z0.set_xlabel(r"Limiting magnitude $m_{\rm lim}$")
     ax_z0.set_ylabel(r"Fitted $z_0$")
+    ax_z0.yaxis.set_label_coords(-0.14, 0.5)
     ax_z0.set_title(r"Calibrated $z_0(m_{\rm lim})$")
 
     ax_ngal.plot(mfit, ngal_curve, lw=3.0, color=color_ngal, alpha=0.9, zorder=10)
@@ -195,38 +209,49 @@ def plot_text_panel(
     ngal,
     n_selected,
     frac_selected,
+    n_total,
 ):
     ax.cla()
     ax.axis("off")
 
-    lines = [
-        "Calibration summary",
-        "",
+    n_rejected = n_total - n_selected
+
+    left_lines = [
         rf"$m_{{\rm lim}} = {maglim:.2f}$",
         rf"$\alpha = {alpha:.3f}$",
         rf"$\beta = {beta:.3f}$",
         rf"$z_0 = {z0:.3f}$",
-        rf"$n_{{\rm gal}} = {ngal:.3f}\ \mathrm{{arcmin}}^{{-2}}$",
-        "",
-        f"Selected galaxies: {n_selected:,}",
-        f"Catalog fraction: {100.0 * frac_selected:.1f}%",
     ]
 
+    right_lines = [
+        rf"$n_{{\rm gal}} = {ngal:.3f}\ \mathrm{{arcmin}}^{{-2}}$",
+        f"Selected: {n_selected:,}",
+        f"Rejected: {n_rejected:,}",
+        f"Fraction kept: {100.0 * frac_selected:.1f}%",
+    ]
+
+    text_left = "\n".join(left_lines)
+    text_right = "\n".join(right_lines)
+
     ax.text(
-        0.03,
-        0.95,
-        "\n".join(lines),
+        0.06,
+        0.88,
+        text_left,
         va="top",
         ha="left",
-        fontsize=13,
-        linespacing=1.55,
+        linespacing=1.45,
         family="monospace",
-        bbox={
-            "boxstyle": "round,pad=0.55",
-            "facecolor": to_rgba("white", 0.85),
-            "edgecolor": "k",
-            "linewidth": 2.0,
-        },
+        transform=ax.transAxes,
+    )
+
+    ax.text(
+        0.54,
+        0.88,
+        text_right,
+        va="top",
+        ha="left",
+        linespacing=1.45,
+        family="monospace",
         transform=ax.transAxes,
     )
 
@@ -324,15 +349,19 @@ c_z0 = colors[1]
 c_ngal = colors[3]
 
 # Figure layout
-fig = plt.figure(figsize=FIGSIZE, constrained_layout=True)
-gs = fig.add_gridspec(2, 3, height_ratios=[1.55, 1.0])
+fig = plt.figure(figsize=FIGSIZE)
+gs = fig.add_gridspec(
+    3,
+    2,
+    height_ratios=[1.55, 1.25, 0.72],
+    hspace=0.5,
+    wspace=0.35,
+)
 
 ax_main = fig.add_subplot(gs[0, :])
 ax_z0 = fig.add_subplot(gs[1, 0])
 ax_ngal = fig.add_subplot(gs[1, 1])
-ax_text = fig.add_subplot(gs[1, 2])
-
-fig.suptitle("Calibrating a parent Smail $n(z)$ from mock galaxies", fontsize=16)
+ax_text = fig.add_subplot(gs[2, :])
 
 # Timeline
 timeline = []
@@ -384,7 +413,6 @@ def update(frame):
         nz_fit=state["nz_fit"],
         hist_color=c_hist,
         fit_color=c_fit,
-        maglim=state["maglim"],
     )
 
     plot_relations(
@@ -413,6 +441,7 @@ def update(frame):
         ngal=state["ngal"],
         n_selected=state["n_selected"],
         frac_selected=state["frac_selected"],
+        n_total=mag.size,
     )
 
     return []

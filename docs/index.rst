@@ -13,13 +13,8 @@ It is designed to integrate easily into forecasting, inference, and
 data-processing pipelines, with an emphasis on clarity, reproducibility,
 and robust validation.
 
-
-Overview
---------
-
 Binny provides tools for constructing and validating tomographic binning
 schemes commonly used in cosmology and large-scale structure analyses.
-
 The package focuses on explicit bin definitions, reproducible binning
 strategies, and diagnostics that help compare different tomographic choices.
 
@@ -43,7 +38,7 @@ The examples below illustrate common Binny workflows.
       :link: examples/nz_modelling
       :link-type: doc
 
-      .. image:: _static/animations/smail_parameter_sweep.gif
+      .. image:: _static/animations/parent_nz_model_sweep.gif
          :width: 100%
          :alt: Parent redshift models
 
@@ -65,18 +60,18 @@ The examples below illustrate common Binny workflows.
       :link: examples/photoz_bins
       :link-type: doc
 
-      .. image:: _static/animations/tomo_photoz_hard_bins.gif
+      .. image:: _static/animations/tomo_photoz_example.gif
          :width: 100%
          :alt: Photometric bins
 
       Construct overlapping tomographic bins from photometric
       redshift estimates.
 
-   .. grid-item-card:: Spectroscopic binning
+   .. grid-item-card:: Spectroscopic tomography
       :link: examples/specz_bins
       :link-type: doc
 
-      .. image:: _static/animations/tomo_specz_hard_bins.gif
+      .. image:: _static/animations/tomo_specz_example.gif
          :width: 100%
          :alt: Spectroscopic bins
 
@@ -91,6 +86,8 @@ The examples below illustrate common Binny workflows.
          :width: 100%
          :alt: Bin summaries
 
+      Summarize tomographic bins through effective redshifts,
+      widths, number densities, and related aggregate statistics.
 
    .. grid-item-card:: Bin diagnostics
       :link: examples/bin_diagnostics

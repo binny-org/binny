@@ -8,9 +8,23 @@ from matplotlib.colors import ListedColormap, to_rgba
 
 from binny import NZTomography
 
+DEFAULT_FONTSIZE = 19
+plt.rcParams.update(
+    {
+        "font.size": DEFAULT_FONTSIZE,
+        "axes.titlesize": DEFAULT_FONTSIZE,
+        "axes.labelsize": DEFAULT_FONTSIZE,
+        "xtick.labelsize": DEFAULT_FONTSIZE,
+        "ytick.labelsize": DEFAULT_FONTSIZE,
+        "legend.fontsize": DEFAULT_FONTSIZE,
+        "figure.titlesize": DEFAULT_FONTSIZE,
+    }
+)
+
 # Animation controls
 FPS = 9
 PAUSE_FRAMES = 4
+FINAL_PAUSE_FRAMES = 12
 TRANSITION_FRAMES = 6
 FIGSIZE = (10.8, 7.8)
 USE_CROSSFADE = True
@@ -43,7 +57,19 @@ def nested_dict_to_matrix(nested_dict):
     return keys, matrix
 
 
-def plot_bins(ax, z, bin_dict, colors, title):
+def add_scheme_annotation(ax, text):
+    ax.text(
+        0.98,
+        0.94,
+        text,
+        transform=ax.transAxes,
+        ha="right",
+        va="top",
+        zorder=5000,
+    )
+
+
+def plot_bins(ax, z, bin_dict, colors, annotation):
     ax.cla()
 
     keys = sorted(bin_dict.keys())
@@ -70,7 +96,7 @@ def plot_bins(ax, z, bin_dict, colors, title):
     ax.set_xlim(z.min(), z.max())
     ax.set_xlabel("Redshift $z$")
     ax.set_ylabel(r"Normalized $n_i(z)$")
-    ax.set_title(title)
+    add_scheme_annotation(ax, annotation)
 
 
 def make_transparent_cmap(name="viridis", alpha=0.78):
@@ -88,7 +114,6 @@ def matrix_max(nested_dict):
 def plot_matrix(
     ax,
     matrix_dict,
-    title,
     xlabel,
     ylabel,
     fmt="{:.1f}",
@@ -97,6 +122,7 @@ def plot_matrix(
     vmax=None,
 ):
     ax.cla()
+    ax.set_title("Leakage matrix")
 
     keys, matrix = nested_dict_to_matrix(matrix_dict)
     n_rows, n_cols = matrix.shape
@@ -111,7 +137,6 @@ def plot_matrix(
         vmax=vmax,
     )
 
-    ax.set_title(title)
     ax.set_xticks(np.arange(n_cols))
     ax.set_yticks(np.arange(n_rows))
     ax.set_xticklabels([f"{key + 1}" for key in keys])
@@ -132,12 +157,12 @@ def plot_matrix(
                 fmt.format(matrix[i, j]),
                 ha="center",
                 va="center",
-                fontsize=11,
+                fontsize=15,
                 color="k",
             )
 
 
-def plot_leakage_composition(ax, leakage_dict, colors, title):
+def plot_leakage_composition(ax, leakage_dict, colors):
     ax.cla()
 
     keys = sorted(leakage_dict.keys())
@@ -164,9 +189,8 @@ def plot_leakage_composition(ax, leakage_dict, colors, title):
 
     ax.set_xticks(x)
     ax.set_xticklabels([f"{key + 1}" for key in keys])
-    ax.set_xlabel("Source bin")
-    ax.set_ylabel("Percent of source-bin mass")
-    ax.set_title(title)
+    ax.set_xlabel("Input bin")
+    ax.set_ylabel("Bin fraction [%]")
     ax.set_ylim(0.0, 100.0)
     ax.legend(frameon=True, loc="center left")
 
@@ -247,11 +271,13 @@ stats_eqdist = tomo_eqdist.cross_bin_stats(
 states = [
     {
         "name": "Equipopulated",
+        "annotation": "Scheme: equipopulated",
         "bins": result_eqpop.bins,
         "leakage": stats_eqpop["leakage"],
     },
     {
         "name": "Equidistant",
+        "annotation": "Scheme: equidistant",
         "bins": result_eqdist.bins,
         "leakage": stats_eqdist["leakage"],
     },
@@ -266,7 +292,7 @@ bin_colors = cmr.take_cmap_colors(
     return_fmt="hex",
 )
 
-cmap_transparent = make_transparent_cmap("viridis", alpha=0.78)
+cmap_transparent = make_transparent_cmap("viridis", alpha=0.65)
 
 # Figure layout
 fig = plt.figure(figsize=FIGSIZE, constrained_layout=True)
@@ -276,7 +302,7 @@ ax_bins = fig.add_subplot(gs[0, :])
 ax_comp = fig.add_subplot(gs[1, 0])
 ax_leakage = fig.add_subplot(gs[1, 1])
 
-fig.suptitle("Tomographic bin diagnostics", fontsize=16)
+fig.suptitle("Representative tomographic bins")
 
 timeline = []
 
@@ -289,7 +315,7 @@ if USE_CROSSFADE:
 else:
     timeline.append(("hold", 1, 0.0))
 
-timeline.extend([("hold", 1, 0.0)] * PAUSE_FRAMES)
+timeline.extend([("hold", 1, 0.0)] * FINAL_PAUSE_FRAMES)
 
 if USE_CROSSFADE:
     for i in range(1, TRANSITION_FRAMES + 1):
@@ -306,9 +332,7 @@ def update(frame):
         state = states[idx]
         bins = state["bins"]
         leakage = state["leakage"]
-        title = f"{state['name']} bins"
-        comp_title = f"{state['name']} leakage composition"
-        leakage_title = f"{state['name']} leakage matrix"
+        annotation = state["annotation"]
 
     else:
         state_a = states[idx]
@@ -316,31 +340,31 @@ def update(frame):
 
         bins = blend_bin_dict(state_a["bins"], state_b["bins"], t)
         leakage = blend_matrix_dict(state_a["leakage"], state_b["leakage"], t)
-        title = "Comparing diagnostics"
-        comp_title = "Leakage composition"
-        leakage_title = "Leakage matrix"
+
+        if idx == 0:
+            annotation = "Scheme: equipopulated → equidistant"
+        else:
+            annotation = "Scheme: equidistant → equipopulated"
 
     plot_bins(
         ax_bins,
         z,
         bins,
         colors=bin_colors,
-        title=title,
+        annotation=annotation,
     )
 
     plot_leakage_composition(
         ax_comp,
         leakage,
         colors=bin_colors,
-        title=comp_title,
     )
 
     plot_matrix(
         ax_leakage,
         leakage,
-        title=leakage_title,
         xlabel="Nominal bin",
-        ylabel="Source bin",
+        ylabel="Input bin",
         fmt="{:.1f}",
         cmap=cmap_transparent,
         vmin=0.0,

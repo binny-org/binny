@@ -17,6 +17,6 @@ clarify how different schemes relate to common formulations used in cosmology.
    notation
    parent_nz
    tomography
-   binning_schemes
+   uncertainties
    diagnostics
 
