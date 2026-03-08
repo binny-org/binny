@@ -2,8 +2,8 @@
    :alt: logo
    :width: 32px
 
-|logo| Parent redshift distributions
-====================================
+|logo| Parent n(z)
+==================
 
 A tomographic analysis begins with an underlying **parent redshift
 distribution** :math:`n(z)`, which describes how galaxies are distributed
