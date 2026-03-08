@@ -277,9 +277,9 @@ fraction of the parent galaxy sample.
 Role of binning in cosmological analyses
 ----------------------------------------
 
-The tomographic bins define the set of observables used in a cosmological
-analysis. For example, a tomographic clustering measurement produces angular
-power spectra
+Tomographic bins define the set of observables used in a cosmological
+analysis. For example, a tomographic clustering measurement produces
+angular power spectra
 
 .. math::
 
@@ -287,21 +287,47 @@ power spectra
 
 for all combinations of bins :math:`i` and :math:`j`.
 
-Similarly, weak-lensing tomography produces shear correlations between source
-bins, while joint analyses may combine clustering, galaxy–galaxy lensing, and
-cosmic shear measurements across multiple bin pairs.
+Similarly, weak-lensing tomography produces shear correlations between
+source bins, while joint analyses may combine clustering,
+galaxy–galaxy lensing, and cosmic shear measurements across multiple
+bin pairs.
 
-The number of bins and the choice of binning scheme therefore determine both
-the dimensionality of the data vector and the redshift resolution of the
-resulting cosmological constraints.
+The number of bins and the choice of binning scheme therefore determine
+both the dimensionality of the data vector and the redshift resolution
+of the analysis.
 
-.. image:: ../_static/animations/tomo_increasing_nbins.gif
-   :width: 620
-   :align: center
-   :alt: Increasing the number of tomographic bins
+In general, tomographic angular power spectra are computed as a
+projection of the three-dimensional matter power spectrum along the
+line of sight,
 
-Increasing :math:`N_{\mathrm{bin}}` improves redshift resolution but also
-increases the number of tomographic observables that enter the analysis.
+.. math::
+
+   C_\ell^{ij}
+   =
+   \int \frac{\mathrm{d}z}{H(z)}
+   W_i(z)\,W_j(z)\,
+   P\!\left(k=\frac{\ell}{\chi(z)}, z\right),
+
+where
+
+- :math:`P(k,z)` is the three-dimensional matter power spectrum,
+- :math:`\chi(z)` is the comoving radial distance,
+- :math:`H(z)` is the Hubble parameter,
+- :math:`W_i(z)` and :math:`W_j(z)` are the projection kernels for bins
+  :math:`i` and :math:`j`.
+
+These kernels depend on the tomographic bin distributions
+:math:`n_i(z)` returned by Binny. Different binning schemes therefore
+modify the kernels :math:`W_i(z)` and ultimately change the structure
+of the observable correlations :math:`C_\ell^{ij}`.
+
+For example, in galaxy clustering the kernel typically takes the form
+
+.. math::
+
+   W_i(z) = b_i(z)\,n_i(z),
+
+where :math:`b_i(z)` is the galaxy bias.
 
 
 Binning in Binny
