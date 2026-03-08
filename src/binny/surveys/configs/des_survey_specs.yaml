@@ -1,0 +1,49 @@
+name: des
+
+survey_meta:
+  footprint:
+    nominal:
+      survey_area: 5000.0
+
+z_grid: {start: 0.0, stop: 2.0, n: 500}
+
+tomography:
+
+  # DES redMaGiC lens sample
+  - role: lens
+    year: 'y1'
+
+    n_gal_arcmin2: 0.6
+
+    kind: photoz
+
+    nz:
+      model: smail
+      params: {z0: 0.25, alpha: 2.0, beta: 1.5}
+
+    bins:
+      edges: [0.15, 0.30, 0.45, 0.60, 0.75, 0.90]
+
+    uncertainties:
+      scatter_scale: 0.015
+      mean_offset: 0.0
+
+
+  # DES source sample
+  - role: source
+    year: 'y1'
+
+    n_gal_arcmin2: 8.0
+
+    kind: photoz
+
+    nz:
+      model: smail
+      params: {z0: 0.35, alpha: 2.0, beta: 1.5}
+
+    bins:
+      edges: [0.20, 0.43, 0.63, 0.90, 1.30]
+
+    uncertainties:
+      scatter_scale: 0.05
+      mean_offset: 0.0
