@@ -1028,7 +1028,7 @@ for all uncertainty ingredients.
 
    tomo = NZTomography()
 
-   z = np.linspace(0.0, 2.0, 500)
+   z = np.linspace(0.0, 4.5, 500)
 
    nz = NZTomography.nz_model(
        "smail",
