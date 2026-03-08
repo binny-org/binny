@@ -262,6 +262,11 @@ Larger :math:`s` values broaden the assignment probability
 :math:`P(i \mid z)`, increase overlap between neighboring tomographic bins,
 and produce less sharply localized true-redshift distributions.
 
+.. image:: ../_static/animations/pz_uncertainty_scatter.gif
+   :alt: Animation showing the effect of increasing photo-z scatter on tomographic bins
+   :width: 400px
+   :align: center
+
 
 Bias / mean shift
 ^^^^^^^^^^^^^^^^^
