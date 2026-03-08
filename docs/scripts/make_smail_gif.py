@@ -49,6 +49,9 @@ alpha_vals = np.linspace(0.5, 4.0, n_frames)
 beta_vals = np.linspace(0.6, 2.5, n_frames)
 z0_vals = np.linspace(0.15, 0.8, n_frames)
 
+# Forward + backward loop without duplicating the endpoints twice
+frame_sequence = list(range(n_frames)) + list(range(n_frames - 2, 0, -1))
+
 colors = cmr.take_cmap_colors(
     "viridis",
     3,
@@ -75,7 +78,6 @@ titles = [
     r"Varying $\beta$",
     r"Varying $z_0$",
 ]
-
 
 for ax, title in zip(axes, titles, strict=True):
     ax.set_title(title)
@@ -190,9 +192,11 @@ def _replace_fill(ax, old_fill, x, y, color):
 def init():
     global fill_alpha, fill_beta, fill_z0
 
-    y_alpha = smail(z, z0=z00, alpha=alpha_vals[0], beta=beta0)
-    y_beta = smail(z, z0=z00, alpha=alpha0, beta=beta_vals[0])
-    y_z0 = smail(z, z0=z0_vals[0], alpha=alpha0, beta=beta0)
+    idx = frame_sequence[0]
+
+    y_alpha = smail(z, z0=z00, alpha=alpha_vals[idx], beta=beta0)
+    y_beta = smail(z, z0=z00, alpha=alpha0, beta=beta_vals[idx])
+    y_z0 = smail(z, z0=z0_vals[idx], alpha=alpha0, beta=beta0)
 
     fill_alpha = _replace_fill(axes[0], fill_alpha, z, y_alpha, color_alpha)
     fill_beta = _replace_fill(axes[1], fill_beta, z, y_beta, color_beta)
@@ -202,15 +206,17 @@ def init():
     line_beta.set_data(z, y_beta)
     line_z0.set_data(z, y_z0)
 
-    text_alpha.set_text(rf"$\alpha = {alpha_vals[0]:.2f}$")
-    text_beta.set_text(rf"$\beta = {beta_vals[0]:.2f}$")
-    text_z0.set_text(rf"$z_0 = {z0_vals[0]:.2f}$")
+    text_alpha.set_text(rf"$\alpha = {alpha_vals[idx]:.2f}$")
+    text_beta.set_text(rf"$\beta = {beta_vals[idx]:.2f}$")
+    text_z0.set_text(rf"$z_0 = {z0_vals[idx]:.2f}$")
 
     return line_alpha, line_beta, line_z0, text_alpha, text_beta, text_z0
 
 
-def update(i):
+def update(frame_idx):
     global fill_alpha, fill_beta, fill_z0
+
+    i = frame_sequence[frame_idx]
 
     a = alpha_vals[i]
     b = beta_vals[i]
@@ -240,7 +246,7 @@ plt.tight_layout()
 anim = FuncAnimation(
     fig,
     update,
-    frames=n_frames,
+    frames=len(frame_sequence),
     init_func=init,
     interval=120,
     blit=False,

@@ -81,6 +81,8 @@ alpha_vals = np.linspace(0.5, 4.0, n_frames)
 beta_vals = np.linspace(0.6, 2.5, n_frames)
 z0_vals = np.linspace(0.15, 0.8, n_frames)
 
+frame_sequence = list(range(n_frames)) + list(range(n_frames - 2, 0, -1))
+
 # Bottom row animation controls
 zshift_vals = np.linspace(0.0, 0.55, n_frames)
 
@@ -342,6 +344,8 @@ def init():
 def update(i):
     global fills
 
+    i = frame_sequence[i]
+
     a = alpha_vals[i]
     b = beta_vals[i]
     zz = z0_vals[i]
@@ -374,7 +378,7 @@ plt.tight_layout(rect=[0, 0, 1, 0.95], h_pad=2.0, w_pad=1.0)
 anim = FuncAnimation(
     fig,
     update,
-    frames=n_frames,
+    frames=len(frame_sequence),
     init_func=init,
     interval=120,
     blit=False,

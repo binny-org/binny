@@ -118,7 +118,7 @@ approximately with the comoving volume element,
 
 .. math::
 
-   dV \propto z^2\,dz,
+   dV \propto z^2\, \mathrm{d}z,
 
 which is the leading-order behavior of the cosmological volume element
 for small redshift. If the galaxy population evolves slowly over this range,
