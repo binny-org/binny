@@ -14,9 +14,9 @@ clarify how different schemes relate to common formulations used in cosmology.
 .. toctree::
    :maxdepth: 2
 
-   notation
    parent_nz
    tomography
    uncertainties
    diagnostics
+   conventions
 
