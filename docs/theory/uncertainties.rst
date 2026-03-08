@@ -288,6 +288,11 @@ API mapping:
 Changing :math:`\beta` shifts the mapping between true redshift and observed
 redshift and therefore shifts the location of the tomographic selection.
 
+.. image:: ../_static/animations/pz_uncertainty_mean_offset.gif
+   :alt: Animation showing the effect of increasing photo-z scatter on tomographic bins
+   :width: 400px
+   :align: center
+
 
 Mean scaling
 ^^^^^^^^^^^^
@@ -309,6 +314,11 @@ API mapping:
 
 When :math:`\alpha \neq 1`, the mapping between true and observed redshift is
 stretched or compressed with redshift.
+
+.. image:: ../_static/animations/pz_uncertainty_mean_scale.gif
+   :alt: Animation showing the effect of increasing photo-z scatter on tomographic bins
+   :width: 400px
+   :align: center
 
 
 Outlier mixture
