@@ -43,12 +43,20 @@ The examples below illustrate common Binny workflows.
       :link: examples/nz_modelling
       :link-type: doc
 
+      .. image:: _static/animations/smail_parameter_sweep.gif
+         :width: 100%
+         :alt: Parent redshift models
+
       Construct analytic or empirical galaxy redshift distributions
       :math:`n(z)` and explore their properties.
 
    .. grid-item-card:: Calibrating redshift distributions
       :link: examples/nz_calibration
       :link-type: doc
+
+      .. image:: _static/animations/smail_from_mock_calibration.gif
+         :width: 100%
+         :alt: Redshift calibration
 
       Infer redshift distribution parameters from simulations
       or mock galaxy catalogs.
@@ -57,6 +65,10 @@ The examples below illustrate common Binny workflows.
       :link: examples/photoz_bins
       :link-type: doc
 
+      .. image:: _static/animations/tomo_photoz_hard_bins.gif
+         :width: 100%
+         :alt: Photometric bins
+
       Construct overlapping tomographic bins from photometric
       redshift estimates.
 
@@ -64,18 +76,39 @@ The examples below illustrate common Binny workflows.
       :link: examples/specz_bins
       :link-type: doc
 
+      .. image:: _static/animations/tomo_specz_hard_bins.gif
+         :width: 100%
+         :alt: Spectroscopic bins
+
       Define sharply bounded redshift bins suitable for
       spectroscopic surveys.
+
+   .. grid-item-card:: Bin summaries
+      :link: examples/bin_summaries
+      :link-type: doc
+
+      .. image:: _static/animations/tomo_bin_summaries.gif
+         :width: 100%
+         :alt: Bin summaries
+
 
    .. grid-item-card:: Bin diagnostics
       :link: examples/bin_diagnostics
       :link-type: doc
+
+      .. image:: _static/animations/tomo_bin_diagnostics.gif
+         :width: 100%
+         :alt: Bin diagnostics
 
       Inspect bin overlap, leakage, and statistical properties.
 
    .. grid-item-card:: Survey presets
       :link: examples/survey_presets
       :link-type: doc
+
+      .. image:: _static/animations/lsst_preset_sweep.gif
+         :width: 100%
+         :alt: Survey presets
 
       Build tomographic bin configurations representative of
       real cosmological surveys.
