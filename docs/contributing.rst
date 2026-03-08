@@ -5,12 +5,12 @@
 |logo| Contributing
 ===================
 
-Contributions to **binny** are very welcome.
+Contributions to ``binny`` are very welcome.
 
-This project aims to provide clear, reliable, and well-tested tomographic
-binning utilities for cosmology and related scientific workflows.
-Contributions that improve correctness, clarity, documentation, or usability
-are all valued.
+``binny`` is intended to evolve as a community-driven project supporting
+tomographic binning workflows in cosmology and related scientific analyses.
+We welcome contributions from the community that improve correctness,
+clarity, documentation, usability, or extend the available functionality.
 
 
 Getting started
@@ -40,7 +40,7 @@ Binny uses a standard pull-request-based workflow:
 - Make focused, logically grouped commits
 - Open a pull request against ``main``
 
-Please keep pull requests reasonably scoped. Large or conceptual changes are
+Keep pull requests reasonably scoped. Large or conceptual changes are
 best discussed in an issue first.
 
 
@@ -91,7 +91,7 @@ To build the documentation locally:
 
 .. code-block:: bash
 
-   tox -e do
+   tox -e docs
 
 This will:
 
