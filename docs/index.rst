@@ -45,6 +45,5 @@ see :doc:`examples/index`.
    examples/index
    installation
    citation
-   development
    contributing
    api/index

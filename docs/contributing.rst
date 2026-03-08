@@ -8,10 +8,10 @@
 Contributions to **binny** are very welcome.
 
 This project aims to provide clear, reliable, and well-tested tomographic
-binning utilities for cosmology and related scientific workflows. Contributions
-that improve correctness, clarity, documentation, or usability are all valued.
+binning utilities for cosmology and related scientific workflows.
+Contributions that improve correctness, clarity, documentation, or usability
+are all valued.
 
----
 
 Getting started
 ---------------
@@ -30,7 +30,6 @@ Getting started
 
       python -m pip install -e ".[dev]"
 
----
 
 Development workflow
 --------------------
@@ -44,7 +43,6 @@ Binny uses a standard pull-request-based workflow:
 Please keep pull requests reasonably scoped. Large or conceptual changes are
 best discussed in an issue first.
 
----
 
 Code style
 ----------
@@ -62,7 +60,6 @@ Before opening a pull request, please run:
    ruff check .
    ruff format --check .
 
----
 
 Testing
 -------
@@ -81,7 +78,6 @@ Tests should:
 - Avoid unnecessary I/O
 - Clearly document expected behavior
 
----
 
 Documentation
 -------------
@@ -103,20 +99,22 @@ This will:
 - Run doctests
 - Build the HTML documentation
 
----
 
 Continuous integration
 ----------------------
 
-All pull requests are checked via GitHub Actions. CI currently runs:
+Binny uses **GitHub Actions** for continuous integration.
 
-- ``ruff`` (linting and formatting)
-- ``pytest`` (unit tests)
+On every push and pull request, the following checks are run:
+
+- ``ruff`` for linting and formatting
+- ``pytest`` for unit tests
 - Multiple Python versions (3.10, 3.11, 3.12)
 
 Pull requests must pass all CI checks before being merged.
 
----
+The current CI status is shown by the badge on the project README.
+
 
 Versioning and releases
 -----------------------
@@ -127,11 +125,25 @@ Binny follows **Semantic Versioning (SemVer)**:
 
    MAJOR.MINOR.PATCH
 
-Version bumps and releases are handled via automated GitHub workflows.
+Version bumps are handled using ``bump-my-version``.
+
+Releases can be triggered via GitHub Actions:
+
+1. Go to **Actions**
+2. Select **Release (bump version)**
+3. Click **Run workflow**
+4. Choose ``patch``, ``minor``, or ``major``
+
+This workflow will:
+
+- Update ``pyproject.toml``
+- Commit the version change
+- Create a git tag
+- Push both the commit and the tag
+
 Contributors do not need to manually update version numbers unless explicitly
 requested.
 
----
 
 Questions and discussion
 ------------------------
