@@ -1,0 +1,400 @@
+from pathlib import Path
+
+import cmasher as cmr
+import matplotlib.pyplot as plt
+import numpy as np
+from matplotlib.animation import FuncAnimation, PillowWriter
+from matplotlib.patches import Polygon
+
+from binny import NZTomography
+
+DEFAULT_FONTSIZE = 17
+plt.rcParams.update(
+    {
+        "font.size": DEFAULT_FONTSIZE,
+        "axes.titlesize": DEFAULT_FONTSIZE,
+        "axes.labelsize": DEFAULT_FONTSIZE,
+        "xtick.labelsize": DEFAULT_FONTSIZE,
+        "ytick.labelsize": DEFAULT_FONTSIZE,
+        "legend.fontsize": DEFAULT_FONTSIZE,
+        "figure.titlesize": DEFAULT_FONTSIZE,
+    }
+)
+
+FPS = 10
+FIGSIZE = (11.4, 9.0)
+
+
+def ordered_curves(bin_dict):
+    keys = sorted(bin_dict.keys())
+    return [np.asarray(bin_dict[k], dtype=float) for k in keys]
+
+
+def make_pingpong_indices(n):
+    forward = list(range(n))
+    backward = list(range(n - 2, 0, -1))
+    return forward + backward
+
+
+def fill_vertices(x, y):
+    return np.vstack(
+        [
+            [x[0], 0.0],
+            np.column_stack([x, y]),
+            [x[-1], 0.0],
+        ]
+    )
+
+
+def make_spec(
+    n_bins,
+    bin_range,
+    scatter_scale,
+    mean_scale,
+    mean_offset,
+    outlier_frac,
+    outlier_scatter_scale,
+    outlier_mean_scale,
+    outlier_mean_offset,
+):
+    return {
+        "kind": "photoz",
+        "bins": {
+            "scheme": "equidistant",
+            "n_bins": n_bins,
+            "range": bin_range,
+        },
+        "uncertainties": {
+            "scatter_scale": scatter_scale,
+            "mean_scale": mean_scale,
+            "mean_offset": mean_offset,
+            "outlier_frac": outlier_frac,
+            "outlier_scatter_scale": outlier_scatter_scale,
+            "outlier_mean_scale": outlier_mean_scale,
+            "outlier_mean_offset": outlier_mean_offset,
+        },
+        "normalize_bins": True,
+    }
+
+
+HERE = Path(__file__).resolve().parent
+OUTDIR = HERE.parent / "_static" / "animations"
+OUTDIR.mkdir(parents=True, exist_ok=True)
+OUTFILE = OUTDIR / "pz_uncertainty_outliers.gif"
+
+tomo = NZTomography()
+
+z = np.linspace(0.0, 2.0, 180)
+
+nz = NZTomography.nz_model(
+    "smail",
+    z,
+    z0=0.2,
+    alpha=2.0,
+    beta=1.0,
+    normalize=True,
+)
+
+n_bins = 3
+bin_range = (0.2, 1.1)
+
+colors = cmr.take_cmap_colors(
+    "viridis",
+    n_bins,
+    cmap_range=(0.0, 1.0),
+    return_fmt="hex",
+)
+
+baseline_scatter = 0.03
+baseline_mean_scale = 1.0
+baseline_mean_offset = 0.0
+
+baseline_outlier_frac = 0.0
+baseline_outlier_scatter = 0.12
+baseline_outlier_mean_scale = 1.0
+baseline_outlier_mean_offset = 0.25
+
+n_states = 16
+
+outlier_frac_vals = np.linspace(0.0, 0.60, n_states)
+outlier_mean_offset_vals = np.linspace(0.0, 0.80, n_states)
+outlier_mean_scale_vals = np.linspace(1.0, 1.85, n_states)
+outlier_scatter_vals = np.linspace(0.05, 0.75, n_states)
+
+frame_ids = make_pingpong_indices(n_states)
+
+base_spec = make_spec(
+    n_bins=n_bins,
+    bin_range=bin_range,
+    scatter_scale=baseline_scatter,
+    mean_scale=baseline_mean_scale,
+    mean_offset=baseline_mean_offset,
+    outlier_frac=baseline_outlier_frac,
+    outlier_scatter_scale=baseline_outlier_scatter,
+    outlier_mean_scale=baseline_outlier_mean_scale,
+    outlier_mean_offset=baseline_outlier_mean_offset,
+)
+
+base_result = tomo.build_bins(z=z, nz=nz, tomo_spec=base_spec)
+fixed_curves = ordered_curves(base_result.bins)
+
+panel_curves = {
+    "frac": [],
+    "offset": [],
+    "scale": [],
+    "scatter": [],
+}
+
+for val in outlier_frac_vals:
+    spec = make_spec(
+        n_bins=n_bins,
+        bin_range=bin_range,
+        scatter_scale=[baseline_scatter, baseline_scatter, baseline_scatter],
+        mean_scale=[baseline_mean_scale, baseline_mean_scale, baseline_mean_scale],
+        mean_offset=[baseline_mean_offset, baseline_mean_offset, baseline_mean_offset],
+        outlier_frac=[0.0, 0.0, float(val)],
+        outlier_scatter_scale=[
+            baseline_outlier_scatter,
+            baseline_outlier_scatter,
+            baseline_outlier_scatter,
+        ],
+        outlier_mean_scale=[
+            baseline_outlier_mean_scale,
+            baseline_outlier_mean_scale,
+            baseline_outlier_mean_scale,
+        ],
+        outlier_mean_offset=[
+            baseline_outlier_mean_offset,
+            baseline_outlier_mean_offset,
+            baseline_outlier_mean_offset,
+        ],
+    )
+    result = tomo.build_bins(z=z, nz=nz, tomo_spec=spec)
+    curves = ordered_curves(result.bins)
+    panel_curves["frac"].append([fixed_curves[0].copy(), fixed_curves[1].copy(), curves[2].copy()])
+
+for val in outlier_mean_offset_vals:
+    spec = make_spec(
+        n_bins=n_bins,
+        bin_range=bin_range,
+        scatter_scale=[baseline_scatter, baseline_scatter, baseline_scatter],
+        mean_scale=[baseline_mean_scale, baseline_mean_scale, baseline_mean_scale],
+        mean_offset=[baseline_mean_offset, baseline_mean_offset, baseline_mean_offset],
+        outlier_frac=[0.0, 0.0, 0.55],
+        outlier_scatter_scale=[
+            baseline_outlier_scatter,
+            baseline_outlier_scatter,
+            baseline_outlier_scatter,
+        ],
+        outlier_mean_scale=[
+            baseline_outlier_mean_scale,
+            baseline_outlier_mean_scale,
+            baseline_outlier_mean_scale,
+        ],
+        outlier_mean_offset=[0.0, 0.0, float(val)],
+    )
+    result = tomo.build_bins(z=z, nz=nz, tomo_spec=spec)
+    curves = ordered_curves(result.bins)
+    panel_curves["offset"].append(
+        [fixed_curves[0].copy(), fixed_curves[1].copy(), curves[2].copy()]
+    )
+
+for val in outlier_mean_scale_vals:
+    spec = make_spec(
+        n_bins=n_bins,
+        bin_range=bin_range,
+        scatter_scale=[baseline_scatter, baseline_scatter, baseline_scatter],
+        mean_scale=[baseline_mean_scale, baseline_mean_scale, baseline_mean_scale],
+        mean_offset=[baseline_mean_offset, baseline_mean_offset, baseline_mean_offset],
+        outlier_frac=[0.0, 0.0, 0.20],
+        outlier_scatter_scale=[
+            baseline_outlier_scatter,
+            baseline_outlier_scatter,
+            baseline_outlier_scatter,
+        ],
+        outlier_mean_scale=[1.0, 1.0, float(val)],
+        outlier_mean_offset=[0.0, 0.0, baseline_outlier_mean_offset],
+    )
+    result = tomo.build_bins(z=z, nz=nz, tomo_spec=spec)
+    curves = ordered_curves(result.bins)
+    panel_curves["scale"].append([fixed_curves[0].copy(), fixed_curves[1].copy(), curves[2].copy()])
+
+for val in outlier_scatter_vals:
+    spec = make_spec(
+        n_bins=n_bins,
+        bin_range=bin_range,
+        scatter_scale=[baseline_scatter, baseline_scatter, baseline_scatter],
+        mean_scale=[baseline_mean_scale, baseline_mean_scale, baseline_mean_scale],
+        mean_offset=[baseline_mean_offset, baseline_mean_offset, baseline_mean_offset],
+        outlier_frac=[0.0, 0.0, 0.20],
+        outlier_scatter_scale=[baseline_outlier_scatter, baseline_outlier_scatter, float(val)],
+        outlier_mean_scale=[
+            baseline_outlier_mean_scale,
+            baseline_outlier_mean_scale,
+            baseline_outlier_mean_scale,
+        ],
+        outlier_mean_offset=[0.0, 0.0, baseline_outlier_mean_offset],
+    )
+    result = tomo.build_bins(z=z, nz=nz, tomo_spec=spec)
+    curves = ordered_curves(result.bins)
+    panel_curves["scatter"].append(
+        [fixed_curves[0].copy(), fixed_curves[1].copy(), curves[2].copy()]
+    )
+
+ymax_bins = 1.08 * max(
+    np.max(curve) for family in panel_curves.values() for frame in family for curve in frame
+)
+
+fig, axes = plt.subplots(2, 2, figsize=FIGSIZE)
+axes = np.asarray(axes)
+
+lw = 2.0
+
+panel_defs = [
+    ("frac", axes[0, 0], r"Outlier fraction", outlier_frac_vals, r"$f_{\rm out}$"),
+    (
+        "offset",
+        axes[0, 1],
+        r"Outlier mean offset",
+        outlier_mean_offset_vals,
+        r"$\beta_{\rm out}$",
+    ),
+    (
+        "scale",
+        axes[1, 0],
+        r"Outlier mean scaling",
+        outlier_mean_scale_vals,
+        r"$\alpha_{\rm out}$",
+    ),
+    (
+        "scatter",
+        axes[1, 1],
+        r"Outlier scatter",
+        outlier_scatter_vals,
+        r"$s_{\rm out}$",
+    ),
+]
+
+panel_artists = {}
+
+zero_vertices = fill_vertices(z, np.zeros_like(z))
+
+for key, ax, title, values, symbol in panel_defs:
+    ax.set_title(title)
+    ax.set_xlim(0.0, 2.0)
+    ax.set_ylim(0.0, ymax_bins)
+
+    for side in ["left", "right", "top", "bottom"]:
+        ax.spines[side].set_visible(True)
+        ax.spines[side].set_linewidth(lw)
+
+    ax.tick_params(
+        axis="both",
+        which="both",
+        direction="in",
+        top=True,
+        right=True,
+        width=lw,
+        length=6,
+    )
+
+    ax.grid(False)
+    ax.plot(z, np.zeros_like(z), color="k", linewidth=lw, zorder=100)
+
+    fills = []
+    lines = []
+
+    for color in colors:
+        poly = Polygon(
+            zero_vertices.copy(),
+            closed=True,
+            facecolor=color,
+            edgecolor="none",
+            alpha=0.6,
+            zorder=10,
+            animated=True,
+        )
+        ax.add_patch(poly)
+        fills.append(poly)
+
+        (line,) = ax.plot(
+            z,
+            np.zeros_like(z),
+            color="k",
+            linewidth=lw,
+            zorder=20,
+            animated=True,
+        )
+        lines.append(line)
+
+    text_main = ax.text(
+        0.64,
+        0.93,
+        "",
+        transform=ax.transAxes,
+        ha="left",
+        va="top",
+        animated=True,
+    )
+
+    panel_artists[key] = {
+        "ax": ax,
+        "fills": fills,
+        "lines": lines,
+        "text": text_main,
+        "values": values,
+        "symbol": symbol,
+    }
+
+axes[0, 0].set_ylabel(r"$n_i(z)$")
+axes[1, 0].set_ylabel(r"$n_i(z)$")
+axes[1, 0].set_xlabel("Redshift $z$")
+axes[1, 1].set_xlabel("Redshift $z$")
+
+
+def draw_panel(key, frame_idx):
+    artists = panel_artists[key]
+    curves = panel_curves[key][frame_idx]
+
+    for b in range(n_bins):
+        y = curves[b]
+        artists["fills"][b].set_xy(fill_vertices(z, y))
+        artists["lines"][b].set_data(z, y)
+
+    val = artists["values"][frame_idx]
+    artists["text"].set_text(rf"{artists['symbol']} = {val:.3f}")
+
+    return [*artists["fills"], *artists["lines"], artists["text"]]
+
+
+def draw_frame(frame_idx):
+    out = []
+    for key, _, _, _, _ in panel_defs:
+        out.extend(draw_panel(key, frame_idx))
+    return out
+
+
+def init():
+    return draw_frame(frame_ids[0])
+
+
+def update(i):
+    return draw_frame(frame_ids[i])
+
+
+plt.tight_layout()
+
+anim = FuncAnimation(
+    fig,
+    update,
+    frames=len(frame_ids),
+    init_func=init,
+    interval=1000 / FPS,
+    blit=True,
+    repeat=True,
+)
+
+anim.save(OUTFILE, writer=PillowWriter(fps=FPS))
+plt.close(fig)
+
+print(f"Saved animation to: {OUTFILE}")

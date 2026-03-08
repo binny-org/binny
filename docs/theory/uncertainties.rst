@@ -393,6 +393,13 @@ This component allows a minority population to follow a broader, shifted, or
 otherwise distorted redshift-assignment model relative to the core sample.
 
 
+.. image:: ../_static/animations/pz_uncertainty_outliers.gif
+   :alt: Animation showing the effect of increasing photo-z scatter on tomographic bins
+   :width: 700px
+   :align: center
+
+
+
 Implemented photo-z parameters
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
