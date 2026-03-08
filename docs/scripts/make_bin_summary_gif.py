@@ -8,9 +8,23 @@ from matplotlib.colors import to_rgba
 
 from binny import NZTomography
 
+DEFAULT_FONTSIZE = 19
+plt.rcParams.update(
+    {
+        "font.size": DEFAULT_FONTSIZE,
+        "axes.titlesize": DEFAULT_FONTSIZE,
+        "axes.labelsize": DEFAULT_FONTSIZE,
+        "xtick.labelsize": DEFAULT_FONTSIZE,
+        "ytick.labelsize": DEFAULT_FONTSIZE,
+        "legend.fontsize": DEFAULT_FONTSIZE,
+        "figure.titlesize": DEFAULT_FONTSIZE,
+    }
+)
+
 # Animation controls
 FPS = 8
 PAUSE_FRAMES = 6
+FINAL_PAUSE_FRAMES = 12
 TRANSITION_FRAMES = 8
 FIGSIZE = (10.8, 7.8)
 
@@ -41,7 +55,19 @@ def blend_fraction_dict(frac_a, frac_b, t):
     return {k: (1.0 - t) * frac_a[k] + t * frac_b[k] for k in keys}
 
 
-def plot_bins(ax, z, bin_dict, colors, title):
+def add_scheme_annotation(ax, text):
+    ax.text(
+        0.98,
+        0.94,
+        text,
+        transform=ax.transAxes,
+        ha="right",
+        va="top",
+        zorder=5000,
+    )
+
+
+def plot_bins(ax, z, bin_dict, colors, annotation):
     ax.cla()
 
     keys = sorted(bin_dict.keys())
@@ -68,10 +94,10 @@ def plot_bins(ax, z, bin_dict, colors, title):
     ax.set_xlim(z.min(), z.max())
     ax.set_xlabel("Redshift $z$")
     ax.set_ylabel(r"Normalized $n_i(z)$")
-    ax.set_title(title)
+    add_scheme_annotation(ax, annotation)
 
 
-def plot_centers(ax, centers, title):
+def plot_centers(ax, centers, annotation):
     ax.cla()
 
     keys = sorted(centers["mean"].keys())
@@ -117,12 +143,11 @@ def plot_centers(ax, centers, title):
     ax.set_xticks(x)
     ax.set_xticklabels([f"{k + 1}" for k in keys])
     ax.set_xlabel("Tomographic bin")
-    ax.set_ylabel("Representative redshift")
-    ax.set_title(title)
-    ax.legend(frameon=True, fontsize=9)
+    ax.set_ylabel("Redshift $z$")
+    ax.legend(frameon=True)
 
 
-def plot_fractions(ax, fractions, title, colors):
+def plot_fractions(ax, fractions, annotation, colors):
     ax.cla()
 
     keys = sorted(fractions.keys())
@@ -143,7 +168,6 @@ def plot_fractions(ax, fractions, title, colors):
     ax.set_xlabel("Tomographic bin")
     ax.set_ylabel("Galaxy fraction")
     ax.set_ylim(0.0, 0.34)
-    ax.set_title(title)
 
 
 # Output path
@@ -205,6 +229,7 @@ result_eqdist = tomo_eqdist.build_bins(
 states = [
     {
         "name": "Equipopulated",
+        "annotation": "Scheme: equipopulated",
         "bins": result_eqpop.bins,
         "centers": {
             m: tomo_eqpop.shape_stats(center_method=m, decimal_places=3)["centers"]
@@ -214,6 +239,7 @@ states = [
     },
     {
         "name": "Equidistant",
+        "annotation": "Scheme: equidistant",
         "bins": result_eqdist.bins,
         "centers": {
             m: tomo_eqdist.shape_stats(center_method=m, decimal_places=3)["centers"]
@@ -238,7 +264,7 @@ ax_bins = fig.add_subplot(gs[0, :])
 ax_centers = fig.add_subplot(gs[1, 0])
 ax_fractions = fig.add_subplot(gs[1, 1])
 
-fig.suptitle("Tomographic bin summaries", fontsize=16)
+fig.suptitle("Representative tomographic bins")
 
 # Build animation timeline
 timeline = []
@@ -255,7 +281,7 @@ else:
     timeline.append(("hold", 1, 0.0))
 
 # hold state 1
-timeline.extend([("hold", 1, 0.0)] * PAUSE_FRAMES)
+timeline.extend([("hold", 1, 0.0)] * FINAL_PAUSE_FRAMES)
 
 # transition 1 -> 0
 if USE_CROSSFADE:
@@ -274,7 +300,7 @@ def update(frame):
         bins = state["bins"]
         centers = state["centers"]
         fractions = state["fractions"]
-        title = f"{state['name']} bins"
+        annotation = state["annotation"]
 
     else:
         state_a = states[idx]
@@ -283,26 +309,30 @@ def update(frame):
         bins = blend_bin_dict(state_a["bins"], state_b["bins"], t)
         centers = blend_center_dict(state_a["centers"], state_b["centers"], t)
         fractions = blend_fraction_dict(state_a["fractions"], state_b["fractions"], t)
-        title = f"{state_a['name']} → {state_b['name']}"
+
+        if idx == 0:
+            annotation = "Scheme: equipopulated → equidistant"
+        else:
+            annotation = "Scheme: equidistant → equipopulated"
 
     plot_bins(
         ax_bins,
         z,
         bins,
         colors=bin_colors,
-        title=title,
+        annotation=annotation,
     )
 
     plot_centers(
         ax_centers,
         centers,
-        title="Representative bin centers",
+        annotation=annotation,
     )
 
     plot_fractions(
         ax_fractions,
         fractions,
-        title="Per-bin population fractions",
+        annotation=annotation,
         colors=bin_colors,
     )
 
