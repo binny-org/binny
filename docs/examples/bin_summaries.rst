@@ -753,6 +753,7 @@ bin.
            [0], [0],
            marker="o",
            linestyle="None",
+           linewidth=2,
            markerfacecolor=fill_eqpop,
            markeredgecolor="k",
            markersize=10,
@@ -762,6 +763,7 @@ bin.
            [0], [0],
            marker="o",
            linestyle="None",
+           linewidth=2,
            markerfacecolor=fill_eqdist,
            markeredgecolor="k",
            markersize=10,
@@ -774,34 +776,36 @@ bin.
            [0], [0],
            marker=marker_map["mean"],
            linestyle="None",
+           linewidth=2,
            color="k",
-           markerfacecolor="k",
-           markersize=8,
+           markerfacecolor="None",
+           markersize=10,
            label="Mean",
        ),
        Line2D(
            [0], [0],
            marker=marker_map["median"],
            linestyle="None",
+           linewidth=2,
            color="k",
-           markerfacecolor="k",
-           markersize=8,
+           markerfacecolor="None",
+           markersize=10,
            label="Median",
        ),
        Line2D(
            [0], [0],
            marker=marker_map["mode"],
            linestyle="None",
+           linewidth=2,
            color="k",
-           markerfacecolor="k",
-           markersize=8,
+           markerfacecolor="None",
+           markersize=10,
            label="Mode",
        ),
    ]
 
    legend1 = axes[1].legend(
        handles=scheme_handles,
-       title="Binning scheme",
        loc="upper left",
        frameon=True,
    )
@@ -809,7 +813,6 @@ bin.
 
    axes[1].legend(
        handles=shape_handles,
-       title="Summary",
        loc="lower right",
        frameon=True,
    )
