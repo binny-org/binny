@@ -306,7 +306,13 @@ more visible off-diagonal patterns.
            "Tomographic bin",
            "Tomographic bin"
        ),
-       (leakage_keys, leakage_matrix, "Leakage matrix", "Nominal bin", "Source bin"),
+       (
+           leakage_keys,
+           leakage_matrix,
+           "Leakage matrix",
+           "Nominal interval",
+           "Input bin"
+       ),
        (
            pearson_keys,
            pearson_matrix,
@@ -669,7 +675,7 @@ Completeness and contamination per bin
 The leakage matrix can be summarized into per-bin **completeness** and
 **contamination** measures.
 
-For a given source bin, the diagonal leakage entry gives the fraction of
+For a given input bin, the diagonal leakage entry gives the fraction of
 its weight that remains inside its own nominal redshift interval. This
 is the **completeness** of that bin. Its complement measures the fraction
 that falls outside the intended interval and therefore quantifies
@@ -790,10 +796,10 @@ mixing with neighboring bins.
 Leakage composition by nominal bin
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-A stacked leakage view shows how the weight of each source bin is
+A stacked leakage view shows how the weight of each input bin is
 distributed across the nominal redshift intervals.
 
-Each bar corresponds to one source bin. The stacked segments show what
+Each bar corresponds to one input bin. The stacked segments show what
 fraction of that bin lies inside each target nominal interval. The
 diagonal component therefore represents self-consistency, while the
 off-diagonal components reveal where leaked weight ends up.
@@ -885,9 +891,9 @@ longer-range tails and outlier-driven transfers across more distant bins.
        bottoms += np.array(values)
 
    ax.set_xticks(x)
-   ax.set_xticklabels([f"Source bin {key + 1}" for key in keys])
-   ax.set_xlabel("Source bin")
-   ax.set_ylabel("Percent of source-bin mass")
+   ax.set_xticklabels([f"Input bin {key + 1}" for key in keys])
+   ax.set_xlabel("Input bin")
+   ax.set_ylabel("Input-bin mass [%]")
    ax.set_title("Leakage composition")
    ax.legend(frameon=True, loc="center left")
 
