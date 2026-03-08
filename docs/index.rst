@@ -5,18 +5,14 @@ Binny
    :gutter: 3
 
    .. grid-item::
+      :class: hero-text
 
-      **Binny** is a Python library providing flexible, explicit, and well-tested
-      tomographic binning algorithms for cosmology and related scientific workflows.
+      **Binny** provides flexible, explicit, and well-tested tomographic
+      binning tools for cosmology and related scientific workflows.
 
-      It is designed to integrate easily into forecasting, inference, and
-      data-processing pipelines, with an emphasis on clarity, reproducibility,
-      and robust validation.
-
-      Binny provides tools for constructing and validating tomographic binning
-      schemes commonly used in cosmology and large-scale structure analyses.
-      The package focuses on explicit bin definitions, reproducible binning
-      strategies, and diagnostics that help compare different tomographic choices.
+      It is designed for forecasting, inference, and data-processing
+      pipelines, with an emphasis on clarity, reproducibility, and
+      robust validation.
 
       Typical use cases include:
 
@@ -26,10 +22,10 @@ Binny
       - survey-specific bin definitions
 
    .. grid-item::
-      :class: sd-text-center
+      :class: sd-text-center hero-logo
 
       .. image:: _static/animations/binny_logo.gif
-         :width: 260px
+         :width: 220px
          :alt: Binny logo
 
 

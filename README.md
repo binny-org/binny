@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="docs/_static/animations/binny_logo.gif" width="420">
+  <img src="docs/_static/animations/binny_logo.gif" width="220">
 </p>
 
 # binny
