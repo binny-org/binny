@@ -118,7 +118,7 @@ approximately with the comoving volume element,
 
 .. math::
 
-   dV \propto z^2\, \mathrm{d}z,
+   \mathrm{d}V \propto z^2\, \mathrm{d}z,
 
 which is the leading-order behavior of the cosmological volume element
 for small redshift. If the galaxy population evolves slowly over this range,
@@ -269,7 +269,7 @@ scaled so that its integral over the provided redshift grid is unity:
 
 .. math::
 
-   \int n(z)\,dz = 1.
+   \int n(z)\,\mathrm{d}z = 1.
 
 In that case, :math:`n(z)` should be interpreted as a **normalized
 redshift probability density** rather than an absolute number count.

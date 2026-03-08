@@ -330,3 +330,118 @@ This ensures that
 - bins can be compared directly
 - diagnostic matrices can be computed consistently
 - plotting functions operate on aligned arrays.
+
+
+Cosmology analysis jargon
+^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Large-scale structure and weak-lensing analyses often use shorthand
+terminology for common combinations of observables.
+
+**Weak lensing (WL)**
+
+- distortion of background galaxy shapes by gravitational lensing
+- often used interchangeably with **cosmic shear** in tomographic analyses
+
+**Cosmic shear**
+
+- weak-lensing correlations measured between **source galaxy bins**
+- typically written as shear–shear correlations
+- often referred to as shear
+
+  .. math::
+
+     C_\ell^{\gamma\gamma,\,ij}
+
+or simply
+
+  .. math::
+
+     C_\ell^{ij}
+
+when the observable is clear from context.
+
+**Galaxy–galaxy lensing (GGL)**
+
+- cross-correlation between **lens galaxies** and **source galaxy shapes**
+- measures how foreground galaxies trace the surrounding matter field
+
+  .. math::
+
+     C_\ell^{g\gamma,\,ij}
+
+where
+
+- :math:`i` labels a **lens bin**
+- :math:`j` labels a **source bin**
+
+**Galaxy clustering**
+
+- angular correlations of galaxies within the lens sample
+
+  .. math::
+
+     C_\ell^{gg,\,ij}
+
+These correlations probe the spatial clustering of galaxies and their
+relation to the underlying matter distribution.
+
+
+Combined two-point analyses
+---------------------------
+
+Modern cosmology analyses often combine multiple two-point observables.
+Common shorthand names include:
+
+**3x2pt**
+
+Joint analysis of three types of two-point correlations:
+
+- galaxy clustering
+- galaxy–galaxy lensing
+- cosmic shear
+
+Symbolically this corresponds to
+
+.. math::
+
+   \{C_\ell^{gg},\ C_\ell^{g\gamma},\ C_\ell^{\gamma\gamma}\}
+
+This is the standard observable set used in many modern survey analyses.
+
+
+**2x2pt**
+
+Joint analysis using two of the three observables above. Common examples include:
+
+- **cosmic shear + galaxy clustering**
+
+  .. math::
+
+     \{C_\ell^{gg},\ C_\ell^{\gamma\gamma}\}
+
+- **galaxy clustering + galaxy–galaxy lensing**
+
+  .. math::
+
+     \{C_\ell^{gg},\ C_\ell^{g\gamma}\}
+
+The exact combination is only a shorthand and should be defined clearly in each context.
+Most often, 2x2pt refers to the combination of galaxy clustering and galaxy–galaxy lensing,
+while cosmic shear is reserved for the 3x2pt case.
+
+
+Bin roles in these analyses
+---------------------------
+
+In this terminology:
+
+- **lens bins** refer to bins used for **galaxy clustering** and
+  **galaxy–galaxy lensing**
+- **source bins** refer to bins used for **weak lensing / cosmic shear**
+
+Thus:
+
+- clustering correlations use **lens–lens bin pairs**
+- galaxy–galaxy lensing uses **lens–source bin pairs**
+- cosmic shear uses **source–source bin pairs**

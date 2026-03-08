@@ -56,7 +56,13 @@ def blend_bin_dict(bin_dict_a, bin_dict_b, t):
     return blended
 
 
-def plot_bins(ax, z, bin_dict, title, label=None, xlim=None):
+def max_in_bin_dict(bin_dict):
+    if not bin_dict:
+        return 1.0
+    return max(np.max(np.asarray(v, dtype=float)) for v in bin_dict.values())
+
+
+def plot_bins(ax, z, bin_dict, title, label=None, xlim=None, ylim=None):
     ax.cla()
 
     keys = sorted(bin_dict.keys())
@@ -95,11 +101,14 @@ def plot_bins(ax, z, bin_dict, title, label=None, xlim=None):
     else:
         ax.set_xlim(*xlim)
 
-    ymax = max(
-        (np.max(np.asarray(bin_dict[key], dtype=float)) for key in keys),
-        default=1.0,
-    )
-    ax.set_ylim(0.0, 1.08 * ymax)
+    if ylim is None:
+        ymax = max(
+            (np.max(np.asarray(bin_dict[key], dtype=float)) for key in keys),
+            default=1.0,
+        )
+        ax.set_ylim(0.0, 1.08 * ymax)
+    else:
+        ax.set_ylim(*ylim)
 
     if label is not None:
         ax.text(
@@ -192,6 +201,12 @@ states = [
     },
 ]
 
+lens_ymax = max(max_in_bin_dict(state["lens_bins"]) for state in states)
+source_ymax = max(max_in_bin_dict(state["source_bins"]) for state in states)
+
+lens_ylim = (0.0, 1.08 * lens_ymax)
+source_ylim = (0.0, 1.08 * source_ymax)
+
 timeline = []
 
 timeline.extend([("hold", 0, 0.0)] * PAUSE_FRAMES)
@@ -216,8 +231,15 @@ fig, axes = plt.subplots(
     2,
     1,
     figsize=FIGSIZE,
-    constrained_layout=True,
     sharex=False,
+)
+
+fig.subplots_adjust(
+    left=0.11,
+    right=0.97,
+    top=0.95,
+    bottom=0.09,
+    hspace=0.50,
 )
 
 ax_lens, ax_source = axes
@@ -231,7 +253,6 @@ def update(frame):
         lens_bins = state["lens_bins"]
         source_bins = state["source_bins"]
         label = state["label"]
-
     else:
         state_a = states[idx]
         state_b = states[(idx + 1) % len(states)]
@@ -247,6 +268,7 @@ def update(frame):
         title="LSST lens sample",
         label=label,
         xlim=(0.0, 1.5),
+        ylim=lens_ylim,
     )
 
     plot_bins(
@@ -256,6 +278,7 @@ def update(frame):
         title="LSST source sample",
         label=label,
         xlim=(0.0, z.max()),
+        ylim=source_ylim,
     )
 
     return []
