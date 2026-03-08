@@ -15,6 +15,8 @@ clarify how different schemes relate to common formulations used in cosmology.
    :maxdepth: 2
 
    notation
+   parent_nz
    tomography
    binning_schemes
    diagnostics
+
