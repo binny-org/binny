@@ -9,21 +9,19 @@
 [![codecov](https://codecov.io/gh/binny-org/binny/branch/main/graph/badge.svg)](https://codecov.io/gh/binny-org/binny)
 [![License](https://img.shields.io/github/license/binny-org/binny)](LICENSE)
 
-.. raw:: html
-
-   <p style="margin-top:1.2em;">
-     <a href="https://binny-org.github.io/binny"
-        style="
-          background:#fde725;
-          color:#440154;
-          padding:0.6em 1.2em;
-          border-radius:8px;
-          text-decoration:none;
-          font-weight:700;
-          display:inline-block;">
-        📖 View the Documentation
-     </a>
-   </p>
+<p align="center">
+  <a href="https://binny-org.github.io/binny"
+     style="
+       background:#fde725;
+       color:#440154;
+       padding:10px 18px;
+       border-radius:8px;
+       text-decoration:none;
+       font-weight:700;
+       display:inline-block;">
+     📖 View the Documentation
+  </a>
+</p>
 
 ---
 
