@@ -10,16 +10,19 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: write
-    steps:
-      - uses: actions/checkout@v3
 
-      - uses: actions/setup-python@v3
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
         with:
           python-version: "3.13"
 
       - name: Install dependencies
         run: |
-          pip install -e .
+          python -m pip install --upgrade pip
+          python -m pip install tox
+          python -m pip install -e .
 
       - name: Sphinx build
         run: |
