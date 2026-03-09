@@ -175,7 +175,9 @@ for val in outlier_frac_vals:
     )
     result = tomo.build_bins(z=z, nz=nz, tomo_spec=spec)
     curves = ordered_curves(result.bins)
-    panel_curves["frac"].append([fixed_curves[0].copy(), fixed_curves[1].copy(), curves[2].copy()])
+    panel_curves["frac"].append(
+        [fixed_curves[0].copy(), fixed_curves[1].copy(), curves[2].copy()]
+    )
 
 for val in outlier_mean_offset_vals:
     spec = make_spec(
@@ -221,7 +223,9 @@ for val in outlier_mean_scale_vals:
     )
     result = tomo.build_bins(z=z, nz=nz, tomo_spec=spec)
     curves = ordered_curves(result.bins)
-    panel_curves["scale"].append([fixed_curves[0].copy(), fixed_curves[1].copy(), curves[2].copy()])
+    panel_curves["scale"].append(
+        [fixed_curves[0].copy(), fixed_curves[1].copy(), curves[2].copy()]
+    )
 
 for val in outlier_scatter_vals:
     spec = make_spec(
@@ -250,7 +254,10 @@ for val in outlier_scatter_vals:
     )
 
 ymax_bins = 1.08 * max(
-    np.max(curve) for family in panel_curves.values() for frame in family for curve in frame
+    np.max(curve)
+    for family in panel_curves.values()
+    for frame in family
+    for curve in frame
 )
 
 fig, axes = plt.subplots(2, 2, figsize=FIGSIZE)
@@ -284,7 +291,6 @@ panel_defs = [
 ]
 
 panel_artists = {}
-
 zero_vertices = fill_vertices(z, np.zeros_like(z))
 
 for key, ax, title, values, symbol in panel_defs:
@@ -336,7 +342,7 @@ for key, ax, title, values, symbol in panel_defs:
         lines.append(line)
 
     text_main = ax.text(
-        0.66,
+        0.64,
         0.93,
         "",
         transform=ax.transAxes,
@@ -345,30 +351,20 @@ for key, ax, title, values, symbol in panel_defs:
         animated=True,
     )
 
-    mixture_label = ax.text(
-        0.66,
-        0.85,
-        r"mixture",
-        transform=ax.transAxes,
-        ha="left",
-        va="top",
-        fontsize=15,
-        animated=True,
-    )
+    # slightly larger and a bit more left/lower so it reads more clearly
+    proxy_x_center = 1.51
+    proxy_halfwidth = 0.155
+    proxy_y_base = 0.60 * ymax_bins
+    proxy_y_amp = 0.14 * ymax_bins
 
-    # tiny proxy area in data coordinates
-    proxy_x_center = 1.63
-    proxy_halfwidth = 0.11
-    proxy_y_base = 0.66 * ymax_bins
-    proxy_y_amp = 0.10 * ymax_bins
+    proxy_u = np.linspace(-3.2, 3.2, 280)
 
-    proxy_u = np.linspace(-3.0, 3.0, 240)
-
+    # keep decomposition, but fade the unchanged components more
     (core_line,) = ax.plot(
         [],
         [],
-        color="0.55",
-        linewidth=1.6,
+        color="0.72",
+        linewidth=1.2,
         linestyle="--",
         zorder=46,
         animated=True,
@@ -376,8 +372,8 @@ for key, ax, title, values, symbol in panel_defs:
     (outlier_line,) = ax.plot(
         [],
         [],
-        color="k",
-        linewidth=1.6,
+        color="0.35",
+        linewidth=1.3,
         linestyle="--",
         zorder=47,
         animated=True,
@@ -386,7 +382,7 @@ for key, ax, title, values, symbol in panel_defs:
         [],
         [],
         color="k",
-        linewidth=2.0,
+        linewidth=2.3,
         zorder=48,
         animated=True,
     )
@@ -398,7 +394,6 @@ for key, ax, title, values, symbol in panel_defs:
         "text": text_main,
         "values": values,
         "symbol": symbol,
-        "mixture_label": mixture_label,
         "proxy_u": proxy_u,
         "proxy_x_center": proxy_x_center,
         "proxy_halfwidth": proxy_halfwidth,
@@ -427,40 +422,43 @@ def draw_panel(key, frame_idx):
     val = artists["values"][frame_idx]
     artists["text"].set_text(rf"{artists['symbol']} = {val:.3f}")
 
-    # proxy: core + outlier + mixture
     u = artists["proxy_u"]
 
     core_center = 0.0
-    core_sigma = 0.85
+    core_sigma = 0.78
 
     if key == "frac":
+        # signature: outlier grows in importance
         f_out = float(val)
-        out_center = 1.45
-        out_sigma = 0.85
+        out_center = 1.75
+        out_sigma = 0.60
 
     elif key == "offset":
+        # signature: outlier slides across x
         f_out = 0.55
         t = (val - outlier_mean_offset_vals.min()) / (
             outlier_mean_offset_vals.max() - outlier_mean_offset_vals.min()
         )
-        out_center = 0.35 + 1.55 * t
-        out_sigma = 0.85
+        out_center = -0.10 + 2.55 * t
+        out_sigma = 0.62
 
     elif key == "scale":
+        # signature: outlier pulls away from the core more dramatically
         f_out = 0.20
         t = (val - outlier_mean_scale_vals.min()) / (
             outlier_mean_scale_vals.max() - outlier_mean_scale_vals.min()
         )
-        out_center = 0.50 + 1.85 * t
-        out_sigma = 0.85
+        out_center = 0.28 + 2.85 * (t**1.15)
+        out_sigma = 0.55
 
     elif key == "scatter":
+        # signature: outlier broadens strongly, stays in place
         f_out = 0.20
-        out_center = 1.45
+        out_center = 1.70
         t = (val - outlier_scatter_vals.min()) / (
             outlier_scatter_vals.max() - outlier_scatter_vals.min()
         )
-        out_sigma = 0.45 + 1.35 * t
+        out_sigma = 0.22 + 1.55 * t
 
     else:
         f_out = 0.20
@@ -480,7 +478,7 @@ def draw_panel(key, frame_idx):
     out_profile /= peak
     mix_profile /= peak
 
-    x_proxy = artists["proxy_x_center"] + artists["proxy_halfwidth"] * (u / 3.0)
+    x_proxy = artists["proxy_x_center"] + artists["proxy_halfwidth"] * (u / 3.2)
 
     y_core = artists["proxy_y_base"] + artists["proxy_y_amp"] * core_profile
     y_out = artists["proxy_y_base"] + artists["proxy_y_amp"] * out_profile
@@ -494,7 +492,6 @@ def draw_panel(key, frame_idx):
         *artists["fills"],
         *artists["lines"],
         artists["text"],
-        artists["mixture_label"],
         artists["core_line"],
         artists["outlier_line"],
         artists["mix_line"],
