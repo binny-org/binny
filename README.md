@@ -15,7 +15,7 @@ It provides flexible binning algorithms, validation utilities, and diagnostic to
 
 Detailed documentation, tutorials, and API reference are available at:
 
-👉 **https://docs.binny.org**
+👉 **https://binny-org.github.io/binny**
 
 ---
 
