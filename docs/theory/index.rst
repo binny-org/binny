@@ -16,7 +16,7 @@ clarify how different schemes relate to common formulations used in cosmology.
 
    parent_nz
    tomography
-   uncertainties
+   uncertainties/index
    diagnostics
    conventions
 

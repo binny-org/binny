@@ -61,6 +61,7 @@ testpaths = ["tests"]
 [tool.ruff]
 exclude = [
   "benchmarks",
+  "docs",
 ]
 line-length = 100
 target-version = "py310"
