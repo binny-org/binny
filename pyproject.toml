@@ -23,7 +23,7 @@ dev = [
   "tox>=4.22",
 ]
 docs = [
-  "sphinx[doctest]",
+  "sphinx[doctest]<9",
   "sphinx-copybutton",
   "sphinx-design",
   "sphinx-multiversion",
