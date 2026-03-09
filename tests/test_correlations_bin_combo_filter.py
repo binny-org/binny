@@ -601,3 +601,131 @@ def test_keep_if_curve_norm_threshold_computes_norms_and_delegates(monkeypatch):
     assert got["mode"] == "all"
     assert got["norms"][0][0] == pytest.approx(1.0)
     assert got["norms"][1][1] == pytest.approx(2.0)
+
+
+def test_set_topology_raises_on_unknown_topology_name():
+    """Tests that set_topology raises KeyError on unknown topology names."""
+    z = _toy_z()
+    curves = _toy_curves(z)
+    f = bcf.BinComboFilter(z=z, curves=curves)
+
+    with pytest.raises(KeyError, match=r"pairs_weird"):
+        f.set_topology("pairs_weird")  # type: ignore[arg-type]
+
+
+def test_select_raises_on_unknown_topology_name():
+    """Tests that select raises KeyError when spec requests an unknown topology."""
+    z = _toy_z()
+    curves = _toy_curves(z)
+    f = bcf.BinComboFilter(z=z, curves=curves)
+
+    with pytest.raises(KeyError, match=r"pairs_weird"):
+        f.select({"topology": {"name": "pairs_weird"}})
+
+
+def test_select_passes_nested_keys_as_star_args_to_topology(monkeypatch):
+    """Tests that select expands a nested keys list into positional topology args."""
+    z = _toy_z()
+    curves = _toy_curves(z)
+    f = bcf.BinComboFilter(z=z, curves=curves)
+
+    got = {"name": None, "args": None}
+
+    def fake_set_topology(self, name, *args):
+        got["name"] = name
+        got["args"] = args
+        return self
+
+    monkeypatch.setattr(bcf.BinComboFilter, "set_topology", fake_set_topology, raising=True)
+
+    f.select(
+        {
+            "topology": {
+                "name": "pairs_cartesian",
+                "keys": [[0, 1], [10, 11]],
+            }
+        }
+    )
+
+    assert got["name"] == "pairs_cartesian"
+    assert got["args"] == ([0, 1], [10, 11])
+
+
+def test_select_passes_flat_keys_as_single_topology_argument(monkeypatch):
+    """Tests that select passes a flat keys list as one topology argument."""
+    z = _toy_z()
+    curves = _toy_curves(z)
+    f = bcf.BinComboFilter(z=z, curves=curves)
+
+    got = {"name": None, "args": None}
+
+    def fake_set_topology(self, name, *args):
+        got["name"] = name
+        got["args"] = args
+        return self
+
+    monkeypatch.setattr(bcf.BinComboFilter, "set_topology", fake_set_topology, raising=True)
+
+    f.select(
+        {
+            "topology": {
+                "name": "pairs_upper_triangle",
+                "keys": [3, 4, 5],
+            }
+        }
+    )
+
+    assert got["name"] == "pairs_upper_triangle"
+    assert got["args"] == ([3, 4, 5],)
+
+
+@pytest.mark.parametrize(
+    ("method_name", "kwargs"),
+    [
+        ("keep_if_overlap_fraction", {"threshold": 0.5, "compare": "bad"}),
+        ("keep_if_overlap_coefficient", {"threshold": 0.5, "compare": "bad"}),
+        ("keep_if_metric", {"kernel": lambda *_args: 0.0, "threshold": 0.5, "compare": "bad"}),
+        ("keep_if_score_relation", {"score": "mean", "relation": "bad"}),
+        ("keep_if_score_consistency", {"score1": "mean", "score2": "median", "relation": "bad"}),
+        ("keep_if_curve_norm_threshold", {"threshold": 0.5, "compare": "bad", "mode": "all"}),
+    ],
+)
+def test_methods_raise_on_invalid_relation_strings(method_name, kwargs):
+    """Tests that public methods reject unsupported relation identifiers."""
+    z = _toy_z()
+    curves = _toy_curves(z)
+    f = bcf.BinComboFilter(z=z, curves=curves, tuples=[(0, 1)])
+
+    method = getattr(f, method_name)
+
+    with pytest.raises(ValueError, match=r"Unknown relation"):
+        method(**kwargs)
+
+
+@pytest.mark.parametrize(
+    "spec",
+    [
+        {"filters": [{"name": "overlap_fraction", "threshold": 0.1, "compare": "bad"}]},
+        {"filters": [{"name": "overlap_coefficient", "threshold": 0.1, "compare": "bad"}]},
+        {"filters": [{"name": "score_relation", "score": "mean", "relation": "bad"}]},
+        {
+            "filters": [
+                {
+                    "name": "score_consistency",
+                    "score1": "mean",
+                    "score2": "median",
+                    "relation": "bad",
+                }
+            ]
+        },
+        {"filters": [{"name": "curve_norm_threshold", "threshold": 0.0, "compare": "bad"}]},
+    ],
+)
+def test_select_raises_on_invalid_relation_strings(spec):
+    """Tests that select rejects unsupported relation identifiers in filter specs."""
+    z = _toy_z()
+    curves = _toy_curves(z)
+    f = bcf.BinComboFilter(z=z, curves=curves)
+
+    with pytest.raises(ValueError, match=r"Unknown relation"):
+        f.select(spec)

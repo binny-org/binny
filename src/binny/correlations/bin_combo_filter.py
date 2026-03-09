@@ -16,6 +16,7 @@ from typing import Any, Literal
 
 import numpy as np
 
+from binny.utils.relations import validate_relation
 from binny.utils.types import FloatArray1D, IndexTuple, IndexTuples
 
 from .filters import (
@@ -167,6 +168,8 @@ class BinComboFilter:
         Raises:
             TypeError: If ``spec`` or one of its subentries has the wrong type.
             KeyError: If a requested filter name or metric kernel is unknown.
+            ValueError: If a requested comparison or ordering relation is not
+            supported.
         """
         # 0) basic validation
         if not isinstance(spec, Mapping):
@@ -424,10 +427,12 @@ class BinComboFilter:
 
         Raises:
             ValueError: If requested positions are not valid for the tuple
-                collection.
+                collection or if the requested relation is not supported.
             KeyError: If a required index is not present in the stored curves
                 for a slot.
         """
+        relation = validate_relation(relation)
+
         scores = self._scores(score, mass=mass)
         self._tuples = filter_by_score_relation(
             self._tuples, scores=scores, pos_a=pos_a, pos_b=pos_b, relation=relation
@@ -542,7 +547,11 @@ class BinComboFilter:
 
         Returns:
             Self, to allow method chaining.
+
+        Raises:
+            ValueError: If the requested comparison relation is not supported.
         """
+        compare = validate_relation(compare)
         metric = metric_min_overlap_fraction(z=self.z, curves=self.curves)
         self._tuples = filter_by_metric_threshold(
             self._tuples, metric=metric, threshold=threshold, compare=compare
@@ -567,7 +576,12 @@ class BinComboFilter:
 
         Returns:
             Self, to allow method chaining.
+
+        Raises:
+            ValueError: If the requested comparison relation is not supported.
         """
+        compare = validate_relation(compare)
+
         metric = metric_overlap_coefficient(z=self.z, curves=self.curves)
         self._tuples = filter_by_metric_threshold(
             self._tuples, metric=metric, threshold=threshold, compare=compare
@@ -594,7 +608,12 @@ class BinComboFilter:
 
         Returns:
             Self, to allow method chaining.
+
+        Raises:
+            ValueError: If the requested comparison relation is not supported.
         """
+        compare = validate_relation(compare)
+
         metric = metric_from_curves(curves=self.curves, kernel=kernel)
         self._tuples = filter_by_metric_threshold(
             self._tuples, metric=metric, threshold=threshold, compare=compare
@@ -683,10 +702,12 @@ class BinComboFilter:
 
         Raises:
             ValueError: If requested positions are not valid for the tuple
-                collection.
+                collection or if the requested relation is not supported.
             KeyError: If a required index is not present in the stored curves
                 for a slot.
         """
+        relation = validate_relation(relation)
+
         scores1 = self._scores(score1, mass=mass)
         scores2 = self._scores(score2, mass=mass if mass2 is None else mass2)
         self._tuples = filter_by_score_consistency(
@@ -725,10 +746,13 @@ class BinComboFilter:
 
         Raises:
             ValueError: If the mode is not recognized, or norms do not cover the
-                tuple positions.
-            KeyError: If a required index is not present in the stored curves
+                tuple positions or if the requested comparison relation is not
+                supported.
+            KeyError: If a required index is not pr esent in the stored curves
                 for a slot.
         """
+        compare = validate_relation(compare)
+
         zz = np.asarray(self.z, dtype=float)
         norm_maps: list[dict[int, float]] = []
         for slot_curves in self.curves:
