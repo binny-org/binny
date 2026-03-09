@@ -4,24 +4,22 @@
 
 # binny
 
+<p align="center">
+
 [![CI](https://github.com/binny-org/binny/actions/workflows/ci.yml/badge.svg)](https://github.com/binny-org/binny/actions/workflows/ci.yml)
 [![Deploy Sphinx Documentation](https://github.com/binny-org/binny/actions/workflows/docs.yml/badge.svg)](https://github.com/binny-org/binny/actions/workflows/docs.yml)
 [![codecov](https://codecov.io/gh/binny-org/binny/branch/main/graph/badge.svg)](https://codecov.io/gh/binny-org/binny)
 [![License](https://img.shields.io/github/license/binny-org/binny)](LICENSE)
+[![Documentation](https://img.shields.io/badge/docs-binny-fde725?style=for-the-badge)](https://binny-org.github.io/binny)
 
-<p align="center">
-  <a href="https://binny-org.github.io/binny"
-     style="
-       background:#fde725;
-       color:#440154;
-       padding:10px 18px;
-       border-radius:8px;
-       text-decoration:none;
-       font-weight:700;
-       display:inline-block;">
-     📖 View the Documentation
-  </a>
+
 </p>
+
+**binny** is a Python library for constructing and analyzing  
+**tomographic redshift bins** used in cosmology and large-scale structure analyses.
+
+It provides flexible binning algorithms, validation utilities, and diagnostic tools
+for forecasting, inference pipelines, and survey analysis workflows.
 
 ---
 
