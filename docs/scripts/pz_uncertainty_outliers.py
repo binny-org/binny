@@ -428,42 +428,33 @@ def draw_panel(key, frame_idx):
     core_sigma = 0.78
 
     if key == "frac":
-        # signature: outlier grows in importance
         f_out = float(val)
-        out_center = 1.75
+        out_center = -1.75
         out_sigma = 0.60
 
     elif key == "offset":
-        # signature: outlier slides across x
         f_out = 0.55
         t = (val - outlier_mean_offset_vals.min()) / (
-            outlier_mean_offset_vals.max() - outlier_mean_offset_vals.min()
+                outlier_mean_offset_vals.max() - outlier_mean_offset_vals.min()
         )
-        out_center = -0.10 + 2.55 * t
+        out_center = 0.10 - 2.55 * t
         out_sigma = 0.62
 
     elif key == "scale":
-        # signature: outlier pulls away from the core more dramatically
         f_out = 0.20
         t = (val - outlier_mean_scale_vals.min()) / (
-            outlier_mean_scale_vals.max() - outlier_mean_scale_vals.min()
+                outlier_mean_scale_vals.max() - outlier_mean_scale_vals.min()
         )
-        out_center = 0.28 + 2.85 * (t**1.15)
+        out_center = -0.28 - 2.85 * (t ** 1.15)
         out_sigma = 0.55
 
     elif key == "scatter":
-        # signature: outlier broadens strongly, stays in place
         f_out = 0.20
-        out_center = 1.70
+        out_center = -1.70
         t = (val - outlier_scatter_vals.min()) / (
-            outlier_scatter_vals.max() - outlier_scatter_vals.min()
+                outlier_scatter_vals.max() - outlier_scatter_vals.min()
         )
         out_sigma = 0.22 + 1.55 * t
-
-    else:
-        f_out = 0.20
-        out_center = 1.45
-        out_sigma = 0.85
 
     core_profile = gaussian_profile(u, core_center, core_sigma)
     out_profile = gaussian_profile(u, out_center, out_sigma)
