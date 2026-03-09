@@ -97,7 +97,7 @@ def plot_bins(ax, z, bin_dict, colors, annotation):
     add_scheme_annotation(ax, annotation)
 
 
-def plot_centers(ax, centers, annotation):
+def plot_centers(ax, centers):
     ax.cla()
 
     keys = sorted(centers["mean"].keys())
@@ -147,7 +147,7 @@ def plot_centers(ax, centers, annotation):
     ax.legend(frameon=True)
 
 
-def plot_fractions(ax, fractions, annotation, colors):
+def plot_fractions(ax, fractions, colors):
     ax.cla()
 
     keys = sorted(fractions.keys())
@@ -167,7 +167,6 @@ def plot_fractions(ax, fractions, annotation, colors):
     ax.set_xticklabels([f"{k + 1}" for k in keys])
     ax.set_xlabel("Tomographic bin")
     ax.set_ylabel("Galaxy fraction")
-    ax.set_ylim(0.0, 0.34)
 
 
 # Output path
@@ -257,8 +256,14 @@ bin_colors = cmr.take_cmap_colors(
 )
 
 # Figure layout
-fig = plt.figure(figsize=FIGSIZE, constrained_layout=True)
-gs = fig.add_gridspec(2, 2, height_ratios=[1.2, 1.15])
+fig = plt.figure(figsize=FIGSIZE)
+gs = fig.add_gridspec(
+    2,
+    2,
+    height_ratios=[1.2, 1.15],
+    hspace=0.35,
+    wspace=0.28,
+)
 
 ax_bins = fig.add_subplot(gs[0, :])
 ax_centers = fig.add_subplot(gs[1, 0])
@@ -326,13 +331,11 @@ def update(frame):
     plot_centers(
         ax_centers,
         centers,
-        annotation=annotation,
     )
 
     plot_fractions(
         ax_fractions,
         fractions,
-        annotation=annotation,
         colors=bin_colors,
     )
 
