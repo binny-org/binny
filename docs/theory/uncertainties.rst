@@ -545,8 +545,8 @@ where
 This is the deterministic idealization of spectroscopic tomography.
 
 
-Completeness uncertainty
-~~~~~~~~~~~~~~~~~~~~~~~~
+Completeness
+~~~~~~~~~~~~
 
 The simplest spec-z uncertainty ingredient is the completeness factor:
 
@@ -560,14 +560,28 @@ where
 - :math:`c_j=1` corresponds to full completeness in bin :math:`j`,
 - :math:`c_j<1` reduces the pre-normalization population in that bin.
 
+This parameter represents objects that should belong to the bin but are
+missing from the sample, for example due to survey selection
+effects, failed spectroscopic measurements, or masking.
+
+Because completeness acts multiplicatively, it changes bin populations before
+optional normalization. If bins are later normalized individually, the shape
+of a nonempty bin is preserved while its **total population decreases**.
+
+In other words, completeness does not move galaxies between bins.
+It simply removes a fraction of galaxies from the affected bin.
+
+The animation below illustrates this effect: as completeness decreases,
+the height of the affected bin decreases while the other bins remain unchanged.
+
+.. image:: ../_static/animations/specz_uncertainty_completeness.gif
+   :alt: Animation showing the effect of decreasing completeness in a spectroscopic tomographic bin
+   :width: 400px
+   :align: center
+
 API mapping:
 
 - :math:`c_j` : ``completeness``
-
-Because completeness acts multiplicatively, it changes bin populations before
-optional normalization. If bins are later normalized individually, the shape of
-a nonempty bin is preserved, while the population loss remains visible only
-through metadata.
 
 
 Observed-bin response
@@ -587,7 +601,7 @@ through a response matrix :math:`M`:
 where
 
 - :math:`M_{ij}` is the probability that an object in true bin :math:`j`
-  appaers in observed bin :math:`i`,
+  appears in observed bin :math:`i`,
 - :math:`i_{\mathrm{obs}}` denotes the observed-bin index,
 - :math:`j_{\mathrm{true}}` denotes the true-bin index.
 
@@ -598,9 +612,7 @@ The response matrix must satisfy the column-stochastic condition
    \sum_i M_{ij} = 1
    \qquad \text{for every true bin } j,
 
-where
-
-- :math:`\sum_i` denotes the sum over all observed bins :math:`i`.
+which simply means that **every galaxy must end up in some observed bin**.
 
 The observed-bin distribution is then
 
@@ -617,8 +629,10 @@ where
 - :math:`M_{ij}` weights how much true bin :math:`j` contributes to observed
   bin :math:`i`.
 
-This means the returned bins may correspond to *observed* tomographic bins,
-while still being represented as functions on the common true-redshift grid.
+The response matrix therefore determines how the true-bin populations are
+distributed across the observed bins. Instead of each true bin contributing
+only to its corresponding observed bin, part of its population may be
+redistributed to other bins.
 
 
 Catastrophic reassignment
@@ -642,11 +656,13 @@ where
 - :math:`q_j` is the redistribution pattern over other bins,
 - :math:`1-f_j` is the fraction that remains in the original bin.
 
+In practice this parameter represents **objects that are assigned to the wrong
+tomographic bin**. Increasing :math:`f_j` moves a larger fraction of galaxies
+from their true bin into other bins.
+
 API mapping:
 
 - :math:`f_j` : ``catastrophic_frac``
-
-Three redistribution models are implemented.
 
 
 Uniform leakage
@@ -655,7 +671,8 @@ Uniform leakage
 With ``leakage_model="uniform"``, the catastrophic fraction is distributed
 equally among all other bins.
 
-This represents nonlocal failures with no preference for nearby bins.
+This represents situations where misclassified galaxies are scattered
+randomly across all bins, with no preference for nearby bins.
 
 
 Neighbor leakage
@@ -665,8 +682,8 @@ With ``leakage_model="neighbor"``, the catastrophic fraction is distributed to
 adjacent bins only. Interior bins leak equally to the left and right
 neighbors, while edge bins leak to their single available neighbor.
 
-This is a simple model for mostly local misclassification in tomographic-bin
-index space.
+This is a simple model for local misclassification, where galaxies are most
+likely to be assigned to bins that are close in redshift.
 
 
 Gaussian leakage in bin index
@@ -690,7 +707,7 @@ where
   :math:`k`,
 - :math:`k` is the receiving bin index,
 - :math:`j` is the source true-bin index,
-- :math:`\lambda` is the Gaussian leakage width in bin-index space,
+- :math:`\lambda` is the Gaussian leakage width in bin-index space.
 
 API mapping:
 
@@ -699,6 +716,17 @@ API mapping:
 This allows leakage to remain concentrated near the original bin while still
 reaching more distant bins with suppressed weight.
 
+
+.. image:: ../_static/animations/specz_uncertainty_catastrophic.gif
+   :alt: Animation showing catastrophic spectroscopic bin reassignment with neighbor leakage
+   :width: 800px
+   :align: center
+
+The animation above shows the **neighbor-leakage case**. As the catastrophic
+fraction :math:`f_2` increases, a larger fraction of galaxies from the second
+true bin is reassigned to its neighboring bins.
+The left panel shows the resulting observed-bin distributions, while the
+matrix on the right shows the corresponding response matrix.
 
 Explicit response matrices
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
