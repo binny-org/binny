@@ -7,25 +7,18 @@ Binny
    .. grid-item::
       :class: hero-text
 
-      **Binny** provides flexible, explicit, and well-tested tomographic
-      binning tools for cosmology and related scientific workflows.
+      **Binny** provides flexible and well-tested tomographic binning
+      tools for cosmology.
 
-      It is designed for forecasting, inference, and data-processing
-      pipelines, with an emphasis on clarity, reproducibility, and
-      robust validation.
-
-      Typical use cases include:
-
-      - photometric-redshift tomography
-      - spectroscopic-redshift binning
-      - cosmological forecasting studies
-      - survey-specific bin definitions
+      It supports constructing galaxy redshift distributions
+      :math:`n(z)`, building tomographic bins, and validating bin
+      configurations for forecasting and inference workflows.
 
    .. grid-item::
       :class: sd-text-center hero-logo
 
       .. image:: _static/animations/binny_logo.gif
-         :width: 220px
+         :width: 200px
          :alt: Binny logo
 
 
