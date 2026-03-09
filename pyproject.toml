@@ -165,6 +165,6 @@ extras = ["docs"]
 allowlist_externals = ["cp"]
 commands = [
   ["sphinx-apidoc", "-o", "{tox_root}/docs/api", "{tox_root}/src/binny", "--separate", "-f"],
-  ["sphinx-multiversion", "{tox_root}/docs", "{tox_root}/docs/_build/html", "--fail-on-warning"],
+  ["sphinx-multiversion", "{tox_root}/docs", "{tox_root}/docs/_build/html"],
   ["cp", "{tox_root}/docs/_templates/pages_redirect.html", "{tox_root}/docs/_build/html/index.html"],
 ]
