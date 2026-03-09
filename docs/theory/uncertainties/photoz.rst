@@ -7,7 +7,7 @@
 
 In photometric-redshift tomography, tomographic bins are defined in observed
 redshift :math:`z_{\mathrm{ph}}`, but the returned bin curves are evaluated on
-the true-redshift grid :math:`z`.
+the true redshift grid :math:`z`.
 
 For an observed-redshift bin with edges
 :math:`[z_{\mathrm{ph,min},i}, z_{\mathrm{ph,max},i}]`, the selected
@@ -19,7 +19,7 @@ true-redshift distribution is
 
 where
 
-- :math:`n_i(z)` is the returned tomographic bin on the **true-redshift** grid,
+- :math:`n_i(z)` is the returned tomographic bin on the **true redshift** grid,
 - :math:`n(z)` is the parent redshift distribution,
 - :math:`P(i \mid z)` is the probability that an object at true redshift
   :math:`z` is assigned to observed bin :math:`i`,
@@ -36,7 +36,7 @@ which ensures that every galaxy at true redshift :math:`z`
 is assigned to the set of observed bins with total probability unity.
 
 This means that photo-z tomography does **not** apply a hard cut in true
-redshift. Instead, each true-redshift value contributes to a bin according to
+redshift. Instead, each true redshift value contributes to a bin according to
 the photo-z assignment model.
 
 
@@ -209,7 +209,7 @@ API mapping:
 
 Larger :math:`s` values broaden the assignment probability
 :math:`P(i \mid z)`, increase overlap between neighboring tomographic bins,
-and produce less sharply localized true-redshift distributions.
+and produce less sharply localized true redshift distributions.
 
 .. image:: ../../_static/animations/pz_uncertainty_scatter.gif
    :alt: Animation showing the effect of mean-offset bias on tomographic bins

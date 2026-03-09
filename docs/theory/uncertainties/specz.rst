@@ -11,9 +11,10 @@ Real surveys, however, may introduce incompleteness, misclassification, or
 measurement scatter, which can be modeled through additional response terms.
 
 In the simplest case, a tomographic bin is a top-hat selection over a
-true-redshift interval.
+true redshift interval.
 
-For true-redshift edges :math:`[z_j, z_{j+1}]`, the true-bin selection window is
+For true redshift edges :math:`[z_j, z_{j+1}]`, the true-bin selection
+window is
 
 .. math::
 
@@ -21,7 +22,8 @@ For true-redshift edges :math:`[z_j, z_{j+1}]`, the true-bin selection window is
 
 where
 
-- :math:`S_j(z)` is the true-redshift selection function for true bin :math:`j`,
+- :math:`S_j(z)` is the true redshift selection function for true bin
+:math:`j`,
 - :math:`c_j` is the completeness factor for bin :math:`j`,
 - :math:`\mathbf{1}_{[z_j, z_{j+1})}(z)` is the indicator function, equal to
   :math:`1` when :math:`z \in [z_j, z_{j+1})` and :math:`0` otherwise,
@@ -308,7 +310,7 @@ where
 - :math:`\mathrm{d}\hat{z}` is the integration measure in measured redshift.
 
 The bin-level response matrix is then obtained by averaging this probability
-across the true-redshift support of each bin:
+across the true redshift support of each bin:
 
 .. math::
 
@@ -321,7 +323,7 @@ where
 - :math:`M^{\mathrm{scatter}}_{ij}` is the scatter-induced response from true
   bin :math:`j` to observed bin :math:`i`,
 - :math:`\langle \cdots \rangle_{z \in j}` denotes an average over the
-  true-redshift support of bin :math:`j`.
+  true redshift support of bin :math:`j`.
 
 If catastrophic leakage is also present, the total response becomes
 
@@ -421,7 +423,7 @@ In the simplest spectroscopic limit,
   :math:`\sigma_0 = \sigma_1 = 0`,
 
 the response reduces to the identity and each tomographic bin is simply a
-top-hat true-redshift slice of the parent distribution.
+top-hat true redshift slice of the parent distribution.
 
 This is the idealized spectroscopic case with perfectly sharp binning and no
 observed-bin mixing.
