@@ -12,11 +12,12 @@ It is intended to make binning choices explicit and reproducible, and to
 clarify how different schemes relate to common formulations used in cosmology.
 
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 1
 
    parent_nz
    tomography
    uncertainties/index
+   statistics
    diagnostics
    conventions
 
