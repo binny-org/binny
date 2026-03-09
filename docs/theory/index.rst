@@ -30,4 +30,5 @@ Table of contents
    uncertainties/index
    statistics
    diagnostics
+   bin_combos
    conventions
