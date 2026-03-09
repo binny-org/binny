@@ -24,4 +24,4 @@ workflows.
    bin_summaries
    bin_diagnostics
    survey_presets
-   bin_combos
+   selections

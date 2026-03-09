@@ -367,3 +367,119 @@ div.figure img {
     border-bottom: 2px solid var(--binny-green);
     padding-bottom: 0.15em;
 }
+
+
+/* ==========================================================================
+   BINNY TABLE STYLE
+   ========================================================================== */
+
+table.binny-table {
+  width: 100%;
+  margin: 1.5rem 0 2rem 0;
+
+  border-collapse: separate;
+  border-spacing: 0;
+
+  border: 2px solid var(--binny-purple);
+  border-radius: 12px;
+  overflow: hidden;
+
+  font-size: 0.96rem;
+  background: white;
+
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.06);
+}
+
+/* HEADER ------------------------------------------------ */
+
+table.binny-table thead th {
+  background: var(--binny-blue);
+  color: white;
+
+  font-weight: 700;
+  text-align: center;
+
+  padding: 0.65rem 0.95rem;
+
+  border-bottom: 2px solid var(--binny-purple);
+}
+
+/* BODY CELLS ------------------------------------------- */
+
+table.binny-table tbody td {
+  padding: 0.6rem 0.9rem;
+  vertical-align: top;
+
+  color: black;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+/* alternating Binny row colors */
+
+table.binny-table tbody tr:nth-child(odd) {
+  background: rgba(253, 231, 37, 0.10); /* binny yellow */
+}
+
+table.binny-table tbody tr:nth-child(even) {
+  background: rgba(53, 183, 121, 0.10); /* binny green */
+}
+
+/* remove last border */
+
+table.binny-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+/* first column (API labels) */
+
+table.binny-table tbody td:first-child {
+  font-weight: 600;
+  color: var(--binny-purple);
+  white-space: nowrap;
+}
+
+/* code inside table */
+
+table.binny-table code {
+  font-size: 0.92em;
+  background: rgba(0, 0, 0, 0.05);
+  color: black;
+  padding: 0.1rem 0.25rem;
+  border-radius: 4px;
+}
+
+/* dark mode compatibility */
+
+html[data-theme="dark"] table.binny-table {
+  background: #1e1e1e;
+  border-color: var(--binny-purple);
+  color: #e6e6e6;
+}
+
+html[data-theme="dark"] table.binny-table thead th {
+  background: var(--binny-blue);
+  color: white;
+  border-bottom: 2px solid var(--binny-purple);
+}
+
+html[data-theme="dark"] table.binny-table tbody td {
+  color: #e6e6e6;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+html[data-theme="dark"] table.binny-table tbody tr:nth-child(odd) {
+  background: rgba(253, 231, 37, 0.10);
+}
+
+html[data-theme="dark"] table.binny-table tbody tr:nth-child(even) {
+  background: rgba(53, 183, 121, 0.10);
+}
+
+html[data-theme="dark"] table.binny-table tbody td:first-child {
+  color: var(--binny-yellow);
+}
+
+html[data-theme="dark"] table.binny-table code {
+  background: rgba(255, 255, 255, 0.08);
+  color: #f3f3f3;
+}

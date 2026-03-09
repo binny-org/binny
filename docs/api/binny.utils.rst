@@ -12,6 +12,7 @@ Submodules
    binny.utils.metadata
    binny.utils.normalization
    binny.utils.pairwise_metrics
+   binny.utils.relations
    binny.utils.types
    binny.utils.validators
 
