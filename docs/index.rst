@@ -142,6 +142,17 @@ The examples below illustrate common Binny workflows.
       Build tomographic bin configurations representative of
       real cosmological surveys.
 
+   .. grid-item-card:: Bin-pair selection
+      :link: examples/selections
+      :link-type: doc
+
+      .. image:: _static/animations/lens_source_pair_exclusions.gif
+         :width: 120%
+         :alt: Bin-pair selection
+
+      Filter or select bin pairs based on redshift separation, overlap, or
+      other criteria relevant for lensing or clustering analyses.
+
 
 Documentation
 -------------
