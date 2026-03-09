@@ -149,16 +149,19 @@ def plot_matrix(
     ax.grid(which="minor", color="k", linestyle="-", linewidth=1.8)
     ax.tick_params(which="minor", bottom=False, left=False)
 
+    mid = vmax / 2
+
     for i in range(n_rows):
         for j in range(n_cols):
+            val = matrix[i, j]
             ax.text(
                 j,
                 i,
-                fmt.format(matrix[i, j]),
+                fmt.format(val),
                 ha="center",
                 va="center",
                 fontsize=15,
-                color="k",
+                color="black" if val > mid else "white",
             )
 
 
