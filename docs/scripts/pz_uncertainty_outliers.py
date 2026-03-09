@@ -46,6 +46,10 @@ def fill_vertices(x, y):
     )
 
 
+def gaussian_profile(u, center, sigma):
+    return np.exp(-0.5 * ((u - center) / sigma) ** 2)
+
+
 def make_spec(
     n_bins,
     bin_range,
@@ -227,7 +231,11 @@ for val in outlier_scatter_vals:
         mean_scale=[baseline_mean_scale, baseline_mean_scale, baseline_mean_scale],
         mean_offset=[baseline_mean_offset, baseline_mean_offset, baseline_mean_offset],
         outlier_frac=[0.0, 0.0, 0.20],
-        outlier_scatter_scale=[baseline_outlier_scatter, baseline_outlier_scatter, float(val)],
+        outlier_scatter_scale=[
+            baseline_outlier_scatter,
+            baseline_outlier_scatter,
+            float(val),
+        ],
         outlier_mean_scale=[
             baseline_outlier_mean_scale,
             baseline_outlier_mean_scale,
@@ -328,12 +336,58 @@ for key, ax, title, values, symbol in panel_defs:
         lines.append(line)
 
     text_main = ax.text(
-        0.64,
+        0.66,
         0.93,
         "",
         transform=ax.transAxes,
         ha="left",
         va="top",
+        animated=True,
+    )
+
+    mixture_label = ax.text(
+        0.66,
+        0.85,
+        r"mixture",
+        transform=ax.transAxes,
+        ha="left",
+        va="top",
+        fontsize=15,
+        animated=True,
+    )
+
+    # tiny proxy area in data coordinates
+    proxy_x_center = 1.63
+    proxy_halfwidth = 0.11
+    proxy_y_base = 0.66 * ymax_bins
+    proxy_y_amp = 0.10 * ymax_bins
+
+    proxy_u = np.linspace(-3.0, 3.0, 240)
+
+    (core_line,) = ax.plot(
+        [],
+        [],
+        color="0.55",
+        linewidth=1.6,
+        linestyle="--",
+        zorder=46,
+        animated=True,
+    )
+    (outlier_line,) = ax.plot(
+        [],
+        [],
+        color="k",
+        linewidth=1.6,
+        linestyle="--",
+        zorder=47,
+        animated=True,
+    )
+    (mix_line,) = ax.plot(
+        [],
+        [],
+        color="k",
+        linewidth=2.0,
+        zorder=48,
         animated=True,
     )
 
@@ -344,6 +398,15 @@ for key, ax, title, values, symbol in panel_defs:
         "text": text_main,
         "values": values,
         "symbol": symbol,
+        "mixture_label": mixture_label,
+        "proxy_u": proxy_u,
+        "proxy_x_center": proxy_x_center,
+        "proxy_halfwidth": proxy_halfwidth,
+        "proxy_y_base": proxy_y_base,
+        "proxy_y_amp": proxy_y_amp,
+        "core_line": core_line,
+        "outlier_line": outlier_line,
+        "mix_line": mix_line,
     }
 
 axes[0, 0].set_ylabel(r"$n_i(z)$")
@@ -364,7 +427,78 @@ def draw_panel(key, frame_idx):
     val = artists["values"][frame_idx]
     artists["text"].set_text(rf"{artists['symbol']} = {val:.3f}")
 
-    return [*artists["fills"], *artists["lines"], artists["text"]]
+    # proxy: core + outlier + mixture
+    u = artists["proxy_u"]
+
+    core_center = 0.0
+    core_sigma = 0.85
+
+    if key == "frac":
+        f_out = float(val)
+        out_center = 1.45
+        out_sigma = 0.85
+
+    elif key == "offset":
+        f_out = 0.55
+        t = (val - outlier_mean_offset_vals.min()) / (
+            outlier_mean_offset_vals.max() - outlier_mean_offset_vals.min()
+        )
+        out_center = 0.35 + 1.55 * t
+        out_sigma = 0.85
+
+    elif key == "scale":
+        f_out = 0.20
+        t = (val - outlier_mean_scale_vals.min()) / (
+            outlier_mean_scale_vals.max() - outlier_mean_scale_vals.min()
+        )
+        out_center = 0.50 + 1.85 * t
+        out_sigma = 0.85
+
+    elif key == "scatter":
+        f_out = 0.20
+        out_center = 1.45
+        t = (val - outlier_scatter_vals.min()) / (
+            outlier_scatter_vals.max() - outlier_scatter_vals.min()
+        )
+        out_sigma = 0.45 + 1.35 * t
+
+    else:
+        f_out = 0.20
+        out_center = 1.45
+        out_sigma = 0.85
+
+    core_profile = gaussian_profile(u, core_center, core_sigma)
+    out_profile = gaussian_profile(u, out_center, out_sigma)
+    mix_profile = (1.0 - f_out) * core_profile + f_out * out_profile
+
+    peak = max(
+        np.max(core_profile),
+        np.max(out_profile),
+        np.max(mix_profile),
+    )
+    core_profile /= peak
+    out_profile /= peak
+    mix_profile /= peak
+
+    x_proxy = artists["proxy_x_center"] + artists["proxy_halfwidth"] * (u / 3.0)
+
+    y_core = artists["proxy_y_base"] + artists["proxy_y_amp"] * core_profile
+    y_out = artists["proxy_y_base"] + artists["proxy_y_amp"] * out_profile
+    y_mix = artists["proxy_y_base"] + artists["proxy_y_amp"] * mix_profile
+
+    artists["core_line"].set_data(x_proxy, y_core)
+    artists["outlier_line"].set_data(x_proxy, y_out)
+    artists["mix_line"].set_data(x_proxy, y_mix)
+
+    return [
+        *artists["fills"],
+        *artists["lines"],
+        artists["text"],
+        artists["mixture_label"],
+        artists["core_line"],
+        artists["outlier_line"],
+        artists["mix_line"],
+    ]
 
 
 def draw_frame(frame_idx):

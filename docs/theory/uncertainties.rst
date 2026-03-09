@@ -281,10 +281,6 @@ where
 
 - :math:`\beta` is the additive shift in the mean photo-z relation.
 
-API mapping:
-
-- :math:`\beta` : ``mean_offset``
-
 Changing :math:`\beta` shifts the mapping between true redshift and observed
 redshift and therefore shifts the location of the tomographic selection.
 
@@ -292,6 +288,10 @@ redshift and therefore shifts the location of the tomographic selection.
    :alt: Animation showing the effect of increasing photo-z scatter on tomographic bins
    :width: 400px
    :align: center
+
+API mapping:
+
+- :math:`\beta` : ``mean_offset``
 
 
 Mean scaling
@@ -308,10 +308,6 @@ where
 - :math:`\alpha` is the multiplicative scaling of true redshift in the mean
   relation.
 
-API mapping:
-
-- :math:`\alpha` : ``mean_scale``
-
 When :math:`\alpha \neq 1`, the mapping between true and observed redshift is
 stretched or compressed with redshift.
 
@@ -321,11 +317,20 @@ stretched or compressed with redshift.
    :align: center
 
 
+API mapping:
+
+- :math:`\alpha` : ``mean_scale``
+
+
 Outlier mixture
 ^^^^^^^^^^^^^^^
 
 Binny also supports a second Gaussian component representing catastrophic or
-outlier-like photo-z failures. The full conditional density is then
+outlier-like photo-z failures. Physically, this is meant to capture a minority
+population of objects whose photometric redshift estimates do not follow the
+same narrow core relation as the main sample. Instead of having a single
+Gaussian assignment model, the conditional density is written as a weighted
+mixture of a core component and an outlier component:
 
 .. math::
 
@@ -349,6 +354,14 @@ where
 API mapping:
 
 - :math:`f_{\mathrm{out}}` : ``outlier_frac``
+
+In plain terms, :math:`f_{\mathrm{out}}` controls how much of the sample is
+allowed to behave like an outlier population rather than the core population.
+If :math:`f_{\mathrm{out}}=0`, the model reduces to the usual single-Gaussian
+photo-z relation. As :math:`f_{\mathrm{out}}` increases, a larger fraction of
+objects is assigned according to the outlier component, which can create
+extended tails or even a visibly separate secondary contribution in the
+returned tomographic bin.
 
 Equivalently, the assignment probability becomes
 
@@ -383,21 +396,42 @@ where
 - :math:`\beta_{\mathrm{out}}` is the outlier mean offset,
 - :math:`s_{\mathrm{out}}` is the outlier scatter amplitude.
 
-API mapping:
+These parameters control *how* the outlier population differs from the core
+one.
 
-- :math:`\alpha_{\mathrm{out}}` : ``outlier_mean_scale``
-- :math:`\beta_{\mathrm{out}}`  : ``outlier_mean_offset``
-- :math:`s_{\mathrm{out}}`      : ``outlier_scatter_scale``
+Changing :math:`\beta_{\mathrm{out}}` mainly shifts the outlier component,
+moving the location of the outlier population relative to the core relation.
+In practice, this often makes the secondary contribution appear displaced in
+redshift rather than centred on the main peak.
 
-This component allows a minority population to follow a broader, shifted, or
-otherwise distorted redshift-assignment model relative to the core sample.
+Changing :math:`\alpha_{\mathrm{out}}` changes the slope of the outlier mean
+relation with redshift. Rather than acting like a simple rigid shift, it
+stretches or compresses the mapping between true and observed redshift for the
+outlier population. In the returned bins this can move the outlier contribution
+and also change how that displacement varies across redshift.
 
+Changing :math:`s_{\mathrm{out}}` changes the width of the outlier component.
+Larger values produce a broader, more diffuse outlier population, while smaller
+values keep it narrower and more localized.
+
+Together, these parameters allow a minority population to follow a broader,
+shifted, or otherwise distorted redshift-assignment model relative to the core
+sample. Depending on the parameter values, the outlier contribution may appear
+as an extended tail, a broad shoulder, or a more clearly separated secondary
+peak in the returned tomographic bin.
 
 .. image:: ../_static/animations/pz_uncertainty_outliers.gif
    :alt: Animation showing the effect of increasing photo-z scatter on tomographic bins
    :width: 700px
    :align: center
 
+
+API mapping:
+
+- :math:`f_{\mathrm{out}}` : ``outlier_frac`` — fraction of objects assigned to the outlier population
+- :math:`\alpha_{\mathrm{out}}` : ``outlier_mean_scale`` — multiplicative scaling of the outlier mean relation
+- :math:`\beta_{\mathrm{out}}`  : ``outlier_mean_offset`` — additive shift of the outlier mean relation
+- :math:`s_{\mathrm{out}}`      : ``outlier_scatter_scale`` — scatter amplitude of the outlier Gaussian
 
 
 Implemented photo-z parameters
