@@ -46,10 +46,6 @@ def fill_vertices(x, y):
     )
 
 
-def gaussian_profile(u, center, sigma):
-    return np.exp(-0.5 * ((u - center) / sigma) ** 2)
-
-
 def make_spec(
     n_bins,
     bin_range,
@@ -253,6 +249,13 @@ for val in outlier_scatter_vals:
         [fixed_curves[0].copy(), fixed_curves[1].copy(), curves[2].copy()]
     )
 
+proxy_reference = {
+    "frac": panel_curves["frac"][0][2].copy(),
+    "offset": panel_curves["offset"][0][2].copy(),
+    "scale": panel_curves["scale"][0][2].copy(),
+    "scatter": panel_curves["scatter"][0][2].copy(),
+}
+
 ymax_bins = 1.08 * max(
     np.max(curve)
     for family in panel_curves.values()
@@ -351,30 +354,25 @@ for key, ax, title, values, symbol in panel_defs:
         animated=True,
     )
 
-    # slightly larger and a bit more left/lower so it reads more clearly
-    proxy_x_center = 1.51
-    proxy_halfwidth = 0.155
-    proxy_y_base = 0.60 * ymax_bins
-    proxy_y_amp = 0.14 * ymax_bins
+    proxy_x_min = 1.30
+    proxy_x_max = 1.74
+    proxy_y_base = 0.64 * ymax_bins
+    proxy_y_amp = 0.20 * ymax_bins
 
-    proxy_u = np.linspace(-3.2, 3.2, 280)
-
-    # keep decomposition, but fade the unchanged components more
-    (core_line,) = ax.plot(
+    (loss_line,) = ax.plot(
         [],
         [],
-        color="0.72",
-        linewidth=1.2,
-        linestyle="--",
+        color=colors[0],
+        linewidth=2.0,
         zorder=46,
         animated=True,
     )
-    (outlier_line,) = ax.plot(
+
+    (gain_line,) = ax.plot(
         [],
         [],
-        color="0.35",
-        linewidth=1.3,
-        linestyle="--",
+        color=colors[1],
+        linewidth=2.0,
         zorder=47,
         animated=True,
     )
@@ -394,13 +392,13 @@ for key, ax, title, values, symbol in panel_defs:
         "text": text_main,
         "values": values,
         "symbol": symbol,
-        "proxy_u": proxy_u,
-        "proxy_x_center": proxy_x_center,
-        "proxy_halfwidth": proxy_halfwidth,
+        "proxy_reference": proxy_reference[key],
+        "proxy_x_min": proxy_x_min,
+        "proxy_x_max": proxy_x_max,
         "proxy_y_base": proxy_y_base,
         "proxy_y_amp": proxy_y_amp,
-        "core_line": core_line,
-        "outlier_line": outlier_line,
+        "loss_line": loss_line,
+        "gain_line": gain_line,
         "mix_line": mix_line,
     }
 
@@ -422,69 +420,41 @@ def draw_panel(key, frame_idx):
     val = artists["values"][frame_idx]
     artists["text"].set_text(rf"{artists['symbol']} = {val:.3f}")
 
-    u = artists["proxy_u"]
+    ref = artists["proxy_reference"]
+    current = curves[2]
 
-    core_center = 0.0
-    core_sigma = 0.78
+    delta = current - ref
+    gain = np.clip(delta, 0.0, None)
+    loss = np.clip(-delta, 0.0, None)
+    total = current.copy()
 
-    if key == "frac":
-        f_out = float(val)
-        out_center = -1.75
-        out_sigma = 0.60
+    peak = max(np.max(gain), np.max(loss), np.max(total))
+    if peak > 0.0:
+        gain /= peak
+        loss /= peak
+        total /= peak
 
-    elif key == "offset":
-        f_out = 0.55
-        t = (val - outlier_mean_offset_vals.min()) / (
-                outlier_mean_offset_vals.max() - outlier_mean_offset_vals.min()
-        )
-        out_center = 0.10 - 2.55 * t
-        out_sigma = 0.62
+    x_proxy = artists["proxy_x_min"] + (
+        (z - z.min()) / (z.max() - z.min())
+    ) * (artists["proxy_x_max"] - artists["proxy_x_min"])
 
-    elif key == "scale":
-        f_out = 0.20
-        t = (val - outlier_mean_scale_vals.min()) / (
-                outlier_mean_scale_vals.max() - outlier_mean_scale_vals.min()
-        )
-        out_center = -0.28 - 2.85 * (t ** 1.15)
-        out_sigma = 0.55
+    y_base = artists["proxy_y_base"]
+    amp = artists["proxy_y_amp"]
 
-    elif key == "scatter":
-        f_out = 0.20
-        out_center = -1.70
-        t = (val - outlier_scatter_vals.min()) / (
-                outlier_scatter_vals.max() - outlier_scatter_vals.min()
-        )
-        out_sigma = 0.22 + 1.55 * t
+    y_loss = y_base - amp * loss
+    y_gain = y_base + amp * gain
+    y_mix = y_base + amp * total
 
-    core_profile = gaussian_profile(u, core_center, core_sigma)
-    out_profile = gaussian_profile(u, out_center, out_sigma)
-    mix_profile = (1.0 - f_out) * core_profile + f_out * out_profile
-
-    peak = max(
-        np.max(core_profile),
-        np.max(out_profile),
-        np.max(mix_profile),
-    )
-    core_profile /= peak
-    out_profile /= peak
-    mix_profile /= peak
-
-    x_proxy = artists["proxy_x_center"] + artists["proxy_halfwidth"] * (u / 3.2)
-
-    y_core = artists["proxy_y_base"] + artists["proxy_y_amp"] * core_profile
-    y_out = artists["proxy_y_base"] + artists["proxy_y_amp"] * out_profile
-    y_mix = artists["proxy_y_base"] + artists["proxy_y_amp"] * mix_profile
-
-    artists["core_line"].set_data(x_proxy, y_core)
-    artists["outlier_line"].set_data(x_proxy, y_out)
+    artists["loss_line"].set_data(x_proxy, y_loss)
+    artists["gain_line"].set_data(x_proxy, y_gain)
     artists["mix_line"].set_data(x_proxy, y_mix)
 
     return [
         *artists["fills"],
         *artists["lines"],
         artists["text"],
-        artists["core_line"],
-        artists["outlier_line"],
+        artists["loss_line"],
+        artists["gain_line"],
         artists["mix_line"],
     ]
 
