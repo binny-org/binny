@@ -144,16 +144,14 @@ commands = [
 description = "Build the HTML files for the current state using Sphinx"
 extras = ["docs"]
 commands = [
-  ["sphinx-apidoc", "-o", "{tox_root}/docs/api", "{tox_root}/src/binny", "--separate", "-f"],
   ["sphinx-build", "{tox_root}/docs", "{tox_root}/docs/_build/html", "--fail-on-warning"],
 ]
 
 [tool.tox.env.do]
+description = "Run doctests and build the HTML docs"
 extras = ["docs"]
 allowlist_externals = ["open"]
 commands = [
-  ["sphinx-apidoc", "-o", "{tox_root}/docs/api", "{tox_root}/src/binny",
-    "--separate", "-f"],
   ["sphinx-build", "-b", "doctest", "{tox_root}/docs", "{tox_root}/docs/_build/doctest", "--fail-on-warning"],
   ["sphinx-build", "-b", "html", "{tox_root}/docs", "{tox_root}/docs/_build/html", "--fail-on-warning"],
   ["open", "{tox_root}/docs/_build/html/index.html"],
@@ -164,7 +162,6 @@ description = "Build the documentation for binny releases using Sphinx"
 extras = ["docs"]
 allowlist_externals = ["cp"]
 commands = [
-  ["sphinx-apidoc", "-o", "{tox_root}/docs/api", "{tox_root}/src/binny", "--separate", "-f"],
   ["sphinx-multiversion", "{tox_root}/docs", "{tox_root}/docs/_build/html", "--fail-on-warning"],
   ["cp", "{tox_root}/docs/_templates/pages_redirect.html", "{tox_root}/docs/_build/html/index.html"],
 ]
