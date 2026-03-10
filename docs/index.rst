@@ -166,4 +166,4 @@ Documentation
    installation
    citation
    contributing
-   api/index
+   api/modules

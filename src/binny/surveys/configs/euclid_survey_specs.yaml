@@ -1,0 +1,73 @@
+name: euclid  # based on Euclid forecast validation setup, arXiv:1910.09273
+
+survey_meta:
+  footprint:
+    nominal: {survey_area: 15000.0}
+
+z_grid:
+  start: 0.0
+  stop: 2.5
+  n: 501
+
+tomography:
+  # Euclid weak-lensing source sample
+  - role: source
+    year: "nominal"
+    kind: photoz
+    n_gal_arcmin2: 30.0
+
+    nz:
+      model: smail
+      params:
+        z0: 0.636
+        alpha: 2.0
+        beta: 1.5
+
+    bins:
+      edges: [0.0010, 0.42, 0.56, 0.68, 0.79, 0.90, 1.02, 1.15, 1.32, 1.58, 2.50]
+
+    uncertainties:
+      # Core photo-z component
+      scatter_scale: 0.05
+      mean_offset: 0.0
+      mean_scale: 1.0
+
+      # Catastrophic outlier component
+      outlier_frac: 0.10
+      outlier_scatter_scale: 0.05
+      outlier_mean_offset: 0.10
+      outlier_mean_scale: 1.0
+
+    normalize_bins: true
+
+  # Euclid spectroscopic clustering sample
+  - role: lens
+    year: "nominal"
+    kind: specz
+
+    nz:
+      # simple approximation to the Hα sample; the actual paper uses the tabulated sample properties
+      model: smail
+      params:
+        z0: 1.0
+        alpha: 2.0
+        beta: 1.5
+
+    bins:
+      edges: [0.90, 1.10, 1.30, 1.50, 1.80]
+
+    uncertainties:
+      completeness: [1.0, 1.0, 1.0, 1.0]
+      catastrophic_frac: [0.0, 0.0, 0.0, 0.0]
+      leakage_model: neighbor
+      leakage_sigma: [1.0, 1.0, 1.0, 1.0]
+
+      specz_scatter: null
+      specz_scatter_model: z_dependent
+      sigma0: 0.001
+      sigma1: 0.001
+
+    galaxy_bias:
+      values: [1.46, 1.61, 1.75, 1.90]
+
+    normalize_bins: true

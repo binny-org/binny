@@ -1,4 +1,4 @@
-name: lsst  # optional name for the survey/setup
+name: lsst  # https://arxiv.org/abs/1809.01669
 
 # Optional survey metadata (binning code can ignore unless requested)
 survey_meta:
