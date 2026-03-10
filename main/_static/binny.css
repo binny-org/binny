@@ -1,0 +1,485 @@
+/* ==========================================================================
+   Binny — compact theme overrides (Furo + fallbacks for other themes)
+   ========================================================================== */
+
+/* --- Brand palette ------------------------------------------------------- */
+:root {
+  --binny-purple: rgba(68, 1, 84, 0.85);
+  --binny-green:  rgba(53, 183, 121, 0.85);
+  --binny-blue:   rgba(49, 104, 142, 0.85);
+  --binny-yellow: rgba(253, 231, 37, 0.6);
+
+  /* Theme-agnostic mapping */
+  --color-brand-primary: var(--binny-purple);
+  --color-brand-content: var(--binny-purple);
+
+  --color-link: var(--binny-purple);
+  --color-link--visited: var(--binny-purple);
+  --color-link--hover: var(--binny-green);
+}
+
+/* --- Furo variable mapping ---------------------------------------------- */
+html[data-theme="light"],
+html[data-theme="dark"] {
+
+  --color-brand-primary: var(--binny-purple);
+  --color-brand-content: var(--binny-purple);
+
+  --color-link: var(--binny-purple);
+  --color-link--visited: var(--binny-purple);
+  --color-link--hover: var(--binny-green);
+}
+
+/* Theme-agnostic dark fallback */
+@media (prefers-color-scheme: dark) {
+  .highlight,
+  pre,
+  code {
+    background-color: #1b1b1b;
+    color: #e6e6e6;
+  }
+}
+
+/* ==========================================================================
+   LINKS
+   ========================================================================== */
+
+a:link    { color: var(--binny-purple) !important; }
+a:visited { color: var(--binny-purple) !important; }
+a:hover   { color: var(--binny-green)  !important; }
+a:active  { color: var(--binny-blue)   !important; }
+
+a { text-decoration-color: currentColor; }
+
+/* Furo explicit override */
+html[data-theme] a:link    { color: var(--binny-purple) !important; }
+html[data-theme] a:visited { color: var(--binny-purple) !important; }
+html[data-theme] a:hover   { color: var(--binny-green)  !important; }
+html[data-theme] a:active  { color: var(--binny-blue)   !important; }
+
+/* Strong override for sidebar + docs regions */
+html[data-theme]
+:is(.content,
+    .sidebar-container,
+    nav.toc,
+    .related,
+    .toc-tree,
+    .toctree-wrapper,
+    table.contentstable) a:link
+{ color: var(--binny-purple) !important; }
+
+html[data-theme]
+:is(.content,
+    .sidebar-container,
+    nav.toc,
+    .related,
+    .toc-tree,
+    .toctree-wrapper,
+    table.contentstable) a:visited
+{ color: var(--binny-purple) !important; }
+
+html[data-theme]
+:is(.content,
+    .sidebar-container,
+    nav.toc,
+    .related,
+    .toc-tree,
+    .toctree-wrapper,
+    table.contentstable) a:hover
+{ color: var(--binny-green) !important; }
+
+html[data-theme]
+:is(.content,
+    .sidebar-container,
+    nav.toc,
+    .related,
+    .toc-tree,
+    .toctree-wrapper,
+    table.contentstable) a:active
+{ color: var(--binny-blue) !important; }
+
+/* FINAL hammer for sidebar */
+.sidebar-tree a,
+.sidebar-tree a:visited {
+  color: var(--binny-purple) !important;
+}
+
+.sidebar-tree a:hover {
+  color: var(--binny-green) !important;
+}
+
+/* ==========================================================================
+   CODE (Pygments) — light mode
+   ========================================================================== */
+
+.highlight .k,
+.highlight .kd,
+.highlight .kn,
+.highlight .kp,
+.highlight .kr,
+.highlight .kt {
+  color: var(--binny-purple);
+  font-weight: 600;
+}
+
+.highlight .nf,
+.highlight .fm,
+.highlight .nc,
+.highlight .ne,
+.highlight .nn {
+  color: var(--binny-blue);
+}
+
+.highlight .s,
+.highlight .m {
+  color: var(--binny-green);
+}
+
+.highlight .o,
+.highlight .ow {
+  color: var(--binny-purple);
+}
+
+.highlight .c,
+.highlight .ch,
+.highlight .cm,
+.highlight .c1,
+.highlight .cs,
+.highlight .cp {
+  color: #6a737d;
+  font-style: italic;
+}
+
+/* API signatures */
+
+.sig .sig-name,
+code.descname {
+  color: var(--binny-blue);
+}
+
+.sig .k {
+  color: var(--binny-purple);
+}
+
+a.reference code {
+  color: var(--binny-green);
+}
+
+/* ==========================================================================
+   CODE — dark mode
+   ========================================================================== */
+
+html[data-theme="dark"] .highlight .k,
+html[data-theme="dark"] .highlight .kd,
+html[data-theme="dark"] .highlight .kn,
+html[data-theme="dark"] .highlight .kp,
+html[data-theme="dark"] .highlight .kr,
+html[data-theme="dark"] .highlight .kt {
+  color: var(--binny-purple) !important;
+  font-weight: 600 !important;
+}
+
+html[data-theme="dark"] .highlight .nf,
+html[data-theme="dark"] .highlight .fm,
+html[data-theme="dark"] .highlight .nc,
+html[data-theme="dark"] .highlight .ne,
+html[data-theme="dark"] .highlight .nn {
+  color: var(--binny-blue) !important;
+}
+
+html[data-theme="dark"] .highlight .s,
+html[data-theme="dark"] .highlight .m {
+  color: var(--binny-green) !important;
+}
+
+html[data-theme="dark"] .highlight .c {
+  color: #8899aa !important;
+  font-style: italic !important;
+}
+
+html[data-theme="dark"] .highlight,
+html[data-theme="dark"] pre,
+html[data-theme="dark"] code {
+  background-color: #1b1b1b;
+  color: #e6e6e6;
+}
+
+/* ==========================================================================
+   BRAND HEADER
+   ========================================================================== */
+
+.sidebar-brand img,
+.mobile-header .brand img {
+  height: 82px;
+  width: auto;
+}
+
+/* Sidebar project title ("binny") */
+.sidebar-brand-text {
+    color: var(--binny-purple);
+}
+
+/* ==========================================================================
+   COMPONENT ACCENTS
+   ========================================================================== */
+
+/* Admonition borders */
+
+.admonition.note,
+.admonition.tip,
+.admonition.hint,
+.admonition.important {
+  border-left: 0.25rem solid var(--binny-green);
+}
+
+.admonition.warning,
+.admonition.caution,
+.admonition.attention,
+.admonition.danger,
+.admonition.error {
+  border-left: 0.25rem solid var(--binny-purple);
+}
+
+/* ==========================================================================
+   TEAM CARDS
+   ========================================================================== */
+
+.team-grid {
+  display: grid;
+  gap: 1rem;
+}
+
+@media (min-width: 700px) {
+  .team-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+.team-card {
+  background: var(--color-background-secondary);
+  padding: 1rem;
+  border-radius: 12px;
+}
+
+.team-card .headshot {
+  width: 96px;
+  height: 96px;
+  border-radius: 9999px;
+  object-fit: cover;
+}
+
+.team-card h3 {
+  margin: 0.5rem 0 0;
+  font-size: 1.05rem;
+}
+
+.team-card p.role {
+  margin: 0.25rem 0 0.5rem;
+  color: var(--color-foreground-secondary);
+}
+
+.team-links a {
+  margin-right: 0.5rem;
+  font-size: 0.95em;
+}
+
+.name-purple {
+  color: var(--binny-purple) !important;
+  font-weight: 700;
+}
+
+.role-blue {
+  color: var(--binny-blue) !important;
+  font-style: italic;
+}
+
+/* ==========================================================================
+   IMAGE SIZE
+   ========================================================================== */
+
+div.plot-directive img,
+div.figure img {
+  max-width: 520px;
+  height: auto;
+}
+
+/* ==========================================================================
+   SIDEBAR TYPOGRAPHY
+   ========================================================================== */
+
+.sidebar-container {
+  font-size: 1.02rem !important;
+}
+
+.sidebar-tree a {
+  font-size: 1.08rem !important;
+  line-height: 1.4 !important;
+}
+
+.sidebar-tree .caption-text {
+  font-size: 1.05rem !important;
+  font-weight: 600 !important;
+}
+
+.sidebar-search input {
+  font-size: 1.02rem !important;
+}
+
+.sidebar-tree li {
+  margin-bottom: 0.15rem !important;
+}
+
+.sidebar-tree a {
+  padding: 0.15rem 0 !important;
+}
+
+/* -----------------------------
+   H1 — Binny purple
+-------------------------------- */
+
+.content h1 {
+    color: var(--binny-purple);
+    border-bottom: 3px solid var(--binny-purple);
+    padding-bottom: 0.3em;
+}
+
+
+/* -----------------------------
+   H2 — Binny blue
+-------------------------------- */
+
+.content h2 {
+    color: var(--binny-blue);
+    border-bottom: 2px solid var(--binny-blue);
+    padding-bottom: 0.25em;
+}
+
+
+/* -----------------------------
+   H3–H6 — Binny green
+-------------------------------- */
+
+.content h3,
+.content h4,
+.content h5,
+.content h6 {
+    color: var(--binny-green);
+    border-bottom: 2px solid var(--binny-green);
+    padding-bottom: 0.15em;
+}
+
+
+/* ==========================================================================
+   BINNY TABLE STYLE
+   ========================================================================== */
+
+table.binny-table {
+  width: 100%;
+  margin: 1.5rem 0 2rem 0;
+
+  border-collapse: separate;
+  border-spacing: 0;
+
+  border: 2px solid var(--binny-purple);
+  border-radius: 12px;
+  overflow: hidden;
+
+  font-size: 0.96rem;
+  background: white;
+
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.06);
+}
+
+/* HEADER ------------------------------------------------ */
+
+table.binny-table thead th {
+  background: var(--binny-blue);
+  color: white;
+
+  font-weight: 700;
+  text-align: center;
+
+  padding: 0.65rem 0.95rem;
+
+  border-bottom: 2px solid var(--binny-purple);
+}
+
+/* BODY CELLS ------------------------------------------- */
+
+table.binny-table tbody td {
+  padding: 0.6rem 0.9rem;
+  vertical-align: top;
+
+  color: black;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+/* alternating Binny row colors */
+
+table.binny-table tbody tr:nth-child(odd) {
+  background: rgba(253, 231, 37, 0.10); /* binny yellow */
+}
+
+table.binny-table tbody tr:nth-child(even) {
+  background: rgba(53, 183, 121, 0.10); /* binny green */
+}
+
+/* remove last border */
+
+table.binny-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+/* first column (API labels) */
+
+table.binny-table tbody td:first-child {
+  font-weight: 600;
+  color: var(--binny-purple);
+  white-space: nowrap;
+}
+
+/* code inside table */
+
+table.binny-table code {
+  font-size: 0.92em;
+  background: rgba(0, 0, 0, 0.05);
+  color: black;
+  padding: 0.1rem 0.25rem;
+  border-radius: 4px;
+}
+
+/* dark mode compatibility */
+
+html[data-theme="dark"] table.binny-table {
+  background: #1e1e1e;
+  border-color: var(--binny-purple);
+  color: #e6e6e6;
+}
+
+html[data-theme="dark"] table.binny-table thead th {
+  background: var(--binny-blue);
+  color: white;
+  border-bottom: 2px solid var(--binny-purple);
+}
+
+html[data-theme="dark"] table.binny-table tbody td {
+  color: #e6e6e6;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+html[data-theme="dark"] table.binny-table tbody tr:nth-child(odd) {
+  background: rgba(253, 231, 37, 0.10);
+}
+
+html[data-theme="dark"] table.binny-table tbody tr:nth-child(even) {
+  background: rgba(53, 183, 121, 0.10);
+}
+
+html[data-theme="dark"] table.binny-table tbody td:first-child {
+  color: var(--binny-yellow);
+}
+
+html[data-theme="dark"] table.binny-table code {
+  background: rgba(255, 255, 255, 0.08);
+  color: #f3f3f3;
+}

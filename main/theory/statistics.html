@@ -1,0 +1,814 @@
+<!doctype html>
+<html class="no-js" lang="en" data-content_root="../">
+  <head><meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <meta name="color-scheme" content="light dark"><meta name="viewport" content="width=device-width, initial-scale=1" />
+<link rel="index" title="Index" href="../genindex.html"><link rel="search" title="Search" href="../search.html"><link rel="next" title="Bin diagnostics" href="diagnostics.html"><link rel="prev" title="Spectroscopic-redshift uncertainties" href="uncertainties/specz.html">
+        <link rel="prefetch" href="../_static/assets/logo.png" as="image">
+        <link rel="prefetch" href="../_static/assets/logo.png" as="image">
+
+    <link rel="shortcut icon" href="../_static/favicon.png"><!-- Generated with Sphinx 8.2.3 and Furo 2025.12.19 -->
+        <title>Bin summaries - Binny documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=d111a655" />
+    <link rel="stylesheet" type="text/css" href="../_static/styles/furo.css?v=7bdb33bb" />
+    <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
+    <link rel="stylesheet" type="text/css" href="../_static/plot_directive.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/sphinx-design.min.css?v=95c83b7e" />
+    <link rel="stylesheet" type="text/css" href="../_static/styles/furo-extensions.css?v=8dab3a3b" />
+    <link rel="stylesheet" type="text/css" href="../_static/binny.css?v=c6280618" />
+    
+    
+
+
+<style>
+  body {
+    --color-code-background: #f2f2f2;
+  --color-code-foreground: #1e1e1e;
+  --color-brand-primary: #440154;
+  --color-brand-content: #31688E;
+  --color-link: #35B779;
+  --color-link--hover: #31688E;
+  --color-link--visited: #FDE725;
+  
+  }
+  @media not print {
+    body[data-theme="dark"] {
+      --color-code-background: #202020;
+  --color-code-foreground: #d0d0d0;
+  --color-brand-primary: #440154;
+  --color-brand-content: #31688E;
+  --color-link: #35B779;
+  --color-link--hover: #31688E;
+  --color-link--visited: #FDE725;
+  
+    }
+    @media (prefers-color-scheme: dark) {
+      body:not([data-theme="light"]) {
+        --color-code-background: #202020;
+  --color-code-foreground: #d0d0d0;
+  --color-brand-primary: #440154;
+  --color-brand-content: #31688E;
+  --color-link: #35B779;
+  --color-link--hover: #31688E;
+  --color-link--visited: #FDE725;
+  
+      }
+    }
+  }
+</style></head>
+  <body>
+    
+    <script>
+      document.body.dataset.theme = localStorage.getItem("theme") || "auto";
+    </script>
+    
+
+<svg xmlns="http://www.w3.org/2000/svg" style="display: none;">
+  <symbol id="svg-toc" viewBox="0 0 24 24">
+    <title>Contents</title>
+    <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 1024 1024">
+      <path d="M408 442h480c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8H408c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8zm-8 204c0 4.4 3.6 8 8 8h480c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8H408c-4.4 0-8 3.6-8 8v56zm504-486H120c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h784c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8zm0 632H120c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h784c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8zM115.4 518.9L271.7 642c5.8 4.6 14.4.5 14.4-6.9V388.9c0-7.4-8.5-11.5-14.4-6.9L115.4 505.1a8.74 8.74 0 0 0 0 13.8z"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-menu" viewBox="0 0 24 24">
+    <title>Menu</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather-menu">
+      <line x1="3" y1="12" x2="21" y2="12"></line>
+      <line x1="3" y1="6" x2="21" y2="6"></line>
+      <line x1="3" y1="18" x2="21" y2="18"></line>
+    </svg>
+  </symbol>
+  <symbol id="svg-arrow-right" viewBox="0 0 24 24">
+    <title>Expand</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather-chevron-right">
+      <polyline points="9 18 15 12 9 6"></polyline>
+    </svg>
+  </symbol>
+  <symbol id="svg-sun" viewBox="0 0 24 24">
+    <title>Light mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="feather-sun">
+      <circle cx="12" cy="12" r="5"></circle>
+      <line x1="12" y1="1" x2="12" y2="3"></line>
+      <line x1="12" y1="21" x2="12" y2="23"></line>
+      <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+      <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+      <line x1="1" y1="12" x2="3" y2="12"></line>
+      <line x1="21" y1="12" x2="23" y2="12"></line>
+      <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+      <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+    </svg>
+  </symbol>
+  <symbol id="svg-moon" viewBox="0 0 24 24">
+    <title>Dark mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-moon">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+      <path d="M12 3c.132 0 .263 0 .393 0a7.5 7.5 0 0 0 7.92 12.446a9 9 0 1 1 -8.313 -12.454z" />
+    </svg>
+  </symbol>
+  <symbol id="svg-sun-with-moon" viewBox="0 0 24 24">
+    <title>Auto light/dark, in light mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round"
+      class="icon-custom-derived-from-feather-sun-and-tabler-moon">
+      <path style="opacity: 50%" d="M 5.411 14.504 C 5.471 14.504 5.532 14.504 5.591 14.504 C 3.639 16.319 4.383 19.569 6.931 20.352 C 7.693 20.586 8.512 20.551 9.25 20.252 C 8.023 23.207 4.056 23.725 2.11 21.184 C 0.166 18.642 1.702 14.949 4.874 14.536 C 5.051 14.512 5.231 14.5 5.411 14.5 L 5.411 14.504 Z"/>
+      <line x1="14.5" y1="3.25" x2="14.5" y2="1.25"/>
+      <line x1="14.5" y1="15.85" x2="14.5" y2="17.85"/>
+      <line x1="10.044" y1="5.094" x2="8.63" y2="3.68"/>
+      <line x1="19" y1="14.05" x2="20.414" y2="15.464"/>
+      <line x1="8.2" y1="9.55" x2="6.2" y2="9.55"/>
+      <line x1="20.8" y1="9.55" x2="22.8" y2="9.55"/>
+      <line x1="10.044" y1="14.006" x2="8.63" y2="15.42"/>
+      <line x1="19" y1="5.05" x2="20.414" y2="3.636"/>
+      <circle cx="14.5" cy="9.55" r="3.6"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-moon-with-sun" viewBox="0 0 24 24">
+    <title>Auto light/dark, in dark mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round"
+      class="icon-custom-derived-from-feather-sun-and-tabler-moon">
+      <path d="M 8.282 7.007 C 8.385 7.007 8.494 7.007 8.595 7.007 C 5.18 10.184 6.481 15.869 10.942 17.24 C 12.275 17.648 13.706 17.589 15 17.066 C 12.851 22.236 5.91 23.143 2.505 18.696 C -0.897 14.249 1.791 7.786 7.342 7.063 C 7.652 7.021 7.965 7 8.282 7 L 8.282 7.007 Z"/>
+      <line style="opacity: 50%" x1="18" y1="3.705" x2="18" y2="2.5"/>
+      <line style="opacity: 50%" x1="18" y1="11.295" x2="18" y2="12.5"/>
+      <line style="opacity: 50%" x1="15.316" y1="4.816" x2="14.464" y2="3.964"/>
+      <line style="opacity: 50%" x1="20.711" y1="10.212" x2="21.563" y2="11.063"/>
+      <line style="opacity: 50%" x1="14.205" y1="7.5" x2="13.001" y2="7.5"/>
+      <line style="opacity: 50%" x1="21.795" y1="7.5" x2="23" y2="7.5"/>
+      <line style="opacity: 50%" x1="15.316" y1="10.184" x2="14.464" y2="11.036"/>
+      <line style="opacity: 50%" x1="20.711" y1="4.789" x2="21.563" y2="3.937"/>
+      <circle style="opacity: 50%" cx="18" cy="7.5" r="2.169"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-pencil" viewBox="0 0 24 24">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-pencil-code">
+      <path d="M4 20h4l10.5 -10.5a2.828 2.828 0 1 0 -4 -4l-10.5 10.5v4" />
+      <path d="M13.5 6.5l4 4" />
+      <path d="M20 21l2 -2l-2 -2" />
+      <path d="M17 17l-2 2l2 2" />
+    </svg>
+  </symbol>
+  <symbol id="svg-eye" viewBox="0 0 24 24">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-eye-code">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+      <path d="M10 12a2 2 0 1 0 4 0a2 2 0 0 0 -4 0" />
+      <path
+        d="M11.11 17.958c-3.209 -.307 -5.91 -2.293 -8.11 -5.958c2.4 -4 5.4 -6 9 -6c3.6 0 6.6 2 9 6c-.21 .352 -.427 .688 -.647 1.008" />
+      <path d="M20 21l2 -2l-2 -2" />
+      <path d="M17 17l-2 2l2 2" />
+    </svg>
+  </symbol>
+</svg>
+
+<input type="checkbox" class="sidebar-toggle" name="__navigation" id="__navigation" aria-label="Toggle site navigation sidebar">
+<input type="checkbox" class="sidebar-toggle" name="__toc" id="__toc" aria-label="Toggle table of contents sidebar">
+<label class="overlay sidebar-overlay" for="__navigation"></label>
+<label class="overlay toc-overlay" for="__toc"></label>
+
+<a class="skip-to-content muted-link" href="#furo-main-content">Skip to content</a>
+
+
+
+<div class="page">
+  <header class="mobile-header">
+    <div class="header-left">
+      <label class="nav-overlay-icon" for="__navigation">
+        <span class="icon"><svg><use href="#svg-menu"></use></svg></span>
+      </label>
+    </div>
+    <div class="header-center">
+      <a href="../index.html"><div class="brand">Binny  documentation</div></a>
+    </div>
+    <div class="header-right">
+      <div class="theme-toggle-container theme-toggle-header">
+        <button class="theme-toggle" aria-label="Toggle Light / Dark / Auto color theme">
+          <svg class="theme-icon-when-auto-light"><use href="#svg-sun-with-moon"></use></svg>
+          <svg class="theme-icon-when-auto-dark"><use href="#svg-moon-with-sun"></use></svg>
+          <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
+          <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
+        </button>
+      </div>
+      <label class="toc-overlay-icon toc-header-icon" for="__toc">
+        <span class="icon"><svg><use href="#svg-toc"></use></svg></span>
+      </label>
+    </div>
+  </header>
+  <aside class="sidebar-drawer">
+    <div class="sidebar-container">
+      
+      <div class="sidebar-sticky"><a class="sidebar-brand" href="../index.html">
+  <div class="sidebar-logo-container">
+    <img class="sidebar-logo only-light" src="../_static/assets/logo.png" alt="Light Logo"/>
+    <img class="sidebar-logo only-dark" src="../_static/assets/logo.png" alt="Dark Logo"/>
+  </div>
+  
+  <span class="sidebar-brand-text">Binny  documentation</span>
+  
+</a><form class="sidebar-search-container" method="get" action="../search.html" role="search">
+  <input class="sidebar-search" placeholder="Search" name="q" aria-label="Search">
+  <input type="hidden" name="check_keywords" value="yes">
+  <input type="hidden" name="area" value="default">
+</form>
+<div id="searchbox"></div><div class="sidebar-scroll"><div class="sidebar-tree">
+  <ul class="current">
+<li class="toctree-l1 current has-children"><a class="reference internal" href="index.html"> Theory</a><input aria-label="Toggle navigation of  Theory" checked="" class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" role="switch" type="checkbox"/><label for="toctree-checkbox-1"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="parent_nz.html"> Parent n(z)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tomography.html"> Tomography</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="uncertainties/index.html"> Redshift uncertainties</a><input aria-label="Toggle navigation of  Redshift uncertainties" class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" role="switch" type="checkbox"/><label for="toctree-checkbox-2"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="uncertainties/photoz.html"> Photometric-redshift uncertainties</a></li>
+<li class="toctree-l3"><a class="reference internal" href="uncertainties/specz.html"> Spectroscopic-redshift uncertainties</a></li>
+</ul>
+</li>
+<li class="toctree-l2 current current-page"><a class="current reference internal" href="#"> Bin summaries</a></li>
+<li class="toctree-l2"><a class="reference internal" href="diagnostics.html"> Bin diagnostics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="bin_combos.html"> Bin-index combinations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="conventions.html"> Conventions</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../workflow.html"> Workflow</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../examples/index.html"> Examples</a><input aria-label="Toggle navigation of  Examples" class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" role="switch" type="checkbox"/><label for="toctree-checkbox-3"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../examples/nz_modelling.html"> Parent n(z) models</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../examples/nz_calibration.html"> Parent n(z) from mocks</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../examples/photoz_bins.html"> Photometric bins</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../examples/specz_bins.html"> Spectroscopic bins</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../examples/bin_summaries.html"> Bin summaries</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../examples/bin_diagnostics.html"> Bin diagnostics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../examples/survey_presets.html"> Survey presets</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../examples/selections.html"> Bin-pair selections</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../installation.html"> Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../citation.html"> Citation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../contributing.html"> Contributing</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../api/modules.html">binny</a><input aria-label="Toggle navigation of binny" class="toctree-checkbox" id="toctree-checkbox-4" name="toctree-checkbox-4" role="switch" type="checkbox"/><label for="toctree-checkbox-4"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../api/binny.html">binny package</a><input aria-label="Toggle navigation of binny package" class="toctree-checkbox" id="toctree-checkbox-5" name="toctree-checkbox-5" role="switch" type="checkbox"/><label for="toctree-checkbox-5"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l3 has-children"><a class="reference internal" href="../api/binny.api.html">binny.api package</a><input aria-label="Toggle navigation of binny.api package" class="toctree-checkbox" id="toctree-checkbox-6" name="toctree-checkbox-6" role="switch" type="checkbox"/><label for="toctree-checkbox-6"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l4"><a class="reference internal" href="../api/binny.api.nz_tomography.html">binny.api.nz_tomography module</a></li>
+</ul>
+</li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="../api/binny.axes.html">binny.axes package</a><input aria-label="Toggle navigation of binny.axes package" class="toctree-checkbox" id="toctree-checkbox-7" name="toctree-checkbox-7" role="switch" type="checkbox"/><label for="toctree-checkbox-7"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l4"><a class="reference internal" href="../api/binny.axes.bin_edges.html">binny.axes.bin_edges module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../api/binny.axes.grids.html">binny.axes.grids module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../api/binny.axes.mixed_edges.html">binny.axes.mixed_edges module</a></li>
+</ul>
+</li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="../api/binny.correlations.html">binny.correlations package</a><input aria-label="Toggle navigation of binny.correlations package" class="toctree-checkbox" id="toctree-checkbox-8" name="toctree-checkbox-8" role="switch" type="checkbox"/><label for="toctree-checkbox-8"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l4"><a class="reference internal" href="../api/binny.correlations.bin_combo_filter.html">binny.correlations.bin_combo_filter module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../api/binny.correlations.filters.html">binny.correlations.filters module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../api/binny.correlations.metrics.html">binny.correlations.metrics module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../api/binny.correlations.scores.html">binny.correlations.scores module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../api/binny.correlations.topology.html">binny.correlations.topology module</a></li>
+</ul>
+</li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="../api/binny.nz.html">binny.nz package</a><input aria-label="Toggle navigation of binny.nz package" class="toctree-checkbox" id="toctree-checkbox-9" name="toctree-checkbox-9" role="switch" type="checkbox"/><label for="toctree-checkbox-9"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l4"><a class="reference internal" href="../api/binny.nz.calibration.html">binny.nz.calibration module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../api/binny.nz.models.html">binny.nz.models module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../api/binny.nz.registry.html">binny.nz.registry module</a></li>
+</ul>
+</li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="../api/binny.nz_tomo.html">binny.nz_tomo package</a><input aria-label="Toggle navigation of binny.nz_tomo package" class="toctree-checkbox" id="toctree-checkbox-10" name="toctree-checkbox-10" role="switch" type="checkbox"/><label for="toctree-checkbox-10"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l4"><a class="reference internal" href="../api/binny.nz_tomo.between_sample_metrics.html">binny.nz_tomo.between_sample_metrics module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../api/binny.nz_tomo.bin_similarity.html">binny.nz_tomo.bin_similarity module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../api/binny.nz_tomo.bin_stats.html">binny.nz_tomo.bin_stats module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../api/binny.nz_tomo.binning_core.html">binny.nz_tomo.binning_core module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../api/binny.nz_tomo.nz_tomo_utils.html">binny.nz_tomo.nz_tomo_utils module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../api/binny.nz_tomo.photoz.html">binny.nz_tomo.photoz module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../api/binny.nz_tomo.specz.html">binny.nz_tomo.specz module</a></li>
+</ul>
+</li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="../api/binny.surveys.html">binny.surveys package</a><input aria-label="Toggle navigation of binny.surveys package" class="toctree-checkbox" id="toctree-checkbox-11" name="toctree-checkbox-11" role="switch" type="checkbox"/><label for="toctree-checkbox-11"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l4"><a class="reference internal" href="../api/binny.surveys.configs.html">binny.surveys.configs package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../api/binny.surveys.config_utils.html">binny.surveys.config_utils module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../api/binny.surveys.sky.html">binny.surveys.sky module</a></li>
+</ul>
+</li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="../api/binny.utils.html">binny.utils package</a><input aria-label="Toggle navigation of binny.utils package" class="toctree-checkbox" id="toctree-checkbox-12" name="toctree-checkbox-12" role="switch" type="checkbox"/><label for="toctree-checkbox-12"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l4"><a class="reference internal" href="../api/binny.utils.broadcasting.html">binny.utils.broadcasting module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../api/binny.utils.io.html">binny.utils.io module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../api/binny.utils.metadata.html">binny.utils.metadata module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../api/binny.utils.normalization.html">binny.utils.normalization module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../api/binny.utils.pairwise_metrics.html">binny.utils.pairwise_metrics module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../api/binny.utils.relations.html">binny.utils.relations module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../api/binny.utils.types.html">binny.utils.types module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../api/binny.utils.validators.html">binny.utils.validators module</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+</div>
+</div>
+
+      </div>
+      
+    </div>
+  </aside>
+  <div class="main">
+    <div class="content">
+      <div class="article-container">
+        <a href="#" class="back-to-top muted-link">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+            <path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8v12z"></path>
+          </svg>
+          <span>Back to top</span>
+        </a>
+        <div class="content-icon-container">
+          <div class="view-this-page">
+  <a class="muted-link" href="../_sources/theory/statistics.rst.txt" title="View this page">
+    <svg><use href="#svg-eye"></use></svg>
+    <span class="visually-hidden">View this page</span>
+  </a>
+</div>
+<div class="theme-toggle-container theme-toggle-content">
+            <button class="theme-toggle" aria-label="Toggle Light / Dark / Auto color theme">
+              <svg class="theme-icon-when-auto-light"><use href="#svg-sun-with-moon"></use></svg>
+              <svg class="theme-icon-when-auto-dark"><use href="#svg-moon-with-sun"></use></svg>
+              <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
+              <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
+            </button>
+          </div>
+          <label class="toc-overlay-icon toc-content-icon" for="__toc">
+            <span class="icon"><svg><use href="#svg-toc"></use></svg></span>
+          </label>
+        </div>
+        <article role="main" id="furo-main-content">
+          <section id="logo-bin-summaries">
+<h1><a class="reference internal" href="../_images/logo.png"><img alt="logo" src="../_images/logo.png" style="width: 32px;" /></a> Bin summaries<a class="headerlink" href="#logo-bin-summaries" title="Link to this heading"><span>#</span></a></h1>
+<p>Tomographic binning does not only produce a collection of bin curves
+<span class="math notranslate nohighlight">\(n_i(z)\)</span>. It also produces a set of useful summary quantities that
+help characterize how those bins are distributed in redshift and how
+they partition the galaxy sample.</p>
+<p>In Binny, these summaries are separated into two broad families:</p>
+<ul class="simple">
+<li><p><strong>shape statistics</strong>, which depend only on the shape of each bin curve,</p></li>
+<li><p><strong>population statistics</strong>, which depend on how galaxies are distributed
+across bins.</p></li>
+</ul>
+<p>This distinction is important because many tomographic workflows use bin
+curves that are individually normalized. Once each bin is normalized on
+its own, the relative number of galaxies in different bins is no longer
+encoded in the curve amplitudes. Shape information remains valid, but
+population information must instead come from tomography metadata.</p>
+<p>This page introduces the main summary quantities provided by Binny and
+explains how they should be interpreted.</p>
+<p>For practical examples of these statistics in action, including
+visualizations and comparisons between different binning schemes,
+see the <a class="reference internal" href="../examples/bin_summaries.html"><span class="doc">Bin summaries examples</span></a>.</p>
+<section id="why-separate-shape-and-population-statistics">
+<h2>Why separate shape and population statistics?<a class="headerlink" href="#why-separate-shape-and-population-statistics" title="Link to this heading"><span>#</span></a></h2>
+<p>Suppose a tomographic construction returns bin curves
+<span class="math notranslate nohighlight">\(n_i(z)\)</span> for bins <span class="math notranslate nohighlight">\(i=1,\dots,N\)</span>.</p>
+<p>Some summaries depend only on the internal structure of each curve. For
+example, one may ask:</p>
+<ul class="simple">
+<li><p>where the bin is centered in redshift,</p></li>
+<li><p>how broad it is,</p></li>
+<li><p>whether it is symmetric or skewed,</p></li>
+<li><p>whether it contains more than one peak.</p></li>
+</ul>
+<p>These are <strong>shape statistics</strong>. They remain meaningful even if every bin
+curve is rescaled or normalized independently.</p>
+<p>Other summaries depend on the relative amount of galaxy population
+assigned to each bin. For example, one may ask:</p>
+<ul class="simple">
+<li><p>what fraction of galaxies lies in each bin,</p></li>
+<li><p>what effective galaxy density belongs to each bin,</p></li>
+<li><p>what effective galaxy count belongs to each bin.</p></li>
+</ul>
+<p>These are <strong>population statistics</strong>. They cannot, in general, be
+recovered from individually normalized bin curves and should instead be
+taken from the metadata returned by the tomographic builder.</p>
+<p>In practice, this means:</p>
+<ul class="simple">
+<li><p>use <strong>shape statistics</strong> to describe what each bin looks like,</p></li>
+<li><p>use <strong>population statistics</strong> to describe how the total sample is
+divided among bins.</p></li>
+</ul>
+</section>
+<section id="shape-statistics">
+<h2>Shape statistics<a class="headerlink" href="#shape-statistics" title="Link to this heading"><span>#</span></a></h2>
+<p>Shape statistics summarize the redshift structure of each individual bin
+curve. They are designed to answer questions such as:</p>
+<ul class="simple">
+<li><p>Where is the bin located?</p></li>
+<li><p>How broad is it?</p></li>
+<li><p>Is it symmetric?</p></li>
+<li><p>Does it show secondary structure?</p></li>
+</ul>
+<p>Throughout this section, let <span class="math notranslate nohighlight">\(n_i(z)\)</span> denote the curve of bin
+<span class="math notranslate nohighlight">\(i\)</span> defined on a redshift grid <span class="math notranslate nohighlight">\(z\)</span>. The curve is treated as
+a nonnegative weight function and does not need to be normalized in
+advance.</p>
+<section id="moments-and-width-summaries">
+<h3>Moments and width summaries<a class="headerlink" href="#moments-and-width-summaries" title="Link to this heading"><span>#</span></a></h3>
+<p>A natural first set of summaries is given by weighted moments of the bin
+curve.</p>
+<p>The weighted mean redshift of bin <span class="math notranslate nohighlight">\(i\)</span> is</p>
+<div class="math-wrapper docutils container">
+<div class="math notranslate nohighlight">
+\[\bar z_i
+=
+\frac{\int z\,n_i(z)\,\mathrm{d}z}{\int n_i(z)\,\mathrm{d}z}.\]</div>
+</div>
+<p>This gives a representative center of the bin, but it can shift toward
+extended tails if the distribution is asymmetric.</p>
+<p>The weighted variance is</p>
+<div class="math-wrapper docutils container">
+<div class="math notranslate nohighlight">
+\[\sigma_{z,i}^2
+=
+\frac{\int (z-\bar z_i)^2 n_i(z)\,\mathrm{d}z}{\int n_i(z)\,\mathrm{d}z},\]</div>
+</div>
+<p>with corresponding standard deviation <span class="math notranslate nohighlight">\(\sigma_{z,i}\)</span>. This is a
+useful measure of spread, although it is not always the most robust
+choice when the bin is strongly skewed or contains outliers.</p>
+<p>Higher standardized moments describe shape asymmetry and tail structure:</p>
+<div class="math-wrapper docutils container">
+<div class="math notranslate nohighlight">
+\[\mathrm{skewness}_i
+=
+\frac{\int (z-\bar z_i)^3 n_i(z)\,\mathrm{d}z}
+     {\sigma_{z,i}^3 \int n_i(z)\,\mathrm{d}z},\]</div>
+</div>
+<div class="math-wrapper docutils container">
+<div class="math notranslate nohighlight">
+\[\mathrm{kurtosis}_i
+=
+\frac{\int (z-\bar z_i)^4 n_i(z)\,\mathrm{d}z}
+     {\sigma_{z,i}^4 \int n_i(z)\,\mathrm{d}z}
+- 3.\]</div>
+</div>
+<p>A positive skewness indicates a longer high-redshift tail, while a
+negative skewness indicates a longer low-redshift tail. The kurtosis
+measures whether the distribution is more sharply peaked or more
+heavy-tailed than a Gaussian reference.</p>
+<p>Binny also provides robust width summaries based on quantiles rather
+than moments. Two especially useful ones are:</p>
+<ul class="simple">
+<li><p>the <strong>interquartile range</strong>
+<span class="math notranslate nohighlight">\(\mathrm{IQR} = q_{75} - q_{25}\)</span>,</p></li>
+<li><p>the <strong>central 68% width</strong>
+<span class="math notranslate nohighlight">\(w_{68} = q_{84} - q_{16}\)</span>.</p></li>
+</ul>
+<p>These are often easier to interpret than the standard deviation when bin
+curves are skewed or mildly non-Gaussian.</p>
+</section>
+<section id="quantiles-and-representative-centers">
+<h3>Quantiles and representative centers<a class="headerlink" href="#quantiles-and-representative-centers" title="Link to this heading"><span>#</span></a></h3>
+<p>A weighted quantile <span class="math notranslate nohighlight">\(q_p\)</span> is defined through the cumulative
+integral of the bin curve. It identifies the redshift below which a
+fraction <span class="math notranslate nohighlight">\(p\)</span> of the bin weight lies.</p>
+<p>Common examples are:</p>
+<ul class="simple">
+<li><p><span class="math notranslate nohighlight">\(q_{50}\)</span>, the weighted median,</p></li>
+<li><p><span class="math notranslate nohighlight">\(q_{16}\)</span> and <span class="math notranslate nohighlight">\(q_{84}\)</span>, which bracket the central
+68% interval,</p></li>
+<li><p><span class="math notranslate nohighlight">\(q_{25}\)</span> and <span class="math notranslate nohighlight">\(q_{75}\)</span>, which define the interquartile
+range.</p></li>
+</ul>
+<p>Quantiles are especially useful because they remain meaningful even when
+the bin is asymmetric or contains extended tails.</p>
+<p>From these quantities one can define different notions of a
+representative bin center:</p>
+<ul class="simple">
+<li><p><strong>mean</strong>: sensitive to the full weight distribution,</p></li>
+<li><p><strong>median</strong>: robust to tails and outliers,</p></li>
+<li><p><strong>mode</strong>: the redshift at which the bin curve reaches its maximum,</p></li>
+<li><p><strong>percentile-based centers</strong> such as <span class="math notranslate nohighlight">\(p50\)</span>, <span class="math notranslate nohighlight">\(p16\)</span>, or
+<span class="math notranslate nohighlight">\(p84\)</span>.</p></li>
+</ul>
+<p>These choices are not interchangeable. If the mean, median, and mode all
+lie close together, the bin is usually fairly compact and symmetric. If
+they differ significantly, the bin likely has skewness, leakage, or
+secondary structure.</p>
+<p>This distinction matters in cosmology because many nuisance or
+astrophysical ingredients are defined per tomographic bin and evaluated
+at a characteristic redshift. Examples include intrinsic-alignment
+amplitudes, galaxy-bias parameters, and magnification-bias terms.</p>
+</section>
+<section id="peak-diagnostics">
+<h3>Peak diagnostics<a class="headerlink" href="#peak-diagnostics" title="Link to this heading"><span>#</span></a></h3>
+<p>Some bin curves are close to unimodal, while others can contain visible
+secondary structure. This can happen because of photometric-redshift
+outliers, leakage from neighboring bins, or more complicated response
+models.</p>
+<p>Binny provides simple peak diagnostics based on local maxima of the bin
+curve. The main quantities are:</p>
+<ul class="simple">
+<li><p>the <strong>mode</strong>, i.e. the location of the global maximum,</p></li>
+<li><p>the <strong>mode height</strong>, i.e. the value of the curve at that maximum,</p></li>
+<li><p>the <strong>number of peaks</strong> above a chosen relative threshold,</p></li>
+<li><p>the <strong>second-peak ratio</strong>, defined as the height of the
+second-highest peak divided by the height of the highest one.</p></li>
+</ul>
+<p>The second-peak ratio is particularly useful as a compact indicator of
+multimodality:</p>
+<ul class="simple">
+<li><p>a value near <strong>0</strong> indicates weak or absent secondary structure,</p></li>
+<li><p>a larger value indicates that a secondary feature is more prominent.</p></li>
+</ul>
+<p>This should be interpreted as a structural diagnostic, not as a direct
+statement about the physical origin of the feature.</p>
+</section>
+<section id="tail-asymmetry">
+<h3>Tail asymmetry<a class="headerlink" href="#tail-asymmetry" title="Link to this heading"><span>#</span></a></h3>
+<p>A convenient way to summarize asymmetry without using higher moments is
+to compare the upper and lower spreads around the median.</p>
+<p>Using the 16th, 50th, and 84th percentiles, one can define</p>
+<div class="math-wrapper docutils container">
+<div class="math notranslate nohighlight">
+\[A_i
+=
+\frac{q_{84,i} - q_{50,i}}{q_{50,i} - q_{16,i}}.\]</div>
+</div>
+<p>This compares the upper tail width to the lower tail width.</p>
+<p>Interpretation is straightforward:</p>
+<ul class="simple">
+<li><p><span class="math notranslate nohighlight">\(A_i = 1\)</span> indicates symmetric upper and lower spreads,</p></li>
+<li><p><span class="math notranslate nohighlight">\(A_i &gt; 1\)</span> indicates a longer high-redshift tail,</p></li>
+<li><p><span class="math notranslate nohighlight">\(A_i &lt; 1\)</span> indicates a longer low-redshift tail.</p></li>
+</ul>
+<p>This statistic is often easier to interpret than skewness because it is
+tied directly to percentile widths.</p>
+</section>
+<section id="in-range-fraction">
+<h3>In-range fraction<a class="headerlink" href="#in-range-fraction" title="Link to this heading"><span>#</span></a></h3>
+<p>If nominal bin edges are known, one can ask how much of a bin curve
+actually remains inside its intended redshift interval.</p>
+<p>For bin <span class="math notranslate nohighlight">\(i\)</span> with nominal interval <span class="math notranslate nohighlight">\([z_i^{\min}, z_i^{\max}]\)</span>,
+the in-range fraction is</p>
+<div class="math-wrapper docutils container">
+<div class="math notranslate nohighlight">
+\[f_i^{\mathrm{in}}
+=
+\frac{
+   \int_{z_i^{\min}}^{z_i^{\max}} n_i(z)\,\mathrm{d}z
+}{
+   \int n_i(z)\,\mathrm{d}z
+}.\]</div>
+</div>
+<p>This quantity measures how cleanly the bin remains localized with
+respect to its intended redshift range.</p>
+<p>Interpretation:</p>
+<ul class="simple">
+<li><p><span class="math notranslate nohighlight">\(f_i^{\mathrm{in}} \approx 1\)</span> means the bin is well confined to
+its nominal interval,</p></li>
+<li><p>smaller values indicate more spillover outside the intended range.</p></li>
+</ul>
+<p>In photometric tomography this is a useful summary of how strongly
+scatter, outliers, or leakage blur the connection between nominal bin
+edges and the actual redshift content of the bin.</p>
+</section>
+<section id="nominal-bin-widths">
+<h3>Nominal bin widths<a class="headerlink" href="#nominal-bin-widths" title="Link to this heading"><span>#</span></a></h3>
+<p>When bin edges are supplied, Binny can also summarize the widths of the
+nominal redshift intervals themselves.</p>
+<p>For edges <span class="math notranslate nohighlight">\(e_0, e_1, \dots, e_N\)</span>, the nominal width of bin
+<span class="math notranslate nohighlight">\(i\)</span> is simply</p>
+<div class="math-wrapper docutils container">
+<div class="math notranslate nohighlight">
+\[\Delta z_i = e_{i+1} - e_i.\]</div>
+</div>
+<p>These widths are properties of the binning scheme rather than of the
+final smeared bin curves.</p>
+<p>This distinction is useful:</p>
+<ul class="simple">
+<li><p><strong>nominal widths</strong> describe how the bins were defined,</p></li>
+<li><p><strong>effective widths</strong> such as <span class="math notranslate nohighlight">\(w_{68}\)</span> describe what the final
+bin curves actually look like after redshift uncertainty is included.</p></li>
+</ul>
+<p>Binny also summarizes nominal widths collectively, for example through
+their minimum, maximum, mean, and standard deviation, as well as an
+<strong>equidistant score</strong> that quantifies how close the set of widths is to
+being uniformly spaced.</p>
+</section>
+</section>
+<section id="population-statistics">
+<h2>Population statistics<a class="headerlink" href="#population-statistics" title="Link to this heading"><span>#</span></a></h2>
+<p>Population statistics describe how the total galaxy sample is divided
+across tomographic bins.</p>
+<p>These quantities do <strong>not</strong> come from the shapes of normalized bin
+curves. Instead, they come from tomographic metadata returned during bin
+construction.</p>
+<p>Let <span class="math notranslate nohighlight">\(f_i\)</span> denote the fraction of the total galaxy sample assigned
+to bin <span class="math notranslate nohighlight">\(i\)</span>. Then</p>
+<div class="math-wrapper docutils container">
+<div class="math notranslate nohighlight">
+\[\sum_i f_i = 1.\]</div>
+</div>
+<p>These fractions are the foundation for the population summaries
+described below.</p>
+<section id="galaxy-fractions-per-bin">
+<h3>Galaxy fractions per bin<a class="headerlink" href="#galaxy-fractions-per-bin" title="Link to this heading"><span>#</span></a></h3>
+<p>The most direct population summary is the per-bin galaxy fraction
+<span class="math notranslate nohighlight">\(f_i\)</span>.</p>
+<p>This tells us what share of the total sample is associated with each
+bin. It is useful for assessing whether a given binning strategy
+produces a balanced partition of the sample or instead concentrates more
+galaxies into certain bins.</p>
+<p>For example:</p>
+<ul class="simple">
+<li><p><strong>equipopulated binning</strong> aims to make the <span class="math notranslate nohighlight">\(f_i\)</span> values similar,</p></li>
+<li><p><strong>equidistant binning</strong> generally produces more variation in
+<span class="math notranslate nohighlight">\(f_i\)</span>, because it prioritizes redshift width rather than equal
+counts.</p></li>
+</ul>
+<p>In practice, exact equality is not always achieved even for
+equipopulated schemes, because redshift uncertainty can scatter galaxies
+across bin boundaries and modify the final observed-bin populations.</p>
+</section>
+<section id="galaxy-densities-per-bin">
+<h3>Galaxy densities per bin<a class="headerlink" href="#galaxy-densities-per-bin" title="Link to this heading"><span>#</span></a></h3>
+<p>If the total effective galaxy surface density of the sample is known,
+say <span class="math notranslate nohighlight">\(n_{\mathrm{tot}}\)</span> in galaxies per square arcminute, then the
+effective density of bin <span class="math notranslate nohighlight">\(i\)</span> is</p>
+<div class="math-wrapper docutils container">
+<div class="math notranslate nohighlight">
+\[n_i = f_i\,n_{\mathrm{tot}}.\]</div>
+</div>
+<p>This gives a more directly survey-relevant quantity than a pure
+fraction. It tells us how much galaxy density is effectively available
+in each bin for downstream analyses.</p>
+<p>These per-bin densities are especially useful in forecasting, where
+noise levels often depend on the effective source or lens density in
+each tomographic slice.</p>
+</section>
+<section id="galaxy-counts-per-bin">
+<h3>Galaxy counts per bin<a class="headerlink" href="#galaxy-counts-per-bin" title="Link to this heading"><span>#</span></a></h3>
+<p>If one also specifies the survey area <span class="math notranslate nohighlight">\(A\)</span>, measured in square
+arcminutes, then an effective count can be assigned to each bin:</p>
+<div class="math-wrapper docutils container">
+<div class="math notranslate nohighlight">
+\[N_i = n_i A.\]</div>
+</div>
+<p>This converts per-bin surface densities into effective galaxy counts.</p>
+<p>These counts are useful when connecting tomography summaries to survey
+scale, shot-noise estimates, catalog expectations, or simple bookkeeping
+in later pipeline stages.</p>
+</section>
+</section>
+<section id="practical-interpretation">
+<h2>Practical interpretation<a class="headerlink" href="#practical-interpretation" title="Link to this heading"><span>#</span></a></h2>
+<p>The various summaries described above do not all serve the same purpose.</p>
+<p>Some quantities have a natural reference value:</p>
+<ul class="simple">
+<li><p>tail asymmetry is easiest to interpret relative to <strong>1</strong>,</p></li>
+<li><p>in-range fraction is easiest to interpret relative to <strong>1</strong>,</p></li>
+<li><p>second-peak strength is easiest to interpret relative to <strong>0</strong>.</p></li>
+</ul>
+<p>Other quantities do not have a universal target:</p>
+<ul class="simple">
+<li><p>mean, median, and mode depend on the bin location,</p></li>
+<li><p>width summaries depend on the chosen science case,</p></li>
+<li><p>skewness and kurtosis depend on the detailed bin shape,</p></li>
+<li><p>nominal bin widths depend on the binning strategy itself.</p></li>
+</ul>
+<p>Because of this, the most useful interpretation is usually comparative.
+These summaries are most informative when used to compare:</p>
+<ul class="simple">
+<li><p>different binning schemes,</p></li>
+<li><p>different redshift uncertainty models,</p></li>
+<li><p>different numbers of tomographic bins,</p></li>
+<li><p>different survey assumptions.</p></li>
+</ul>
+<p>In other words, the goal is usually not to declare a single number
+“good” or “bad” in isolation, but to understand how tomographic choices
+change the structure and population of the resulting bins.</p>
+</section>
+<section id="how-this-connects-to-the-examples">
+<h2>How this connects to the examples<a class="headerlink" href="#how-this-connects-to-the-examples" title="Link to this heading"><span>#</span></a></h2>
+<p>This page introduces the concepts behind Binny’s bin-summary statistics.</p>
+<p>For worked examples showing how these quantities behave in practice,
+including visualizations of bin centers, widths, and population
+distributions, see the <a class="reference internal" href="../examples/bin_summaries.html"><span class="doc">Bin summaries examples</span></a>.</p>
+<p>A useful way to think about the split is:</p>
+<ul class="simple">
+<li><p>this page explains <strong>what the summary quantities mean</strong>,</p></li>
+<li><p>the examples page shows <strong>how they behave for real binning choices</strong>.</p></li>
+</ul>
+<p>Together they provide both the theoretical interpretation and the
+practical diagnostics needed to assess tomographic bin quality.</p>
+</section>
+<section id="notes">
+<h2>Notes<a class="headerlink" href="#notes" title="Link to this heading"><span>#</span></a></h2>
+<ul class="simple">
+<li><p>Shape statistics are safe to compute from the bin curves themselves,
+even when those curves are individually normalized.</p></li>
+<li><p>Population statistics should be taken from tomography metadata rather
+than inferred from normalized curves.</p></li>
+<li><p>Different center definitions serve different purposes; no single
+choice is universally best.</p></li>
+<li><p>Robust percentile-based summaries are often easier to interpret than
+moment-based summaries when bin curves are skewed or mildly
+multimodal.</p></li>
+<li><p>In-range fraction and peak diagnostics are especially useful for
+understanding the impact of redshift uncertainty, leakage, and
+outliers.</p></li>
+</ul>
+</section>
+</section>
+
+        </article>
+      </div>
+      <footer>
+        
+        <div class="related-pages">
+          <a class="next-page" href="diagnostics.html">
+              <div class="page-info">
+                <div class="context">
+                  <span>Next</span>
+                </div>
+                <div class="title"> Bin diagnostics</div>
+              </div>
+              <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
+            </a>
+          <a class="prev-page" href="uncertainties/specz.html">
+              <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
+              <div class="page-info">
+                <div class="context">
+                  <span>Previous</span>
+                </div>
+                
+                <div class="title"> Spectroscopic-redshift uncertainties</div>
+                
+              </div>
+            </a>
+        </div>
+        <div class="bottom-of-page">
+          <div class="left-details">
+            <div class="copyright">
+                Copyright &#169; 2026, Nikolina Šarčević, Matthijs van der Wild
+            </div>
+            Made with <a href="https://www.sphinx-doc.org/">Sphinx</a> and <a class="muted-link" href="https://pradyunsg.me">@pradyunsg</a>'s
+            
+            <a href="https://github.com/pradyunsg/furo">Furo</a>
+            
+          </div>
+          <div class="right-details">
+            
+          </div>
+        </div>
+        
+      </footer>
+    </div>
+    <aside class="toc-drawer">
+      
+      
+      <div class="toc-sticky toc-scroll">
+        <div class="toc-title-container">
+          <span class="toc-title">
+            On this page
+          </span>
+        </div>
+        <div class="toc-tree-container">
+          <div class="toc-tree">
+            <ul>
+<li><a class="reference internal" href="#"> Bin summaries</a><ul>
+<li><a class="reference internal" href="#why-separate-shape-and-population-statistics">Why separate shape and population statistics?</a></li>
+<li><a class="reference internal" href="#shape-statistics">Shape statistics</a><ul>
+<li><a class="reference internal" href="#moments-and-width-summaries">Moments and width summaries</a></li>
+<li><a class="reference internal" href="#quantiles-and-representative-centers">Quantiles and representative centers</a></li>
+<li><a class="reference internal" href="#peak-diagnostics">Peak diagnostics</a></li>
+<li><a class="reference internal" href="#tail-asymmetry">Tail asymmetry</a></li>
+<li><a class="reference internal" href="#in-range-fraction">In-range fraction</a></li>
+<li><a class="reference internal" href="#nominal-bin-widths">Nominal bin widths</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#population-statistics">Population statistics</a><ul>
+<li><a class="reference internal" href="#galaxy-fractions-per-bin">Galaxy fractions per bin</a></li>
+<li><a class="reference internal" href="#galaxy-densities-per-bin">Galaxy densities per bin</a></li>
+<li><a class="reference internal" href="#galaxy-counts-per-bin">Galaxy counts per bin</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#practical-interpretation">Practical interpretation</a></li>
+<li><a class="reference internal" href="#how-this-connects-to-the-examples">How this connects to the examples</a></li>
+<li><a class="reference internal" href="#notes">Notes</a></li>
+</ul>
+</li>
+</ul>
+
+          </div>
+        </div>
+      </div>
+      
+      
+    </aside>
+  </div>
+</div><script src="../_static/documentation_options.js?v=5929fcd5"></script>
+    <script src="../_static/doctools.js?v=9bcbadda"></script>
+    <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../_static/scripts/furo.js?v=46bd48cc"></script>
+    <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="../_static/copybutton.js?v=f16c4c56"></script>
+    <script src="../_static/design-tabs.js?v=f930bc37"></script>
+    <script async="async" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    </body>
+</html>
