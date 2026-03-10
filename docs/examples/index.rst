@@ -14,14 +14,26 @@ background by showing how the individual components fit together in practice.
 They range from minimal, self-contained scripts to more survey-specific
 workflows.
 
-.. toctree::
-   :maxdepth: 1
+.. grid:: 2
+   :gutter: 3
 
-   nz_modelling
-   nz_calibration
-   photoz_bins
-   specz_bins
-   bin_summaries
-   bin_diagnostics
-   survey_presets
-   selections
+   .. grid-item::
+
+      .. toctree::
+         :maxdepth: 1
+
+         nz_modelling
+         nz_calibration
+         photoz_bins
+         specz_bins
+         bin_summaries
+         bin_diagnostics
+         survey_presets
+         selections
+
+   .. grid-item::
+      :class: sd-text-center hero-logo
+
+      .. image:: ../_static/animations/binny_logo.gif
+         :width: 220px
+         :alt: Binny logo

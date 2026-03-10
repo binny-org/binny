@@ -22,13 +22,25 @@ behavior, see the :doc:`Examples <../examples/index>` section.
 Table of contents
 -----------------
 
-.. toctree::
-   :maxdepth: 1
+.. grid:: 2
+   :gutter: 3
 
-   parent_nz
-   tomography
-   uncertainties/index
-   statistics
-   diagnostics
-   bin_combos
-   conventions
+   .. grid-item::
+
+      .. toctree::
+         :maxdepth: 1
+
+         parent_nz
+         tomography
+         uncertainties/index
+         statistics
+         diagnostics
+         bin_combos
+         conventions
+
+   .. grid-item::
+      :class: sd-text-center hero-logo
+
+      .. image:: ../_static/animations/binny_logo_left_to_right.gif
+         :width: 220px
+         :alt: Binny logo

@@ -8,8 +8,8 @@ from matplotlib.animation import FuncAnimation, PillowWriter
 from binny.api.nz_tomography import NZTomography
 
 FPS = 14
-PAUSE_FRAMES = 2
-TRANSITION_FRAMES = 10
+PAUSE_FRAMES = 4
+REVEAL_FRAMES = 50
 FIGSIZE = (8.8, 7.2)
 
 DEFAULT_XLIM = (0.0, 0.6)
@@ -54,55 +54,28 @@ def build_binny_curves():
 
     b_sum = np.zeros_like(z)
     for k in keys:
-        b_sum += np.asarray(bins[k])
+        b_sum += np.asarray(bins[k], dtype=float)
 
     eps = 1e-30
     shrink = 0.8
     scaled = []
 
     for k in keys:
-        b = np.asarray(bins[k])
+        b = np.asarray(bins[k], dtype=float)
         frac = b / np.maximum(b_sum, eps)
         scaled.append(shrink * nz * frac)
 
     return z, scaled
 
 
-def smoothstep(t):
-    return t * t * (3.0 - 2.0 * t)
+def revealed_curve(z, curve, zcut):
+    return np.where(z <= zcut, curve, 0.0)
 
 
-def smootherstep(t):
-    return t**3 * (t * (t * 6.0 - 15.0) + 10.0)
-
-
-def plot_logo(ax, z, curves, colors, n_full, next_scale, ylim):
+def plot_logo(ax, z, curves, colors, ylim):
     ax.cla()
 
-    # Fully drawn curves
-    for i in range(n_full):
-        curve = curves[i]
-        color = colors[i]
-
-        ax.fill_between(
-            z,
-            0.0,
-            curve,
-            color=color,
-            alpha=FILL_ALPHA,
-        )
-        ax.plot(
-            z,
-            curve,
-            color="k",
-            linewidth=LINEWIDTH,
-        )
-
-    # Incoming curve grows from the baseline
-    if n_full < len(curves) and next_scale > 0.0:
-        curve = next_scale * curves[n_full]
-        color = colors[n_full]
-
+    for curve, color in zip(curves, colors, strict=True):
         ax.fill_between(
             z,
             0.0,
@@ -132,7 +105,7 @@ def plot_logo(ax, z, curves, colors, n_full, next_scale, ylim):
 HERE = Path(__file__).resolve().parent
 OUTDIR = HERE.parent / "_static" / "animations"
 OUTDIR.mkdir(parents=True, exist_ok=True)
-OUTFILE = OUTDIR / "binny_logo.gif"
+OUTFILE = OUTDIR / "binny_logo_left_to_right.gif"
 
 z, curves = build_binny_curves()
 n_bins = len(curves)
@@ -147,18 +120,12 @@ colors = cmr.take_cmap_colors(
 ymax = max(np.max(c) for c in curves)
 ylim = (-0.01, 1.15 * ymax)
 
-# Each frame stores:
-#   n_full = number of fully drawn curves
-#   next_scale = growth factor for the next curve
-timeline = []
+reveal_vals = np.linspace(z.min(), z.max(), REVEAL_FRAMES)
 
-# Animate every bin, including the first one
-for i in range(n_bins):
-    for j in range(TRANSITION_FRAMES):
-        t = (j + 1) / TRANSITION_FRAMES
-        s = smootherstep(t)
-        timeline.append((i, s))
-    timeline.extend([(i + 1, 0.0)] * PAUSE_FRAMES)
+timeline = []
+timeline.extend([reveal_vals[0]] * PAUSE_FRAMES)
+timeline.extend(reveal_vals)
+timeline.extend([reveal_vals[-1]] * PAUSE_FRAMES)
 
 fig, ax = plt.subplots(figsize=FIGSIZE)
 
@@ -171,18 +138,9 @@ fig.subplots_adjust(
 
 
 def update(frame):
-    n_full, next_scale = timeline[frame]
-
-    plot_logo(
-        ax,
-        z,
-        curves,
-        colors,
-        n_full,
-        next_scale,
-        ylim,
-    )
-
+    zcut = timeline[frame]
+    curves_now = [revealed_curve(z, curve, zcut) for curve in curves]
+    plot_logo(ax, z, curves_now, colors, ylim)
     return []
 
 

@@ -17,7 +17,7 @@ Binny
    .. grid-item::
       :class: sd-text-center hero-logo
 
-      .. image:: _static/animations/binny_logo.gif
+      .. image:: _static/animations/binny_logo_left_to_right.gif
          :width: 200px
          :alt: Binny logo
 
