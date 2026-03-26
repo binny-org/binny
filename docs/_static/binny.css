@@ -9,25 +9,51 @@
   --binny-blue:   rgba(49, 104, 142, 0.85);
   --binny-yellow: rgba(253, 231, 37, 0.6);
 
-  /* Theme-agnostic mapping */
+  /* dedicated dark palette */
+  --binny-purple-dark: #c7a6ff;
+  --binny-blue-dark:   #7fc8ff;
+  --binny-green-dark:  #7ee0b0;
+  --binny-yellow-dark: #e7d36f;
+
+  /* Theme-agnostic mapping: LIGHT DEFAULT */
   --color-brand-primary: var(--binny-purple);
   --color-brand-content: var(--binny-purple);
 
   --color-link: var(--binny-purple);
   --color-link--visited: var(--binny-purple);
   --color-link--hover: var(--binny-green);
+  --color-link--active: var(--binny-blue);
 }
 
 /* --- Furo variable mapping ---------------------------------------------- */
-html[data-theme="light"],
-html[data-theme="dark"] {
-
+html[data-theme="light"] {
   --color-brand-primary: var(--binny-purple);
   --color-brand-content: var(--binny-purple);
 
   --color-link: var(--binny-purple);
   --color-link--visited: var(--binny-purple);
   --color-link--hover: var(--binny-green);
+  --color-link--active: var(--binny-blue);
+}
+
+html[data-theme="dark"] {
+  /* Furo surface colors */
+  --color-background-primary: #111418;
+  --color-background-secondary: #181c22;
+  --color-background-border: #2a313b;
+
+  --color-foreground-primary: #e8edf3;
+  --color-foreground-secondary: #b8c0cc;
+  --color-foreground-muted: #8b95a5;
+
+  /* brand + links */
+  --color-brand-primary: var(--binny-purple-dark);
+  --color-brand-content: var(--binny-purple-dark);
+
+  --color-link: var(--binny-blue-dark);
+  --color-link--visited: #b79cff;
+  --color-link--hover: var(--binny-green-dark);
+  --color-link--active: var(--binny-green-dark);
 }
 
 /* Theme-agnostic dark fallback */
@@ -35,8 +61,8 @@ html[data-theme="dark"] {
   .highlight,
   pre,
   code {
-    background-color: #1b1b1b;
-    color: #e6e6e6;
+    background-color: #161a20;
+    color: #e6edf3;
   }
 }
 
@@ -44,18 +70,18 @@ html[data-theme="dark"] {
    LINKS
    ========================================================================== */
 
-a:link    { color: var(--binny-purple) !important; }
-a:visited { color: var(--binny-purple) !important; }
-a:hover   { color: var(--binny-green)  !important; }
-a:active  { color: var(--binny-blue)   !important; }
+a:link    { color: var(--color-link) !important; }
+a:visited { color: var(--color-link--visited) !important; }
+a:hover   { color: var(--color-link--hover) !important; }
+a:active  { color: var(--color-link--active) !important; }
 
 a { text-decoration-color: currentColor; }
 
 /* Furo explicit override */
-html[data-theme] a:link    { color: var(--binny-purple) !important; }
-html[data-theme] a:visited { color: var(--binny-purple) !important; }
-html[data-theme] a:hover   { color: var(--binny-green)  !important; }
-html[data-theme] a:active  { color: var(--binny-blue)   !important; }
+html[data-theme] a:link    { color: var(--color-link) !important; }
+html[data-theme] a:visited { color: var(--color-link--visited) !important; }
+html[data-theme] a:hover   { color: var(--color-link--hover) !important; }
+html[data-theme] a:active  { color: var(--color-link--active) !important; }
 
 /* Strong override for sidebar + docs regions */
 html[data-theme]
@@ -66,7 +92,7 @@ html[data-theme]
     .toc-tree,
     .toctree-wrapper,
     table.contentstable) a:link
-{ color: var(--binny-purple) !important; }
+{ color: var(--color-link) !important; }
 
 html[data-theme]
 :is(.content,
@@ -76,7 +102,7 @@ html[data-theme]
     .toc-tree,
     .toctree-wrapper,
     table.contentstable) a:visited
-{ color: var(--binny-purple) !important; }
+{ color: var(--color-link--visited) !important; }
 
 html[data-theme]
 :is(.content,
@@ -86,7 +112,7 @@ html[data-theme]
     .toc-tree,
     .toctree-wrapper,
     table.contentstable) a:hover
-{ color: var(--binny-green) !important; }
+{ color: var(--color-link--hover) !important; }
 
 html[data-theme]
 :is(.content,
@@ -96,16 +122,16 @@ html[data-theme]
     .toc-tree,
     .toctree-wrapper,
     table.contentstable) a:active
-{ color: var(--binny-blue) !important; }
+{ color: var(--color-link--active) !important; }
 
 /* FINAL hammer for sidebar */
 .sidebar-tree a,
 .sidebar-tree a:visited {
-  color: var(--binny-purple) !important;
+  color: var(--color-link) !important;
 }
 
 .sidebar-tree a:hover {
-  color: var(--binny-green) !important;
+  color: var(--color-link--hover) !important;
 }
 
 /* ==========================================================================
@@ -175,7 +201,7 @@ html[data-theme="dark"] .highlight .kn,
 html[data-theme="dark"] .highlight .kp,
 html[data-theme="dark"] .highlight .kr,
 html[data-theme="dark"] .highlight .kt {
-  color: var(--binny-purple) !important;
+  color: var(--binny-purple-dark) !important;
   font-weight: 600 !important;
 }
 
@@ -184,24 +210,49 @@ html[data-theme="dark"] .highlight .fm,
 html[data-theme="dark"] .highlight .nc,
 html[data-theme="dark"] .highlight .ne,
 html[data-theme="dark"] .highlight .nn {
-  color: var(--binny-blue) !important;
+  color: var(--binny-blue-dark) !important;
 }
 
 html[data-theme="dark"] .highlight .s,
 html[data-theme="dark"] .highlight .m {
-  color: var(--binny-green) !important;
+  color: var(--binny-green-dark) !important;
 }
 
-html[data-theme="dark"] .highlight .c {
-  color: #8899aa !important;
+html[data-theme="dark"] .highlight .o,
+html[data-theme="dark"] .highlight .ow {
+  color: var(--binny-purple-dark) !important;
+}
+
+html[data-theme="dark"] .highlight .c,
+html[data-theme="dark"] .highlight .ch,
+html[data-theme="dark"] .highlight .cm,
+html[data-theme="dark"] .highlight .c1,
+html[data-theme="dark"] .highlight .cs,
+html[data-theme="dark"] .highlight .cp {
+  color: #8b95a5 !important;
   font-style: italic !important;
 }
 
 html[data-theme="dark"] .highlight,
 html[data-theme="dark"] pre,
 html[data-theme="dark"] code {
-  background-color: #1b1b1b;
-  color: #e6e6e6;
+  background-color: #161a20;
+  color: #e6edf3;
+  border-radius: 8px;
+}
+
+/* Dark API signatures */
+html[data-theme="dark"] .sig .sig-name,
+html[data-theme="dark"] code.descname {
+  color: var(--binny-blue-dark) !important;
+}
+
+html[data-theme="dark"] .sig .k {
+  color: var(--binny-purple-dark) !important;
+}
+
+html[data-theme="dark"] a.reference code {
+  color: var(--binny-green-dark) !important;
 }
 
 /* ==========================================================================
@@ -216,7 +267,11 @@ html[data-theme="dark"] code {
 
 /* Sidebar project title ("binny") */
 .sidebar-brand-text {
-    color: var(--binny-purple);
+  color: var(--binny-purple);
+}
+
+html[data-theme="dark"] .sidebar-brand-text {
+  color: var(--binny-purple-dark) !important;
 }
 
 /* ==========================================================================
@@ -238,6 +293,21 @@ html[data-theme="dark"] code {
 .admonition.danger,
 .admonition.error {
   border-left: 0.25rem solid var(--binny-purple);
+}
+
+html[data-theme="dark"] .admonition.note,
+html[data-theme="dark"] .admonition.tip,
+html[data-theme="dark"] .admonition.hint,
+html[data-theme="dark"] .admonition.important {
+  border-left-color: var(--binny-green-dark);
+}
+
+html[data-theme="dark"] .admonition.warning,
+html[data-theme="dark"] .admonition.caution,
+html[data-theme="dark"] .admonition.attention,
+html[data-theme="dark"] .admonition.danger,
+html[data-theme="dark"] .admonition.error {
+  border-left-color: var(--binny-purple-dark);
 }
 
 /* ==========================================================================
@@ -293,6 +363,14 @@ html[data-theme="dark"] code {
   font-style: italic;
 }
 
+html[data-theme="dark"] .name-purple {
+  color: var(--binny-purple-dark) !important;
+}
+
+html[data-theme="dark"] .role-blue {
+  color: var(--binny-blue-dark) !important;
+}
+
 /* ==========================================================================
    IMAGE SIZE
    ========================================================================== */
@@ -338,22 +416,20 @@ div.figure img {
 -------------------------------- */
 
 .content h1 {
-    color: var(--binny-purple);
-    border-bottom: 3px solid var(--binny-purple);
-    padding-bottom: 0.3em;
+  color: var(--binny-purple);
+  border-bottom: 3px solid var(--binny-purple);
+  padding-bottom: 0.3em;
 }
-
 
 /* -----------------------------
    H2 — Binny blue
 -------------------------------- */
 
 .content h2 {
-    color: var(--binny-blue);
-    border-bottom: 2px solid var(--binny-blue);
-    padding-bottom: 0.25em;
+  color: var(--binny-blue);
+  border-bottom: 2px solid var(--binny-blue);
+  padding-bottom: 0.25em;
 }
-
 
 /* -----------------------------
    H3–H6 — Binny green
@@ -363,11 +439,29 @@ div.figure img {
 .content h4,
 .content h5,
 .content h6 {
-    color: var(--binny-green);
-    border-bottom: 2px solid var(--binny-green);
-    padding-bottom: 0.15em;
+  color: var(--binny-green);
+  border-bottom: 2px solid var(--binny-green);
+  padding-bottom: 0.15em;
 }
 
+/* Dark headings: same scheme, softened for dark UI */
+html[data-theme="dark"] .content h1 {
+  color: var(--binny-purple-dark);
+  border-bottom: 2px solid rgba(199, 166, 255, 0.35);
+}
+
+html[data-theme="dark"] .content h2 {
+  color: var(--binny-blue-dark);
+  border-bottom: 1px solid rgba(127, 200, 255, 0.28);
+}
+
+html[data-theme="dark"] .content h3,
+html[data-theme="dark"] .content h4,
+html[data-theme="dark"] .content h5,
+html[data-theme="dark"] .content h6 {
+  color: var(--binny-green-dark);
+  border-bottom: 1px solid rgba(126, 224, 176, 0.22);
+}
 
 /* ==========================================================================
    BINNY TABLE STYLE
@@ -451,15 +545,16 @@ table.binny-table code {
 /* dark mode compatibility */
 
 html[data-theme="dark"] table.binny-table {
-  background: #1e1e1e;
-  border-color: var(--binny-purple);
-  color: #e6e6e6;
+  background: #161a20;
+  border-color: var(--binny-purple-dark);
+  color: #e8edf3;
+  box-shadow: none;
 }
 
 html[data-theme="dark"] table.binny-table thead th {
-  background: var(--binny-blue);
-  color: white;
-  border-bottom: 2px solid var(--binny-purple);
+  background: #223247;
+  color: #f5f7fa;
+  border-bottom: 1px solid var(--binny-purple-dark);
 }
 
 html[data-theme="dark"] table.binny-table tbody td {
@@ -467,19 +562,21 @@ html[data-theme="dark"] table.binny-table tbody td {
   border-bottom: 1px solid rgba(255, 255, 255, 0.08);
 }
 
+/* remove bright striping in dark mode */
 html[data-theme="dark"] table.binny-table tbody tr:nth-child(odd) {
-  background: rgba(253, 231, 37, 0.10);
+  background: #151a1f;
 }
 
 html[data-theme="dark"] table.binny-table tbody tr:nth-child(even) {
-  background: rgba(53, 183, 121, 0.10);
+  background: #1a2027;
 }
 
 html[data-theme="dark"] table.binny-table tbody td:first-child {
-  color: var(--binny-yellow);
+  color: var(--binny-purple-dark);
 }
 
 html[data-theme="dark"] table.binny-table code {
-  background: rgba(255, 255, 255, 0.08);
-  color: #f3f3f3;
+  background: #222933;
+  color: #f0f4f8;
 }
+
