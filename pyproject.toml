@@ -1,5 +1,5 @@
 [project]
-name = "binny"
+name = "pybinny"
 version = "0.1.0"
 description = "Flexible tomographic binning algorithms for cosmology."
 readme = "README.md"
