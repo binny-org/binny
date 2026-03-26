@@ -5,10 +5,25 @@
 |logo| Installation
 ===================
 
+From PyPI
+---------
+
+To install the latest released version of Binny:
+
+.. code-block:: bash
+
+   python -m pip install pybinny
+
+Then import it in Python as:
+
+.. code-block:: python
+
+   import binny
+
 From source
 -----------
 
-During development, installing from source is recommended:
+For development or to use the latest unreleased changes:
 
 .. code-block:: bash
 
@@ -19,7 +34,7 @@ During development, installing from source is recommended:
 Development install
 -------------------
 
-To install with development tools (testing, linting, CI helpers):
+To install Binny together with development tools for testing, linting, and CI:
 
 .. code-block:: bash
 
