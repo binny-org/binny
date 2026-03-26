@@ -25,13 +25,20 @@ for forecasting, inference pipelines, and survey analysis workflows.
 
 # Installation
 
-### Install from source
+# Installation
 
+## Install from PyPI
+
+```bash
+pip install pybinny
+````
+
+### Install from source
 ```bash
 git clone https://github.com/binny-org/binny.git
 cd binny
 python -m pip install -e .
-````
+```
 
 ### Development install
 
