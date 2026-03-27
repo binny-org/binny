@@ -25,8 +25,6 @@ for forecasting, inference pipelines, and survey analysis workflows.
 
 # Installation
 
-# Installation
-
 ## Install from PyPI
 
 ```bash
