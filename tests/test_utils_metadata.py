@@ -6,7 +6,11 @@ from pathlib import Path
 
 import numpy as np
 
-from binny.utils.metadata import build_tomo_bins_metadata, save_metadata_txt
+from binny.utils.metadata import (
+    _weighted_quantile,
+    build_tomo_bins_metadata,
+    save_metadata_txt,
+)
 
 
 def test_build_tomo_bins_metadata_includes_optional_notes_and_casts_keys():
@@ -82,3 +86,90 @@ def test_save_metadata_txt_decimal_places_none_keeps_values_verbatim(
 
     lines = txt.splitlines()
     assert lines == ["x: 1.23456"]
+
+
+def test_build_tomo_bins_metadata_includes_truez_summary():
+    """Tests that truez_summary is present and contains expected keys."""
+    z = np.linspace(0.0, 2.0, 5)
+    parent = np.ones_like(z)
+    edges = np.array([0.0, 1.0, 2.0])
+
+    bins = {
+        0: np.exp(-((z - 0.5) ** 2) / 0.01),
+    }
+
+    meta = build_tomo_bins_metadata(
+        kind="photoz",
+        z=z,
+        parent_nz=parent,
+        bin_edges=edges,
+        bins_returned=bins,
+        inputs={},
+    )
+
+    summary = meta["bins"]["truez_summary"][0]
+
+    assert "z_mean" in summary
+    assert "z_median" in summary
+    assert "z_mode" in summary
+    assert summary["z_mean"] is not None
+
+
+def test_truez_summary_zero_weight_returns_none():
+    """Tests that zero-weight bins return None for all summary stats."""
+    z = np.linspace(0.0, 1.0, 5)
+    bins = {0: np.zeros_like(z)}
+
+    meta = build_tomo_bins_metadata(
+        kind="photoz",
+        z=z,
+        parent_nz=np.ones_like(z),
+        bin_edges=np.array([0.0, 1.0]),
+        bins_returned=bins,
+        inputs={},
+    )
+
+    summary = meta["bins"]["truez_summary"][0]
+
+    assert all(v is None for v in summary.values())
+
+
+def test_weighted_quantile_basic_behavior():
+    """Tests weighted quantile returns correct median for symmetric distribution."""
+    z = np.array([0.0, 1.0, 2.0])
+    pdf = np.array([0.0, 1.0, 0.0])
+
+    q50 = _weighted_quantile(z, pdf, 0.5)
+
+    assert q50 == 1.0
+
+
+def test_weighted_quantile_empty_returns_none():
+    """Tests weighted quantile returns None for empty input."""
+    z = np.array([])
+    pdf = np.array([])
+
+    assert _weighted_quantile(z, pdf, 0.5) is None
+
+
+def test_weighted_quantile_zero_area_returns_none():
+    """Tests weighted quantile returns None when pdf integrates to zero."""
+    z = np.array([0.0, 1.0])
+    pdf = np.array([0.0, 0.0])
+
+    assert _weighted_quantile(z, pdf, 0.5) is None
+
+
+def test_metadata_includes_description_block():
+    """Tests that metadata includes human-readable description."""
+    meta = build_tomo_bins_metadata(
+        kind="photoz",
+        z=np.array([0.0, 1.0]),
+        parent_nz=np.array([1.0, 1.0]),
+        bin_edges=np.array([0.0, 1.0]),
+        bins_returned={0: np.array([1.0, 1.0])},
+        inputs={},
+    )
+
+    assert "description" in meta
+    assert "truez_summary" in meta["description"]["bins"]

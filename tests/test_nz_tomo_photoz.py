@@ -625,6 +625,106 @@ def test_build_photoz_bins_metadata_round_trip(z_nz, tmp_path):
     assert "bin_edges" in meta_str
     assert "bins_norms" in meta_str
 
+    assert "truez_summary" in meta["bins"]
+    assert set(meta["bins"]["truez_summary"].keys()) == {0, 1, 2}
+
     # Returned bins are unit-normalized when normalize_bins=True.
     for arr in bins.values():
         assert np.isclose(np.trapezoid(arr, x=z), 1.0, rtol=1e-6, atol=1e-8)
+
+
+def test_build_photoz_bins_metadata_includes_truez_summary(z_nz):
+    """Tests that photo-z metadata includes per-bin true-z summary statistics."""
+    z, nz = z_nz
+    edges = [0.0, 0.5, 1.0, 1.5]
+
+    bins, meta = build_photoz_bins(
+        z,
+        nz,
+        edges,
+        scatter_scale=0.05,
+        mean_offset=0.01,
+        normalize_bins=True,
+        include_metadata=True,
+    )
+
+    assert isinstance(bins, dict)
+    assert isinstance(meta, dict)
+
+    bins_meta = meta["bins"]
+    assert "truez_summary" in bins_meta
+
+    summary = bins_meta["truez_summary"]
+    assert isinstance(summary, dict)
+    assert set(summary.keys()) == {0, 1, 2}
+
+    expected_keys = {
+        "z_mean",
+        "z_median",
+        "z_mode",
+        "z_lo_68",
+        "z_hi_68",
+        "z_lo_95",
+        "z_hi_95",
+        "z_q05",
+        "z_q25",
+        "z_q75",
+        "z_q95",
+    }
+
+    for i in [0, 1, 2]:
+        assert set(summary[i].keys()) == expected_keys
+
+
+def test_build_photoz_bins_metadata_truez_summary_is_ordered(z_nz):
+    """Tests that true-z summary quantiles are finite and ordered per bin."""
+    z, nz = z_nz
+    edges = [0.0, 0.5, 1.0, 1.5]
+
+    _, meta = build_photoz_bins(
+        z,
+        nz,
+        edges,
+        scatter_scale=0.05,
+        mean_offset=0.01,
+        normalize_bins=True,
+        include_metadata=True,
+    )
+
+    summary = meta["bins"]["truez_summary"]
+
+    for stats in summary.values():
+        vals = [
+            stats["z_mean"],
+            stats["z_median"],
+            stats["z_mode"],
+            stats["z_lo_68"],
+            stats["z_hi_68"],
+            stats["z_lo_95"],
+            stats["z_hi_95"],
+            stats["z_q05"],
+            stats["z_q25"],
+            stats["z_q75"],
+            stats["z_q95"],
+        ]
+        assert all(v is not None for v in vals)
+        assert all(np.isfinite(v) for v in vals)
+
+        assert (
+            stats["z_lo_95"]
+            <= stats["z_lo_68"]
+            <= stats["z_median"]
+            <= stats["z_hi_68"]
+            <= stats["z_hi_95"]
+        )
+
+        assert (
+            stats["z_q05"]
+            <= stats["z_q25"]
+            <= stats["z_median"]
+            <= stats["z_q75"]
+            <= stats["z_q95"]
+        )
+
+        assert z[0] <= stats["z_mode"] <= z[-1]
+        assert z[0] <= stats["z_mean"] <= z[-1]
