@@ -1,0 +1,1182 @@
+<!doctype html>
+<html class="no-js" lang="en" data-content_root="../">
+  <head><meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <meta name="color-scheme" content="light dark"><meta name="viewport" content="width=device-width, initial-scale=1" />
+<link rel="index" title="Index" href="../genindex.html"><link rel="search" title="Search" href="../search.html"><link rel="next" title="binny.api package" href="binny.api.html"><link rel="prev" title="binny" href="modules.html">
+        <link rel="prefetch" href="../_static/assets/logo.png" as="image">
+        <link rel="prefetch" href="../_static/assets/logo.png" as="image">
+
+    <link rel="shortcut icon" href="../_static/favicon.png"><!-- Generated with Sphinx 8.2.3 and Furo 2025.12.19 -->
+        <title>binny package - Binny documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=d111a655" />
+    <link rel="stylesheet" type="text/css" href="../_static/styles/furo.css?v=7bdb33bb" />
+    <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
+    <link rel="stylesheet" type="text/css" href="../_static/plot_directive.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/sphinx-design.min.css?v=95c83b7e" />
+    <link rel="stylesheet" type="text/css" href="../_static/styles/furo-extensions.css?v=8dab3a3b" />
+    <link rel="stylesheet" type="text/css" href="../_static/binny.css?v=9dc84726" />
+    
+    
+
+
+<style>
+  body {
+    --color-code-background: #f2f2f2;
+  --color-code-foreground: #1e1e1e;
+  --color-brand-primary: #440154;
+  --color-brand-content: #31688E;
+  --color-link: #35B779;
+  --color-link--hover: #31688E;
+  --color-link--visited: #FDE725;
+  
+  }
+  @media not print {
+    body[data-theme="dark"] {
+      --color-code-background: #202020;
+  --color-code-foreground: #d0d0d0;
+  --color-brand-primary: #440154;
+  --color-brand-content: #31688E;
+  --color-link: #35B779;
+  --color-link--hover: #31688E;
+  --color-link--visited: #FDE725;
+  
+    }
+    @media (prefers-color-scheme: dark) {
+      body:not([data-theme="light"]) {
+        --color-code-background: #202020;
+  --color-code-foreground: #d0d0d0;
+  --color-brand-primary: #440154;
+  --color-brand-content: #31688E;
+  --color-link: #35B779;
+  --color-link--hover: #31688E;
+  --color-link--visited: #FDE725;
+  
+      }
+    }
+  }
+</style></head>
+  <body>
+    
+    <script>
+      document.body.dataset.theme = localStorage.getItem("theme") || "auto";
+    </script>
+    
+
+<svg xmlns="http://www.w3.org/2000/svg" style="display: none;">
+  <symbol id="svg-toc" viewBox="0 0 24 24">
+    <title>Contents</title>
+    <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 1024 1024">
+      <path d="M408 442h480c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8H408c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8zm-8 204c0 4.4 3.6 8 8 8h480c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8H408c-4.4 0-8 3.6-8 8v56zm504-486H120c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h784c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8zm0 632H120c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h784c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8zM115.4 518.9L271.7 642c5.8 4.6 14.4.5 14.4-6.9V388.9c0-7.4-8.5-11.5-14.4-6.9L115.4 505.1a8.74 8.74 0 0 0 0 13.8z"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-menu" viewBox="0 0 24 24">
+    <title>Menu</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather-menu">
+      <line x1="3" y1="12" x2="21" y2="12"></line>
+      <line x1="3" y1="6" x2="21" y2="6"></line>
+      <line x1="3" y1="18" x2="21" y2="18"></line>
+    </svg>
+  </symbol>
+  <symbol id="svg-arrow-right" viewBox="0 0 24 24">
+    <title>Expand</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather-chevron-right">
+      <polyline points="9 18 15 12 9 6"></polyline>
+    </svg>
+  </symbol>
+  <symbol id="svg-sun" viewBox="0 0 24 24">
+    <title>Light mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="feather-sun">
+      <circle cx="12" cy="12" r="5"></circle>
+      <line x1="12" y1="1" x2="12" y2="3"></line>
+      <line x1="12" y1="21" x2="12" y2="23"></line>
+      <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+      <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+      <line x1="1" y1="12" x2="3" y2="12"></line>
+      <line x1="21" y1="12" x2="23" y2="12"></line>
+      <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+      <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+    </svg>
+  </symbol>
+  <symbol id="svg-moon" viewBox="0 0 24 24">
+    <title>Dark mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-moon">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+      <path d="M12 3c.132 0 .263 0 .393 0a7.5 7.5 0 0 0 7.92 12.446a9 9 0 1 1 -8.313 -12.454z" />
+    </svg>
+  </symbol>
+  <symbol id="svg-sun-with-moon" viewBox="0 0 24 24">
+    <title>Auto light/dark, in light mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round"
+      class="icon-custom-derived-from-feather-sun-and-tabler-moon">
+      <path style="opacity: 50%" d="M 5.411 14.504 C 5.471 14.504 5.532 14.504 5.591 14.504 C 3.639 16.319 4.383 19.569 6.931 20.352 C 7.693 20.586 8.512 20.551 9.25 20.252 C 8.023 23.207 4.056 23.725 2.11 21.184 C 0.166 18.642 1.702 14.949 4.874 14.536 C 5.051 14.512 5.231 14.5 5.411 14.5 L 5.411 14.504 Z"/>
+      <line x1="14.5" y1="3.25" x2="14.5" y2="1.25"/>
+      <line x1="14.5" y1="15.85" x2="14.5" y2="17.85"/>
+      <line x1="10.044" y1="5.094" x2="8.63" y2="3.68"/>
+      <line x1="19" y1="14.05" x2="20.414" y2="15.464"/>
+      <line x1="8.2" y1="9.55" x2="6.2" y2="9.55"/>
+      <line x1="20.8" y1="9.55" x2="22.8" y2="9.55"/>
+      <line x1="10.044" y1="14.006" x2="8.63" y2="15.42"/>
+      <line x1="19" y1="5.05" x2="20.414" y2="3.636"/>
+      <circle cx="14.5" cy="9.55" r="3.6"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-moon-with-sun" viewBox="0 0 24 24">
+    <title>Auto light/dark, in dark mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round"
+      class="icon-custom-derived-from-feather-sun-and-tabler-moon">
+      <path d="M 8.282 7.007 C 8.385 7.007 8.494 7.007 8.595 7.007 C 5.18 10.184 6.481 15.869 10.942 17.24 C 12.275 17.648 13.706 17.589 15 17.066 C 12.851 22.236 5.91 23.143 2.505 18.696 C -0.897 14.249 1.791 7.786 7.342 7.063 C 7.652 7.021 7.965 7 8.282 7 L 8.282 7.007 Z"/>
+      <line style="opacity: 50%" x1="18" y1="3.705" x2="18" y2="2.5"/>
+      <line style="opacity: 50%" x1="18" y1="11.295" x2="18" y2="12.5"/>
+      <line style="opacity: 50%" x1="15.316" y1="4.816" x2="14.464" y2="3.964"/>
+      <line style="opacity: 50%" x1="20.711" y1="10.212" x2="21.563" y2="11.063"/>
+      <line style="opacity: 50%" x1="14.205" y1="7.5" x2="13.001" y2="7.5"/>
+      <line style="opacity: 50%" x1="21.795" y1="7.5" x2="23" y2="7.5"/>
+      <line style="opacity: 50%" x1="15.316" y1="10.184" x2="14.464" y2="11.036"/>
+      <line style="opacity: 50%" x1="20.711" y1="4.789" x2="21.563" y2="3.937"/>
+      <circle style="opacity: 50%" cx="18" cy="7.5" r="2.169"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-pencil" viewBox="0 0 24 24">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-pencil-code">
+      <path d="M4 20h4l10.5 -10.5a2.828 2.828 0 1 0 -4 -4l-10.5 10.5v4" />
+      <path d="M13.5 6.5l4 4" />
+      <path d="M20 21l2 -2l-2 -2" />
+      <path d="M17 17l-2 2l2 2" />
+    </svg>
+  </symbol>
+  <symbol id="svg-eye" viewBox="0 0 24 24">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-eye-code">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+      <path d="M10 12a2 2 0 1 0 4 0a2 2 0 0 0 -4 0" />
+      <path
+        d="M11.11 17.958c-3.209 -.307 -5.91 -2.293 -8.11 -5.958c2.4 -4 5.4 -6 9 -6c3.6 0 6.6 2 9 6c-.21 .352 -.427 .688 -.647 1.008" />
+      <path d="M20 21l2 -2l-2 -2" />
+      <path d="M17 17l-2 2l2 2" />
+    </svg>
+  </symbol>
+</svg>
+
+<input type="checkbox" class="sidebar-toggle" name="__navigation" id="__navigation" aria-label="Toggle site navigation sidebar">
+<input type="checkbox" class="sidebar-toggle" name="__toc" id="__toc" aria-label="Toggle table of contents sidebar">
+<label class="overlay sidebar-overlay" for="__navigation"></label>
+<label class="overlay toc-overlay" for="__toc"></label>
+
+<a class="skip-to-content muted-link" href="#furo-main-content">Skip to content</a>
+
+
+
+<div class="page">
+  <header class="mobile-header">
+    <div class="header-left">
+      <label class="nav-overlay-icon" for="__navigation">
+        <span class="icon"><svg><use href="#svg-menu"></use></svg></span>
+      </label>
+    </div>
+    <div class="header-center">
+      <a href="../index.html"><div class="brand">Binny  documentation</div></a>
+    </div>
+    <div class="header-right">
+      <div class="theme-toggle-container theme-toggle-header">
+        <button class="theme-toggle" aria-label="Toggle Light / Dark / Auto color theme">
+          <svg class="theme-icon-when-auto-light"><use href="#svg-sun-with-moon"></use></svg>
+          <svg class="theme-icon-when-auto-dark"><use href="#svg-moon-with-sun"></use></svg>
+          <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
+          <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
+        </button>
+      </div>
+      <label class="toc-overlay-icon toc-header-icon" for="__toc">
+        <span class="icon"><svg><use href="#svg-toc"></use></svg></span>
+      </label>
+    </div>
+  </header>
+  <aside class="sidebar-drawer">
+    <div class="sidebar-container">
+      
+      <div class="sidebar-sticky"><a class="sidebar-brand" href="../index.html">
+  <div class="sidebar-logo-container">
+    <img class="sidebar-logo only-light" src="../_static/assets/logo.png" alt="Light Logo"/>
+    <img class="sidebar-logo only-dark" src="../_static/assets/logo.png" alt="Dark Logo"/>
+  </div>
+  
+  <span class="sidebar-brand-text">Binny  documentation</span>
+  
+</a><form class="sidebar-search-container" method="get" action="../search.html" role="search">
+  <input class="sidebar-search" placeholder="Search" name="q" aria-label="Search">
+  <input type="hidden" name="check_keywords" value="yes">
+  <input type="hidden" name="area" value="default">
+</form>
+<div id="searchbox"></div><div class="sidebar-scroll"><div class="sidebar-tree">
+  <ul class="current">
+<li class="toctree-l1 has-children"><a class="reference internal" href="../theory/index.html"> Theory</a><input aria-label="Toggle navigation of  Theory" class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" role="switch" type="checkbox"/><label for="toctree-checkbox-1"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../theory/parent_nz.html"> Parent n(z)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../theory/tomography.html"> Tomography</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../theory/uncertainties/index.html"> Redshift uncertainties</a><input aria-label="Toggle navigation of  Redshift uncertainties" class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" role="switch" type="checkbox"/><label for="toctree-checkbox-2"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="../theory/uncertainties/photoz.html"> Photometric-redshift uncertainties</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../theory/uncertainties/specz.html"> Spectroscopic-redshift uncertainties</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../theory/statistics.html"> Bin summaries</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../theory/diagnostics.html"> Bin diagnostics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../theory/bin_combos.html"> Bin-index combinations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../theory/conventions.html"> Conventions</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../workflow.html"> Workflow</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../examples/index.html"> Examples</a><input aria-label="Toggle navigation of  Examples" class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" role="switch" type="checkbox"/><label for="toctree-checkbox-3"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../examples/nz_modelling.html"> Parent n(z) models</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../examples/nz_calibration.html"> Parent n(z) from mocks</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../examples/photoz_bins.html"> Photometric bins</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../examples/specz_bins.html"> Spectroscopic bins</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../examples/bin_summaries.html"> Bin summaries</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../examples/bin_diagnostics.html"> Bin diagnostics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../examples/survey_presets.html"> Survey presets</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../examples/selections.html"> Bin-pair selections</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../installation.html"> Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../citation.html"> Citation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../contributing.html"> Contributing</a></li>
+<li class="toctree-l1 current has-children"><a class="reference internal" href="index.html">Binny API</a><input aria-label="Toggle navigation of Binny API" checked="" class="toctree-checkbox" id="toctree-checkbox-4" name="toctree-checkbox-4" role="switch" type="checkbox"/><label for="toctree-checkbox-4"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul class="current">
+<li class="toctree-l2 current has-children"><a class="reference internal" href="modules.html">binny</a><input aria-label="Toggle navigation of binny" checked="" class="toctree-checkbox" id="toctree-checkbox-5" name="toctree-checkbox-5" role="switch" type="checkbox"/><label for="toctree-checkbox-5"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul class="current">
+<li class="toctree-l3 current has-children current-page"><a class="current reference internal" href="#">binny package</a><input aria-label="Toggle navigation of binny package" checked="" class="toctree-checkbox" id="toctree-checkbox-6" name="toctree-checkbox-6" role="switch" type="checkbox"/><label for="toctree-checkbox-6"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l4 has-children"><a class="reference internal" href="binny.api.html">binny.api package</a><input aria-label="Toggle navigation of binny.api package" class="toctree-checkbox" id="toctree-checkbox-7" name="toctree-checkbox-7" role="switch" type="checkbox"/><label for="toctree-checkbox-7"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l5"><a class="reference internal" href="binny.api.nz_tomography.html">binny.api.nz_tomography module</a></li>
+</ul>
+</li>
+<li class="toctree-l4 has-children"><a class="reference internal" href="binny.axes.html">binny.axes package</a><input aria-label="Toggle navigation of binny.axes package" class="toctree-checkbox" id="toctree-checkbox-8" name="toctree-checkbox-8" role="switch" type="checkbox"/><label for="toctree-checkbox-8"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l5"><a class="reference internal" href="binny.axes.bin_edges.html">binny.axes.bin_edges module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="binny.axes.grids.html">binny.axes.grids module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="binny.axes.mixed_edges.html">binny.axes.mixed_edges module</a></li>
+</ul>
+</li>
+<li class="toctree-l4 has-children"><a class="reference internal" href="binny.correlations.html">binny.correlations package</a><input aria-label="Toggle navigation of binny.correlations package" class="toctree-checkbox" id="toctree-checkbox-9" name="toctree-checkbox-9" role="switch" type="checkbox"/><label for="toctree-checkbox-9"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l5"><a class="reference internal" href="binny.correlations.bin_combo_filter.html">binny.correlations.bin_combo_filter module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="binny.correlations.filters.html">binny.correlations.filters module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="binny.correlations.metrics.html">binny.correlations.metrics module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="binny.correlations.scores.html">binny.correlations.scores module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="binny.correlations.topology.html">binny.correlations.topology module</a></li>
+</ul>
+</li>
+<li class="toctree-l4 has-children"><a class="reference internal" href="binny.nz.html">binny.nz package</a><input aria-label="Toggle navigation of binny.nz package" class="toctree-checkbox" id="toctree-checkbox-10" name="toctree-checkbox-10" role="switch" type="checkbox"/><label for="toctree-checkbox-10"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l5"><a class="reference internal" href="binny.nz.calibration.html">binny.nz.calibration module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="binny.nz.models.html">binny.nz.models module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="binny.nz.registry.html">binny.nz.registry module</a></li>
+</ul>
+</li>
+<li class="toctree-l4 has-children"><a class="reference internal" href="binny.nz_tomo.html">binny.nz_tomo package</a><input aria-label="Toggle navigation of binny.nz_tomo package" class="toctree-checkbox" id="toctree-checkbox-11" name="toctree-checkbox-11" role="switch" type="checkbox"/><label for="toctree-checkbox-11"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l5"><a class="reference internal" href="binny.nz_tomo.between_sample_metrics.html">binny.nz_tomo.between_sample_metrics module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="binny.nz_tomo.bin_similarity.html">binny.nz_tomo.bin_similarity module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="binny.nz_tomo.bin_stats.html">binny.nz_tomo.bin_stats module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="binny.nz_tomo.binning_core.html">binny.nz_tomo.binning_core module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="binny.nz_tomo.nz_tomo_utils.html">binny.nz_tomo.nz_tomo_utils module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="binny.nz_tomo.photoz.html">binny.nz_tomo.photoz module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="binny.nz_tomo.specz.html">binny.nz_tomo.specz module</a></li>
+</ul>
+</li>
+<li class="toctree-l4 has-children"><a class="reference internal" href="binny.surveys.html">binny.surveys package</a><input aria-label="Toggle navigation of binny.surveys package" class="toctree-checkbox" id="toctree-checkbox-12" name="toctree-checkbox-12" role="switch" type="checkbox"/><label for="toctree-checkbox-12"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l5"><a class="reference internal" href="binny.surveys.configs.html">binny.surveys.configs package</a></li>
+<li class="toctree-l5"><a class="reference internal" href="binny.surveys.config_utils.html">binny.surveys.config_utils module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="binny.surveys.sky.html">binny.surveys.sky module</a></li>
+</ul>
+</li>
+<li class="toctree-l4 has-children"><a class="reference internal" href="binny.utils.html">binny.utils package</a><input aria-label="Toggle navigation of binny.utils package" class="toctree-checkbox" id="toctree-checkbox-13" name="toctree-checkbox-13" role="switch" type="checkbox"/><label for="toctree-checkbox-13"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l5"><a class="reference internal" href="binny.utils.broadcasting.html">binny.utils.broadcasting module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="binny.utils.io.html">binny.utils.io module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="binny.utils.metadata.html">binny.utils.metadata module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="binny.utils.normalization.html">binny.utils.normalization module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="binny.utils.pairwise_metrics.html">binny.utils.pairwise_metrics module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="binny.utils.relations.html">binny.utils.relations module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="binny.utils.types.html">binny.utils.types module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="binny.utils.validators.html">binny.utils.validators module</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+</div>
+</div>
+
+      </div>
+      
+    </div>
+  </aside>
+  <div class="main">
+    <div class="content">
+      <div class="article-container">
+        <a href="#" class="back-to-top muted-link">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+            <path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8v12z"></path>
+          </svg>
+          <span>Back to top</span>
+        </a>
+        <div class="content-icon-container">
+          <div class="view-this-page">
+  <a class="muted-link" href="../_sources/api/binny.rst.txt" title="View this page">
+    <svg><use href="#svg-eye"></use></svg>
+    <span class="visually-hidden">View this page</span>
+  </a>
+</div>
+<div class="theme-toggle-container theme-toggle-content">
+            <button class="theme-toggle" aria-label="Toggle Light / Dark / Auto color theme">
+              <svg class="theme-icon-when-auto-light"><use href="#svg-sun-with-moon"></use></svg>
+              <svg class="theme-icon-when-auto-dark"><use href="#svg-moon-with-sun"></use></svg>
+              <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
+              <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
+            </button>
+          </div>
+          <label class="toc-overlay-icon toc-content-icon" for="__toc">
+            <span class="icon"><svg><use href="#svg-toc"></use></svg></span>
+          </label>
+        </div>
+        <article role="main" id="furo-main-content">
+          <section id="binny-package">
+<h1>binny package<a class="headerlink" href="#binny-package" title="Link to this heading"><span>#</span></a></h1>
+<section id="subpackages">
+<h2>Subpackages<a class="headerlink" href="#subpackages" title="Link to this heading"><span>#</span></a></h2>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="binny.api.html">binny.api package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="binny.api.html#submodules">Submodules</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="binny.api.nz_tomography.html">binny.api.nz_tomography module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="binny.api.nz_tomography.html#binny.api.nz_tomography.NZTomography"><code class="docutils literal notranslate"><span class="pre">NZTomography</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="binny.api.nz_tomography.html#binny.api.nz_tomography.available_metric_kernels"><code class="docutils literal notranslate"><span class="pre">available_metric_kernels()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="binny.api.nz_tomography.html#binny.api.nz_tomography.register_metric_kernel"><code class="docutils literal notranslate"><span class="pre">register_metric_kernel()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="binny.axes.html">binny.axes package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="binny.axes.html#submodules">Submodules</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="binny.axes.bin_edges.html">binny.axes.bin_edges module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="binny.axes.bin_edges.html#binny.axes.bin_edges.equal_information_edges"><code class="docutils literal notranslate"><span class="pre">equal_information_edges()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="binny.axes.bin_edges.html#binny.axes.bin_edges.equal_number_edges"><code class="docutils literal notranslate"><span class="pre">equal_number_edges()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="binny.axes.bin_edges.html#binny.axes.bin_edges.equidistant_chi_edges"><code class="docutils literal notranslate"><span class="pre">equidistant_chi_edges()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="binny.axes.bin_edges.html#binny.axes.bin_edges.equidistant_edges"><code class="docutils literal notranslate"><span class="pre">equidistant_edges()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="binny.axes.bin_edges.html#binny.axes.bin_edges.geometric_edges"><code class="docutils literal notranslate"><span class="pre">geometric_edges()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="binny.axes.bin_edges.html#binny.axes.bin_edges.log_edges"><code class="docutils literal notranslate"><span class="pre">log_edges()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="binny.axes.grids.html">binny.axes.grids module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="binny.axes.grids.html#binny.axes.grids.grid"><code class="docutils literal notranslate"><span class="pre">grid()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="binny.axes.grids.html#binny.axes.grids.linear_grid"><code class="docutils literal notranslate"><span class="pre">linear_grid()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="binny.axes.grids.html#binny.axes.grids.log_grid"><code class="docutils literal notranslate"><span class="pre">log_grid()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="binny.axes.mixed_edges.html">binny.axes.mixed_edges module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="binny.axes.mixed_edges.html#binny.axes.mixed_edges.mixed_edges"><code class="docutils literal notranslate"><span class="pre">mixed_edges()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="binny.axes.html#module-binny.axes">Module contents</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="binny.correlations.html">binny.correlations package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="binny.correlations.html#submodules">Submodules</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="binny.correlations.bin_combo_filter.html">binny.correlations.bin_combo_filter module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="binny.correlations.bin_combo_filter.html#binny.correlations.bin_combo_filter.BinComboFilter"><code class="docutils literal notranslate"><span class="pre">BinComboFilter</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="binny.correlations.filters.html">binny.correlations.filters module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="binny.correlations.filters.html#binny.correlations.filters.filter_by_curve_norm_threshold"><code class="docutils literal notranslate"><span class="pre">filter_by_curve_norm_threshold()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="binny.correlations.filters.html#binny.correlations.filters.filter_by_metric_threshold"><code class="docutils literal notranslate"><span class="pre">filter_by_metric_threshold()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="binny.correlations.filters.html#binny.correlations.filters.filter_by_score_consistency"><code class="docutils literal notranslate"><span class="pre">filter_by_score_consistency()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="binny.correlations.filters.html#binny.correlations.filters.filter_by_score_difference"><code class="docutils literal notranslate"><span class="pre">filter_by_score_difference()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="binny.correlations.filters.html#binny.correlations.filters.filter_by_score_relation"><code class="docutils literal notranslate"><span class="pre">filter_by_score_relation()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="binny.correlations.filters.html#binny.correlations.filters.filter_by_score_separation"><code class="docutils literal notranslate"><span class="pre">filter_by_score_separation()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="binny.correlations.filters.html#binny.correlations.filters.filter_by_width_ratio"><code class="docutils literal notranslate"><span class="pre">filter_by_width_ratio()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="binny.correlations.metrics.html">binny.correlations.metrics module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="binny.correlations.metrics.html#binny.correlations.metrics.metric_from_curves"><code class="docutils literal notranslate"><span class="pre">metric_from_curves()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="binny.correlations.metrics.html#binny.correlations.metrics.metric_min_overlap_fraction"><code class="docutils literal notranslate"><span class="pre">metric_min_overlap_fraction()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="binny.correlations.metrics.html#binny.correlations.metrics.metric_overlap_coefficient"><code class="docutils literal notranslate"><span class="pre">metric_overlap_coefficient()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="binny.correlations.scores.html">binny.correlations.scores module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="binny.correlations.scores.html#binny.correlations.scores.score_credible_width"><code class="docutils literal notranslate"><span class="pre">score_credible_width()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="binny.correlations.scores.html#binny.correlations.scores.score_mean_location"><code class="docutils literal notranslate"><span class="pre">score_mean_location()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="binny.correlations.scores.html#binny.correlations.scores.score_median_location"><code class="docutils literal notranslate"><span class="pre">score_median_location()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="binny.correlations.scores.html#binny.correlations.scores.score_peak_location"><code class="docutils literal notranslate"><span class="pre">score_peak_location()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="binny.correlations.topology.html">binny.correlations.topology module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="binny.correlations.topology.html#binny.correlations.topology.pairs_all"><code class="docutils literal notranslate"><span class="pre">pairs_all()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="binny.correlations.topology.html#binny.correlations.topology.pairs_cartesian"><code class="docutils literal notranslate"><span class="pre">pairs_cartesian()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="binny.correlations.topology.html#binny.correlations.topology.pairs_diagonal"><code class="docutils literal notranslate"><span class="pre">pairs_diagonal()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="binny.correlations.topology.html#binny.correlations.topology.pairs_lower_triangle"><code class="docutils literal notranslate"><span class="pre">pairs_lower_triangle()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="binny.correlations.topology.html#binny.correlations.topology.pairs_off_diagonal"><code class="docutils literal notranslate"><span class="pre">pairs_off_diagonal()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="binny.correlations.topology.html#binny.correlations.topology.pairs_upper_triangle"><code class="docutils literal notranslate"><span class="pre">pairs_upper_triangle()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="binny.correlations.topology.html#binny.correlations.topology.tuples_all"><code class="docutils literal notranslate"><span class="pre">tuples_all()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="binny.correlations.topology.html#binny.correlations.topology.tuples_cartesian"><code class="docutils literal notranslate"><span class="pre">tuples_cartesian()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="binny.correlations.topology.html#binny.correlations.topology.tuples_diagonal"><code class="docutils literal notranslate"><span class="pre">tuples_diagonal()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="binny.correlations.topology.html#binny.correlations.topology.tuples_nondecreasing"><code class="docutils literal notranslate"><span class="pre">tuples_nondecreasing()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="binny.correlations.html#module-binny.correlations">Module contents</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="binny.nz.html">binny.nz package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="binny.nz.html#submodules">Submodules</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="binny.nz.calibration.html">binny.nz.calibration module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="binny.nz.calibration.html#binny.nz.calibration.calibrate_depth_smail_from_mock"><code class="docutils literal notranslate"><span class="pre">calibrate_depth_smail_from_mock()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="binny.nz.calibration.html#binny.nz.calibration.eval_ngal_of_maglim"><code class="docutils literal notranslate"><span class="pre">eval_ngal_of_maglim()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="binny.nz.calibration.html#binny.nz.calibration.eval_z0_of_maglim"><code class="docutils literal notranslate"><span class="pre">eval_z0_of_maglim()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="binny.nz.calibration.html#binny.nz.calibration.fit_ngal_of_maglim_from_mock"><code class="docutils literal notranslate"><span class="pre">fit_ngal_of_maglim_from_mock()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="binny.nz.calibration.html#binny.nz.calibration.fit_smail_params_from_mock"><code class="docutils literal notranslate"><span class="pre">fit_smail_params_from_mock()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="binny.nz.calibration.html#binny.nz.calibration.fit_z0_of_maglim_from_mock"><code class="docutils literal notranslate"><span class="pre">fit_z0_of_maglim_from_mock()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="binny.nz.models.html">binny.nz.models module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="binny.nz.models.html#binny.nz.models.gamma_distribution"><code class="docutils literal notranslate"><span class="pre">gamma_distribution()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="binny.nz.models.html#binny.nz.models.gaussian_distribution"><code class="docutils literal notranslate"><span class="pre">gaussian_distribution()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="binny.nz.models.html#binny.nz.models.gaussian_mixture_distribution"><code class="docutils literal notranslate"><span class="pre">gaussian_mixture_distribution()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="binny.nz.models.html#binny.nz.models.lognormal_distribution"><code class="docutils literal notranslate"><span class="pre">lognormal_distribution()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="binny.nz.models.html#binny.nz.models.schechter_like_distribution"><code class="docutils literal notranslate"><span class="pre">schechter_like_distribution()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="binny.nz.models.html#binny.nz.models.shifted_smail_distribution"><code class="docutils literal notranslate"><span class="pre">shifted_smail_distribution()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="binny.nz.models.html#binny.nz.models.skew_normal_distribution"><code class="docutils literal notranslate"><span class="pre">skew_normal_distribution()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="binny.nz.models.html#binny.nz.models.smail_like_distribution"><code class="docutils literal notranslate"><span class="pre">smail_like_distribution()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="binny.nz.models.html#binny.nz.models.student_t_distribution"><code class="docutils literal notranslate"><span class="pre">student_t_distribution()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="binny.nz.models.html#binny.nz.models.tophat_distribution"><code class="docutils literal notranslate"><span class="pre">tophat_distribution()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="binny.nz.registry.html">binny.nz.registry module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="binny.nz.registry.html#binny.nz.registry.available_models"><code class="docutils literal notranslate"><span class="pre">available_models()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="binny.nz.registry.html#binny.nz.registry.get_model"><code class="docutils literal notranslate"><span class="pre">get_model()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="binny.nz.registry.html#binny.nz.registry.nz_model"><code class="docutils literal notranslate"><span class="pre">nz_model()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="binny.nz.html#module-binny.nz">Module contents</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="binny.nz.html#binny.nz.available_models"><code class="docutils literal notranslate"><span class="pre">available_models()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="binny.nz.html#binny.nz.get_model"><code class="docutils literal notranslate"><span class="pre">get_model()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="binny.nz.html#binny.nz.nz_model"><code class="docutils literal notranslate"><span class="pre">nz_model()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="binny.nz_tomo.html">binny.nz_tomo package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="binny.nz_tomo.html#submodules">Submodules</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="binny.nz_tomo.between_sample_metrics.html">binny.nz_tomo.between_sample_metrics module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="binny.nz_tomo.between_sample_metrics.html#binny.nz_tomo.between_sample_metrics.between_bin_overlap"><code class="docutils literal notranslate"><span class="pre">between_bin_overlap()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="binny.nz_tomo.between_sample_metrics.html#binny.nz_tomo.between_sample_metrics.between_interval_mass_matrix"><code class="docutils literal notranslate"><span class="pre">between_interval_mass_matrix()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="binny.nz_tomo.between_sample_metrics.html#binny.nz_tomo.between_sample_metrics.between_overlap_pairs"><code class="docutils literal notranslate"><span class="pre">between_overlap_pairs()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="binny.nz_tomo.between_sample_metrics.html#binny.nz_tomo.between_sample_metrics.between_pearson_matrix"><code class="docutils literal notranslate"><span class="pre">between_pearson_matrix()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="binny.nz_tomo.between_sample_metrics.html#binny.nz_tomo.between_sample_metrics.bin_overlap"><code class="docutils literal notranslate"><span class="pre">bin_overlap()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="binny.nz_tomo.between_sample_metrics.html#binny.nz_tomo.between_sample_metrics.leakage_matrix"><code class="docutils literal notranslate"><span class="pre">leakage_matrix()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="binny.nz_tomo.between_sample_metrics.html#binny.nz_tomo.between_sample_metrics.overlap_pairs"><code class="docutils literal notranslate"><span class="pre">overlap_pairs()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="binny.nz_tomo.between_sample_metrics.html#binny.nz_tomo.between_sample_metrics.pearson_matrix"><code class="docutils literal notranslate"><span class="pre">pearson_matrix()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="binny.nz_tomo.bin_similarity.html">binny.nz_tomo.bin_similarity module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="binny.nz_tomo.bin_similarity.html#binny.nz_tomo.bin_similarity.bin_overlap"><code class="docutils literal notranslate"><span class="pre">bin_overlap()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="binny.nz_tomo.bin_similarity.html#binny.nz_tomo.bin_similarity.leakage_matrix"><code class="docutils literal notranslate"><span class="pre">leakage_matrix()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="binny.nz_tomo.bin_similarity.html#binny.nz_tomo.bin_similarity.overlap_pairs"><code class="docutils literal notranslate"><span class="pre">overlap_pairs()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="binny.nz_tomo.bin_similarity.html#binny.nz_tomo.bin_similarity.pearson_matrix"><code class="docutils literal notranslate"><span class="pre">pearson_matrix()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="binny.nz_tomo.bin_stats.html">binny.nz_tomo.bin_stats module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="binny.nz_tomo.bin_stats.html#binny.nz_tomo.bin_stats.bin_centers"><code class="docutils literal notranslate"><span class="pre">bin_centers()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="binny.nz_tomo.bin_stats.html#binny.nz_tomo.bin_stats.bin_moments"><code class="docutils literal notranslate"><span class="pre">bin_moments()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="binny.nz_tomo.bin_stats.html#binny.nz_tomo.bin_stats.bin_quantiles"><code class="docutils literal notranslate"><span class="pre">bin_quantiles()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="binny.nz_tomo.bin_stats.html#binny.nz_tomo.bin_stats.galaxy_count_per_bin"><code class="docutils literal notranslate"><span class="pre">galaxy_count_per_bin()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="binny.nz_tomo.bin_stats.html#binny.nz_tomo.bin_stats.galaxy_density_per_bin"><code class="docutils literal notranslate"><span class="pre">galaxy_density_per_bin()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="binny.nz_tomo.bin_stats.html#binny.nz_tomo.bin_stats.galaxy_fraction_per_bin"><code class="docutils literal notranslate"><span class="pre">galaxy_fraction_per_bin()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="binny.nz_tomo.bin_stats.html#binny.nz_tomo.bin_stats.in_range_fraction"><code class="docutils literal notranslate"><span class="pre">in_range_fraction()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="binny.nz_tomo.bin_stats.html#binny.nz_tomo.bin_stats.in_range_fraction_per_bin"><code class="docutils literal notranslate"><span class="pre">in_range_fraction_per_bin()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="binny.nz_tomo.bin_stats.html#binny.nz_tomo.bin_stats.peak_flags"><code class="docutils literal notranslate"><span class="pre">peak_flags()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="binny.nz_tomo.bin_stats.html#binny.nz_tomo.bin_stats.peak_flags_per_bin"><code class="docutils literal notranslate"><span class="pre">peak_flags_per_bin()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="binny.nz_tomo.bin_stats.html#binny.nz_tomo.bin_stats.population_stats"><code class="docutils literal notranslate"><span class="pre">population_stats()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="binny.nz_tomo.bin_stats.html#binny.nz_tomo.bin_stats.shape_stats"><code class="docutils literal notranslate"><span class="pre">shape_stats()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="binny.nz_tomo.binning_core.html">binny.nz_tomo.binning_core module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="binny.nz_tomo.binning_core.html#binny.nz_tomo.binning_core.build_bins_on_edges"><code class="docutils literal notranslate"><span class="pre">build_bins_on_edges()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="binny.nz_tomo.binning_core.html#binny.nz_tomo.binning_core.finalize_tomo_metadata"><code class="docutils literal notranslate"><span class="pre">finalize_tomo_metadata()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="binny.nz_tomo.binning_core.html#binny.nz_tomo.binning_core.resolve_bin_edges"><code class="docutils literal notranslate"><span class="pre">resolve_bin_edges()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="binny.nz_tomo.binning_core.html#binny.nz_tomo.binning_core.validate_bin_edges"><code class="docutils literal notranslate"><span class="pre">validate_bin_edges()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="binny.nz_tomo.nz_tomo_utils.html">binny.nz_tomo.nz_tomo_utils module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="binny.nz_tomo.nz_tomo_utils.html#binny.nz_tomo.nz_tomo_utils.extract_bin_edges_from_meta"><code class="docutils literal notranslate"><span class="pre">extract_bin_edges_from_meta()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="binny.nz_tomo.nz_tomo_utils.html#binny.nz_tomo.nz_tomo_utils.mixed_edges_from_segments"><code class="docutils literal notranslate"><span class="pre">mixed_edges_from_segments()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="binny.nz_tomo.nz_tomo_utils.html#binny.nz_tomo.nz_tomo_utils.photoz_segments_to_axes"><code class="docutils literal notranslate"><span class="pre">photoz_segments_to_axes()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="binny.nz_tomo.nz_tomo_utils.html#binny.nz_tomo.nz_tomo_utils.resolve_bin_edges_for_leakage"><code class="docutils literal notranslate"><span class="pre">resolve_bin_edges_for_leakage()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="binny.nz_tomo.nz_tomo_utils.html#binny.nz_tomo.nz_tomo_utils.resolve_n_bins_for_builder"><code class="docutils literal notranslate"><span class="pre">resolve_n_bins_for_builder()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="binny.nz_tomo.photoz.html">binny.nz_tomo.photoz module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="binny.nz_tomo.photoz.html#model">Model</a></li>
+<li class="toctree-l4"><a class="reference internal" href="binny.nz_tomo.photoz.html#metadata-population-fractions">Metadata / population fractions</a></li>
+<li class="toctree-l4"><a class="reference internal" href="binny.nz_tomo.photoz.html#binny.nz_tomo.photoz.build_photoz_bins"><code class="docutils literal notranslate"><span class="pre">build_photoz_bins()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="binny.nz_tomo.photoz.html#binny.nz_tomo.photoz.true_redshift_distribution"><code class="docutils literal notranslate"><span class="pre">true_redshift_distribution()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="binny.nz_tomo.specz.html">binny.nz_tomo.specz module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="binny.nz_tomo.specz.html#selection-model">Selection model</a></li>
+<li class="toctree-l4"><a class="reference internal" href="binny.nz_tomo.specz.html#bin-to-bin-response-optional">Bin-to-bin response (optional)</a></li>
+<li class="toctree-l4"><a class="reference internal" href="binny.nz_tomo.specz.html#normalization">Normalization</a></li>
+<li class="toctree-l4"><a class="reference internal" href="binny.nz_tomo.specz.html#binny.nz_tomo.specz.apply_response_matrix"><code class="docutils literal notranslate"><span class="pre">apply_response_matrix()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="binny.nz_tomo.specz.html#binny.nz_tomo.specz.build_specz_bins"><code class="docutils literal notranslate"><span class="pre">build_specz_bins()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="binny.nz_tomo.specz.html#binny.nz_tomo.specz.build_specz_response_matrix"><code class="docutils literal notranslate"><span class="pre">build_specz_response_matrix()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="binny.nz_tomo.specz.html#binny.nz_tomo.specz.specz_gaussian_response_matrix"><code class="docutils literal notranslate"><span class="pre">specz_gaussian_response_matrix()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="binny.nz_tomo.specz.html#binny.nz_tomo.specz.specz_selection_in_bin"><code class="docutils literal notranslate"><span class="pre">specz_selection_in_bin()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="binny.nz_tomo.html#module-binny.nz_tomo">Module contents</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="binny.surveys.html">binny.surveys package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="binny.surveys.html#subpackages">Subpackages</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="binny.surveys.configs.html">binny.surveys.configs package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="binny.surveys.configs.html#module-binny.surveys.configs">Module contents</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="binny.surveys.html#submodules">Submodules</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="binny.surveys.config_utils.html">binny.surveys.config_utils module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="binny.surveys.config_utils.html#binny.surveys.config_utils.SurveyFootprint"><code class="docutils literal notranslate"><span class="pre">SurveyFootprint</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="binny.surveys.config_utils.html#binny.surveys.config_utils.config_path"><code class="docutils literal notranslate"><span class="pre">config_path()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="binny.surveys.config_utils.html#binny.surveys.config_utils.list_configs"><code class="docutils literal notranslate"><span class="pre">list_configs()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="binny.surveys.sky.html">binny.surveys.sky module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="binny.surveys.sky.html#binny.surveys.sky.arcmin2_to_deg2"><code class="docutils literal notranslate"><span class="pre">arcmin2_to_deg2()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="binny.surveys.sky.html#binny.surveys.sky.arcmin2_to_sr"><code class="docutils literal notranslate"><span class="pre">arcmin2_to_sr()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="binny.surveys.sky.html#binny.surveys.sky.area_to_arcmin2"><code class="docutils literal notranslate"><span class="pre">area_to_arcmin2()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="binny.surveys.sky.html#binny.surveys.sky.deg2_to_arcmin2"><code class="docutils literal notranslate"><span class="pre">deg2_to_arcmin2()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="binny.surveys.sky.html#binny.surveys.sky.deg2_to_f_sky"><code class="docutils literal notranslate"><span class="pre">deg2_to_f_sky()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="binny.surveys.sky.html#binny.surveys.sky.deg2_to_sr"><code class="docutils literal notranslate"><span class="pre">deg2_to_sr()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="binny.surveys.sky.html#binny.surveys.sky.density_arcmin2_to_sr"><code class="docutils literal notranslate"><span class="pre">density_arcmin2_to_sr()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="binny.surveys.sky.html#binny.surveys.sky.density_sr_to_arcmin2"><code class="docutils literal notranslate"><span class="pre">density_sr_to_arcmin2()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="binny.surveys.sky.html#binny.surveys.sky.density_to_per_arcmin2"><code class="docutils literal notranslate"><span class="pre">density_to_per_arcmin2()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="binny.surveys.sky.html#binny.surveys.sky.f_sky_to_deg2"><code class="docutils literal notranslate"><span class="pre">f_sky_to_deg2()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="binny.surveys.sky.html#binny.surveys.sky.f_sky_to_sr"><code class="docutils literal notranslate"><span class="pre">f_sky_to_sr()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="binny.surveys.sky.html#binny.surveys.sky.sr_to_arcmin2"><code class="docutils literal notranslate"><span class="pre">sr_to_arcmin2()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="binny.surveys.sky.html#binny.surveys.sky.sr_to_deg2"><code class="docutils literal notranslate"><span class="pre">sr_to_deg2()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="binny.surveys.sky.html#binny.surveys.sky.sr_to_f_sky"><code class="docutils literal notranslate"><span class="pre">sr_to_f_sky()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="binny.surveys.html#module-binny.surveys">Module contents</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="binny.utils.html">binny.utils package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="binny.utils.html#submodules">Submodules</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="binny.utils.broadcasting.html">binny.utils.broadcasting module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="binny.utils.broadcasting.html#binny.utils.broadcasting.as_per_bin"><code class="docutils literal notranslate"><span class="pre">as_per_bin()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="binny.utils.io.html">binny.utils.io module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="binny.utils.io.html#binny.utils.io.load_binning_recipe"><code class="docutils literal notranslate"><span class="pre">load_binning_recipe()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="binny.utils.io.html#binny.utils.io.load_nz"><code class="docutils literal notranslate"><span class="pre">load_nz()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="binny.utils.io.html#binny.utils.io.load_yaml"><code class="docutils literal notranslate"><span class="pre">load_yaml()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="binny.utils.metadata.html">binny.utils.metadata module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="binny.utils.metadata.html#binny.utils.metadata.build_tomo_bins_metadata"><code class="docutils literal notranslate"><span class="pre">build_tomo_bins_metadata()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="binny.utils.metadata.html#binny.utils.metadata.round_floats"><code class="docutils literal notranslate"><span class="pre">round_floats()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="binny.utils.metadata.html#binny.utils.metadata.save_metadata_txt"><code class="docutils literal notranslate"><span class="pre">save_metadata_txt()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="binny.utils.normalization.html">binny.utils.normalization module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="binny.utils.normalization.html#binny.utils.normalization.as_bins_dict"><code class="docutils literal notranslate"><span class="pre">as_bins_dict()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="binny.utils.normalization.html#binny.utils.normalization.as_float_array"><code class="docutils literal notranslate"><span class="pre">as_float_array()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="binny.utils.normalization.html#binny.utils.normalization.cdf_from_curve"><code class="docutils literal notranslate"><span class="pre">cdf_from_curve()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="binny.utils.normalization.html#binny.utils.normalization.curve_norm_mode"><code class="docutils literal notranslate"><span class="pre">curve_norm_mode()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="binny.utils.normalization.html#binny.utils.normalization.integrate_bins"><code class="docutils literal notranslate"><span class="pre">integrate_bins()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="binny.utils.normalization.html#binny.utils.normalization.normalize_1d"><code class="docutils literal notranslate"><span class="pre">normalize_1d()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="binny.utils.normalization.html#binny.utils.normalization.normalize_edges"><code class="docutils literal notranslate"><span class="pre">normalize_edges()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="binny.utils.normalization.html#binny.utils.normalization.normalize_or_check_curves"><code class="docutils literal notranslate"><span class="pre">normalize_or_check_curves()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="binny.utils.normalization.html#binny.utils.normalization.normalize_over_z"><code class="docutils literal notranslate"><span class="pre">normalize_over_z()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="binny.utils.normalization.html#binny.utils.normalization.prepare_metric_inputs"><code class="docutils literal notranslate"><span class="pre">prepare_metric_inputs()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="binny.utils.normalization.html#binny.utils.normalization.require_bins"><code class="docutils literal notranslate"><span class="pre">require_bins()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="binny.utils.normalization.html#binny.utils.normalization.trapz_weights"><code class="docutils literal notranslate"><span class="pre">trapz_weights()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="binny.utils.normalization.html#binny.utils.normalization.weighted_quantile_from_cdf"><code class="docutils literal notranslate"><span class="pre">weighted_quantile_from_cdf()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="binny.utils.pairwise_metrics.html">binny.utils.pairwise_metrics module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="binny.utils.pairwise_metrics.html#binny.utils.pairwise_metrics.apply_unit"><code class="docutils literal notranslate"><span class="pre">apply_unit()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="binny.utils.pairwise_metrics.html#binny.utils.pairwise_metrics.fill_symmetric"><code class="docutils literal notranslate"><span class="pre">fill_symmetric()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="binny.utils.pairwise_metrics.html#binny.utils.pairwise_metrics.mass_per_segment"><code class="docutils literal notranslate"><span class="pre">mass_per_segment()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="binny.utils.pairwise_metrics.html#binny.utils.pairwise_metrics.pair_cosine"><code class="docutils literal notranslate"><span class="pre">pair_cosine()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="binny.utils.pairwise_metrics.html#binny.utils.pairwise_metrics.pair_hellinger"><code class="docutils literal notranslate"><span class="pre">pair_hellinger()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="binny.utils.pairwise_metrics.html#binny.utils.pairwise_metrics.pair_js"><code class="docutils literal notranslate"><span class="pre">pair_js()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="binny.utils.pairwise_metrics.html#binny.utils.pairwise_metrics.pair_min"><code class="docutils literal notranslate"><span class="pre">pair_min()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="binny.utils.pairwise_metrics.html#binny.utils.pairwise_metrics.pair_tv"><code class="docutils literal notranslate"><span class="pre">pair_tv()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="binny.utils.pairwise_metrics.html#binny.utils.pairwise_metrics.prepare_metric_inputs"><code class="docutils literal notranslate"><span class="pre">prepare_metric_inputs()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="binny.utils.pairwise_metrics.html#binny.utils.pairwise_metrics.segment_mass_probs"><code class="docutils literal notranslate"><span class="pre">segment_mass_probs()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="binny.utils.relations.html">binny.utils.relations module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="binny.utils.relations.html#binny.utils.relations.available_relations"><code class="docutils literal notranslate"><span class="pre">available_relations()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="binny.utils.relations.html#binny.utils.relations.validate_relation"><code class="docutils literal notranslate"><span class="pre">validate_relation()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="binny.utils.types.html">binny.utils.types module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="binny.utils.validators.html">binny.utils.validators module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="binny.utils.validators.html#binny.utils.validators.edge_coercion"><code class="docutils literal notranslate"><span class="pre">edge_coercion()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="binny.utils.validators.html#binny.utils.validators.resolve_binning_method"><code class="docutils literal notranslate"><span class="pre">resolve_binning_method()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="binny.utils.validators.html#binny.utils.validators.validate_axis_and_weights"><code class="docutils literal notranslate"><span class="pre">validate_axis_and_weights()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="binny.utils.validators.html#binny.utils.validators.validate_grid_spec"><code class="docutils literal notranslate"><span class="pre">validate_grid_spec()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="binny.utils.validators.html#binny.utils.validators.validate_interval"><code class="docutils literal notranslate"><span class="pre">validate_interval()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="binny.utils.validators.html#binny.utils.validators.validate_mixed_segments"><code class="docutils literal notranslate"><span class="pre">validate_mixed_segments()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="binny.utils.validators.html#binny.utils.validators.validate_n_bins"><code class="docutils literal notranslate"><span class="pre">validate_n_bins()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="binny.utils.validators.html#binny.utils.validators.validate_probability_vector"><code class="docutils literal notranslate"><span class="pre">validate_probability_vector()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="binny.utils.validators.html#binny.utils.validators.validate_response_matrix"><code class="docutils literal notranslate"><span class="pre">validate_response_matrix()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="binny.utils.validators.html#binny.utils.validators.validate_same_shape"><code class="docutils literal notranslate"><span class="pre">validate_same_shape()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="binny.utils.validators.html#binny.utils.validators.validated_float_arrays"><code class="docutils literal notranslate"><span class="pre">validated_float_arrays()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="binny.utils.html#module-binny.utils">Module contents</a></li>
+</ul>
+</li>
+</ul>
+</div>
+</section>
+<section id="module-binny">
+<span id="module-contents"></span><h2>Module contents<a class="headerlink" href="#module-binny" title="Link to this heading"><span>#</span></a></h2>
+<p>Public Binny API.</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="binny.NZTomography">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">binny.</span></span><span class="sig-name descname"><span class="pre">NZTomography</span></span><a class="headerlink" href="#binny.NZTomography" title="Link to this definition"><span>#</span></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Builds and caches tomographic n(z) bins with a small public API.</p>
+<p>An instance caches the most recent parent distribution (z, nz),
+the tomography settings used to build the bins, the constructed bin curves,
+and optional metadata. This lets follow-up calls (stats, comparisons,
+combo filtering) reuse the same build without re-parsing inputs.</p>
+<p>Initialize an empty cache.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="binny.NZTomography.between_sample_stats">
+<span class="sig-name descname"><span class="pre">between_sample_stats</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">other</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="binny.api.nz_tomography.html#binny.api.nz_tomography.NZTomography" title="binny.api.nz_tomography.NZTomography"><span class="pre">NZTomography</span></a></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">overlap</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Mapping</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pairs</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Mapping</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">interval_mass</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Mapping</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pearson</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Mapping</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#binny.NZTomography.between_sample_stats" title="Link to this definition"><span>#</span></a></dt>
+<dd><p>Compute a bundle of between-sample comparison and diagnostic matrices.</p>
+<p>This returns quantitative comparisons between bins from two different
+tomographic samples, such as lens and source bins used in galaxy-galaxy
+lensing. The returned quantities can be used to assess overlap,
+similarity, ordering, and interval-based contamination across sample
+families.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>other</strong> – Second tomography instance to compare against. Both instances
+must be built on the same redshift grid.</p></li>
+<li><p><strong>overlap</strong> – Keyword arguments for between-sample overlap metrics, or
+<code class="docutils literal notranslate"><span class="pre">None</span></code> to skip.</p></li>
+<li><p><strong>pairs</strong> – Keyword arguments for between-sample pair summaries, or
+<code class="docutils literal notranslate"><span class="pre">None</span></code> to skip.</p></li>
+<li><p><strong>interval_mass</strong> – Keyword arguments for interval-mass computation, or
+<code class="docutils literal notranslate"><span class="pre">None</span></code> to skip. Must include <code class="docutils literal notranslate"><span class="pre">&quot;target_edges&quot;</span></code>.</p></li>
+<li><p><strong>pearson</strong> – Keyword arguments for between-sample Pearson correlation
+computation, or <code class="docutils literal notranslate"><span class="pre">None</span></code> to skip.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A dictionary containing a subset of keys <code class="docutils literal notranslate"><span class="pre">&quot;overlap&quot;</span></code>,
+<code class="docutils literal notranslate"><span class="pre">&quot;correlations&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;interval_mass&quot;</span></code>, and <code class="docutils literal notranslate"><span class="pre">&quot;pearson&quot;</span></code>.</p>
+</dd>
+<dt class="field-odd">Raises<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>ValueError</strong> – If bins are not cached, if the two instances do not
+    share the same redshift grid, or if interval-mass computation
+    is requested without providing <code class="docutils literal notranslate"><span class="pre">target_edges</span></code>.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="binny.NZTomography.bin_combo_filter">
+<span class="sig-name descname"><span class="pre">bin_combo_filter</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">spec</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Mapping</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">other</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="binny.api.nz_tomography.html#binny.api.nz_tomography.NZTomography" title="binny.api.nz_tomography.NZTomography"><span class="pre">NZTomography</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="p"><span class="pre">...</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#binny.NZTomography.bin_combo_filter" title="Link to this definition"><span>#</span></a></dt>
+<dd><p>Select bin-index combinations using a combo-filter specification.</p>
+<p>This is a high-level entry point for “give me the bin pairs/tuples that
+satisfy these criteria.” It constructs a
+<a class="reference internal" href="binny.correlations.bin_combo_filter.html#binny.correlations.bin_combo_filter.BinComboFilter" title="binny.correlations.bin_combo_filter.BinComboFilter"><code class="xref py py-class docutils literal notranslate"><span class="pre">BinComboFilter</span></code></a> on the
+cached bins (optionally using a second tomography instance for
+cross-sample comparisons), applies the provided selection spec, and returns
+the resulting index tuples.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>spec</strong> – Selection specification for topology + ordered filters.</p></li>
+<li><p><strong>other</strong> – Optional second tomography instance for cross-sample selections.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A list of index tuples representing the selected bin combinations.</p>
+</dd>
+<dt class="field-odd">Raises<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>ValueError</strong> – If bins are not cached, or if cross-sample filtering is
+    requested but the two instances do not share the same redshift grid.</p></li>
+<li><p><strong>KeyError</strong> – If the selection spec references an unknown topology, filter,
+    or metric kernel.</p></li>
+<li><p><strong>TypeError</strong> – If the selection spec has an unexpected structure.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="binny.NZTomography.bin_keys">
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">bin_keys</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#binny.NZTomography.bin_keys" title="Link to this definition"><span>#</span></a></dt>
+<dd><p>Bin indices for the most recent build, in mapping insertion order.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>List of integer bin indices in the same order they appear in <code class="docutils literal notranslate"><span class="pre">bins</span></code>.</p>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>ValueError</strong> – If bins have not been built yet (call <a class="reference internal" href="#binny.NZTomography.build_bins" title="binny.NZTomography.build_bins"><code class="xref py py-meth docutils literal notranslate"><span class="pre">build_bins()</span></code></a>).</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="binny.NZTomography.bins">
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">bins</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Mapping</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">ndarray</span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#binny.NZTomography.bins" title="Link to this definition"><span>#</span></a></dt>
+<dd><p>Mapping of bin index to bin curve from the most recent build.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Mapping from integer bin index to the corresponding bin n(z) array.</p>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>ValueError</strong> – If bins have not been built yet (call <a class="reference internal" href="#binny.NZTomography.build_bins" title="binny.NZTomography.build_bins"><code class="xref py py-meth docutils literal notranslate"><span class="pre">build_bins()</span></code></a>).</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="binny.NZTomography.build_bins">
+<span class="sig-name descname"><span class="pre">build_bins</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">config_file</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">Path</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cfg</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Mapping</span><span class="p"><span class="pre">[</span></span><span class="pre">Any</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">z</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Any</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nz</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Any</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tomo_spec</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Mapping</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">key</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">role</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">year</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Any</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">kind</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">overrides</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Mapping</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">include_survey_metadata</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">include_tomo_metadata</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">TomographyBins</span></span></span><a class="headerlink" href="#binny.NZTomography.build_bins" title="Link to this definition"><span>#</span></a></dt>
+<dd><p>Builds tomographic bins from a config, mapping, or explicit arrays.</p>
+<p>Given either a survey configuration or direct <code class="docutils literal notranslate"><span class="pre">(z,</span> <span class="pre">nz)</span></code> arrays, this
+method constructs the corresponding tomographic bins and returns the
+resulting bin distributions along with the relevant inputs.</p>
+<p>Exactly one of the following input modes must be used:
+- <code class="docutils literal notranslate"><span class="pre">config_file=...</span></code> (optionally with <code class="docutils literal notranslate"><span class="pre">key=...</span></code>),
+- <code class="docutils literal notranslate"><span class="pre">cfg=...</span></code> (an in-memory config mapping),
+- <code class="docutils literal notranslate"><span class="pre">(z=...,</span> <span class="pre">nz=...,</span> <span class="pre">tomo_spec=...)</span></code> (explicit arrays plus a spec mapping).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>config_file</strong> – Path to a YAML config file. If provided, the
+tomography entry is selected from the file
+(optionally using <code class="docutils literal notranslate"><span class="pre">key</span></code>).</p></li>
+<li><p><strong>cfg</strong> – In-memory config mapping using the same schema as the YAML files.</p></li>
+<li><p><strong>z</strong> – True-redshift grid. Used only in the explicit arrays mode.</p></li>
+<li><p><strong>nz</strong> – Parent distribution evaluated on <code class="docutils literal notranslate"><span class="pre">z</span></code>. Used only in the
+explicit arrays mode.</p></li>
+<li><p><strong>tomo_spec</strong> – Tomography specification mapping for the explicit arrays mode.</p></li>
+<li><p><strong>key</strong> – Optional entry key when selecting an item from a config file.</p></li>
+<li><p><strong>role</strong> – Optional selector for a tomography entry
+(e.g., “lens” or “source”).</p></li>
+<li><p><strong>year</strong> – Optional selector for a tomography entry (e.g., “1”, “10”).</p></li>
+<li><p><strong>kind</strong> – Optional tomography kind override (“photoz” or “specz”).</p></li>
+<li><p><strong>overrides</strong> – Optional mapping of values merged into the resolved
+tomography spec.
+Nested mappings are merged shallowly at the first level.</p></li>
+<li><p><strong>include_survey_metadata</strong> – Whether to include survey-level metadata
+in the output when building from a config file or mapping.</p></li>
+<li><p><strong>include_tomo_metadata</strong> – Whether to request tomography metadata
+from the builder.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A <code class="xref py py-class docutils literal notranslate"><span class="pre">TomographyBins</span></code> object
+containing the true-redshift grid, parent distribution, resolved
+tomography spec, constructed bins, and optional tomography and
+survey metadata.</p>
+</dd>
+<dt class="field-odd">Raises<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>ValueError</strong> – If inputs are inconsistent, no unique entry can be selected, the
+    tomography spec is invalid, or the requested kind is unsupported.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="binny.NZTomography.build_survey_bins">
+<span class="sig-name descname"><span class="pre">build_survey_bins</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">survey</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">role</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">year</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Any</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">z</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Any</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">overrides</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Mapping</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">include_survey_metadata</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">include_tomo_metadata</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">config_file</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">Path</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">TomographyBins</span></span></span><a class="headerlink" href="#binny.NZTomography.build_survey_bins" title="Link to this definition"><span>#</span></a></dt>
+<dd><p>Builds tomographic bins from a built-in survey preset.</p>
+<p>This method loads the configuration for a given survey preset, builds the
+corresponding tomographic bins, and returns the resulting bin distributions.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>survey</strong> – Survey preset name (case-insensitive), resolved to a shipped YAML file.</p></li>
+<li><p><strong>role</strong> – Optional selector for a tomography entry (e.g., “lens” or “source”).</p></li>
+<li><p><strong>year</strong> – Optional selector for a tomography entry (e.g., “1”, “10”).</p></li>
+<li><p><strong>z</strong> – Optional override for the config-defined redshift grid.</p></li>
+<li><p><strong>overrides</strong> – Optional mapping merged into the resolved tomography spec.</p></li>
+<li><p><strong>include_survey_metadata</strong> – Whether to include survey-level metadata in the output.</p></li>
+<li><p><strong>include_tomo_metadata</strong> – Whether to include tomography metadata in the output.</p></li>
+<li><p><strong>config_file</strong> – Optional explicit path to a survey-spec YAML file. If provided, it
+is used instead of resolving a shipped preset.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A <code class="xref py py-class docutils literal notranslate"><span class="pre">TomographyBins</span></code> object,
+which provides convenience methods such as <code class="docutils literal notranslate"><span class="pre">shape_stats()</span></code> and
+<code class="docutils literal notranslate"><span class="pre">population_stats()</span></code>.</p>
+</dd>
+<dt class="field-odd">Raises<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>FileNotFoundError</strong> – If the requested preset name does not resolve to a shipped file.</p></li>
+<li><p><strong>ValueError</strong> – If the selected entry is invalid or required metadata is unavailable.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="binny.NZTomography.calibrate_smail_from_mock">
+<em class="property"><span class="k"><span class="pre">static</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">calibrate_smail_from_mock</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">z_true</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mag</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">maglims</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">area_deg2</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">infer_alpha_beta_from</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Literal</span><span class="p"><span class="pre">[</span></span><span class="s"><span class="pre">'deep_cut'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'all_selected_at_maglim'</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'deep_cut'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">alpha_beta_maglim</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">z_max</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#binny.NZTomography.calibrate_smail_from_mock" title="Link to this definition"><span>#</span></a></dt>
+<dd><p>Run an end-to-end calibration of survey depth scaling relations.</p>
+<p>This routine performs a complete calibration of the relations linking
+survey limiting magnitude to both the redshift distribution and the
+galaxy number density of a sample.</p>
+<p>The procedure estimates the shape parameters of the Smail redshift
+distribution from a representative galaxy sample, calibrates how the
+redshift scale parameter varies with magnitude limit, and measures the
+corresponding galaxy number density.</p>
+<p>The resulting calibration can be used to construct realistic analytic
+redshift distributions and galaxy densities for survey forecasts.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>z_true</strong> – True redshifts of galaxies in the mock catalog.</p></li>
+<li><p><strong>mag</strong> – Apparent magnitudes of the same galaxies.</p></li>
+<li><p><strong>maglims</strong> – Limiting magnitudes defining magnitude-limited samples.</p></li>
+<li><p><strong>area_deg2</strong> – Survey area of the mock catalog in square degrees.</p></li>
+<li><p><strong>infer_alpha_beta_from</strong> – Strategy used to determine the shape
+parameters of the Smail distribution.</p></li>
+<li><p><strong>alpha_beta_maglim</strong> – Magnitude limit defining the deep sample used to
+infer the Smail shape parameters.</p></li>
+<li><p><strong>z_max</strong> – Maximum redshift included when fitting redshift distributions.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Dictionary containing the calibrated Smail parameters,
+the fitted z0–magnitude relation, and the galaxy density
+calibration.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="binny.NZTomography.clear">
+<span class="sig-name descname"><span class="pre">clear</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#binny.NZTomography.clear" title="Link to this definition"><span>#</span></a></dt>
+<dd><p>Clears the cached parent distribution, spec, bins, and metadata.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="binny.NZTomography.cross_bin_stats">
+<span class="sig-name descname"><span class="pre">cross_bin_stats</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">overlap</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Mapping</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pairs</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Mapping</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">leakage</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Mapping</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pearson</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Mapping</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#binny.NZTomography.cross_bin_stats" title="Link to this definition"><span>#</span></a></dt>
+<dd><p>Compute a bundle of cross-bin similarity and diagnostic matrices.</p>
+<p>This returns quantitative comparisons between tomographic bins, such as how
+much two bins overlap in redshift, how strongly their shapes co-vary, and
+(optionally) how much probability mass leaks across a set of bin edges.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>overlap</strong> – Keyword arguments for overlap metrics, or <code class="docutils literal notranslate"><span class="pre">None</span></code> to skip.</p></li>
+<li><p><strong>pairs</strong> – Keyword arguments for pairwise overlap summaries, or <code class="docutils literal notranslate"><span class="pre">None</span></code> to skip.</p></li>
+<li><p><strong>leakage</strong> – Keyword arguments for leakage matrix computation. Must include
+<code class="docutils literal notranslate"><span class="pre">&quot;bin_edges&quot;</span></code> (the bin edges corresponding to the bins), or <code class="docutils literal notranslate"><span class="pre">None</span></code> to skip.</p></li>
+<li><p><strong>pearson</strong> – Keyword arguments for Pearson correlation computation, or <code class="docutils literal notranslate"><span class="pre">None</span></code> to skip.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A dictionary containing a subset of keys <code class="docutils literal notranslate"><span class="pre">&quot;overlap&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;correlations&quot;</span></code>,
+<code class="docutils literal notranslate"><span class="pre">&quot;leakage&quot;</span></code>, and <code class="docutils literal notranslate"><span class="pre">&quot;pearson&quot;</span></code>.</p>
+</dd>
+<dt class="field-odd">Raises<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>ValueError</strong> – If bins are not cached, or if leakage is requested without
+    providing <code class="docutils literal notranslate"><span class="pre">bin_edges</span></code>.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="binny.NZTomography.list_nz_models">
+<em class="property"><span class="k"><span class="pre">static</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">list_nz_models</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#binny.NZTomography.list_nz_models" title="Link to this definition"><span>#</span></a></dt>
+<dd><p>Lists available registered n(z) model names.</p>
+<p>Returns the set of model identifiers currently registered with the n(z)
+registry. This is useful for discovery and for validating
+configuration inputs.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>A sorted list of registered n(z) model names.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="binny.NZTomography.list_surveys">
+<em class="property"><span class="k"><span class="pre">static</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">list_surveys</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#binny.NZTomography.list_surveys" title="Link to this definition"><span>#</span></a></dt>
+<dd><p>List available shipped survey preset names.</p>
+<p>Survey presets are YAML configuration files shipped with the package,
+following the naming convention <code class="docutils literal notranslate"><span class="pre">&lt;preset&gt;_survey_specs.yaml</span></code>. This
+method returns the available preset base names (without the suffix),
+suitable for passing to <a class="reference internal" href="#binny.NZTomography.build_survey_bins" title="binny.NZTomography.build_survey_bins"><code class="xref py py-meth docutils literal notranslate"><span class="pre">build_survey_bins()</span></code></a>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>A sorted list of available survey preset base names.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="binny.NZTomography.nz">
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">nz</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">ndarray</span></em><a class="headerlink" href="#binny.NZTomography.nz" title="Link to this definition"><span>#</span></a></dt>
+<dd><p>Parent n(z) from the most recent build.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>The cached parent distribution evaluated on <a class="reference internal" href="#binny.NZTomography.z" title="binny.NZTomography.z"><code class="xref py py-attr docutils literal notranslate"><span class="pre">z</span></code></a>.</p>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>ValueError</strong> – If no build has been performed yet.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="binny.NZTomography.nz_model">
+<em class="property"><span class="k"><span class="pre">static</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">nz_model</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">z</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Any</span></span></em>, <em class="sig-param"><span class="positional-only-separator o"><abbr title="Positional-only parameter separator (PEP 570)"><span class="pre">/</span></abbr></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">params</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Any</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">ndarray</span></span></span><a class="headerlink" href="#binny.NZTomography.nz_model" title="Link to this definition"><span>#</span></a></dt>
+<dd><p>Computes a registered parent n(z) model on a redshift grid.</p>
+<p>This is a convenience wrapper around the n(z) registry. It computes the
+named model on the provided redshift grid and returns the resulting
+array.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>name</strong> – Name of a registered n(z) model.</p></li>
+<li><p><strong>z</strong> – Redshift grid (array-like) to compute the model on.</p></li>
+<li><p><strong>**params</strong> – Model-specific parameters passed to the registered
+implementation.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Model values on <code class="docutils literal notranslate"><span class="pre">z</span></code>.</p>
+</dd>
+<dt class="field-odd">Raises<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>ValueError</strong> – If the model name is unknown or the provided parameters
+    are invalid for the requested model.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="binny.NZTomography.population_stats">
+<span class="sig-name descname"><span class="pre">population_stats</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Any</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#binny.NZTomography.population_stats" title="Link to this definition"><span>#</span></a></dt>
+<dd><p>Compute population statistics for the cached bins.</p>
+<p>Population statistics describe how galaxies are distributed across bins,
+including quantities related to bin occupancy and normalization relative
+to the parent redshift distribution.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>**kwargs</strong> – Additional keyword arguments forwarded to the underlying stats
+function.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A dictionary of population statistics computed from the cached bins and
+cached tomography metadata.</p>
+</dd>
+<dt class="field-odd">Raises<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>ValueError</strong> – If bins have not been built, or if tomography metadata is not
+    available (rebuild with <code class="docutils literal notranslate"><span class="pre">include_tomo_metadata=True</span></code>).</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="binny.NZTomography.shape_stats">
+<span class="sig-name descname"><span class="pre">shape_stats</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Any</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#binny.NZTomography.shape_stats" title="Link to this definition"><span>#</span></a></dt>
+<dd><p>Computes shape statistics for the cached bins.</p>
+<p>Shape statistics summarize the structure of each bin’s redshift distribution
+(e.g. bin moments, centers, etc.) using the parent
+redshift grid and the most recently built bins.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>**kwargs</strong> – Additional keyword arguments forwarded to the underlying stats
+function.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A dictionary of shape statistics computed from the cached bins.</p>
+</dd>
+<dt class="field-odd">Raises<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>ValueError</strong> – If bins have not been built yet.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="binny.NZTomography.z">
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">z</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">ndarray</span></em><a class="headerlink" href="#binny.NZTomography.z" title="Link to this definition"><span>#</span></a></dt>
+<dd><p>True-redshift grid from the most recent build.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>The cached redshift grid used to build the parent n(z) and bins.</p>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>ValueError</strong> – If no build has been performed yet.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="binny.available_metric_kernels">
+<span class="sig-prename descclassname"><span class="pre">binny.</span></span><span class="sig-name descname"><span class="pre">available_metric_kernels</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#binny.available_metric_kernels" title="Link to this definition"><span>#</span></a></dt>
+<dd><p>List registered metric-kernel names for combo-filter specs.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="binny.register_metric_kernel">
+<span class="sig-prename descclassname"><span class="pre">binny.</span></span><span class="sig-name descname"><span class="pre">register_metric_kernel</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">func</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Callable</span><span class="p"><span class="pre">[</span></span><span class="p"><span class="pre">[</span></span><span class="p"><span class="pre">...</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">float</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#binny.register_metric_kernel" title="Link to this definition"><span>#</span></a></dt>
+<dd><p>Register a metric kernel for use in combo-filter specs.</p>
+<p>The name is referenced in selection specs via:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">{</span><span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;metric&quot;</span><span class="p">,</span> <span class="s2">&quot;metric&quot;</span><span class="p">:</span> <span class="s2">&quot;&lt;name&gt;&quot;</span><span class="p">,</span> <span class="s2">&quot;threshold&quot;</span><span class="p">:</span> <span class="o">...</span><span class="p">,</span> <span class="s2">&quot;compare&quot;</span><span class="p">:</span> <span class="o">...</span><span class="p">}</span>
+</pre></div>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>name</strong> – Kernel identifier used in selection specs.</p></li>
+<li><p><strong>func</strong> – Callable that receives one curve per slot and returns a float.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>ValueError</strong> – If <code class="docutils literal notranslate"><span class="pre">name</span></code> is already registered.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+</section>
+
+        </article>
+      </div>
+      <footer>
+        
+        <div class="related-pages">
+          <a class="next-page" href="binny.api.html">
+              <div class="page-info">
+                <div class="context">
+                  <span>Next</span>
+                </div>
+                <div class="title">binny.api package</div>
+              </div>
+              <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
+            </a>
+          <a class="prev-page" href="modules.html">
+              <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
+              <div class="page-info">
+                <div class="context">
+                  <span>Previous</span>
+                </div>
+                
+                <div class="title">binny</div>
+                
+              </div>
+            </a>
+        </div>
+        <div class="bottom-of-page">
+          <div class="left-details">
+            <div class="copyright">
+                Copyright &#169; 2026, Nikolina Šarčević, Matthijs van der Wild
+            </div>
+            Made with <a href="https://www.sphinx-doc.org/">Sphinx</a> and <a class="muted-link" href="https://pradyunsg.me">@pradyunsg</a>'s
+            
+            <a href="https://github.com/pradyunsg/furo">Furo</a>
+            
+          </div>
+          <div class="right-details">
+            
+          </div>
+        </div>
+        
+      </footer>
+    </div>
+    <aside class="toc-drawer">
+      
+      
+      <div class="toc-sticky toc-scroll">
+        <div class="toc-title-container">
+          <span class="toc-title">
+            On this page
+          </span>
+        </div>
+        <div class="toc-tree-container">
+          <div class="toc-tree">
+            <ul>
+<li><a class="reference internal" href="#">binny package</a><ul>
+<li><a class="reference internal" href="#subpackages">Subpackages</a></li>
+<li><a class="reference internal" href="#module-binny">Module contents</a><ul>
+<li><a class="reference internal" href="#binny.NZTomography"><code class="docutils literal notranslate"><span class="pre">NZTomography</span></code></a><ul>
+<li><a class="reference internal" href="#binny.NZTomography.between_sample_stats"><code class="docutils literal notranslate"><span class="pre">NZTomography.between_sample_stats()</span></code></a></li>
+<li><a class="reference internal" href="#binny.NZTomography.bin_combo_filter"><code class="docutils literal notranslate"><span class="pre">NZTomography.bin_combo_filter()</span></code></a></li>
+<li><a class="reference internal" href="#binny.NZTomography.bin_keys"><code class="docutils literal notranslate"><span class="pre">NZTomography.bin_keys</span></code></a></li>
+<li><a class="reference internal" href="#binny.NZTomography.bins"><code class="docutils literal notranslate"><span class="pre">NZTomography.bins</span></code></a></li>
+<li><a class="reference internal" href="#binny.NZTomography.build_bins"><code class="docutils literal notranslate"><span class="pre">NZTomography.build_bins()</span></code></a></li>
+<li><a class="reference internal" href="#binny.NZTomography.build_survey_bins"><code class="docutils literal notranslate"><span class="pre">NZTomography.build_survey_bins()</span></code></a></li>
+<li><a class="reference internal" href="#binny.NZTomography.calibrate_smail_from_mock"><code class="docutils literal notranslate"><span class="pre">NZTomography.calibrate_smail_from_mock()</span></code></a></li>
+<li><a class="reference internal" href="#binny.NZTomography.clear"><code class="docutils literal notranslate"><span class="pre">NZTomography.clear()</span></code></a></li>
+<li><a class="reference internal" href="#binny.NZTomography.cross_bin_stats"><code class="docutils literal notranslate"><span class="pre">NZTomography.cross_bin_stats()</span></code></a></li>
+<li><a class="reference internal" href="#binny.NZTomography.list_nz_models"><code class="docutils literal notranslate"><span class="pre">NZTomography.list_nz_models()</span></code></a></li>
+<li><a class="reference internal" href="#binny.NZTomography.list_surveys"><code class="docutils literal notranslate"><span class="pre">NZTomography.list_surveys()</span></code></a></li>
+<li><a class="reference internal" href="#binny.NZTomography.nz"><code class="docutils literal notranslate"><span class="pre">NZTomography.nz</span></code></a></li>
+<li><a class="reference internal" href="#binny.NZTomography.nz_model"><code class="docutils literal notranslate"><span class="pre">NZTomography.nz_model()</span></code></a></li>
+<li><a class="reference internal" href="#binny.NZTomography.population_stats"><code class="docutils literal notranslate"><span class="pre">NZTomography.population_stats()</span></code></a></li>
+<li><a class="reference internal" href="#binny.NZTomography.shape_stats"><code class="docutils literal notranslate"><span class="pre">NZTomography.shape_stats()</span></code></a></li>
+<li><a class="reference internal" href="#binny.NZTomography.z"><code class="docutils literal notranslate"><span class="pre">NZTomography.z</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#binny.available_metric_kernels"><code class="docutils literal notranslate"><span class="pre">available_metric_kernels()</span></code></a></li>
+<li><a class="reference internal" href="#binny.register_metric_kernel"><code class="docutils literal notranslate"><span class="pre">register_metric_kernel()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+          </div>
+        </div>
+      </div>
+      
+      
+    </aside>
+  </div>
+</div><script src="../_static/documentation_options.js?v=5929fcd5"></script>
+    <script src="../_static/doctools.js?v=9bcbadda"></script>
+    <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../_static/scripts/furo.js?v=46bd48cc"></script>
+    <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="../_static/copybutton.js?v=f16c4c56"></script>
+    <script src="../_static/design-tabs.js?v=f930bc37"></script>
+    </body>
+</html>
