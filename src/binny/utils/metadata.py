@@ -76,6 +76,8 @@ def build_tomo_bins_metadata(
         int(k): np.asarray(v, dtype=float).tolist() for k, v in bins_returned.items()
     }
 
+    truez_summary = _compute_effective_truez(z_arr, bins_returned)
+
     meta: dict[str, Any] = {
         "kind": kind,
         "grid": {
@@ -105,12 +107,15 @@ def build_tomo_bins_metadata(
             "count_per_bin": None
             if count_per_bin is None
             else {int(k): float(v) for k, v in count_per_bin.items()},
+            "truez_summary": truez_summary,
         },
         "inputs": dict(inputs),
     }
 
     if notes is not None:
         meta["notes"] = dict(notes)
+
+    meta["description"] = _metadata_description()
 
     return meta
 
@@ -174,3 +179,186 @@ def save_metadata_txt(
     rounded = round_floats(dict(meta), decimal_places)
     p.write_text(_format(rounded) + "\n", encoding="utf-8")
     return p
+
+
+def _weighted_quantile(
+    z: np.ndarray,
+    pdf: np.ndarray,
+    q: float,
+) -> float | None:
+    """Return the quantile of a 1D probability distribution on a grid.
+
+    This function computes the quantile corresponding to cumulative probability
+    ``q`` for a distribution defined by ``pdf`` evaluated on a grid ``z``.
+    The distribution is interpreted as a continuous function and normalized
+    internally using trapezoidal integration.
+
+    The cumulative distribution function (CDF) is constructed via trapezoidal
+    integration, and the quantile is obtained by interpolation.
+
+    Args:
+        z: Monotonic 1D array representing the grid (e.g., redshift).
+        pdf: 1D array of the same shape as ``z`` representing the probability
+            density evaluated on the grid. Does not need to be normalized.
+        q: Desired quantile in the interval [0, 1].
+
+    Returns:
+        The value of ``z`` at which the cumulative probability reaches ``q``.
+        Returns ``None`` if the input distribution has zero total weight or if
+        the grid is empty.
+
+    Raises:
+        ValueError: If ``z`` and ``pdf`` have different shapes.
+    """
+    if z.size == 0:
+        return None
+
+    area = float(np.trapezoid(pdf, z))
+    if area <= 0.0:
+        return None
+
+    pdf_norm = pdf / area
+
+    if z.size == 1:
+        return float(z[0])
+
+    dz = np.diff(z)
+    cdf = np.empty_like(z, dtype=float)
+    cdf[0] = 0.0
+    cdf[1:] = np.cumsum(0.5 * (pdf_norm[:-1] + pdf_norm[1:]) * dz)
+
+    total = cdf[-1]
+    if total <= 0.0:
+        return None
+
+    cdf = cdf / total
+    return float(np.interp(q, cdf, z))
+
+
+def _compute_effective_truez(
+    z: Any,
+    bins_returned: Mapping[int, Any],
+) -> dict[int, dict[str, float | None]]:
+    """Compute true-redshift summary statistics for tomographic bins.
+
+    For each returned bin distribution ``n_i(z)``, this function computes a set
+    of summary statistics describing its location, width, and shape in true
+    redshift space.
+
+    The input distributions may be normalized or unnormalized; all statistics
+    are computed from the normalized shape.
+
+    The following quantities are computed per bin:
+        - Mean (z_mean)
+        - Median (z_median)
+        - Mode (z_mode)
+        - Central 68% interval (z_lo_68, z_hi_68)
+        - Central 95% interval (z_lo_95, z_hi_95)
+        - Additional quantiles (z_q05, z_q25, z_q75, z_q95)
+
+    These summaries provide a probabilistic description of each bin in true
+    redshift space, complementing the imposed bin edges defined in photo-z
+    space.
+
+    Args:
+        z: 1D array-like representing the true-redshift grid shared by all bins.
+        bins_returned: Mapping from bin index to arrays representing the
+            corresponding bin distributions evaluated on ``z``.
+
+    Returns:
+        Dictionary mapping each bin index to a dictionary of summary statistics.
+        If a bin has zero total weight, all summary values are set to ``None``.
+
+    Notes:
+        These statistics describe the effective support of each bin in true-z.
+        Due to photo-z scatter and bias, bins are generally overlapping and do
+        not correspond to sharp intervals in true redshift space.
+    """
+    z_arr = np.asarray(z, dtype=float)
+
+    out: dict[int, dict[str, float | None]] = {}
+
+    for i, n_bin in bins_returned.items():
+        pdf = np.asarray(n_bin, dtype=float)
+
+        area = float(np.trapezoid(pdf, z_arr))
+
+        if area <= 0.0:
+            out[int(i)] = {
+                "z_mean": None,
+                "z_median": None,
+                "z_mode": None,
+                "z_lo_68": None,
+                "z_hi_68": None,
+                "z_lo_95": None,
+                "z_hi_95": None,
+                "z_q05": None,
+                "z_q25": None,
+                "z_q75": None,
+                "z_q95": None,
+            }
+            continue
+
+        pdf_norm = pdf / area
+
+        z_mean = float(np.trapezoid(z_arr * pdf_norm, z_arr))
+        z_mode = float(z_arr[np.argmax(pdf_norm)])
+
+        out[int(i)] = {
+            "z_mean": z_mean,
+            "z_median": _weighted_quantile(z_arr, pdf_norm, 0.5),
+            "z_mode": z_mode,
+            "z_lo_68": _weighted_quantile(z_arr, pdf_norm, 0.16),
+            "z_hi_68": _weighted_quantile(z_arr, pdf_norm, 0.84),
+            "z_lo_95": _weighted_quantile(z_arr, pdf_norm, 0.025),
+            "z_hi_95": _weighted_quantile(z_arr, pdf_norm, 0.975),
+            "z_q05": _weighted_quantile(z_arr, pdf_norm, 0.05),
+            "z_q25": _weighted_quantile(z_arr, pdf_norm, 0.25),
+            "z_q75": _weighted_quantile(z_arr, pdf_norm, 0.75),
+            "z_q95": _weighted_quantile(z_arr, pdf_norm, 0.95),
+        }
+
+    return out
+
+
+def _metadata_description() -> dict[str, Any]:
+    """Return human-readable descriptions of metadata fields.
+
+    This provides a concise explanation of the meaning of each top-level
+    metadata field and key subfields. It is intended for inspection,
+    debugging, and reproducibility, and does not affect any computations.
+
+    Returns:
+        Dictionary mapping metadata keys to short textual descriptions.
+    """
+    return {
+        "kind": "Tomography type: 'photoz' (photo-z selected bins) or 'specz'.",
+        "grid": {
+            "z": "Redshift grid used for all distributions "
+            "(interpreted as true-z for photo-z bins)",
+            "z_min": "Minimum redshift of the grid.",
+            "z_max": "Maximum redshift of the grid.",
+            "n": "Number of grid points.",
+        },
+        "parent_nz": {
+            "values": "Parent redshift distribution evaluated on z.",
+            "norm": "Optional normalization of the parent distribution (depends on convention).",
+        },
+        "bins": {
+            "indices": "Indices of tomographic bins.",
+            "n_bins": "Total number of bins.",
+            "bin_edges": "Nominal bin edges (typically in photo-z space for photoz tomography).",
+            "bins_returned": "Per-bin distributions n_i(z) evaluated on the true-z grid.",
+            "bins_norms": "Optional per-bin normalization values.",
+            "frac_per_bin": "Optional fraction of galaxies per bin.",
+            "density_per_bin": "Optional number density per bin.",
+            "count_per_bin": "Optional galaxy counts per bin.",
+            "truez_summary": (
+                "Summary statistics of the true-redshift distribution in each bin "
+                "(mean, median, mode, and quantiles). These describe the "
+                "true-redshift distribution of each bin and are not hard edges."
+            ),
+        },
+        "inputs": "User-provided configuration used to generate the bins.",
+        "notes": "Optional user-provided annotations.",
+    }
