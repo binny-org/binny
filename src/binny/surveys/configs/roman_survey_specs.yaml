@@ -1,0 +1,122 @@
+name: roman  # Wenzl22 / arXiv:2112.07681 Roman HLS + wide specs
+
+# Optional survey metadata
+survey_meta:
+  reference: Wenzl22
+  footprint:
+    scenarios:
+      hls_optimistic: {survey_area: 2000.0}
+      hls_conservative: {survey_area: 2000.0}
+      wide: {survey_area: 18000.0}
+
+# Redshift grid used for evaluating n(z) and all n_i(z) outputs
+z_grid: {start: 0.0, stop: 4.0, n: 500}
+
+tomography:
+  # HLS OPTIMISTIC SOURCE
+  - role: source
+    scenario: hls_optimistic
+    n_gal_arcmin2: 51.0
+    kind: photoz
+
+    nz:
+      model: smail
+      params: {z0: 0.13, alpha: 2.0, beta: 0.66}
+
+    bins:
+      scheme: equal_number
+      n_bins: 10
+
+    uncertainties:
+      scatter_scale: 0.01
+      mean_offset: 0.0
+
+  # HLS OPTIMISTIC LENS
+  - role: lens
+    scenario: hls_optimistic
+    n_gal_arcmin2: 66.0
+    kind: photoz
+
+    nz:
+      model: smail
+      params: {z0: 0.08, alpha: 2.0, beta: 0.58}
+
+    bins:
+      scheme: equal_number
+      n_bins: 10
+
+    uncertainties:
+      scatter_scale: 0.01
+      mean_offset: 0.0
+
+  # HLS CONSERVATIVE SOURCE
+  - role: source
+    scenario: hls_conservative
+    n_gal_arcmin2: 51.0
+    kind: photoz
+
+    nz:
+      model: smail
+      params: {z0: 0.13, alpha: 2.0, beta: 0.66}
+
+    bins:
+      scheme: equal_number
+      n_bins: 10
+
+    uncertainties:
+      scatter_scale: 0.05
+      mean_offset: 0.0
+
+  # HLS CONSERVATIVE LENS
+  - role: lens
+    scenario: hls_conservative
+    n_gal_arcmin2: 66.0
+    kind: photoz
+
+    nz:
+      model: smail
+      params: {z0: 0.08, alpha: 2.0, beta: 0.58}
+
+    bins:
+      scheme: equal_number
+      n_bins: 10
+
+    uncertainties:
+      scatter_scale: 0.05
+      mean_offset: 0.0
+
+  # WIDE SOURCE
+  - role: source
+    scenario: wide
+    n_gal_arcmin2: 43.0
+    kind: photoz
+
+    nz:
+      model: smail
+      params: {z0: 0.16, alpha: 2.0, beta: 0.70}
+
+    bins:
+      scheme: equal_number
+      n_bins: 10
+
+    uncertainties:
+      scatter_scale: 0.02
+      mean_offset: 0.0
+
+  # WIDE LENS
+  - role: lens
+    scenario: wide
+    n_gal_arcmin2: 59.0
+    kind: photoz
+
+    nz:
+      model: smail
+      params: {z0: 0.10, alpha: 2.0, beta: 0.62}
+
+    bins:
+      scheme: equal_number
+      n_bins: 10
+
+    uncertainties:
+      scatter_scale: 0.02
+      mean_offset: 0.0
