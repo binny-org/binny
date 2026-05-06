@@ -11,6 +11,7 @@ import pytest
 import yaml
 
 from binny.surveys.config_utils import (
+    _build_parent_nz,
     _extract_survey_meta,
     _extract_z_grid,
     _iter_tomography_entries,
@@ -22,6 +23,7 @@ from binny.surveys.config_utils import (
     _resolve_config_entry,
     _select_entries,
     _survey_meta,
+    _tabulated_params_from_config,
     config_path,
     list_configs,
 )
@@ -243,7 +245,6 @@ def test_build_parent_nz_rejects_missing_model() -> None:
     """Tests that _build_parent_nz rejects nz blocks missing model."""
     z = np.linspace(0.0, 1.0, 5)
     entry = {"nz": {"params": {}}}
-    from binny.surveys.config_utils import _build_parent_nz
 
     with pytest.raises(ValueError, match="must contain a 'model'"):
         _build_parent_nz(entry, z)
@@ -253,7 +254,6 @@ def test_build_parent_nz_rejects_non_mapping_params() -> None:
     """Tests that _build_parent_nz rejects non-mapping nz.params."""
     z = np.linspace(0.0, 1.0, 5)
     entry = {"nz": {"model": "smail", "params": [1, 2, 3]}}
-    from binny.surveys.config_utils import _build_parent_nz
 
     with pytest.raises(ValueError, match="nz.params must be a mapping"):
         _build_parent_nz(entry, z)
@@ -301,3 +301,126 @@ def test_parse_entry_rejects_non_mapping_uncertainties() -> None:
                 "uncertainties": [1, 2],
             }
         )
+
+
+def test_tabulated_params_from_config_accepts_inline_arrays() -> None:
+    """Tests that tabulated inline arrays are passed through."""
+    z_input = [0.0, 0.5, 1.0]
+    nz_input = [0.0, 2.0, 0.0]
+
+    params = _tabulated_params_from_config(
+        {
+            "model": "tabulated",
+            "z_input": z_input,
+            "nz_input": nz_input,
+        }
+    )
+
+    assert params["z_input"] == z_input
+    assert params["nz_input"] == nz_input
+
+
+def test_tabulated_params_from_config_rejects_partial_inline_arrays() -> None:
+    """Tests that tabulated inline arrays require both z and n(z)."""
+    with pytest.raises(ValueError, match="requires both 'z_input' and 'nz_input'"):
+        _tabulated_params_from_config(
+            {
+                "model": "tabulated",
+                "z_input": [0.0, 1.0],
+            }
+        )
+
+
+def test_tabulated_params_from_config_reads_absolute_source_file(tmp_path) -> None:
+    """Tests that tabulated source files are read from absolute paths."""
+    p = tmp_path / "nz.txt"
+    np.savetxt(
+        p,
+        np.array(
+            [
+                [0.0, 0.0],
+                [0.5, 2.0],
+                [1.0, 0.0],
+            ]
+        ),
+    )
+
+    params = _tabulated_params_from_config(
+        {
+            "model": "tabulated",
+            "source": {
+                "path": str(p),
+                "z_col": 0,
+                "nz_col": 1,
+                "skiprows": 0,
+            },
+        }
+    )
+
+    assert np.allclose(params["z_input"], [0.0, 0.5, 1.0])
+    assert np.allclose(params["nz_input"], [0.0, 2.0, 0.0])
+
+
+def test_tabulated_params_from_config_rejects_source_without_path() -> None:
+    """Tests that tabulated source files require a path."""
+    with pytest.raises(ValueError, match="source must contain a 'path' field"):
+        _tabulated_params_from_config(
+            {
+                "model": "tabulated",
+                "source": {
+                    "z_col": 0,
+                    "nz_col": 1,
+                },
+            }
+        )
+
+
+def test_build_parent_nz_accepts_inline_tabulated_nz() -> None:
+    """Tests that _build_parent_nz builds inline tabulated n(z)."""
+    z = np.linspace(0.0, 1.0, 5)
+
+    entry = {
+        "nz": {
+            "model": "tabulated",
+            "z_input": [0.0, 0.5, 1.0],
+            "nz_input": [0.0, 2.0, 0.0],
+            "params": {"normalize": False},
+        }
+    }
+
+    nz = _build_parent_nz(entry, z)
+
+    assert isinstance(nz, np.ndarray)
+    assert nz.shape == z.shape
+    assert np.all(nz >= 0.0)
+    assert nz[0] == pytest.approx(0.0)
+    assert nz[-1] == pytest.approx(0.0)
+
+
+def test_parse_entry_accepts_tabulated_source_block() -> None:
+    """Tests that _parse_entry preserves tabulated source blocks."""
+    entry = {
+        "role": "lens",
+        "year": "lrg",
+        "kind": "specz",
+        "nz": {
+            "model": "tabulated",
+            "source": {
+                "path": "desi_lrg_nz.txt",
+                "z_col": 0,
+                "nz_col": 1,
+                "skiprows": 0,
+            },
+            "params": {"normalize": True},
+        },
+        "bins": {"edges": [0.4, 1.0]},
+    }
+
+    spec = _parse_entry(entry)
+
+    assert spec["role"] == "lens"
+    assert spec["year"] == "lrg"
+    assert spec["kind"] == "specz"
+    assert spec["nz"]["model"] == "tabulated"
+    assert spec["nz"]["source"]["path"] == "desi_lrg_nz.txt"
+    assert np.allclose(spec["bins"]["edges"], [0.4, 1.0])

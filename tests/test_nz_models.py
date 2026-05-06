@@ -15,6 +15,7 @@ from binny.nz.models import (
     skew_normal_distribution,
     smail_like_distribution,
     student_t_distribution,
+    tabulated_distribution,
     tophat_distribution,
 )
 
@@ -309,3 +310,107 @@ def test_student_t_distribution_raises_for_nonpositive_params(sigma, nu, msg):
     non-positive sigma or nu."""
     with pytest.raises(ValueError, match=msg):
         student_t_distribution(0.0, mu=0.0, sigma=sigma, nu=nu)
+
+
+def test_tabulated_distribution_interpolates_expected_values():
+    """Tests that tabulated_distribution interpolates expected values."""
+    z = np.array([0.0, 0.5, 1.0, 1.5, 2.0])
+    z_input = np.array([0.0, 1.0, 2.0])
+    nz_input = np.array([0.0, 2.0, 0.0])
+
+    got = tabulated_distribution(z, z_input=z_input, nz_input=nz_input)
+
+    expected = np.array([0.0, 1.0, 2.0, 1.0, 0.0])
+    _assert_allclose(got, expected)
+
+
+def test_tabulated_distribution_returns_zero_outside_input_range():
+    """Tests that tabulated_distribution returns zero outside input range."""
+    z = np.array([-0.5, 0.0, 1.0, 2.0, 2.5])
+    z_input = np.array([0.0, 1.0, 2.0])
+    nz_input = np.array([0.0, 1.0, 0.0])
+
+    got = tabulated_distribution(z, z_input=z_input, nz_input=nz_input)
+
+    expected = np.array([0.0, 0.0, 1.0, 0.0, 0.0])
+    _assert_allclose(got, expected)
+
+
+def test_tabulated_distribution_preserves_shape_for_array_input():
+    """Tests that tabulated_distribution preserves input shape."""
+    z = np.linspace(0.0, 2.0, 25)
+    z_input = np.array([0.0, 1.0, 2.0])
+    nz_input = np.array([0.0, 1.0, 0.0])
+
+    got = tabulated_distribution(z, z_input=z_input, nz_input=nz_input)
+
+    assert got.shape == z.shape
+
+
+def test_tabulated_distribution_scalar_input_returns_scalar_shape():
+    """Tests that tabulated_distribution preserves scalar input shape."""
+    z = 0.5
+    z_input = np.array([0.0, 1.0, 2.0])
+    nz_input = np.array([0.0, 2.0, 0.0])
+
+    got = tabulated_distribution(z, z_input=z_input, nz_input=nz_input)
+
+    assert np.asarray(got).shape == ()
+    _assert_allclose(got, 1.0)
+
+
+def test_tabulated_distribution_normalizes_over_z():
+    """Tests that tabulated_distribution normalizes over z."""
+    z = np.linspace(0.0, 2.0, 101)
+    z_input = np.array([0.0, 1.0, 2.0])
+    nz_input = np.array([0.0, 2.0, 0.0])
+
+    got = tabulated_distribution(z, z_input=z_input, nz_input=nz_input, normalize=True)
+
+    _assert_allclose(np.trapezoid(got, z), 1.0, rtol=1e-12, atol=1e-12)
+
+
+def test_tabulated_distribution_raises_for_non_1d_input_arrays():
+    """Tests that tabulated_distribution raises ValueError for non-1D inputs."""
+    z = np.linspace(0.0, 2.0, 5)
+    z_input = np.array([[0.0, 1.0, 2.0]])
+    nz_input = np.array([0.0, 1.0, 0.0])
+
+    with pytest.raises(ValueError, match="z_table and nz_table must be 1D arrays"):
+        tabulated_distribution(z, z_input=z_input, nz_input=nz_input)
+
+
+def test_tabulated_distribution_raises_for_shape_mismatch():
+    """Tests that tabulated_distribution raises ValueError for shape mismatch."""
+    z = np.linspace(0.0, 2.0, 5)
+    z_input = np.array([0.0, 1.0, 2.0])
+    nz_input = np.array([0.0, 1.0])
+
+    with pytest.raises(ValueError, match="z_table and nz_table must have the same shape"):
+        tabulated_distribution(z, z_input=z_input, nz_input=nz_input)
+
+
+def test_tabulated_distribution_raises_for_too_few_input_points():
+    """Tests that tabulated_distribution raises ValueError for too few points."""
+    z = np.linspace(0.0, 2.0, 5)
+    z_input = np.array([0.0])
+    nz_input = np.array([1.0])
+
+    with pytest.raises(ValueError, match="at least two points"):
+        tabulated_distribution(z, z_input=z_input, nz_input=nz_input)
+
+
+@pytest.mark.parametrize(
+    "z_input",
+    [
+        np.array([0.0, 1.0, 1.0]),
+        np.array([0.0, 2.0, 1.0]),
+    ],
+)
+def test_tabulated_distribution_raises_for_non_increasing_z_input(z_input):
+    """Tests that tabulated_distribution raises ValueError for bad z_input."""
+    z = np.linspace(0.0, 2.0, 5)
+    nz_input = np.array([0.0, 1.0, 0.0])
+
+    with pytest.raises(ValueError, match="z_table must be strictly increasing"):
+        tabulated_distribution(z, z_input=z_input, nz_input=nz_input)
