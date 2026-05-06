@@ -83,13 +83,19 @@ where = ["src"]
 "binny.surveys" = ["configs/*.yaml"]
 
 [tool.bumpversion]
-commit = true
 current_version = "0.1.1"
+commit = true
 tag = true
 
-[tool.bumpversion.files."pyproject.toml"]
-replace = 'version = "{new_version}"'
+[[tool.bumpversion.files]]
+filename = "pyproject.toml"
 search = 'version = "{current_version}"'
+replace = 'version = "{new_version}"'
+
+[[tool.bumpversion.files]]
+filename = "pyproject.toml"
+search = 'current_version = "{current_version}"'
+replace = 'current_version = "{new_version}"'
 
 
 [tool.tox]
