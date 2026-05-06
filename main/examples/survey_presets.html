@@ -1,0 +1,980 @@
+<!doctype html>
+<html class="no-js" lang="en" data-content_root="../">
+  <head><meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <meta name="color-scheme" content="light dark"><meta name="viewport" content="width=device-width, initial-scale=1" />
+<link rel="index" title="Index" href="../genindex.html"><link rel="search" title="Search" href="../search.html"><link rel="next" title="Bin-pair selections" href="selections.html"><link rel="prev" title="Bin diagnostics" href="bin_diagnostics.html">
+        <link rel="prefetch" href="../_static/assets/logo.png" as="image">
+        <link rel="prefetch" href="../_static/assets/logo.png" as="image">
+
+    <link rel="shortcut icon" href="../_static/favicon.png"><!-- Generated with Sphinx 8.2.3 and Furo 2025.12.19 -->
+        <title>Survey presets - Binny documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=d111a655" />
+    <link rel="stylesheet" type="text/css" href="../_static/styles/furo.css?v=7bdb33bb" />
+    <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
+    <link rel="stylesheet" type="text/css" href="../_static/plot_directive.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/sphinx-design.min.css?v=95c83b7e" />
+    <link rel="stylesheet" type="text/css" href="../_static/styles/furo-extensions.css?v=8dab3a3b" />
+    <link rel="stylesheet" type="text/css" href="../_static/binny.css?v=9dc84726" />
+    
+    
+
+
+<style>
+  body {
+    --color-code-background: #f2f2f2;
+  --color-code-foreground: #1e1e1e;
+  --color-brand-primary: #440154;
+  --color-brand-content: #31688E;
+  --color-link: #35B779;
+  --color-link--hover: #31688E;
+  --color-link--visited: #FDE725;
+  
+  }
+  @media not print {
+    body[data-theme="dark"] {
+      --color-code-background: #202020;
+  --color-code-foreground: #d0d0d0;
+  --color-brand-primary: #440154;
+  --color-brand-content: #31688E;
+  --color-link: #35B779;
+  --color-link--hover: #31688E;
+  --color-link--visited: #FDE725;
+  
+    }
+    @media (prefers-color-scheme: dark) {
+      body:not([data-theme="light"]) {
+        --color-code-background: #202020;
+  --color-code-foreground: #d0d0d0;
+  --color-brand-primary: #440154;
+  --color-brand-content: #31688E;
+  --color-link: #35B779;
+  --color-link--hover: #31688E;
+  --color-link--visited: #FDE725;
+  
+      }
+    }
+  }
+</style></head>
+  <body>
+    
+    <script>
+      document.body.dataset.theme = localStorage.getItem("theme") || "auto";
+    </script>
+    
+
+<svg xmlns="http://www.w3.org/2000/svg" style="display: none;">
+  <symbol id="svg-toc" viewBox="0 0 24 24">
+    <title>Contents</title>
+    <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 1024 1024">
+      <path d="M408 442h480c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8H408c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8zm-8 204c0 4.4 3.6 8 8 8h480c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8H408c-4.4 0-8 3.6-8 8v56zm504-486H120c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h784c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8zm0 632H120c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h784c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8zM115.4 518.9L271.7 642c5.8 4.6 14.4.5 14.4-6.9V388.9c0-7.4-8.5-11.5-14.4-6.9L115.4 505.1a8.74 8.74 0 0 0 0 13.8z"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-menu" viewBox="0 0 24 24">
+    <title>Menu</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather-menu">
+      <line x1="3" y1="12" x2="21" y2="12"></line>
+      <line x1="3" y1="6" x2="21" y2="6"></line>
+      <line x1="3" y1="18" x2="21" y2="18"></line>
+    </svg>
+  </symbol>
+  <symbol id="svg-arrow-right" viewBox="0 0 24 24">
+    <title>Expand</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather-chevron-right">
+      <polyline points="9 18 15 12 9 6"></polyline>
+    </svg>
+  </symbol>
+  <symbol id="svg-sun" viewBox="0 0 24 24">
+    <title>Light mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="feather-sun">
+      <circle cx="12" cy="12" r="5"></circle>
+      <line x1="12" y1="1" x2="12" y2="3"></line>
+      <line x1="12" y1="21" x2="12" y2="23"></line>
+      <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+      <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+      <line x1="1" y1="12" x2="3" y2="12"></line>
+      <line x1="21" y1="12" x2="23" y2="12"></line>
+      <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+      <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+    </svg>
+  </symbol>
+  <symbol id="svg-moon" viewBox="0 0 24 24">
+    <title>Dark mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-moon">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+      <path d="M12 3c.132 0 .263 0 .393 0a7.5 7.5 0 0 0 7.92 12.446a9 9 0 1 1 -8.313 -12.454z" />
+    </svg>
+  </symbol>
+  <symbol id="svg-sun-with-moon" viewBox="0 0 24 24">
+    <title>Auto light/dark, in light mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round"
+      class="icon-custom-derived-from-feather-sun-and-tabler-moon">
+      <path style="opacity: 50%" d="M 5.411 14.504 C 5.471 14.504 5.532 14.504 5.591 14.504 C 3.639 16.319 4.383 19.569 6.931 20.352 C 7.693 20.586 8.512 20.551 9.25 20.252 C 8.023 23.207 4.056 23.725 2.11 21.184 C 0.166 18.642 1.702 14.949 4.874 14.536 C 5.051 14.512 5.231 14.5 5.411 14.5 L 5.411 14.504 Z"/>
+      <line x1="14.5" y1="3.25" x2="14.5" y2="1.25"/>
+      <line x1="14.5" y1="15.85" x2="14.5" y2="17.85"/>
+      <line x1="10.044" y1="5.094" x2="8.63" y2="3.68"/>
+      <line x1="19" y1="14.05" x2="20.414" y2="15.464"/>
+      <line x1="8.2" y1="9.55" x2="6.2" y2="9.55"/>
+      <line x1="20.8" y1="9.55" x2="22.8" y2="9.55"/>
+      <line x1="10.044" y1="14.006" x2="8.63" y2="15.42"/>
+      <line x1="19" y1="5.05" x2="20.414" y2="3.636"/>
+      <circle cx="14.5" cy="9.55" r="3.6"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-moon-with-sun" viewBox="0 0 24 24">
+    <title>Auto light/dark, in dark mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round"
+      class="icon-custom-derived-from-feather-sun-and-tabler-moon">
+      <path d="M 8.282 7.007 C 8.385 7.007 8.494 7.007 8.595 7.007 C 5.18 10.184 6.481 15.869 10.942 17.24 C 12.275 17.648 13.706 17.589 15 17.066 C 12.851 22.236 5.91 23.143 2.505 18.696 C -0.897 14.249 1.791 7.786 7.342 7.063 C 7.652 7.021 7.965 7 8.282 7 L 8.282 7.007 Z"/>
+      <line style="opacity: 50%" x1="18" y1="3.705" x2="18" y2="2.5"/>
+      <line style="opacity: 50%" x1="18" y1="11.295" x2="18" y2="12.5"/>
+      <line style="opacity: 50%" x1="15.316" y1="4.816" x2="14.464" y2="3.964"/>
+      <line style="opacity: 50%" x1="20.711" y1="10.212" x2="21.563" y2="11.063"/>
+      <line style="opacity: 50%" x1="14.205" y1="7.5" x2="13.001" y2="7.5"/>
+      <line style="opacity: 50%" x1="21.795" y1="7.5" x2="23" y2="7.5"/>
+      <line style="opacity: 50%" x1="15.316" y1="10.184" x2="14.464" y2="11.036"/>
+      <line style="opacity: 50%" x1="20.711" y1="4.789" x2="21.563" y2="3.937"/>
+      <circle style="opacity: 50%" cx="18" cy="7.5" r="2.169"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-pencil" viewBox="0 0 24 24">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-pencil-code">
+      <path d="M4 20h4l10.5 -10.5a2.828 2.828 0 1 0 -4 -4l-10.5 10.5v4" />
+      <path d="M13.5 6.5l4 4" />
+      <path d="M20 21l2 -2l-2 -2" />
+      <path d="M17 17l-2 2l2 2" />
+    </svg>
+  </symbol>
+  <symbol id="svg-eye" viewBox="0 0 24 24">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-eye-code">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+      <path d="M10 12a2 2 0 1 0 4 0a2 2 0 0 0 -4 0" />
+      <path
+        d="M11.11 17.958c-3.209 -.307 -5.91 -2.293 -8.11 -5.958c2.4 -4 5.4 -6 9 -6c3.6 0 6.6 2 9 6c-.21 .352 -.427 .688 -.647 1.008" />
+      <path d="M20 21l2 -2l-2 -2" />
+      <path d="M17 17l-2 2l2 2" />
+    </svg>
+  </symbol>
+</svg>
+
+<input type="checkbox" class="sidebar-toggle" name="__navigation" id="__navigation" aria-label="Toggle site navigation sidebar">
+<input type="checkbox" class="sidebar-toggle" name="__toc" id="__toc" aria-label="Toggle table of contents sidebar">
+<label class="overlay sidebar-overlay" for="__navigation"></label>
+<label class="overlay toc-overlay" for="__toc"></label>
+
+<a class="skip-to-content muted-link" href="#furo-main-content">Skip to content</a>
+
+
+
+<div class="page">
+  <header class="mobile-header">
+    <div class="header-left">
+      <label class="nav-overlay-icon" for="__navigation">
+        <span class="icon"><svg><use href="#svg-menu"></use></svg></span>
+      </label>
+    </div>
+    <div class="header-center">
+      <a href="../index.html"><div class="brand">Binny  documentation</div></a>
+    </div>
+    <div class="header-right">
+      <div class="theme-toggle-container theme-toggle-header">
+        <button class="theme-toggle" aria-label="Toggle Light / Dark / Auto color theme">
+          <svg class="theme-icon-when-auto-light"><use href="#svg-sun-with-moon"></use></svg>
+          <svg class="theme-icon-when-auto-dark"><use href="#svg-moon-with-sun"></use></svg>
+          <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
+          <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
+        </button>
+      </div>
+      <label class="toc-overlay-icon toc-header-icon" for="__toc">
+        <span class="icon"><svg><use href="#svg-toc"></use></svg></span>
+      </label>
+    </div>
+  </header>
+  <aside class="sidebar-drawer">
+    <div class="sidebar-container">
+      
+      <div class="sidebar-sticky"><a class="sidebar-brand" href="../index.html">
+  <div class="sidebar-logo-container">
+    <img class="sidebar-logo only-light" src="../_static/assets/logo.png" alt="Light Logo"/>
+    <img class="sidebar-logo only-dark" src="../_static/assets/logo.png" alt="Dark Logo"/>
+  </div>
+  
+  <span class="sidebar-brand-text">Binny  documentation</span>
+  
+</a><form class="sidebar-search-container" method="get" action="../search.html" role="search">
+  <input class="sidebar-search" placeholder="Search" name="q" aria-label="Search">
+  <input type="hidden" name="check_keywords" value="yes">
+  <input type="hidden" name="area" value="default">
+</form>
+<div id="searchbox"></div><div class="sidebar-scroll"><div class="sidebar-tree">
+  <ul class="current">
+<li class="toctree-l1 has-children"><a class="reference internal" href="../theory/index.html"> Theory</a><input aria-label="Toggle navigation of  Theory" class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" role="switch" type="checkbox"/><label for="toctree-checkbox-1"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../theory/parent_nz.html"> Parent n(z)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../theory/tomography.html"> Tomography</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../theory/uncertainties/index.html"> Redshift uncertainties</a><input aria-label="Toggle navigation of  Redshift uncertainties" class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" role="switch" type="checkbox"/><label for="toctree-checkbox-2"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="../theory/uncertainties/photoz.html"> Photometric-redshift uncertainties</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../theory/uncertainties/specz.html"> Spectroscopic-redshift uncertainties</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../theory/statistics.html"> Bin summaries</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../theory/diagnostics.html"> Bin diagnostics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../theory/bin_combos.html"> Bin-index combinations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../theory/conventions.html"> Conventions</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../workflow.html"> Workflow</a></li>
+<li class="toctree-l1 current has-children"><a class="reference internal" href="index.html"> Examples</a><input aria-label="Toggle navigation of  Examples" checked="" class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" role="switch" type="checkbox"/><label for="toctree-checkbox-3"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="nz_modelling.html"> Parent n(z) models</a></li>
+<li class="toctree-l2"><a class="reference internal" href="nz_calibration.html"> Parent n(z) from mocks</a></li>
+<li class="toctree-l2"><a class="reference internal" href="photoz_bins.html"> Photometric bins</a></li>
+<li class="toctree-l2"><a class="reference internal" href="specz_bins.html"> Spectroscopic bins</a></li>
+<li class="toctree-l2"><a class="reference internal" href="bin_summaries.html"> Bin summaries</a></li>
+<li class="toctree-l2"><a class="reference internal" href="bin_diagnostics.html"> Bin diagnostics</a></li>
+<li class="toctree-l2 current current-page"><a class="current reference internal" href="#"> Survey presets</a></li>
+<li class="toctree-l2"><a class="reference internal" href="selections.html"> Bin-pair selections</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../installation.html"> Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../citation.html"> Citation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../contributing.html"> Contributing</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../api/index.html">Binny API</a><input aria-label="Toggle navigation of Binny API" class="toctree-checkbox" id="toctree-checkbox-4" name="toctree-checkbox-4" role="switch" type="checkbox"/><label for="toctree-checkbox-4"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../api/modules.html">binny</a><input aria-label="Toggle navigation of binny" class="toctree-checkbox" id="toctree-checkbox-5" name="toctree-checkbox-5" role="switch" type="checkbox"/><label for="toctree-checkbox-5"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l3 has-children"><a class="reference internal" href="../api/binny.html">binny package</a><input aria-label="Toggle navigation of binny package" class="toctree-checkbox" id="toctree-checkbox-6" name="toctree-checkbox-6" role="switch" type="checkbox"/><label for="toctree-checkbox-6"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l4 has-children"><a class="reference internal" href="../api/binny.api.html">binny.api package</a><input aria-label="Toggle navigation of binny.api package" class="toctree-checkbox" id="toctree-checkbox-7" name="toctree-checkbox-7" role="switch" type="checkbox"/><label for="toctree-checkbox-7"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l5"><a class="reference internal" href="../api/binny.api.nz_tomography.html">binny.api.nz_tomography module</a></li>
+</ul>
+</li>
+<li class="toctree-l4 has-children"><a class="reference internal" href="../api/binny.axes.html">binny.axes package</a><input aria-label="Toggle navigation of binny.axes package" class="toctree-checkbox" id="toctree-checkbox-8" name="toctree-checkbox-8" role="switch" type="checkbox"/><label for="toctree-checkbox-8"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l5"><a class="reference internal" href="../api/binny.axes.bin_edges.html">binny.axes.bin_edges module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../api/binny.axes.grids.html">binny.axes.grids module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../api/binny.axes.mixed_edges.html">binny.axes.mixed_edges module</a></li>
+</ul>
+</li>
+<li class="toctree-l4 has-children"><a class="reference internal" href="../api/binny.correlations.html">binny.correlations package</a><input aria-label="Toggle navigation of binny.correlations package" class="toctree-checkbox" id="toctree-checkbox-9" name="toctree-checkbox-9" role="switch" type="checkbox"/><label for="toctree-checkbox-9"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l5"><a class="reference internal" href="../api/binny.correlations.bin_combo_filter.html">binny.correlations.bin_combo_filter module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../api/binny.correlations.filters.html">binny.correlations.filters module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../api/binny.correlations.metrics.html">binny.correlations.metrics module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../api/binny.correlations.scores.html">binny.correlations.scores module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../api/binny.correlations.topology.html">binny.correlations.topology module</a></li>
+</ul>
+</li>
+<li class="toctree-l4 has-children"><a class="reference internal" href="../api/binny.nz.html">binny.nz package</a><input aria-label="Toggle navigation of binny.nz package" class="toctree-checkbox" id="toctree-checkbox-10" name="toctree-checkbox-10" role="switch" type="checkbox"/><label for="toctree-checkbox-10"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l5"><a class="reference internal" href="../api/binny.nz.calibration.html">binny.nz.calibration module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../api/binny.nz.models.html">binny.nz.models module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../api/binny.nz.registry.html">binny.nz.registry module</a></li>
+</ul>
+</li>
+<li class="toctree-l4 has-children"><a class="reference internal" href="../api/binny.nz_tomo.html">binny.nz_tomo package</a><input aria-label="Toggle navigation of binny.nz_tomo package" class="toctree-checkbox" id="toctree-checkbox-11" name="toctree-checkbox-11" role="switch" type="checkbox"/><label for="toctree-checkbox-11"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l5"><a class="reference internal" href="../api/binny.nz_tomo.between_sample_metrics.html">binny.nz_tomo.between_sample_metrics module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../api/binny.nz_tomo.bin_similarity.html">binny.nz_tomo.bin_similarity module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../api/binny.nz_tomo.bin_stats.html">binny.nz_tomo.bin_stats module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../api/binny.nz_tomo.binning_core.html">binny.nz_tomo.binning_core module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../api/binny.nz_tomo.nz_tomo_utils.html">binny.nz_tomo.nz_tomo_utils module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../api/binny.nz_tomo.photoz.html">binny.nz_tomo.photoz module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../api/binny.nz_tomo.specz.html">binny.nz_tomo.specz module</a></li>
+</ul>
+</li>
+<li class="toctree-l4 has-children"><a class="reference internal" href="../api/binny.surveys.html">binny.surveys package</a><input aria-label="Toggle navigation of binny.surveys package" class="toctree-checkbox" id="toctree-checkbox-12" name="toctree-checkbox-12" role="switch" type="checkbox"/><label for="toctree-checkbox-12"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l5"><a class="reference internal" href="../api/binny.surveys.configs.html">binny.surveys.configs package</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../api/binny.surveys.config_utils.html">binny.surveys.config_utils module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../api/binny.surveys.sky.html">binny.surveys.sky module</a></li>
+</ul>
+</li>
+<li class="toctree-l4 has-children"><a class="reference internal" href="../api/binny.utils.html">binny.utils package</a><input aria-label="Toggle navigation of binny.utils package" class="toctree-checkbox" id="toctree-checkbox-13" name="toctree-checkbox-13" role="switch" type="checkbox"/><label for="toctree-checkbox-13"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l5"><a class="reference internal" href="../api/binny.utils.broadcasting.html">binny.utils.broadcasting module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../api/binny.utils.io.html">binny.utils.io module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../api/binny.utils.metadata.html">binny.utils.metadata module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../api/binny.utils.normalization.html">binny.utils.normalization module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../api/binny.utils.pairwise_metrics.html">binny.utils.pairwise_metrics module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../api/binny.utils.relations.html">binny.utils.relations module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../api/binny.utils.types.html">binny.utils.types module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../api/binny.utils.validators.html">binny.utils.validators module</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+</div>
+</div>
+
+      </div>
+      
+    </div>
+  </aside>
+  <div class="main">
+    <div class="content">
+      <div class="article-container">
+        <a href="#" class="back-to-top muted-link">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+            <path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8v12z"></path>
+          </svg>
+          <span>Back to top</span>
+        </a>
+        <div class="content-icon-container">
+          <div class="view-this-page">
+  <a class="muted-link" href="../_sources/examples/survey_presets.rst.txt" title="View this page">
+    <svg><use href="#svg-eye"></use></svg>
+    <span class="visually-hidden">View this page</span>
+  </a>
+</div>
+<div class="theme-toggle-container theme-toggle-content">
+            <button class="theme-toggle" aria-label="Toggle Light / Dark / Auto color theme">
+              <svg class="theme-icon-when-auto-light"><use href="#svg-sun-with-moon"></use></svg>
+              <svg class="theme-icon-when-auto-dark"><use href="#svg-moon-with-sun"></use></svg>
+              <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
+              <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
+            </button>
+          </div>
+          <label class="toc-overlay-icon toc-content-icon" for="__toc">
+            <span class="icon"><svg><use href="#svg-toc"></use></svg></span>
+          </label>
+        </div>
+        <article role="main" id="furo-main-content">
+          <section id="logo-survey-presets">
+<h1><a class="reference internal" href="../_images/logo.png"><img alt="logo" src="../_images/logo.png" style="width: 32px;" /></a> Survey presets<a class="headerlink" href="#logo-survey-presets" title="Link to this heading"><span>#</span></a></h1>
+<p>Binny allows survey configurations to be stored as YAML <strong>survey
+presets</strong>. A preset groups together the parent redshift distribution,
+tomographic binning scheme, uncertainty model, and optional survey
+metadata such as footprint or galaxy density.</p>
+<p>Using a YAML preset makes it easier to keep survey configurations
+consistent across forecasts, examples, and analyses.</p>
+<section id="lsst-survey-preset">
+<h2>LSST survey preset<a class="headerlink" href="#lsst-survey-preset" title="Link to this heading"><span>#</span></a></h2>
+<p>The example below shows the LSST survey preset included with Binny.
+It defines tomographic configurations for <strong>lens</strong> and <strong>source</strong>
+samples for both <strong>year 1</strong> and <strong>year 10</strong>.</p>
+<details class="sd-sphinx-override sd-dropdown sd-card sd-mb-3 sd-fade-in-slide-down">
+<summary class="sd-summary-title sd-card-header">
+<span class="sd-summary-icon"><svg version="1.1" width="1.0em" height="1.0em" class="sd-octicon sd-octicon-code" viewBox="0 0 16 16" aria-hidden="true"><path d="m11.28 3.22 4.25 4.25a.75.75 0 0 1 0 1.06l-4.25 4.25a.749.749 0 0 1-1.275-.326.749.749 0 0 1 .215-.734L13.94 8l-3.72-3.72a.749.749 0 0 1 .326-1.275.749.749 0 0 1 .734.215Zm-6.56 0a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042L2.06 8l3.72 3.72a.749.749 0 0 1-.326 1.275.749.749 0 0 1-.734-.215L.47 8.53a.75.75 0 0 1 0-1.06Z"></path></svg></span><span class="sd-summary-text">Show LSST YAML preset</span><span class="sd-summary-state-marker sd-summary-chevron-right"><svg version="1.1" width="1.5em" height="1.5em" class="sd-octicon sd-octicon-chevron-right" viewBox="0 0 24 24" aria-hidden="true"><path d="M8.72 18.78a.75.75 0 0 1 0-1.06L14.44 12 8.72 6.28a.751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018l6.25 6.25a.75.75 0 0 1 0 1.06l-6.25 6.25a.75.75 0 0 1-1.06 0Z"></path></svg></span></summary><div class="sd-summary-content sd-card-body docutils">
+<div class="literal-block-wrapper docutils container" id="id5">
+<div class="code-block-caption"><span class="caption-text">LSST survey configuration</span><a class="headerlink" href="#id5" title="Link to this code"><span>#</span></a></div>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">lsst</span><span class="w">  </span><span class="c1"># https://arxiv.org/abs/1809.01669</span>
+
+<span class="c1"># Optional survey metadata (binning code can ignore unless requested)</span>
+<span class="nt">survey_meta</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">footprint</span><span class="p">:</span>
+<span class="w">    </span><span class="c1"># Can provide either survey_area [deg^2] or frac_sky (or both).</span>
+<span class="w">    </span><span class="nt">nominal</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt">survey_area</span><span class="p">:</span><span class="w"> </span><span class="nv">18000.0</span><span class="p p-Indicator">}</span>
+<span class="w">    </span><span class="nt">years</span><span class="p">:</span>
+<span class="w">      </span><span class="c1"># Year labels are strings on purpose (stable keys).</span>
+<span class="w">      </span><span class="s">&#39;1&#39;</span><span class="p p-Indicator">:</span><span class="w">  </span><span class="p p-Indicator">{</span><span class="nt">survey_area</span><span class="p">:</span><span class="w"> </span><span class="nv">12000.0</span><span class="p p-Indicator">}</span>
+<span class="w">      </span><span class="s">&#39;10&#39;</span><span class="p p-Indicator">:</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt">survey_area</span><span class="p">:</span><span class="w"> </span><span class="nv">14000.0</span><span class="p p-Indicator">}</span>
+
+<span class="c1"># Redshift grid used for evaluating n(z) and all n_i(z) outputs</span>
+<span class="nt">z_grid</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt">start</span><span class="p">:</span><span class="w"> </span><span class="nv">0.0</span><span class="p p-Indicator">,</span><span class="nt"> stop</span><span class="p">:</span><span class="w"> </span><span class="nv">3.5</span><span class="p p-Indicator">,</span><span class="nt"> n</span><span class="p">:</span><span class="w"> </span><span class="nv">500</span><span class="p p-Indicator">}</span>
+
+
+<span class="nt">tomography</span><span class="p">:</span>
+<span class="w">  </span><span class="c1"># LENS (Y1)</span>
+<span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">role</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">lens</span><span class="w">  </span><span class="c1"># optional label (e.g. lens/source); used for bookkeeping/keys</span>
+<span class="w">    </span><span class="nt">year</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;1&#39;</span><span class="w">   </span><span class="c1"># optional label; string is recommended for stable YAML keys</span>
+
+<span class="w">    </span><span class="c1"># Optional population metadata (not needed to build bins)</span>
+<span class="w">    </span><span class="nt">n_gal_arcmin2</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">18.0</span><span class="w">  </span><span class="c1"># surface density [gal/arcmin^2]; optional</span>
+
+<span class="w">    </span><span class="c1"># Tomography kind (dispatcher). If omitted, default could be &quot;photoz&quot;.</span>
+<span class="w">    </span><span class="nt">kind</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">photoz</span>
+
+<span class="w">    </span><span class="nt">nz</span><span class="p">:</span>
+<span class="w">      </span><span class="nt">model</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">smail</span>
+<span class="w">      </span><span class="nt">params</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt"> z0</span><span class="p">:</span><span class="w"> </span><span class="nv">0.26</span><span class="p p-Indicator">,</span><span class="nt"> alpha</span><span class="p">:</span><span class="w"> </span><span class="nv">2.0</span><span class="p p-Indicator">,</span><span class="nt"> beta</span><span class="p">:</span><span class="w"> </span><span class="nv">0.94</span><span class="p p-Indicator">}</span>
+
+<span class="w">    </span><span class="c1"># Bin specification:</span>
+<span class="w">    </span><span class="c1"># - Option A (scheme-based): provide scheme + n_bins (+ optional range)</span>
+<span class="w">    </span><span class="c1"># - Option B (explicit edges): provide edges only (no scheme / n_bins)</span>
+<span class="w">    </span><span class="nt">bins</span><span class="p">:</span>
+<span class="w">      </span><span class="nt">scheme</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">equidistant</span>
+<span class="w">      </span><span class="nt">n_bins</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">5</span>
+<span class="w">      </span><span class="nt">range</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">0.2</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">1.2</span><span class="p p-Indicator">]</span>
+<span class="w">      </span><span class="c1"># edges: [0.2, 0.4, 0.6, 0.8, 1.0, 1.2]  # alternative to scheme-based</span>
+
+<span class="w">    </span><span class="c1"># Photo-z uncertainty / error model parameters (name intentionally not &quot;photoz&quot;)</span>
+<span class="w">    </span><span class="nt">uncertainties</span><span class="p">:</span>
+<span class="w">      </span><span class="nt">scatter_scale</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0.03</span><span class="w">  </span><span class="c1"># sigma(z) ~ scatter_scale * (1+z) * mean_scale</span>
+<span class="w">      </span><span class="nt">mean_offset</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0.0</span><span class="w">     </span><span class="c1"># mu(z) ~ mean_scale * z - mean_offset</span>
+<span class="w">      </span><span class="c1"># mean_scale: 1.0     # optional (scalar broadcasts), if supported</span>
+
+<span class="w">  </span><span class="c1"># LENS (Y10)</span>
+<span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">role</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">lens</span>
+<span class="w">    </span><span class="nt">year</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;10&#39;</span>
+<span class="w">    </span><span class="nt">n_gal_arcmin2</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">48.0</span><span class="w">  </span><span class="c1"># surface density [gal/arcmin^2]; optional</span>
+<span class="w">    </span><span class="nt">kind</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">photoz</span>
+<span class="w">    </span><span class="nt">nz</span><span class="p">:</span>
+<span class="w">      </span><span class="nt">model</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">smail</span>
+<span class="w">      </span><span class="nt">params</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt"> z0</span><span class="p">:</span><span class="w"> </span><span class="nv">0.28</span><span class="p p-Indicator">,</span><span class="nt"> alpha</span><span class="p">:</span><span class="w"> </span><span class="nv">2.0</span><span class="p p-Indicator">,</span><span class="nt"> beta</span><span class="p">:</span><span class="w"> </span><span class="nv">0.9</span><span class="w"> </span><span class="p p-Indicator">}</span>
+<span class="w">    </span><span class="nt">bins</span><span class="p">:</span>
+<span class="w">      </span><span class="nt">scheme</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">equidistant</span>
+<span class="w">      </span><span class="nt">n_bins</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">10</span>
+<span class="w">      </span><span class="nt">range</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">0.2</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">1.2</span><span class="p p-Indicator">]</span>
+<span class="w">    </span><span class="nt">uncertainties</span><span class="p">:</span>
+<span class="w">      </span><span class="nt">scatter_scale</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0.03</span>
+<span class="w">      </span><span class="nt">mean_offset</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0.0</span>
+
+<span class="w">  </span><span class="c1"># SOURCE (Y1)</span>
+<span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">role</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">source</span>
+<span class="w">    </span><span class="nt">year</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;1&#39;</span>
+<span class="w">    </span><span class="nt">n_gal_arcmin2</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">10.0</span><span class="w">  </span><span class="c1"># surface density [gal/arcmin^2]; optional</span>
+<span class="w">    </span><span class="nt">kind</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">photoz</span>
+<span class="w">    </span><span class="nt">nz</span><span class="p">:</span>
+<span class="w">      </span><span class="nt">model</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">smail</span>
+<span class="w">      </span><span class="nt">params</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt"> z0</span><span class="p">:</span><span class="w"> </span><span class="nv">0.13</span><span class="p p-Indicator">,</span><span class="nt"> alpha</span><span class="p">:</span><span class="w"> </span><span class="nv">2.0</span><span class="p p-Indicator">,</span><span class="nt"> beta</span><span class="p">:</span><span class="w"> </span><span class="nv">0.78</span><span class="w"> </span><span class="p p-Indicator">}</span>
+<span class="w">    </span><span class="nt">bins</span><span class="p">:</span>
+<span class="w">      </span><span class="nt">scheme</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">equal_number</span>
+<span class="w">      </span><span class="nt">n_bins</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">5</span>
+<span class="w">      </span><span class="c1"># edges: [...]  # alternative to scheme-based</span>
+<span class="w">    </span><span class="nt">uncertainties</span><span class="p">:</span>
+<span class="w">      </span><span class="nt">scatter_scale</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0.05</span>
+<span class="w">      </span><span class="nt">mean_offset</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0.0</span>
+
+<span class="w">  </span><span class="c1"># SOURCE (Y10)</span>
+<span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">role</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">source</span>
+<span class="w">    </span><span class="nt">year</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;10&#39;</span>
+<span class="w">    </span><span class="nt">n_gal_arcmin2</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">27.0</span><span class="w">  </span><span class="c1"># surface density [gal/arcmin^2]; optional</span>
+<span class="w">    </span><span class="nt">kind</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">photoz</span>
+<span class="w">    </span><span class="nt">nz</span><span class="p">:</span>
+<span class="w">      </span><span class="nt">model</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">smail</span>
+<span class="w">      </span><span class="nt">params</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt"> z0</span><span class="p">:</span><span class="w"> </span><span class="nv">0.11</span><span class="p p-Indicator">,</span><span class="nt"> alpha</span><span class="p">:</span><span class="w"> </span><span class="nv">2.0</span><span class="p p-Indicator">,</span><span class="nt"> beta</span><span class="p">:</span><span class="w"> </span><span class="nv">0.68</span><span class="w"> </span><span class="p p-Indicator">}</span>
+<span class="w">    </span><span class="nt">bins</span><span class="p">:</span>
+<span class="w">      </span><span class="nt">scheme</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">equal_number</span>
+<span class="w">      </span><span class="nt">n_bins</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">5</span>
+<span class="w">    </span><span class="nt">uncertainties</span><span class="p">:</span>
+<span class="w">      </span><span class="nt">scatter_scale</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0.05</span>
+<span class="w">      </span><span class="nt">mean_offset</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0.0</span>
+</pre></div>
+</div>
+</div>
+</div>
+</details><section id="visualizing-the-preset">
+<h3>Visualizing the preset<a class="headerlink" href="#visualizing-the-preset" title="Link to this heading"><span>#</span></a></h3>
+<p>The figure below loads the LSST preset directly, constructs the
+corresponding tomographic bins, and plots the resulting redshift
+distributions for lens and source samples in years 1 and 10.</p>
+<p>(<a class="reference download internal" download="" href="../_downloads/87dfaec812c598bfb2366de29b374b95/survey_presets-1.py"><code class="xref download docutils literal notranslate"><span class="pre">Source</span> <span class="pre">code</span></code></a>, <a class="reference download internal" download="" href="../_downloads/8a4e60ff6078e2550ca6d6ff3bc5294d/survey_presets-1.png"><code class="xref download docutils literal notranslate"><span class="pre">png</span></code></a>, <a class="reference download internal" download="" href="../_downloads/a32a124705eab4dd9e1571f1a3ec64bb/survey_presets-1.hires.png"><code class="xref download docutils literal notranslate"><span class="pre">hires.png</span></code></a>, <a class="reference download internal" download="" href="../_downloads/6c96609695a9bf5c575d3f1b40feab70/survey_presets-1.pdf"><code class="xref download docutils literal notranslate"><span class="pre">pdf</span></code></a>)</p>
+<figure class="align-default">
+<a class="plot-directive reference internal image-reference" href="../_images/survey_presets-1.png"><img alt="../_images/survey_presets-1.png" class="plot-directive" src="../_images/survey_presets-1.png" style="width: 900px;" />
+</a>
+</figure>
+</section>
+</section>
+<section id="euclid-survey-preset">
+<h2>Euclid survey preset<a class="headerlink" href="#euclid-survey-preset" title="Link to this heading"><span>#</span></a></h2>
+<p>Binny can also be used with a Euclid-inspired survey preset containing
+a photometric <strong>source</strong> sample and a spectroscopic <strong>lens</strong> sample.</p>
+<p>In this simplified preset, the source sample follows the commonly used
+Euclid weak-lensing redshift distribution with 10 explicit tomographic
+bin edges, while the lens sample is represented as a spectroscopic
+sample over the Euclid clustering redshift range.</p>
+<details class="sd-sphinx-override sd-dropdown sd-card sd-mb-3 sd-fade-in-slide-down">
+<summary class="sd-summary-title sd-card-header">
+<span class="sd-summary-icon"><svg version="1.1" width="1.0em" height="1.0em" class="sd-octicon sd-octicon-code" viewBox="0 0 16 16" aria-hidden="true"><path d="m11.28 3.22 4.25 4.25a.75.75 0 0 1 0 1.06l-4.25 4.25a.749.749 0 0 1-1.275-.326.749.749 0 0 1 .215-.734L13.94 8l-3.72-3.72a.749.749 0 0 1 .326-1.275.749.749 0 0 1 .734.215Zm-6.56 0a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042L2.06 8l3.72 3.72a.749.749 0 0 1-.326 1.275.749.749 0 0 1-.734-.215L.47 8.53a.75.75 0 0 1 0-1.06Z"></path></svg></span><span class="sd-summary-text">Show Euclid YAML preset</span><span class="sd-summary-state-marker sd-summary-chevron-right"><svg version="1.1" width="1.5em" height="1.5em" class="sd-octicon sd-octicon-chevron-right" viewBox="0 0 24 24" aria-hidden="true"><path d="M8.72 18.78a.75.75 0 0 1 0-1.06L14.44 12 8.72 6.28a.751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018l6.25 6.25a.75.75 0 0 1 0 1.06l-6.25 6.25a.75.75 0 0 1-1.06 0Z"></path></svg></span></summary><div class="sd-summary-content sd-card-body docutils">
+<div class="literal-block-wrapper docutils container" id="id6">
+<div class="code-block-caption"><span class="caption-text">Euclid survey configuration</span><a class="headerlink" href="#id6" title="Link to this code"><span>#</span></a></div>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">euclid</span><span class="w">  </span><span class="c1"># based on Euclid forecast validation setup, arXiv:1910.09273</span>
+
+<span class="nt">survey_meta</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">footprint</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">nominal</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt">survey_area</span><span class="p">:</span><span class="w"> </span><span class="nv">15000.0</span><span class="p p-Indicator">}</span>
+
+<span class="nt">z_grid</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">start</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0.0</span>
+<span class="w">  </span><span class="nt">stop</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">2.5</span>
+<span class="w">  </span><span class="nt">n</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">501</span>
+
+<span class="nt">tomography</span><span class="p">:</span>
+<span class="w">  </span><span class="c1"># Euclid weak-lensing source sample</span>
+<span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">role</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">source</span>
+<span class="w">    </span><span class="nt">year</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;nominal&quot;</span>
+<span class="w">    </span><span class="nt">kind</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">photoz</span>
+<span class="w">    </span><span class="nt">n_gal_arcmin2</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">30.0</span>
+
+<span class="w">    </span><span class="nt">nz</span><span class="p">:</span>
+<span class="w">      </span><span class="nt">model</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">smail</span>
+<span class="w">      </span><span class="nt">params</span><span class="p">:</span>
+<span class="w">        </span><span class="nt">z0</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0.636</span>
+<span class="w">        </span><span class="nt">alpha</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">2.0</span>
+<span class="w">        </span><span class="nt">beta</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1.5</span>
+
+<span class="w">    </span><span class="nt">bins</span><span class="p">:</span>
+<span class="w">      </span><span class="nt">edges</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">0.0010</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">0.42</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">0.56</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">0.68</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">0.79</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">0.90</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">1.02</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">1.15</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">1.32</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">1.58</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">2.50</span><span class="p p-Indicator">]</span>
+
+<span class="w">    </span><span class="nt">uncertainties</span><span class="p">:</span>
+<span class="w">      </span><span class="c1"># Core photo-z component</span>
+<span class="w">      </span><span class="nt">scatter_scale</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0.05</span>
+<span class="w">      </span><span class="nt">mean_offset</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0.0</span>
+<span class="w">      </span><span class="nt">mean_scale</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1.0</span>
+
+<span class="w">      </span><span class="c1"># Catastrophic outlier component</span>
+<span class="w">      </span><span class="nt">outlier_frac</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0.10</span>
+<span class="w">      </span><span class="nt">outlier_scatter_scale</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0.05</span>
+<span class="w">      </span><span class="nt">outlier_mean_offset</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0.10</span>
+<span class="w">      </span><span class="nt">outlier_mean_scale</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1.0</span>
+
+<span class="w">    </span><span class="nt">normalize_bins</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span>
+
+<span class="w">  </span><span class="c1"># Euclid spectroscopic clustering sample</span>
+<span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">role</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">lens</span>
+<span class="w">    </span><span class="nt">year</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;nominal&quot;</span>
+<span class="w">    </span><span class="nt">kind</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">specz</span>
+
+<span class="w">    </span><span class="nt">nz</span><span class="p">:</span>
+<span class="w">      </span><span class="c1"># simple approximation to the Hα sample; the actual paper uses the tabulated sample properties</span>
+<span class="w">      </span><span class="nt">model</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">smail</span>
+<span class="w">      </span><span class="nt">params</span><span class="p">:</span>
+<span class="w">        </span><span class="nt">z0</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1.0</span>
+<span class="w">        </span><span class="nt">alpha</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">2.0</span>
+<span class="w">        </span><span class="nt">beta</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1.5</span>
+
+<span class="w">    </span><span class="nt">bins</span><span class="p">:</span>
+<span class="w">      </span><span class="nt">edges</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">0.90</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">1.10</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">1.30</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">1.50</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">1.80</span><span class="p p-Indicator">]</span>
+
+<span class="w">    </span><span class="nt">uncertainties</span><span class="p">:</span>
+<span class="w">      </span><span class="nt">completeness</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">1.0</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">1.0</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">1.0</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">1.0</span><span class="p p-Indicator">]</span>
+<span class="w">      </span><span class="nt">catastrophic_frac</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">0.0</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">0.0</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">0.0</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">0.0</span><span class="p p-Indicator">]</span>
+<span class="w">      </span><span class="nt">leakage_model</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">neighbor</span>
+<span class="w">      </span><span class="nt">leakage_sigma</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">1.0</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">1.0</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">1.0</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">1.0</span><span class="p p-Indicator">]</span>
+
+<span class="w">      </span><span class="nt">specz_scatter</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">null</span>
+<span class="w">      </span><span class="nt">specz_scatter_model</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">z_dependent</span>
+<span class="w">      </span><span class="nt">sigma0</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0.001</span>
+<span class="w">      </span><span class="nt">sigma1</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0.001</span>
+
+<span class="w">    </span><span class="nt">galaxy_bias</span><span class="p">:</span>
+<span class="w">      </span><span class="nt">values</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">1.46</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">1.61</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">1.75</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">1.90</span><span class="p p-Indicator">]</span>
+
+<span class="w">    </span><span class="nt">normalize_bins</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span>
+</pre></div>
+</div>
+</div>
+</div>
+</details><section id="id1">
+<h3>Visualizing the preset<a class="headerlink" href="#id1" title="Link to this heading"><span>#</span></a></h3>
+<p>The figure below loads the Euclid preset and visualizes the resulting
+spectroscopic lens bins and photometric source bins.</p>
+<p>(<a class="reference download internal" download="" href="../_downloads/43c7ca623d41cab75b95786bf48d7440/survey_presets-2.py"><code class="xref download docutils literal notranslate"><span class="pre">Source</span> <span class="pre">code</span></code></a>, <a class="reference download internal" download="" href="../_downloads/41fc947084a9f9d37b0dc015fd9a6638/survey_presets-2.png"><code class="xref download docutils literal notranslate"><span class="pre">png</span></code></a>, <a class="reference download internal" download="" href="../_downloads/0b9e0b17a88eab38b905a36ceb45c54e/survey_presets-2.hires.png"><code class="xref download docutils literal notranslate"><span class="pre">hires.png</span></code></a>, <a class="reference download internal" download="" href="../_downloads/7233cd45704283d6b7e1c1630f27870c/survey_presets-2.pdf"><code class="xref download docutils literal notranslate"><span class="pre">pdf</span></code></a>)</p>
+<figure class="align-default">
+<a class="plot-directive reference internal image-reference" href="../_images/survey_presets-2.png"><img alt="../_images/survey_presets-2.png" class="plot-directive" src="../_images/survey_presets-2.png" style="width: 900px;" />
+</a>
+</figure>
+</section>
+</section>
+<section id="des-survey-preset">
+<h2>DES survey preset<a class="headerlink" href="#des-survey-preset" title="Link to this heading"><span>#</span></a></h2>
+<p>Binny also includes a simplified configuration inspired by the
+tomographic setup used in the Dark Energy Survey (DES).</p>
+<p>Compared to LSST, DES covers a smaller area of the sky and has lower
+galaxy number densities, resulting in fewer tomographic bins and a
+shallower redshift reach.</p>
+<details class="sd-sphinx-override sd-dropdown sd-card sd-mb-3 sd-fade-in-slide-down">
+<summary class="sd-summary-title sd-card-header">
+<span class="sd-summary-icon"><svg version="1.1" width="1.0em" height="1.0em" class="sd-octicon sd-octicon-code" viewBox="0 0 16 16" aria-hidden="true"><path d="m11.28 3.22 4.25 4.25a.75.75 0 0 1 0 1.06l-4.25 4.25a.749.749 0 0 1-1.275-.326.749.749 0 0 1 .215-.734L13.94 8l-3.72-3.72a.749.749 0 0 1 .326-1.275.749.749 0 0 1 .734.215Zm-6.56 0a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042L2.06 8l3.72 3.72a.749.749 0 0 1-.326 1.275.749.749 0 0 1-.734-.215L.47 8.53a.75.75 0 0 1 0-1.06Z"></path></svg></span><span class="sd-summary-text">Show DES YAML preset</span><span class="sd-summary-state-marker sd-summary-chevron-right"><svg version="1.1" width="1.5em" height="1.5em" class="sd-octicon sd-octicon-chevron-right" viewBox="0 0 24 24" aria-hidden="true"><path d="M8.72 18.78a.75.75 0 0 1 0-1.06L14.44 12 8.72 6.28a.751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018l6.25 6.25a.75.75 0 0 1 0 1.06l-6.25 6.25a.75.75 0 0 1-1.06 0Z"></path></svg></span></summary><div class="sd-summary-content sd-card-body docutils">
+<div class="literal-block-wrapper docutils container" id="id7">
+<div class="code-block-caption"><span class="caption-text">DES survey configuration</span><a class="headerlink" href="#id7" title="Link to this code"><span>#</span></a></div>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">des</span>
+
+<span class="nt">survey_meta</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">footprint</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">nominal</span><span class="p">:</span>
+<span class="w">      </span><span class="nt">survey_area</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">5000.0</span>
+
+<span class="nt">z_grid</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt">start</span><span class="p">:</span><span class="w"> </span><span class="nv">0.0</span><span class="p p-Indicator">,</span><span class="nt"> stop</span><span class="p">:</span><span class="w"> </span><span class="nv">2.0</span><span class="p p-Indicator">,</span><span class="nt"> n</span><span class="p">:</span><span class="w"> </span><span class="nv">500</span><span class="p p-Indicator">}</span>
+
+<span class="nt">tomography</span><span class="p">:</span>
+
+<span class="w">  </span><span class="c1"># DES redMaGiC lens sample</span>
+<span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">role</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">lens</span>
+<span class="w">    </span><span class="nt">year</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;y1&#39;</span>
+
+<span class="w">    </span><span class="nt">n_gal_arcmin2</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0.6</span>
+
+<span class="w">    </span><span class="nt">kind</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">photoz</span>
+
+<span class="w">    </span><span class="nt">nz</span><span class="p">:</span>
+<span class="w">      </span><span class="nt">model</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">smail</span>
+<span class="w">      </span><span class="nt">params</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt">z0</span><span class="p">:</span><span class="w"> </span><span class="nv">0.25</span><span class="p p-Indicator">,</span><span class="nt"> alpha</span><span class="p">:</span><span class="w"> </span><span class="nv">2.0</span><span class="p p-Indicator">,</span><span class="nt"> beta</span><span class="p">:</span><span class="w"> </span><span class="nv">1.5</span><span class="p p-Indicator">}</span>
+
+<span class="w">    </span><span class="nt">bins</span><span class="p">:</span>
+<span class="w">      </span><span class="nt">edges</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">0.15</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">0.30</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">0.45</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">0.60</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">0.75</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">0.90</span><span class="p p-Indicator">]</span>
+
+<span class="w">    </span><span class="nt">uncertainties</span><span class="p">:</span>
+<span class="w">      </span><span class="nt">scatter_scale</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0.015</span>
+<span class="w">      </span><span class="nt">mean_offset</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0.0</span>
+
+
+<span class="w">  </span><span class="c1"># DES source sample</span>
+<span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">role</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">source</span>
+<span class="w">    </span><span class="nt">year</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;y1&#39;</span>
+
+<span class="w">    </span><span class="nt">n_gal_arcmin2</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">8.0</span>
+
+<span class="w">    </span><span class="nt">kind</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">photoz</span>
+
+<span class="w">    </span><span class="nt">nz</span><span class="p">:</span>
+<span class="w">      </span><span class="nt">model</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">smail</span>
+<span class="w">      </span><span class="nt">params</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt">z0</span><span class="p">:</span><span class="w"> </span><span class="nv">0.35</span><span class="p p-Indicator">,</span><span class="nt"> alpha</span><span class="p">:</span><span class="w"> </span><span class="nv">2.0</span><span class="p p-Indicator">,</span><span class="nt"> beta</span><span class="p">:</span><span class="w"> </span><span class="nv">1.5</span><span class="p p-Indicator">}</span>
+
+<span class="w">    </span><span class="nt">bins</span><span class="p">:</span>
+<span class="w">      </span><span class="nt">edges</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">0.20</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">0.43</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">0.63</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">0.90</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">1.30</span><span class="p p-Indicator">]</span>
+
+<span class="w">    </span><span class="nt">uncertainties</span><span class="p">:</span>
+<span class="w">      </span><span class="nt">scatter_scale</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0.05</span>
+<span class="w">      </span><span class="nt">mean_offset</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0.0</span>
+</pre></div>
+</div>
+</div>
+</div>
+</details><section id="id2">
+<h3>Visualizing the preset<a class="headerlink" href="#id2" title="Link to this heading"><span>#</span></a></h3>
+<p>The figure below loads the DES preset and visualizes the resulting
+lens and source tomographic bins.</p>
+<p>(<a class="reference download internal" download="" href="../_downloads/75e25a6af7af783d63cac82414561256/survey_presets-3.py"><code class="xref download docutils literal notranslate"><span class="pre">Source</span> <span class="pre">code</span></code></a>, <a class="reference download internal" download="" href="../_downloads/781d6c4fcb31bfc195efb8785476a427/survey_presets-3.png"><code class="xref download docutils literal notranslate"><span class="pre">png</span></code></a>, <a class="reference download internal" download="" href="../_downloads/34be4a0f91a27ea092cfe30b5e513eae/survey_presets-3.hires.png"><code class="xref download docutils literal notranslate"><span class="pre">hires.png</span></code></a>, <a class="reference download internal" download="" href="../_downloads/1648a09c2cf3e4d790c16ece3c66049f/survey_presets-3.pdf"><code class="xref download docutils literal notranslate"><span class="pre">pdf</span></code></a>)</p>
+<figure class="align-default">
+<a class="plot-directive reference internal image-reference" href="../_images/survey_presets-3.png"><img alt="../_images/survey_presets-3.png" class="plot-directive" src="../_images/survey_presets-3.png" style="width: 850px;" />
+</a>
+</figure>
+</section>
+</section>
+<section id="roman-survey-preset">
+<h2>Roman survey preset<a class="headerlink" href="#roman-survey-preset" title="Link to this heading"><span>#</span></a></h2>
+<p>Binny also includes a Roman-inspired survey preset based on the
+Wenzl22 HLS and wide survey configurations.</p>
+<p>The preset contains photometric <strong>lens</strong> and <strong>source</strong> samples for
+the optimistic HLS, conservative HLS, and wide Roman scenarios.</p>
+<details class="sd-sphinx-override sd-dropdown sd-card sd-mb-3 sd-fade-in-slide-down">
+<summary class="sd-summary-title sd-card-header">
+<span class="sd-summary-icon"><svg version="1.1" width="1.0em" height="1.0em" class="sd-octicon sd-octicon-code" viewBox="0 0 16 16" aria-hidden="true"><path d="m11.28 3.22 4.25 4.25a.75.75 0 0 1 0 1.06l-4.25 4.25a.749.749 0 0 1-1.275-.326.749.749 0 0 1 .215-.734L13.94 8l-3.72-3.72a.749.749 0 0 1 .326-1.275.749.749 0 0 1 .734.215Zm-6.56 0a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042L2.06 8l3.72 3.72a.749.749 0 0 1-.326 1.275.749.749 0 0 1-.734-.215L.47 8.53a.75.75 0 0 1 0-1.06Z"></path></svg></span><span class="sd-summary-text">Show Roman YAML preset</span><span class="sd-summary-state-marker sd-summary-chevron-right"><svg version="1.1" width="1.5em" height="1.5em" class="sd-octicon sd-octicon-chevron-right" viewBox="0 0 24 24" aria-hidden="true"><path d="M8.72 18.78a.75.75 0 0 1 0-1.06L14.44 12 8.72 6.28a.751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018l6.25 6.25a.75.75 0 0 1 0 1.06l-6.25 6.25a.75.75 0 0 1-1.06 0Z"></path></svg></span></summary><div class="sd-summary-content sd-card-body docutils">
+<div class="literal-block-wrapper docutils container" id="id8">
+<div class="code-block-caption"><span class="caption-text">Roman survey configuration</span><a class="headerlink" href="#id8" title="Link to this code"><span>#</span></a></div>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">roman</span><span class="w">  </span><span class="c1"># Wenzl22 / arXiv:2112.07681 Roman HLS + wide specs</span>
+
+<span class="c1"># Optional survey metadata</span>
+<span class="nt">survey_meta</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">reference</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Wenzl22</span>
+<span class="w">  </span><span class="nt">footprint</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">scenarios</span><span class="p">:</span>
+<span class="w">      </span><span class="nt">hls_optimistic</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt">survey_area</span><span class="p">:</span><span class="w"> </span><span class="nv">2000.0</span><span class="p p-Indicator">}</span>
+<span class="w">      </span><span class="nt">hls_conservative</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt">survey_area</span><span class="p">:</span><span class="w"> </span><span class="nv">2000.0</span><span class="p p-Indicator">}</span>
+<span class="w">      </span><span class="nt">wide</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt">survey_area</span><span class="p">:</span><span class="w"> </span><span class="nv">18000.0</span><span class="p p-Indicator">}</span>
+
+<span class="c1"># Redshift grid used for evaluating n(z) and all n_i(z) outputs</span>
+<span class="nt">z_grid</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt">start</span><span class="p">:</span><span class="w"> </span><span class="nv">0.0</span><span class="p p-Indicator">,</span><span class="nt"> stop</span><span class="p">:</span><span class="w"> </span><span class="nv">4.0</span><span class="p p-Indicator">,</span><span class="nt"> n</span><span class="p">:</span><span class="w"> </span><span class="nv">500</span><span class="p p-Indicator">}</span>
+
+<span class="nt">tomography</span><span class="p">:</span>
+<span class="w">  </span><span class="c1"># HLS OPTIMISTIC SOURCE</span>
+<span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">role</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">source</span>
+<span class="w">    </span><span class="nt">scenario</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">hls_optimistic</span>
+<span class="w">    </span><span class="nt">n_gal_arcmin2</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">51.0</span>
+<span class="w">    </span><span class="nt">kind</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">photoz</span>
+
+<span class="w">    </span><span class="nt">nz</span><span class="p">:</span>
+<span class="w">      </span><span class="nt">model</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">smail</span>
+<span class="w">      </span><span class="nt">params</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt">z0</span><span class="p">:</span><span class="w"> </span><span class="nv">0.13</span><span class="p p-Indicator">,</span><span class="nt"> alpha</span><span class="p">:</span><span class="w"> </span><span class="nv">2.0</span><span class="p p-Indicator">,</span><span class="nt"> beta</span><span class="p">:</span><span class="w"> </span><span class="nv">0.66</span><span class="p p-Indicator">}</span>
+
+<span class="w">    </span><span class="nt">bins</span><span class="p">:</span>
+<span class="w">      </span><span class="nt">scheme</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">equal_number</span>
+<span class="w">      </span><span class="nt">n_bins</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">10</span>
+
+<span class="w">    </span><span class="nt">uncertainties</span><span class="p">:</span>
+<span class="w">      </span><span class="nt">scatter_scale</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0.01</span>
+<span class="w">      </span><span class="nt">mean_offset</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0.0</span>
+
+<span class="w">  </span><span class="c1"># HLS OPTIMISTIC LENS</span>
+<span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">role</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">lens</span>
+<span class="w">    </span><span class="nt">scenario</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">hls_optimistic</span>
+<span class="w">    </span><span class="nt">n_gal_arcmin2</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">66.0</span>
+<span class="w">    </span><span class="nt">kind</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">photoz</span>
+
+<span class="w">    </span><span class="nt">nz</span><span class="p">:</span>
+<span class="w">      </span><span class="nt">model</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">smail</span>
+<span class="w">      </span><span class="nt">params</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt">z0</span><span class="p">:</span><span class="w"> </span><span class="nv">0.08</span><span class="p p-Indicator">,</span><span class="nt"> alpha</span><span class="p">:</span><span class="w"> </span><span class="nv">2.0</span><span class="p p-Indicator">,</span><span class="nt"> beta</span><span class="p">:</span><span class="w"> </span><span class="nv">0.58</span><span class="p p-Indicator">}</span>
+
+<span class="w">    </span><span class="nt">bins</span><span class="p">:</span>
+<span class="w">      </span><span class="nt">scheme</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">equal_number</span>
+<span class="w">      </span><span class="nt">n_bins</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">10</span>
+
+<span class="w">    </span><span class="nt">uncertainties</span><span class="p">:</span>
+<span class="w">      </span><span class="nt">scatter_scale</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0.01</span>
+<span class="w">      </span><span class="nt">mean_offset</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0.0</span>
+
+<span class="w">  </span><span class="c1"># HLS CONSERVATIVE SOURCE</span>
+<span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">role</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">source</span>
+<span class="w">    </span><span class="nt">scenario</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">hls_conservative</span>
+<span class="w">    </span><span class="nt">n_gal_arcmin2</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">51.0</span>
+<span class="w">    </span><span class="nt">kind</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">photoz</span>
+
+<span class="w">    </span><span class="nt">nz</span><span class="p">:</span>
+<span class="w">      </span><span class="nt">model</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">smail</span>
+<span class="w">      </span><span class="nt">params</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt">z0</span><span class="p">:</span><span class="w"> </span><span class="nv">0.13</span><span class="p p-Indicator">,</span><span class="nt"> alpha</span><span class="p">:</span><span class="w"> </span><span class="nv">2.0</span><span class="p p-Indicator">,</span><span class="nt"> beta</span><span class="p">:</span><span class="w"> </span><span class="nv">0.66</span><span class="p p-Indicator">}</span>
+
+<span class="w">    </span><span class="nt">bins</span><span class="p">:</span>
+<span class="w">      </span><span class="nt">scheme</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">equal_number</span>
+<span class="w">      </span><span class="nt">n_bins</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">10</span>
+
+<span class="w">    </span><span class="nt">uncertainties</span><span class="p">:</span>
+<span class="w">      </span><span class="nt">scatter_scale</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0.05</span>
+<span class="w">      </span><span class="nt">mean_offset</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0.0</span>
+
+<span class="w">  </span><span class="c1"># HLS CONSERVATIVE LENS</span>
+<span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">role</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">lens</span>
+<span class="w">    </span><span class="nt">scenario</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">hls_conservative</span>
+<span class="w">    </span><span class="nt">n_gal_arcmin2</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">66.0</span>
+<span class="w">    </span><span class="nt">kind</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">photoz</span>
+
+<span class="w">    </span><span class="nt">nz</span><span class="p">:</span>
+<span class="w">      </span><span class="nt">model</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">smail</span>
+<span class="w">      </span><span class="nt">params</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt">z0</span><span class="p">:</span><span class="w"> </span><span class="nv">0.08</span><span class="p p-Indicator">,</span><span class="nt"> alpha</span><span class="p">:</span><span class="w"> </span><span class="nv">2.0</span><span class="p p-Indicator">,</span><span class="nt"> beta</span><span class="p">:</span><span class="w"> </span><span class="nv">0.58</span><span class="p p-Indicator">}</span>
+
+<span class="w">    </span><span class="nt">bins</span><span class="p">:</span>
+<span class="w">      </span><span class="nt">scheme</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">equal_number</span>
+<span class="w">      </span><span class="nt">n_bins</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">10</span>
+
+<span class="w">    </span><span class="nt">uncertainties</span><span class="p">:</span>
+<span class="w">      </span><span class="nt">scatter_scale</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0.05</span>
+<span class="w">      </span><span class="nt">mean_offset</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0.0</span>
+
+<span class="w">  </span><span class="c1"># WIDE SOURCE</span>
+<span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">role</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">source</span>
+<span class="w">    </span><span class="nt">scenario</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">wide</span>
+<span class="w">    </span><span class="nt">n_gal_arcmin2</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">43.0</span>
+<span class="w">    </span><span class="nt">kind</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">photoz</span>
+
+<span class="w">    </span><span class="nt">nz</span><span class="p">:</span>
+<span class="w">      </span><span class="nt">model</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">smail</span>
+<span class="w">      </span><span class="nt">params</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt">z0</span><span class="p">:</span><span class="w"> </span><span class="nv">0.16</span><span class="p p-Indicator">,</span><span class="nt"> alpha</span><span class="p">:</span><span class="w"> </span><span class="nv">2.0</span><span class="p p-Indicator">,</span><span class="nt"> beta</span><span class="p">:</span><span class="w"> </span><span class="nv">0.70</span><span class="p p-Indicator">}</span>
+
+<span class="w">    </span><span class="nt">bins</span><span class="p">:</span>
+<span class="w">      </span><span class="nt">scheme</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">equal_number</span>
+<span class="w">      </span><span class="nt">n_bins</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">10</span>
+
+<span class="w">    </span><span class="nt">uncertainties</span><span class="p">:</span>
+<span class="w">      </span><span class="nt">scatter_scale</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0.02</span>
+<span class="w">      </span><span class="nt">mean_offset</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0.0</span>
+
+<span class="w">  </span><span class="c1"># WIDE LENS</span>
+<span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">role</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">lens</span>
+<span class="w">    </span><span class="nt">scenario</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">wide</span>
+<span class="w">    </span><span class="nt">n_gal_arcmin2</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">59.0</span>
+<span class="w">    </span><span class="nt">kind</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">photoz</span>
+
+<span class="w">    </span><span class="nt">nz</span><span class="p">:</span>
+<span class="w">      </span><span class="nt">model</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">smail</span>
+<span class="w">      </span><span class="nt">params</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt">z0</span><span class="p">:</span><span class="w"> </span><span class="nv">0.10</span><span class="p p-Indicator">,</span><span class="nt"> alpha</span><span class="p">:</span><span class="w"> </span><span class="nv">2.0</span><span class="p p-Indicator">,</span><span class="nt"> beta</span><span class="p">:</span><span class="w"> </span><span class="nv">0.62</span><span class="p p-Indicator">}</span>
+
+<span class="w">    </span><span class="nt">bins</span><span class="p">:</span>
+<span class="w">      </span><span class="nt">scheme</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">equal_number</span>
+<span class="w">      </span><span class="nt">n_bins</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">10</span>
+
+<span class="w">    </span><span class="nt">uncertainties</span><span class="p">:</span>
+<span class="w">      </span><span class="nt">scatter_scale</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0.02</span>
+<span class="w">      </span><span class="nt">mean_offset</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0.0</span>
+</pre></div>
+</div>
+</div>
+</div>
+</details><section id="id3">
+<h3>Visualizing the preset<a class="headerlink" href="#id3" title="Link to this heading"><span>#</span></a></h3>
+<p>The figure below loads the Roman preset and visualizes the resulting
+photometric lens and source tomographic bins. The top row compares
+the optimistic High Latitude Survey (HLS) configuration against the conservative HLS
+configuration, while the bottom row shows the wide survey
+configuration.</p>
+<p>(<a class="reference download internal" download="" href="../_downloads/fc9975035f5e2bec5a54dadb0405c144/survey_presets-4.py"><code class="xref download docutils literal notranslate"><span class="pre">Source</span> <span class="pre">code</span></code></a>, <a class="reference download internal" download="" href="../_downloads/910b15f4c3ff7f1cea66002a9d3a702e/survey_presets-4.png"><code class="xref download docutils literal notranslate"><span class="pre">png</span></code></a>, <a class="reference download internal" download="" href="../_downloads/fd59838e72fc3cd73463b90eea9fa536/survey_presets-4.hires.png"><code class="xref download docutils literal notranslate"><span class="pre">hires.png</span></code></a>, <a class="reference download internal" download="" href="../_downloads/e132799a2d205b5aa4aa8fd1170d3689/survey_presets-4.pdf"><code class="xref download docutils literal notranslate"><span class="pre">pdf</span></code></a>)</p>
+<figure class="align-default">
+<a class="plot-directive reference internal image-reference" href="../_images/survey_presets-4.png"><img alt="../_images/survey_presets-4.png" class="plot-directive" src="../_images/survey_presets-4.png" style="width: 900px;" />
+</a>
+</figure>
+</section>
+</section>
+<section id="desi-survey-preset">
+<h2>DESI survey preset<a class="headerlink" href="#desi-survey-preset" title="Link to this heading"><span>#</span></a></h2>
+<p>Binny also includes a DESI-inspired survey preset containing
+tabulated spectroscopic <strong>LRG</strong> and <strong>ELG</strong> lens redshift
+distributions.</p>
+<p>The default preset uses the legacy Dani redshift windows:
+<span class="math notranslate nohighlight">\(0.4 \leq z \leq 1.0\)</span> for LRGs and
+<span class="math notranslate nohighlight">\(0.6 \leq z \leq 1.5\)</span> for ELGs.</p>
+<details class="sd-sphinx-override sd-dropdown sd-card sd-mb-3 sd-fade-in-slide-down">
+<summary class="sd-summary-title sd-card-header">
+<span class="sd-summary-icon"><svg version="1.1" width="1.0em" height="1.0em" class="sd-octicon sd-octicon-code" viewBox="0 0 16 16" aria-hidden="true"><path d="m11.28 3.22 4.25 4.25a.75.75 0 0 1 0 1.06l-4.25 4.25a.749.749 0 0 1-1.275-.326.749.749 0 0 1 .215-.734L13.94 8l-3.72-3.72a.749.749 0 0 1 .326-1.275.749.749 0 0 1 .734.215Zm-6.56 0a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042L2.06 8l3.72 3.72a.749.749 0 0 1-.326 1.275.749.749 0 0 1-.734-.215L.47 8.53a.75.75 0 0 1 0-1.06Z"></path></svg></span><span class="sd-summary-text">Show DESI YAML preset</span><span class="sd-summary-state-marker sd-summary-chevron-right"><svg version="1.1" width="1.5em" height="1.5em" class="sd-octicon sd-octicon-chevron-right" viewBox="0 0 24 24" aria-hidden="true"><path d="M8.72 18.78a.75.75 0 0 1 0-1.06L14.44 12 8.72 6.28a.751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018l6.25 6.25a.75.75 0 0 1 0 1.06l-6.25 6.25a.75.75 0 0 1-1.06 0Z"></path></svg></span></summary><div class="sd-summary-content sd-card-body docutils">
+<div class="literal-block-wrapper docutils container" id="id9">
+<div class="code-block-caption"><span class="caption-text">DESI survey configuration</span><a class="headerlink" href="#id9" title="Link to this code"><span>#</span></a></div>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">desi</span>
+
+<span class="nt">survey_meta</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">description</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">DESI LRG and ELG tabulated lens redshift distributions.</span>
+<span class="w">  </span><span class="nt">notes</span><span class="p">:</span>
+<span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Plain DESI LRG uses the legacy Dani window 0.4 &lt;= z &lt;= 1.0.</span>
+<span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">DESI/4MOST-style ELG uses the legacy Dani window 0.6 &lt;= z &lt;= 1.5.</span>
+
+<span class="nt">z_grid</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">start</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0.0</span>
+<span class="w">  </span><span class="nt">stop</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">2.0</span>
+<span class="w">  </span><span class="nt">n</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">500</span>
+
+<span class="nt">tomography</span><span class="p">:</span>
+<span class="w">  </span><span class="c1"># LRGs</span>
+<span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">role</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">lens</span>
+<span class="w">    </span><span class="nt">year</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">lrg</span>
+<span class="w">    </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">DESI LRG</span>
+
+<span class="w">    </span><span class="nt">kind</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">specz</span>
+
+<span class="w">    </span><span class="nt">nz</span><span class="p">:</span>
+<span class="w">      </span><span class="nt">model</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">tabulated</span>
+<span class="w">      </span><span class="nt">source</span><span class="p">:</span>
+<span class="w">        </span><span class="nt">path</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">desi_lrg_nz.txt</span>
+<span class="w">        </span><span class="nt">z_col</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0</span>
+<span class="w">        </span><span class="nt">nz_col</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1</span>
+<span class="w">        </span><span class="nt">skiprows</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1</span>
+<span class="w">      </span><span class="nt">params</span><span class="p">:</span>
+<span class="w">        </span><span class="nt">normalize</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span>
+
+<span class="w">    </span><span class="nt">bins</span><span class="p">:</span>
+<span class="w">      </span><span class="nt">edges</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">0.4</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">1.0</span><span class="p p-Indicator">]</span>
+
+<span class="w">  </span><span class="c1"># ELGs</span>
+<span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">role</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">lens</span>
+<span class="w">    </span><span class="nt">year</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">elg</span>
+<span class="w">    </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">DESI ELG</span>
+
+<span class="w">    </span><span class="nt">kind</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">specz</span>
+
+<span class="w">    </span><span class="nt">nz</span><span class="p">:</span>
+<span class="w">      </span><span class="nt">model</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">tabulated</span>
+<span class="w">      </span><span class="nt">source</span><span class="p">:</span>
+<span class="w">        </span><span class="nt">path</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">desi_elg_nz.txt</span>
+<span class="w">        </span><span class="nt">z_col</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0</span>
+<span class="w">        </span><span class="nt">nz_col</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1</span>
+<span class="w">        </span><span class="nt">skiprows</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1</span>
+<span class="w">      </span><span class="nt">params</span><span class="p">:</span>
+<span class="w">        </span><span class="nt">normalize</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span>
+
+<span class="w">    </span><span class="nt">bins</span><span class="p">:</span>
+<span class="w">      </span><span class="nt">edges</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">0.6</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">1.5</span><span class="p p-Indicator">]</span>
+</pre></div>
+</div>
+</div>
+</div>
+</details><section id="id4">
+<h3>Visualizing the preset<a class="headerlink" href="#id4" title="Link to this heading"><span>#</span></a></h3>
+<p>The figure below loads the DESI preset and visualizes the tabulated
+LRG and ELG redshift distributions. The rows show the same redshift
+windows split into one, three, and five equal-width tomographic bins.</p>
+<p>(<a class="reference download internal" download="" href="../_downloads/10e1da468ec2d83b32752c185e8d5305/survey_presets-5.py"><code class="xref download docutils literal notranslate"><span class="pre">Source</span> <span class="pre">code</span></code></a>, <a class="reference download internal" download="" href="../_downloads/a0e59ac30f1e5a65df9a84561499d268/survey_presets-5.png"><code class="xref download docutils literal notranslate"><span class="pre">png</span></code></a>, <a class="reference download internal" download="" href="../_downloads/80b8c52de3e5fed7d6695d88a3dea7d3/survey_presets-5.hires.png"><code class="xref download docutils literal notranslate"><span class="pre">hires.png</span></code></a>, <a class="reference download internal" download="" href="../_downloads/3290cf593a974046baac758a0692328e/survey_presets-5.pdf"><code class="xref download docutils literal notranslate"><span class="pre">pdf</span></code></a>)</p>
+<figure class="align-default">
+<a class="plot-directive reference internal image-reference" href="../_images/survey_presets-5.png"><img alt="../_images/survey_presets-5.png" class="plot-directive" src="../_images/survey_presets-5.png" style="width: 900px;" />
+</a>
+</figure>
+</section>
+</section>
+</section>
+
+        </article>
+      </div>
+      <footer>
+        
+        <div class="related-pages">
+          <a class="next-page" href="selections.html">
+              <div class="page-info">
+                <div class="context">
+                  <span>Next</span>
+                </div>
+                <div class="title"> Bin-pair selections</div>
+              </div>
+              <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
+            </a>
+          <a class="prev-page" href="bin_diagnostics.html">
+              <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
+              <div class="page-info">
+                <div class="context">
+                  <span>Previous</span>
+                </div>
+                
+                <div class="title"> Bin diagnostics</div>
+                
+              </div>
+            </a>
+        </div>
+        <div class="bottom-of-page">
+          <div class="left-details">
+            <div class="copyright">
+                Copyright &#169; 2026, Nikolina Šarčević, Matthijs van der Wild
+            </div>
+            Made with <a href="https://www.sphinx-doc.org/">Sphinx</a> and <a class="muted-link" href="https://pradyunsg.me">@pradyunsg</a>'s
+            
+            <a href="https://github.com/pradyunsg/furo">Furo</a>
+            
+          </div>
+          <div class="right-details">
+            
+          </div>
+        </div>
+        
+      </footer>
+    </div>
+    <aside class="toc-drawer">
+      
+      
+      <div class="toc-sticky toc-scroll">
+        <div class="toc-title-container">
+          <span class="toc-title">
+            On this page
+          </span>
+        </div>
+        <div class="toc-tree-container">
+          <div class="toc-tree">
+            <ul>
+<li><a class="reference internal" href="#"> Survey presets</a><ul>
+<li><a class="reference internal" href="#lsst-survey-preset">LSST survey preset</a><ul>
+<li><a class="reference internal" href="#visualizing-the-preset">Visualizing the preset</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#euclid-survey-preset">Euclid survey preset</a><ul>
+<li><a class="reference internal" href="#id1">Visualizing the preset</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#des-survey-preset">DES survey preset</a><ul>
+<li><a class="reference internal" href="#id2">Visualizing the preset</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#roman-survey-preset">Roman survey preset</a><ul>
+<li><a class="reference internal" href="#id3">Visualizing the preset</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#desi-survey-preset">DESI survey preset</a><ul>
+<li><a class="reference internal" href="#id4">Visualizing the preset</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+          </div>
+        </div>
+      </div>
+      
+      
+    </aside>
+  </div>
+</div><script src="../_static/documentation_options.js?v=5929fcd5"></script>
+    <script src="../_static/doctools.js?v=9bcbadda"></script>
+    <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../_static/scripts/furo.js?v=46bd48cc"></script>
+    <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="../_static/copybutton.js?v=f16c4c56"></script>
+    <script src="../_static/design-tabs.js?v=f930bc37"></script>
+    <script async="async" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    </body>
+</html>

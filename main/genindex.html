@@ -1,0 +1,1385 @@
+<!doctype html>
+<html class="no-js" lang="en" data-content_root="./">
+  <head><meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <meta name="color-scheme" content="light dark"><link rel="index" title="Index" href="#"><link rel="search" title="Search" href="search.html">
+        <link rel="prefetch" href="_static/assets/logo.png" as="image">
+        <link rel="prefetch" href="_static/assets/logo.png" as="image">
+
+    <link rel="shortcut icon" href="_static/favicon.png"><!-- Generated with Sphinx 8.2.3 and Furo 2025.12.19 --><title>Index - Binny documentation</title>
+<link rel="stylesheet" type="text/css" href="_static/pygments.css?v=d111a655" />
+    <link rel="stylesheet" type="text/css" href="_static/styles/furo.css?v=7bdb33bb" />
+    <link rel="stylesheet" type="text/css" href="_static/copybutton.css?v=76b2166b" />
+    <link rel="stylesheet" type="text/css" href="_static/plot_directive.css" />
+    <link rel="stylesheet" type="text/css" href="_static/sphinx-design.min.css?v=95c83b7e" />
+    <link rel="stylesheet" type="text/css" href="_static/styles/furo-extensions.css?v=8dab3a3b" />
+    <link rel="stylesheet" type="text/css" href="_static/binny.css?v=9dc84726" />
+    
+    
+
+
+<style>
+  body {
+    --color-code-background: #f2f2f2;
+  --color-code-foreground: #1e1e1e;
+  --color-brand-primary: #440154;
+  --color-brand-content: #31688E;
+  --color-link: #35B779;
+  --color-link--hover: #31688E;
+  --color-link--visited: #FDE725;
+  
+  }
+  @media not print {
+    body[data-theme="dark"] {
+      --color-code-background: #202020;
+  --color-code-foreground: #d0d0d0;
+  --color-brand-primary: #440154;
+  --color-brand-content: #31688E;
+  --color-link: #35B779;
+  --color-link--hover: #31688E;
+  --color-link--visited: #FDE725;
+  
+    }
+    @media (prefers-color-scheme: dark) {
+      body:not([data-theme="light"]) {
+        --color-code-background: #202020;
+  --color-code-foreground: #d0d0d0;
+  --color-brand-primary: #440154;
+  --color-brand-content: #31688E;
+  --color-link: #35B779;
+  --color-link--hover: #31688E;
+  --color-link--visited: #FDE725;
+  
+      }
+    }
+  }
+</style></head>
+  <body>
+    
+    <script>
+      document.body.dataset.theme = localStorage.getItem("theme") || "auto";
+    </script>
+    
+
+<svg xmlns="http://www.w3.org/2000/svg" style="display: none;">
+  <symbol id="svg-toc" viewBox="0 0 24 24">
+    <title>Contents</title>
+    <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 1024 1024">
+      <path d="M408 442h480c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8H408c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8zm-8 204c0 4.4 3.6 8 8 8h480c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8H408c-4.4 0-8 3.6-8 8v56zm504-486H120c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h784c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8zm0 632H120c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h784c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8zM115.4 518.9L271.7 642c5.8 4.6 14.4.5 14.4-6.9V388.9c0-7.4-8.5-11.5-14.4-6.9L115.4 505.1a8.74 8.74 0 0 0 0 13.8z"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-menu" viewBox="0 0 24 24">
+    <title>Menu</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather-menu">
+      <line x1="3" y1="12" x2="21" y2="12"></line>
+      <line x1="3" y1="6" x2="21" y2="6"></line>
+      <line x1="3" y1="18" x2="21" y2="18"></line>
+    </svg>
+  </symbol>
+  <symbol id="svg-arrow-right" viewBox="0 0 24 24">
+    <title>Expand</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather-chevron-right">
+      <polyline points="9 18 15 12 9 6"></polyline>
+    </svg>
+  </symbol>
+  <symbol id="svg-sun" viewBox="0 0 24 24">
+    <title>Light mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="feather-sun">
+      <circle cx="12" cy="12" r="5"></circle>
+      <line x1="12" y1="1" x2="12" y2="3"></line>
+      <line x1="12" y1="21" x2="12" y2="23"></line>
+      <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+      <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+      <line x1="1" y1="12" x2="3" y2="12"></line>
+      <line x1="21" y1="12" x2="23" y2="12"></line>
+      <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+      <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+    </svg>
+  </symbol>
+  <symbol id="svg-moon" viewBox="0 0 24 24">
+    <title>Dark mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-moon">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+      <path d="M12 3c.132 0 .263 0 .393 0a7.5 7.5 0 0 0 7.92 12.446a9 9 0 1 1 -8.313 -12.454z" />
+    </svg>
+  </symbol>
+  <symbol id="svg-sun-with-moon" viewBox="0 0 24 24">
+    <title>Auto light/dark, in light mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round"
+      class="icon-custom-derived-from-feather-sun-and-tabler-moon">
+      <path style="opacity: 50%" d="M 5.411 14.504 C 5.471 14.504 5.532 14.504 5.591 14.504 C 3.639 16.319 4.383 19.569 6.931 20.352 C 7.693 20.586 8.512 20.551 9.25 20.252 C 8.023 23.207 4.056 23.725 2.11 21.184 C 0.166 18.642 1.702 14.949 4.874 14.536 C 5.051 14.512 5.231 14.5 5.411 14.5 L 5.411 14.504 Z"/>
+      <line x1="14.5" y1="3.25" x2="14.5" y2="1.25"/>
+      <line x1="14.5" y1="15.85" x2="14.5" y2="17.85"/>
+      <line x1="10.044" y1="5.094" x2="8.63" y2="3.68"/>
+      <line x1="19" y1="14.05" x2="20.414" y2="15.464"/>
+      <line x1="8.2" y1="9.55" x2="6.2" y2="9.55"/>
+      <line x1="20.8" y1="9.55" x2="22.8" y2="9.55"/>
+      <line x1="10.044" y1="14.006" x2="8.63" y2="15.42"/>
+      <line x1="19" y1="5.05" x2="20.414" y2="3.636"/>
+      <circle cx="14.5" cy="9.55" r="3.6"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-moon-with-sun" viewBox="0 0 24 24">
+    <title>Auto light/dark, in dark mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round"
+      class="icon-custom-derived-from-feather-sun-and-tabler-moon">
+      <path d="M 8.282 7.007 C 8.385 7.007 8.494 7.007 8.595 7.007 C 5.18 10.184 6.481 15.869 10.942 17.24 C 12.275 17.648 13.706 17.589 15 17.066 C 12.851 22.236 5.91 23.143 2.505 18.696 C -0.897 14.249 1.791 7.786 7.342 7.063 C 7.652 7.021 7.965 7 8.282 7 L 8.282 7.007 Z"/>
+      <line style="opacity: 50%" x1="18" y1="3.705" x2="18" y2="2.5"/>
+      <line style="opacity: 50%" x1="18" y1="11.295" x2="18" y2="12.5"/>
+      <line style="opacity: 50%" x1="15.316" y1="4.816" x2="14.464" y2="3.964"/>
+      <line style="opacity: 50%" x1="20.711" y1="10.212" x2="21.563" y2="11.063"/>
+      <line style="opacity: 50%" x1="14.205" y1="7.5" x2="13.001" y2="7.5"/>
+      <line style="opacity: 50%" x1="21.795" y1="7.5" x2="23" y2="7.5"/>
+      <line style="opacity: 50%" x1="15.316" y1="10.184" x2="14.464" y2="11.036"/>
+      <line style="opacity: 50%" x1="20.711" y1="4.789" x2="21.563" y2="3.937"/>
+      <circle style="opacity: 50%" cx="18" cy="7.5" r="2.169"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-pencil" viewBox="0 0 24 24">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-pencil-code">
+      <path d="M4 20h4l10.5 -10.5a2.828 2.828 0 1 0 -4 -4l-10.5 10.5v4" />
+      <path d="M13.5 6.5l4 4" />
+      <path d="M20 21l2 -2l-2 -2" />
+      <path d="M17 17l-2 2l2 2" />
+    </svg>
+  </symbol>
+  <symbol id="svg-eye" viewBox="0 0 24 24">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-eye-code">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+      <path d="M10 12a2 2 0 1 0 4 0a2 2 0 0 0 -4 0" />
+      <path
+        d="M11.11 17.958c-3.209 -.307 -5.91 -2.293 -8.11 -5.958c2.4 -4 5.4 -6 9 -6c3.6 0 6.6 2 9 6c-.21 .352 -.427 .688 -.647 1.008" />
+      <path d="M20 21l2 -2l-2 -2" />
+      <path d="M17 17l-2 2l2 2" />
+    </svg>
+  </symbol>
+</svg>
+
+<input type="checkbox" class="sidebar-toggle" name="__navigation" id="__navigation" aria-label="Toggle site navigation sidebar">
+<input type="checkbox" class="sidebar-toggle" name="__toc" id="__toc" aria-label="Toggle table of contents sidebar">
+<label class="overlay sidebar-overlay" for="__navigation"></label>
+<label class="overlay toc-overlay" for="__toc"></label>
+
+<a class="skip-to-content muted-link" href="#furo-main-content">Skip to content</a>
+
+
+
+<div class="page">
+  <header class="mobile-header">
+    <div class="header-left">
+      <label class="nav-overlay-icon" for="__navigation">
+        <span class="icon"><svg><use href="#svg-menu"></use></svg></span>
+      </label>
+    </div>
+    <div class="header-center">
+      <a href="index.html"><div class="brand">Binny  documentation</div></a>
+    </div>
+    <div class="header-right">
+      <div class="theme-toggle-container theme-toggle-header">
+        <button class="theme-toggle" aria-label="Toggle Light / Dark / Auto color theme">
+          <svg class="theme-icon-when-auto-light"><use href="#svg-sun-with-moon"></use></svg>
+          <svg class="theme-icon-when-auto-dark"><use href="#svg-moon-with-sun"></use></svg>
+          <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
+          <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
+        </button>
+      </div>
+      <label class="toc-overlay-icon toc-header-icon no-toc" for="__toc">
+        <span class="icon"><svg><use href="#svg-toc"></use></svg></span>
+      </label>
+    </div>
+  </header>
+  <aside class="sidebar-drawer">
+    <div class="sidebar-container">
+      
+      <div class="sidebar-sticky"><a class="sidebar-brand" href="index.html">
+  <div class="sidebar-logo-container">
+    <img class="sidebar-logo only-light" src="_static/assets/logo.png" alt="Light Logo"/>
+    <img class="sidebar-logo only-dark" src="_static/assets/logo.png" alt="Dark Logo"/>
+  </div>
+  
+  <span class="sidebar-brand-text">Binny  documentation</span>
+  
+</a><form class="sidebar-search-container" method="get" action="search.html" role="search">
+  <input class="sidebar-search" placeholder="Search" name="q" aria-label="Search">
+  <input type="hidden" name="check_keywords" value="yes">
+  <input type="hidden" name="area" value="default">
+</form>
+<div id="searchbox"></div><div class="sidebar-scroll"><div class="sidebar-tree">
+  <ul>
+<li class="toctree-l1 has-children"><a class="reference internal" href="theory/index.html"> Theory</a><input aria-label="Toggle navigation of  Theory" class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" role="switch" type="checkbox"/><label for="toctree-checkbox-1"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="theory/parent_nz.html"> Parent n(z)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="theory/tomography.html"> Tomography</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="theory/uncertainties/index.html"> Redshift uncertainties</a><input aria-label="Toggle navigation of  Redshift uncertainties" class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" role="switch" type="checkbox"/><label for="toctree-checkbox-2"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="theory/uncertainties/photoz.html"> Photometric-redshift uncertainties</a></li>
+<li class="toctree-l3"><a class="reference internal" href="theory/uncertainties/specz.html"> Spectroscopic-redshift uncertainties</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="theory/statistics.html"> Bin summaries</a></li>
+<li class="toctree-l2"><a class="reference internal" href="theory/diagnostics.html"> Bin diagnostics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="theory/bin_combos.html"> Bin-index combinations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="theory/conventions.html"> Conventions</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="workflow.html"> Workflow</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="examples/index.html"> Examples</a><input aria-label="Toggle navigation of  Examples" class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" role="switch" type="checkbox"/><label for="toctree-checkbox-3"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="examples/nz_modelling.html"> Parent n(z) models</a></li>
+<li class="toctree-l2"><a class="reference internal" href="examples/nz_calibration.html"> Parent n(z) from mocks</a></li>
+<li class="toctree-l2"><a class="reference internal" href="examples/photoz_bins.html"> Photometric bins</a></li>
+<li class="toctree-l2"><a class="reference internal" href="examples/specz_bins.html"> Spectroscopic bins</a></li>
+<li class="toctree-l2"><a class="reference internal" href="examples/bin_summaries.html"> Bin summaries</a></li>
+<li class="toctree-l2"><a class="reference internal" href="examples/bin_diagnostics.html"> Bin diagnostics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="examples/survey_presets.html"> Survey presets</a></li>
+<li class="toctree-l2"><a class="reference internal" href="examples/selections.html"> Bin-pair selections</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="installation.html"> Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="citation.html"> Citation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="contributing.html"> Contributing</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="api/index.html">Binny API</a><input aria-label="Toggle navigation of Binny API" class="toctree-checkbox" id="toctree-checkbox-4" name="toctree-checkbox-4" role="switch" type="checkbox"/><label for="toctree-checkbox-4"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l2 has-children"><a class="reference internal" href="api/modules.html">binny</a><input aria-label="Toggle navigation of binny" class="toctree-checkbox" id="toctree-checkbox-5" name="toctree-checkbox-5" role="switch" type="checkbox"/><label for="toctree-checkbox-5"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l3 has-children"><a class="reference internal" href="api/binny.html">binny package</a><input aria-label="Toggle navigation of binny package" class="toctree-checkbox" id="toctree-checkbox-6" name="toctree-checkbox-6" role="switch" type="checkbox"/><label for="toctree-checkbox-6"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l4 has-children"><a class="reference internal" href="api/binny.api.html">binny.api package</a><input aria-label="Toggle navigation of binny.api package" class="toctree-checkbox" id="toctree-checkbox-7" name="toctree-checkbox-7" role="switch" type="checkbox"/><label for="toctree-checkbox-7"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l5"><a class="reference internal" href="api/binny.api.nz_tomography.html">binny.api.nz_tomography module</a></li>
+</ul>
+</li>
+<li class="toctree-l4 has-children"><a class="reference internal" href="api/binny.axes.html">binny.axes package</a><input aria-label="Toggle navigation of binny.axes package" class="toctree-checkbox" id="toctree-checkbox-8" name="toctree-checkbox-8" role="switch" type="checkbox"/><label for="toctree-checkbox-8"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l5"><a class="reference internal" href="api/binny.axes.bin_edges.html">binny.axes.bin_edges module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="api/binny.axes.grids.html">binny.axes.grids module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="api/binny.axes.mixed_edges.html">binny.axes.mixed_edges module</a></li>
+</ul>
+</li>
+<li class="toctree-l4 has-children"><a class="reference internal" href="api/binny.correlations.html">binny.correlations package</a><input aria-label="Toggle navigation of binny.correlations package" class="toctree-checkbox" id="toctree-checkbox-9" name="toctree-checkbox-9" role="switch" type="checkbox"/><label for="toctree-checkbox-9"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l5"><a class="reference internal" href="api/binny.correlations.bin_combo_filter.html">binny.correlations.bin_combo_filter module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="api/binny.correlations.filters.html">binny.correlations.filters module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="api/binny.correlations.metrics.html">binny.correlations.metrics module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="api/binny.correlations.scores.html">binny.correlations.scores module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="api/binny.correlations.topology.html">binny.correlations.topology module</a></li>
+</ul>
+</li>
+<li class="toctree-l4 has-children"><a class="reference internal" href="api/binny.nz.html">binny.nz package</a><input aria-label="Toggle navigation of binny.nz package" class="toctree-checkbox" id="toctree-checkbox-10" name="toctree-checkbox-10" role="switch" type="checkbox"/><label for="toctree-checkbox-10"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l5"><a class="reference internal" href="api/binny.nz.calibration.html">binny.nz.calibration module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="api/binny.nz.models.html">binny.nz.models module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="api/binny.nz.registry.html">binny.nz.registry module</a></li>
+</ul>
+</li>
+<li class="toctree-l4 has-children"><a class="reference internal" href="api/binny.nz_tomo.html">binny.nz_tomo package</a><input aria-label="Toggle navigation of binny.nz_tomo package" class="toctree-checkbox" id="toctree-checkbox-11" name="toctree-checkbox-11" role="switch" type="checkbox"/><label for="toctree-checkbox-11"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l5"><a class="reference internal" href="api/binny.nz_tomo.between_sample_metrics.html">binny.nz_tomo.between_sample_metrics module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="api/binny.nz_tomo.bin_similarity.html">binny.nz_tomo.bin_similarity module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="api/binny.nz_tomo.bin_stats.html">binny.nz_tomo.bin_stats module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="api/binny.nz_tomo.binning_core.html">binny.nz_tomo.binning_core module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="api/binny.nz_tomo.nz_tomo_utils.html">binny.nz_tomo.nz_tomo_utils module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="api/binny.nz_tomo.photoz.html">binny.nz_tomo.photoz module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="api/binny.nz_tomo.specz.html">binny.nz_tomo.specz module</a></li>
+</ul>
+</li>
+<li class="toctree-l4 has-children"><a class="reference internal" href="api/binny.surveys.html">binny.surveys package</a><input aria-label="Toggle navigation of binny.surveys package" class="toctree-checkbox" id="toctree-checkbox-12" name="toctree-checkbox-12" role="switch" type="checkbox"/><label for="toctree-checkbox-12"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l5"><a class="reference internal" href="api/binny.surveys.configs.html">binny.surveys.configs package</a></li>
+<li class="toctree-l5"><a class="reference internal" href="api/binny.surveys.config_utils.html">binny.surveys.config_utils module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="api/binny.surveys.sky.html">binny.surveys.sky module</a></li>
+</ul>
+</li>
+<li class="toctree-l4 has-children"><a class="reference internal" href="api/binny.utils.html">binny.utils package</a><input aria-label="Toggle navigation of binny.utils package" class="toctree-checkbox" id="toctree-checkbox-13" name="toctree-checkbox-13" role="switch" type="checkbox"/><label for="toctree-checkbox-13"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l5"><a class="reference internal" href="api/binny.utils.broadcasting.html">binny.utils.broadcasting module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="api/binny.utils.io.html">binny.utils.io module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="api/binny.utils.metadata.html">binny.utils.metadata module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="api/binny.utils.normalization.html">binny.utils.normalization module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="api/binny.utils.pairwise_metrics.html">binny.utils.pairwise_metrics module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="api/binny.utils.relations.html">binny.utils.relations module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="api/binny.utils.types.html">binny.utils.types module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="api/binny.utils.validators.html">binny.utils.validators module</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+</div>
+</div>
+
+      </div>
+      
+    </div>
+  </aside>
+  <div class="main">
+    <div class="content">
+      <div class="article-container">
+        <a href="#" class="back-to-top muted-link">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+            <path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8v12z"></path>
+          </svg>
+          <span>Back to top</span>
+        </a>
+        <div class="content-icon-container">
+          <div class="theme-toggle-container theme-toggle-content">
+            <button class="theme-toggle" aria-label="Toggle Light / Dark / Auto color theme">
+              <svg class="theme-icon-when-auto-light"><use href="#svg-sun-with-moon"></use></svg>
+              <svg class="theme-icon-when-auto-dark"><use href="#svg-moon-with-sun"></use></svg>
+              <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
+              <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
+            </button>
+          </div>
+          <label class="toc-overlay-icon toc-content-icon no-toc" for="__toc">
+            <span class="icon"><svg><use href="#svg-toc"></use></svg></span>
+          </label>
+        </div>
+        <article role="main" id="furo-main-content">
+          
+<section class="genindex-section">
+  <h1 id="index">Index</h1>
+  <div class="genindex-jumpbox"><a href="#A"><strong>A</strong></a> | <a href="#B"><strong>B</strong></a> | <a href="#C"><strong>C</strong></a> | <a href="#D"><strong>D</strong></a> | <a href="#E"><strong>E</strong></a> | <a href="#F"><strong>F</strong></a> | <a href="#G"><strong>G</strong></a> | <a href="#I"><strong>I</strong></a> | <a href="#K"><strong>K</strong></a> | <a href="#L"><strong>L</strong></a> | <a href="#M"><strong>M</strong></a> | <a href="#N"><strong>N</strong></a> | <a href="#O"><strong>O</strong></a> | <a href="#P"><strong>P</strong></a> | <a href="#R"><strong>R</strong></a> | <a href="#S"><strong>S</strong></a> | <a href="#T"><strong>T</strong></a> | <a href="#V"><strong>V</strong></a> | <a href="#W"><strong>W</strong></a> | <a href="#Z"><strong>Z</strong></a></div>
+</section>
+<section id="A" class="genindex-section">
+  <h2>A</h2>
+  <table style="width: 100%" class="indextable genindextable"><tr>
+    <td style="width: 33%; vertical-align: top;"><ul>
+        <li><a href="api/binny.nz_tomo.specz.html#binny.nz_tomo.specz.apply_response_matrix">apply_response_matrix() (in module binny.nz_tomo.specz)</a>
+</li>
+        <li><a href="api/binny.utils.pairwise_metrics.html#binny.utils.pairwise_metrics.apply_unit">apply_unit() (in module binny.utils.pairwise_metrics)</a>
+</li>
+        <li><a href="api/binny.surveys.sky.html#binny.surveys.sky.arcmin2_to_deg2">arcmin2_to_deg2() (in module binny.surveys.sky)</a>
+</li>
+        <li><a href="api/binny.surveys.sky.html#binny.surveys.sky.arcmin2_to_sr">arcmin2_to_sr() (in module binny.surveys.sky)</a>
+</li>
+        <li><a href="api/binny.surveys.sky.html#binny.surveys.sky.area_to_arcmin2">area_to_arcmin2() (in module binny.surveys.sky)</a>
+</li>
+        <li><a href="api/binny.utils.normalization.html#binny.utils.normalization.as_bins_dict">as_bins_dict() (in module binny.utils.normalization)</a>
+</li>
+    </ul></td>
+    <td style="width: 33%; vertical-align: top;"><ul>
+        <li><a href="api/binny.utils.normalization.html#binny.utils.normalization.as_float_array">as_float_array() (in module binny.utils.normalization)</a>
+</li>
+        <li><a href="api/binny.utils.broadcasting.html#binny.utils.broadcasting.as_per_bin">as_per_bin() (in module binny.utils.broadcasting)</a>
+</li>
+        <li><a href="api/binny.html#binny.available_metric_kernels">available_metric_kernels() (in module binny)</a>
+
+        <ul>
+          <li><a href="api/binny.api.nz_tomography.html#binny.api.nz_tomography.available_metric_kernels">(in module binny.api.nz_tomography)</a>
+</li>
+        </ul></li>
+        <li><a href="api/binny.nz.html#binny.nz.available_models">available_models() (in module binny.nz)</a>
+
+        <ul>
+          <li><a href="api/binny.nz.registry.html#binny.nz.registry.available_models">(in module binny.nz.registry)</a>
+</li>
+        </ul></li>
+        <li><a href="api/binny.utils.relations.html#binny.utils.relations.available_relations">available_relations() (in module binny.utils.relations)</a>
+</li>
+    </ul></td>
+  </tr></table>
+</section>
+
+<section id="B" class="genindex-section">
+  <h2>B</h2>
+  <table style="width: 100%" class="indextable genindextable"><tr>
+    <td style="width: 33%; vertical-align: top;"><ul>
+        <li><a href="api/binny.nz_tomo.between_sample_metrics.html#binny.nz_tomo.between_sample_metrics.between_bin_overlap">between_bin_overlap() (in module binny.nz_tomo.between_sample_metrics)</a>
+</li>
+        <li><a href="api/binny.nz_tomo.between_sample_metrics.html#binny.nz_tomo.between_sample_metrics.between_interval_mass_matrix">between_interval_mass_matrix() (in module binny.nz_tomo.between_sample_metrics)</a>
+</li>
+        <li><a href="api/binny.nz_tomo.between_sample_metrics.html#binny.nz_tomo.between_sample_metrics.between_overlap_pairs">between_overlap_pairs() (in module binny.nz_tomo.between_sample_metrics)</a>
+</li>
+        <li><a href="api/binny.nz_tomo.between_sample_metrics.html#binny.nz_tomo.between_sample_metrics.between_pearson_matrix">between_pearson_matrix() (in module binny.nz_tomo.between_sample_metrics)</a>
+</li>
+        <li><a href="api/binny.api.nz_tomography.html#binny.api.nz_tomography.NZTomography.between_sample_stats">between_sample_stats() (binny.api.nz_tomography.NZTomography method)</a>
+
+        <ul>
+          <li><a href="api/binny.html#binny.NZTomography.between_sample_stats">(binny.NZTomography method)</a>
+</li>
+        </ul></li>
+        <li><a href="api/binny.nz_tomo.bin_stats.html#binny.nz_tomo.bin_stats.bin_centers">bin_centers() (in module binny.nz_tomo.bin_stats)</a>
+</li>
+        <li><a href="api/binny.api.nz_tomography.html#binny.api.nz_tomography.NZTomography.bin_combo_filter">bin_combo_filter() (binny.api.nz_tomography.NZTomography method)</a>
+
+        <ul>
+          <li><a href="api/binny.html#binny.NZTomography.bin_combo_filter">(binny.NZTomography method)</a>
+</li>
+        </ul></li>
+        <li><a href="api/binny.api.nz_tomography.html#binny.api.nz_tomography.NZTomography.bin_keys">bin_keys (binny.api.nz_tomography.NZTomography property)</a>
+
+        <ul>
+          <li><a href="api/binny.html#binny.NZTomography.bin_keys">(binny.NZTomography property)</a>
+</li>
+        </ul></li>
+        <li><a href="api/binny.nz_tomo.bin_stats.html#binny.nz_tomo.bin_stats.bin_moments">bin_moments() (in module binny.nz_tomo.bin_stats)</a>
+</li>
+        <li><a href="api/binny.nz_tomo.between_sample_metrics.html#binny.nz_tomo.between_sample_metrics.bin_overlap">bin_overlap() (in module binny.nz_tomo.between_sample_metrics)</a>
+
+        <ul>
+          <li><a href="api/binny.nz_tomo.bin_similarity.html#binny.nz_tomo.bin_similarity.bin_overlap">(in module binny.nz_tomo.bin_similarity)</a>
+</li>
+        </ul></li>
+        <li><a href="api/binny.nz_tomo.bin_stats.html#binny.nz_tomo.bin_stats.bin_quantiles">bin_quantiles() (in module binny.nz_tomo.bin_stats)</a>
+</li>
+        <li><a href="api/binny.correlations.bin_combo_filter.html#binny.correlations.bin_combo_filter.BinComboFilter">BinComboFilter (class in binny.correlations.bin_combo_filter)</a>
+</li>
+        <li>
+    binny
+
+        <ul>
+          <li><a href="api/binny.html#module-binny">module</a>
+</li>
+        </ul></li>
+        <li>
+    binny.api.nz_tomography
+
+        <ul>
+          <li><a href="api/binny.api.nz_tomography.html#module-binny.api.nz_tomography">module</a>
+</li>
+        </ul></li>
+        <li>
+    binny.axes
+
+        <ul>
+          <li><a href="api/binny.axes.html#module-binny.axes">module</a>
+</li>
+        </ul></li>
+        <li>
+    binny.axes.bin_edges
+
+        <ul>
+          <li><a href="api/binny.axes.bin_edges.html#module-binny.axes.bin_edges">module</a>
+</li>
+        </ul></li>
+        <li>
+    binny.axes.grids
+
+        <ul>
+          <li><a href="api/binny.axes.grids.html#module-binny.axes.grids">module</a>
+</li>
+        </ul></li>
+        <li>
+    binny.axes.mixed_edges
+
+        <ul>
+          <li><a href="api/binny.axes.mixed_edges.html#module-binny.axes.mixed_edges">module</a>
+</li>
+        </ul></li>
+        <li>
+    binny.correlations
+
+        <ul>
+          <li><a href="api/binny.correlations.html#module-binny.correlations">module</a>
+</li>
+        </ul></li>
+        <li>
+    binny.correlations.bin_combo_filter
+
+        <ul>
+          <li><a href="api/binny.correlations.bin_combo_filter.html#module-binny.correlations.bin_combo_filter">module</a>
+</li>
+        </ul></li>
+        <li>
+    binny.correlations.filters
+
+        <ul>
+          <li><a href="api/binny.correlations.filters.html#module-binny.correlations.filters">module</a>
+</li>
+        </ul></li>
+        <li>
+    binny.correlations.metrics
+
+        <ul>
+          <li><a href="api/binny.correlations.metrics.html#module-binny.correlations.metrics">module</a>
+</li>
+        </ul></li>
+        <li>
+    binny.correlations.scores
+
+        <ul>
+          <li><a href="api/binny.correlations.scores.html#module-binny.correlations.scores">module</a>
+</li>
+        </ul></li>
+        <li>
+    binny.correlations.topology
+
+        <ul>
+          <li><a href="api/binny.correlations.topology.html#module-binny.correlations.topology">module</a>
+</li>
+        </ul></li>
+        <li>
+    binny.nz
+
+        <ul>
+          <li><a href="api/binny.nz.html#module-binny.nz">module</a>
+</li>
+        </ul></li>
+        <li>
+    binny.nz.calibration
+
+        <ul>
+          <li><a href="api/binny.nz.calibration.html#module-binny.nz.calibration">module</a>
+</li>
+        </ul></li>
+        <li>
+    binny.nz.models
+
+        <ul>
+          <li><a href="api/binny.nz.models.html#module-binny.nz.models">module</a>
+</li>
+        </ul></li>
+        <li>
+    binny.nz.registry
+
+        <ul>
+          <li><a href="api/binny.nz.registry.html#module-binny.nz.registry">module</a>
+</li>
+        </ul></li>
+        <li>
+    binny.nz_tomo
+
+        <ul>
+          <li><a href="api/binny.nz_tomo.html#module-binny.nz_tomo">module</a>
+</li>
+        </ul></li>
+    </ul></td>
+    <td style="width: 33%; vertical-align: top;"><ul>
+        <li>
+    binny.nz_tomo.between_sample_metrics
+
+        <ul>
+          <li><a href="api/binny.nz_tomo.between_sample_metrics.html#module-binny.nz_tomo.between_sample_metrics">module</a>
+</li>
+        </ul></li>
+        <li>
+    binny.nz_tomo.bin_similarity
+
+        <ul>
+          <li><a href="api/binny.nz_tomo.bin_similarity.html#module-binny.nz_tomo.bin_similarity">module</a>
+</li>
+        </ul></li>
+        <li>
+    binny.nz_tomo.bin_stats
+
+        <ul>
+          <li><a href="api/binny.nz_tomo.bin_stats.html#module-binny.nz_tomo.bin_stats">module</a>
+</li>
+        </ul></li>
+        <li>
+    binny.nz_tomo.binning_core
+
+        <ul>
+          <li><a href="api/binny.nz_tomo.binning_core.html#module-binny.nz_tomo.binning_core">module</a>
+</li>
+        </ul></li>
+        <li>
+    binny.nz_tomo.nz_tomo_utils
+
+        <ul>
+          <li><a href="api/binny.nz_tomo.nz_tomo_utils.html#module-binny.nz_tomo.nz_tomo_utils">module</a>
+</li>
+        </ul></li>
+        <li>
+    binny.nz_tomo.photoz
+
+        <ul>
+          <li><a href="api/binny.nz_tomo.photoz.html#module-binny.nz_tomo.photoz">module</a>
+</li>
+        </ul></li>
+        <li>
+    binny.nz_tomo.specz
+
+        <ul>
+          <li><a href="api/binny.nz_tomo.specz.html#module-binny.nz_tomo.specz">module</a>
+</li>
+        </ul></li>
+        <li>
+    binny.surveys
+
+        <ul>
+          <li><a href="api/binny.surveys.html#module-binny.surveys">module</a>
+</li>
+        </ul></li>
+        <li>
+    binny.surveys.config_utils
+
+        <ul>
+          <li><a href="api/binny.surveys.config_utils.html#module-binny.surveys.config_utils">module</a>
+</li>
+        </ul></li>
+        <li>
+    binny.surveys.configs
+
+        <ul>
+          <li><a href="api/binny.surveys.configs.html#module-binny.surveys.configs">module</a>
+</li>
+        </ul></li>
+        <li>
+    binny.surveys.sky
+
+        <ul>
+          <li><a href="api/binny.surveys.sky.html#module-binny.surveys.sky">module</a>
+</li>
+        </ul></li>
+        <li>
+    binny.utils
+
+        <ul>
+          <li><a href="api/binny.utils.html#module-binny.utils">module</a>
+</li>
+        </ul></li>
+        <li>
+    binny.utils.broadcasting
+
+        <ul>
+          <li><a href="api/binny.utils.broadcasting.html#module-binny.utils.broadcasting">module</a>
+</li>
+        </ul></li>
+        <li>
+    binny.utils.io
+
+        <ul>
+          <li><a href="api/binny.utils.io.html#module-binny.utils.io">module</a>
+</li>
+        </ul></li>
+        <li>
+    binny.utils.metadata
+
+        <ul>
+          <li><a href="api/binny.utils.metadata.html#module-binny.utils.metadata">module</a>
+</li>
+        </ul></li>
+        <li>
+    binny.utils.normalization
+
+        <ul>
+          <li><a href="api/binny.utils.normalization.html#module-binny.utils.normalization">module</a>
+</li>
+        </ul></li>
+        <li>
+    binny.utils.pairwise_metrics
+
+        <ul>
+          <li><a href="api/binny.utils.pairwise_metrics.html#module-binny.utils.pairwise_metrics">module</a>
+</li>
+        </ul></li>
+        <li>
+    binny.utils.relations
+
+        <ul>
+          <li><a href="api/binny.utils.relations.html#module-binny.utils.relations">module</a>
+</li>
+        </ul></li>
+        <li>
+    binny.utils.types
+
+        <ul>
+          <li><a href="api/binny.utils.types.html#module-binny.utils.types">module</a>
+</li>
+        </ul></li>
+        <li>
+    binny.utils.validators
+
+        <ul>
+          <li><a href="api/binny.utils.validators.html#module-binny.utils.validators">module</a>
+</li>
+        </ul></li>
+        <li><a href="api/binny.api.nz_tomography.html#binny.api.nz_tomography.NZTomography.bins">bins (binny.api.nz_tomography.NZTomography property)</a>
+
+        <ul>
+          <li><a href="api/binny.html#binny.NZTomography.bins">(binny.NZTomography property)</a>
+</li>
+        </ul></li>
+        <li><a href="api/binny.api.nz_tomography.html#binny.api.nz_tomography.NZTomography.build_bins">build_bins() (binny.api.nz_tomography.NZTomography method)</a>
+
+        <ul>
+          <li><a href="api/binny.html#binny.NZTomography.build_bins">(binny.NZTomography method)</a>
+</li>
+        </ul></li>
+        <li><a href="api/binny.nz_tomo.binning_core.html#binny.nz_tomo.binning_core.build_bins_on_edges">build_bins_on_edges() (in module binny.nz_tomo.binning_core)</a>
+</li>
+        <li><a href="api/binny.nz_tomo.photoz.html#binny.nz_tomo.photoz.build_photoz_bins">build_photoz_bins() (in module binny.nz_tomo.photoz)</a>
+</li>
+        <li><a href="api/binny.nz_tomo.specz.html#binny.nz_tomo.specz.build_specz_bins">build_specz_bins() (in module binny.nz_tomo.specz)</a>
+</li>
+        <li><a href="api/binny.nz_tomo.specz.html#binny.nz_tomo.specz.build_specz_response_matrix">build_specz_response_matrix() (in module binny.nz_tomo.specz)</a>
+</li>
+        <li><a href="api/binny.api.nz_tomography.html#binny.api.nz_tomography.NZTomography.build_survey_bins">build_survey_bins() (binny.api.nz_tomography.NZTomography method)</a>
+
+        <ul>
+          <li><a href="api/binny.html#binny.NZTomography.build_survey_bins">(binny.NZTomography method)</a>
+</li>
+        </ul></li>
+        <li><a href="api/binny.utils.metadata.html#binny.utils.metadata.build_tomo_bins_metadata">build_tomo_bins_metadata() (in module binny.utils.metadata)</a>
+</li>
+    </ul></td>
+  </tr></table>
+</section>
+
+<section id="C" class="genindex-section">
+  <h2>C</h2>
+  <table style="width: 100%" class="indextable genindextable"><tr>
+    <td style="width: 33%; vertical-align: top;"><ul>
+        <li><a href="api/binny.nz.calibration.html#binny.nz.calibration.calibrate_depth_smail_from_mock">calibrate_depth_smail_from_mock() (in module binny.nz.calibration)</a>
+</li>
+        <li><a href="api/binny.api.nz_tomography.html#binny.api.nz_tomography.NZTomography.calibrate_smail_from_mock">calibrate_smail_from_mock() (binny.api.nz_tomography.NZTomography static method)</a>
+
+        <ul>
+          <li><a href="api/binny.html#binny.NZTomography.calibrate_smail_from_mock">(binny.NZTomography static method)</a>
+</li>
+        </ul></li>
+        <li><a href="api/binny.utils.normalization.html#binny.utils.normalization.cdf_from_curve">cdf_from_curve() (in module binny.utils.normalization)</a>
+</li>
+        <li><a href="api/binny.api.nz_tomography.html#binny.api.nz_tomography.NZTomography.clear">clear() (binny.api.nz_tomography.NZTomography method)</a>
+
+        <ul>
+          <li><a href="api/binny.html#binny.NZTomography.clear">(binny.NZTomography method)</a>
+</li>
+        </ul></li>
+    </ul></td>
+    <td style="width: 33%; vertical-align: top;"><ul>
+        <li><a href="api/binny.surveys.config_utils.html#binny.surveys.config_utils.config_path">config_path() (in module binny.surveys.config_utils)</a>
+</li>
+        <li><a href="api/binny.api.nz_tomography.html#binny.api.nz_tomography.NZTomography.cross_bin_stats">cross_bin_stats() (binny.api.nz_tomography.NZTomography method)</a>
+
+        <ul>
+          <li><a href="api/binny.html#binny.NZTomography.cross_bin_stats">(binny.NZTomography method)</a>
+</li>
+        </ul></li>
+        <li><a href="api/binny.utils.normalization.html#binny.utils.normalization.curve_norm_mode">curve_norm_mode() (in module binny.utils.normalization)</a>
+</li>
+    </ul></td>
+  </tr></table>
+</section>
+
+<section id="D" class="genindex-section">
+  <h2>D</h2>
+  <table style="width: 100%" class="indextable genindextable"><tr>
+    <td style="width: 33%; vertical-align: top;"><ul>
+        <li><a href="api/binny.surveys.sky.html#binny.surveys.sky.deg2_to_arcmin2">deg2_to_arcmin2() (in module binny.surveys.sky)</a>
+</li>
+        <li><a href="api/binny.surveys.sky.html#binny.surveys.sky.deg2_to_f_sky">deg2_to_f_sky() (in module binny.surveys.sky)</a>
+</li>
+        <li><a href="api/binny.surveys.sky.html#binny.surveys.sky.deg2_to_sr">deg2_to_sr() (in module binny.surveys.sky)</a>
+</li>
+    </ul></td>
+    <td style="width: 33%; vertical-align: top;"><ul>
+        <li><a href="api/binny.surveys.sky.html#binny.surveys.sky.density_arcmin2_to_sr">density_arcmin2_to_sr() (in module binny.surveys.sky)</a>
+</li>
+        <li><a href="api/binny.surveys.sky.html#binny.surveys.sky.density_sr_to_arcmin2">density_sr_to_arcmin2() (in module binny.surveys.sky)</a>
+</li>
+        <li><a href="api/binny.surveys.sky.html#binny.surveys.sky.density_to_per_arcmin2">density_to_per_arcmin2() (in module binny.surveys.sky)</a>
+</li>
+    </ul></td>
+  </tr></table>
+</section>
+
+<section id="E" class="genindex-section">
+  <h2>E</h2>
+  <table style="width: 100%" class="indextable genindextable"><tr>
+    <td style="width: 33%; vertical-align: top;"><ul>
+        <li><a href="api/binny.utils.validators.html#binny.utils.validators.edge_coercion">edge_coercion() (in module binny.utils.validators)</a>
+</li>
+        <li><a href="api/binny.axes.bin_edges.html#binny.axes.bin_edges.equal_information_edges">equal_information_edges() (in module binny.axes.bin_edges)</a>
+</li>
+        <li><a href="api/binny.axes.bin_edges.html#binny.axes.bin_edges.equal_number_edges">equal_number_edges() (in module binny.axes.bin_edges)</a>
+</li>
+        <li><a href="api/binny.axes.bin_edges.html#binny.axes.bin_edges.equidistant_chi_edges">equidistant_chi_edges() (in module binny.axes.bin_edges)</a>
+</li>
+    </ul></td>
+    <td style="width: 33%; vertical-align: top;"><ul>
+        <li><a href="api/binny.axes.bin_edges.html#binny.axes.bin_edges.equidistant_edges">equidistant_edges() (in module binny.axes.bin_edges)</a>
+</li>
+        <li><a href="api/binny.nz.calibration.html#binny.nz.calibration.eval_ngal_of_maglim">eval_ngal_of_maglim() (in module binny.nz.calibration)</a>
+</li>
+        <li><a href="api/binny.nz.calibration.html#binny.nz.calibration.eval_z0_of_maglim">eval_z0_of_maglim() (in module binny.nz.calibration)</a>
+</li>
+        <li><a href="api/binny.nz_tomo.nz_tomo_utils.html#binny.nz_tomo.nz_tomo_utils.extract_bin_edges_from_meta">extract_bin_edges_from_meta() (in module binny.nz_tomo.nz_tomo_utils)</a>
+</li>
+    </ul></td>
+  </tr></table>
+</section>
+
+<section id="F" class="genindex-section">
+  <h2>F</h2>
+  <table style="width: 100%" class="indextable genindextable"><tr>
+    <td style="width: 33%; vertical-align: top;"><ul>
+        <li><a href="api/binny.surveys.sky.html#binny.surveys.sky.f_sky_to_deg2">f_sky_to_deg2() (in module binny.surveys.sky)</a>
+</li>
+        <li><a href="api/binny.surveys.sky.html#binny.surveys.sky.f_sky_to_sr">f_sky_to_sr() (in module binny.surveys.sky)</a>
+</li>
+        <li><a href="api/binny.utils.pairwise_metrics.html#binny.utils.pairwise_metrics.fill_symmetric">fill_symmetric() (in module binny.utils.pairwise_metrics)</a>
+</li>
+        <li><a href="api/binny.correlations.filters.html#binny.correlations.filters.filter_by_curve_norm_threshold">filter_by_curve_norm_threshold() (in module binny.correlations.filters)</a>
+</li>
+        <li><a href="api/binny.correlations.filters.html#binny.correlations.filters.filter_by_metric_threshold">filter_by_metric_threshold() (in module binny.correlations.filters)</a>
+</li>
+        <li><a href="api/binny.correlations.filters.html#binny.correlations.filters.filter_by_score_consistency">filter_by_score_consistency() (in module binny.correlations.filters)</a>
+</li>
+        <li><a href="api/binny.correlations.filters.html#binny.correlations.filters.filter_by_score_difference">filter_by_score_difference() (in module binny.correlations.filters)</a>
+</li>
+    </ul></td>
+    <td style="width: 33%; vertical-align: top;"><ul>
+        <li><a href="api/binny.correlations.filters.html#binny.correlations.filters.filter_by_score_relation">filter_by_score_relation() (in module binny.correlations.filters)</a>
+</li>
+        <li><a href="api/binny.correlations.filters.html#binny.correlations.filters.filter_by_score_separation">filter_by_score_separation() (in module binny.correlations.filters)</a>
+</li>
+        <li><a href="api/binny.correlations.filters.html#binny.correlations.filters.filter_by_width_ratio">filter_by_width_ratio() (in module binny.correlations.filters)</a>
+</li>
+        <li><a href="api/binny.nz_tomo.binning_core.html#binny.nz_tomo.binning_core.finalize_tomo_metadata">finalize_tomo_metadata() (in module binny.nz_tomo.binning_core)</a>
+</li>
+        <li><a href="api/binny.nz.calibration.html#binny.nz.calibration.fit_ngal_of_maglim_from_mock">fit_ngal_of_maglim_from_mock() (in module binny.nz.calibration)</a>
+</li>
+        <li><a href="api/binny.nz.calibration.html#binny.nz.calibration.fit_smail_params_from_mock">fit_smail_params_from_mock() (in module binny.nz.calibration)</a>
+</li>
+        <li><a href="api/binny.nz.calibration.html#binny.nz.calibration.fit_z0_of_maglim_from_mock">fit_z0_of_maglim_from_mock() (in module binny.nz.calibration)</a>
+</li>
+        <li><a href="api/binny.surveys.config_utils.html#binny.surveys.config_utils.SurveyFootprint.frac_sky">frac_sky (binny.surveys.config_utils.SurveyFootprint attribute)</a>
+</li>
+    </ul></td>
+  </tr></table>
+</section>
+
+<section id="G" class="genindex-section">
+  <h2>G</h2>
+  <table style="width: 100%" class="indextable genindextable"><tr>
+    <td style="width: 33%; vertical-align: top;"><ul>
+        <li><a href="api/binny.nz_tomo.bin_stats.html#binny.nz_tomo.bin_stats.galaxy_count_per_bin">galaxy_count_per_bin() (in module binny.nz_tomo.bin_stats)</a>
+</li>
+        <li><a href="api/binny.nz_tomo.bin_stats.html#binny.nz_tomo.bin_stats.galaxy_density_per_bin">galaxy_density_per_bin() (in module binny.nz_tomo.bin_stats)</a>
+</li>
+        <li><a href="api/binny.nz_tomo.bin_stats.html#binny.nz_tomo.bin_stats.galaxy_fraction_per_bin">galaxy_fraction_per_bin() (in module binny.nz_tomo.bin_stats)</a>
+</li>
+        <li><a href="api/binny.nz.models.html#binny.nz.models.gamma_distribution">gamma_distribution() (in module binny.nz.models)</a>
+</li>
+        <li><a href="api/binny.nz.models.html#binny.nz.models.gaussian_distribution">gaussian_distribution() (in module binny.nz.models)</a>
+</li>
+    </ul></td>
+    <td style="width: 33%; vertical-align: top;"><ul>
+        <li><a href="api/binny.nz.models.html#binny.nz.models.gaussian_mixture_distribution">gaussian_mixture_distribution() (in module binny.nz.models)</a>
+</li>
+        <li><a href="api/binny.axes.bin_edges.html#binny.axes.bin_edges.geometric_edges">geometric_edges() (in module binny.axes.bin_edges)</a>
+</li>
+        <li><a href="api/binny.nz.html#binny.nz.get_model">get_model() (in module binny.nz)</a>
+
+        <ul>
+          <li><a href="api/binny.nz.registry.html#binny.nz.registry.get_model">(in module binny.nz.registry)</a>
+</li>
+        </ul></li>
+        <li><a href="api/binny.axes.grids.html#binny.axes.grids.grid">grid() (in module binny.axes.grids)</a>
+</li>
+    </ul></td>
+  </tr></table>
+</section>
+
+<section id="I" class="genindex-section">
+  <h2>I</h2>
+  <table style="width: 100%" class="indextable genindextable"><tr>
+    <td style="width: 33%; vertical-align: top;"><ul>
+        <li><a href="api/binny.nz_tomo.bin_stats.html#binny.nz_tomo.bin_stats.in_range_fraction">in_range_fraction() (in module binny.nz_tomo.bin_stats)</a>
+</li>
+    </ul></td>
+    <td style="width: 33%; vertical-align: top;"><ul>
+        <li><a href="api/binny.nz_tomo.bin_stats.html#binny.nz_tomo.bin_stats.in_range_fraction_per_bin">in_range_fraction_per_bin() (in module binny.nz_tomo.bin_stats)</a>
+</li>
+        <li><a href="api/binny.utils.normalization.html#binny.utils.normalization.integrate_bins">integrate_bins() (in module binny.utils.normalization)</a>
+</li>
+    </ul></td>
+  </tr></table>
+</section>
+
+<section id="K" class="genindex-section">
+  <h2>K</h2>
+  <table style="width: 100%" class="indextable genindextable"><tr>
+    <td style="width: 33%; vertical-align: top;"><ul>
+        <li><a href="api/binny.correlations.bin_combo_filter.html#binny.correlations.bin_combo_filter.BinComboFilter.keep_if_curve_norm_threshold">keep_if_curve_norm_threshold() (binny.correlations.bin_combo_filter.BinComboFilter method)</a>
+</li>
+        <li><a href="api/binny.correlations.bin_combo_filter.html#binny.correlations.bin_combo_filter.BinComboFilter.keep_if_metric">keep_if_metric() (binny.correlations.bin_combo_filter.BinComboFilter method)</a>
+</li>
+        <li><a href="api/binny.correlations.bin_combo_filter.html#binny.correlations.bin_combo_filter.BinComboFilter.keep_if_overlap_coefficient">keep_if_overlap_coefficient() (binny.correlations.bin_combo_filter.BinComboFilter method)</a>
+</li>
+        <li><a href="api/binny.correlations.bin_combo_filter.html#binny.correlations.bin_combo_filter.BinComboFilter.keep_if_overlap_fraction">keep_if_overlap_fraction() (binny.correlations.bin_combo_filter.BinComboFilter method)</a>
+</li>
+    </ul></td>
+    <td style="width: 33%; vertical-align: top;"><ul>
+        <li><a href="api/binny.correlations.bin_combo_filter.html#binny.correlations.bin_combo_filter.BinComboFilter.keep_if_score_consistency">keep_if_score_consistency() (binny.correlations.bin_combo_filter.BinComboFilter method)</a>
+</li>
+        <li><a href="api/binny.correlations.bin_combo_filter.html#binny.correlations.bin_combo_filter.BinComboFilter.keep_if_score_difference">keep_if_score_difference() (binny.correlations.bin_combo_filter.BinComboFilter method)</a>
+</li>
+        <li><a href="api/binny.correlations.bin_combo_filter.html#binny.correlations.bin_combo_filter.BinComboFilter.keep_if_score_relation">keep_if_score_relation() (binny.correlations.bin_combo_filter.BinComboFilter method)</a>
+</li>
+        <li><a href="api/binny.correlations.bin_combo_filter.html#binny.correlations.bin_combo_filter.BinComboFilter.keep_if_score_separation">keep_if_score_separation() (binny.correlations.bin_combo_filter.BinComboFilter method)</a>
+</li>
+        <li><a href="api/binny.correlations.bin_combo_filter.html#binny.correlations.bin_combo_filter.BinComboFilter.keep_if_width_ratio">keep_if_width_ratio() (binny.correlations.bin_combo_filter.BinComboFilter method)</a>
+</li>
+    </ul></td>
+  </tr></table>
+</section>
+
+<section id="L" class="genindex-section">
+  <h2>L</h2>
+  <table style="width: 100%" class="indextable genindextable"><tr>
+    <td style="width: 33%; vertical-align: top;"><ul>
+        <li><a href="api/binny.nz_tomo.between_sample_metrics.html#binny.nz_tomo.between_sample_metrics.leakage_matrix">leakage_matrix() (in module binny.nz_tomo.between_sample_metrics)</a>
+
+        <ul>
+          <li><a href="api/binny.nz_tomo.bin_similarity.html#binny.nz_tomo.bin_similarity.leakage_matrix">(in module binny.nz_tomo.bin_similarity)</a>
+</li>
+        </ul></li>
+        <li><a href="api/binny.axes.grids.html#binny.axes.grids.linear_grid">linear_grid() (in module binny.axes.grids)</a>
+</li>
+        <li><a href="api/binny.surveys.config_utils.html#binny.surveys.config_utils.list_configs">list_configs() (in module binny.surveys.config_utils)</a>
+</li>
+        <li><a href="api/binny.api.nz_tomography.html#binny.api.nz_tomography.NZTomography.list_nz_models">list_nz_models() (binny.api.nz_tomography.NZTomography static method)</a>
+
+        <ul>
+          <li><a href="api/binny.html#binny.NZTomography.list_nz_models">(binny.NZTomography static method)</a>
+</li>
+        </ul></li>
+        <li><a href="api/binny.api.nz_tomography.html#binny.api.nz_tomography.NZTomography.list_surveys">list_surveys() (binny.api.nz_tomography.NZTomography static method)</a>
+
+        <ul>
+          <li><a href="api/binny.html#binny.NZTomography.list_surveys">(binny.NZTomography static method)</a>
+</li>
+        </ul></li>
+    </ul></td>
+    <td style="width: 33%; vertical-align: top;"><ul>
+        <li><a href="api/binny.utils.io.html#binny.utils.io.load_binning_recipe">load_binning_recipe() (in module binny.utils.io)</a>
+</li>
+        <li><a href="api/binny.utils.io.html#binny.utils.io.load_nz">load_nz() (in module binny.utils.io)</a>
+</li>
+        <li><a href="api/binny.utils.io.html#binny.utils.io.load_yaml">load_yaml() (in module binny.utils.io)</a>
+</li>
+        <li><a href="api/binny.axes.bin_edges.html#binny.axes.bin_edges.log_edges">log_edges() (in module binny.axes.bin_edges)</a>
+</li>
+        <li><a href="api/binny.axes.grids.html#binny.axes.grids.log_grid">log_grid() (in module binny.axes.grids)</a>
+</li>
+        <li><a href="api/binny.nz.models.html#binny.nz.models.lognormal_distribution">lognormal_distribution() (in module binny.nz.models)</a>
+</li>
+    </ul></td>
+  </tr></table>
+</section>
+
+<section id="M" class="genindex-section">
+  <h2>M</h2>
+  <table style="width: 100%" class="indextable genindextable"><tr>
+    <td style="width: 33%; vertical-align: top;"><ul>
+        <li><a href="api/binny.utils.pairwise_metrics.html#binny.utils.pairwise_metrics.mass_per_segment">mass_per_segment() (in module binny.utils.pairwise_metrics)</a>
+</li>
+        <li><a href="api/binny.correlations.metrics.html#binny.correlations.metrics.metric_from_curves">metric_from_curves() (in module binny.correlations.metrics)</a>
+</li>
+        <li><a href="api/binny.correlations.metrics.html#binny.correlations.metrics.metric_min_overlap_fraction">metric_min_overlap_fraction() (in module binny.correlations.metrics)</a>
+</li>
+        <li><a href="api/binny.correlations.metrics.html#binny.correlations.metrics.metric_overlap_coefficient">metric_overlap_coefficient() (in module binny.correlations.metrics)</a>
+</li>
+        <li><a href="api/binny.axes.mixed_edges.html#binny.axes.mixed_edges.mixed_edges">mixed_edges() (in module binny.axes.mixed_edges)</a>
+</li>
+        <li><a href="api/binny.nz_tomo.nz_tomo_utils.html#binny.nz_tomo.nz_tomo_utils.mixed_edges_from_segments">mixed_edges_from_segments() (in module binny.nz_tomo.nz_tomo_utils)</a>
+</li>
+        <li>
+    module
+
+        <ul>
+          <li><a href="api/binny.html#module-binny">binny</a>
+</li>
+          <li><a href="api/binny.api.nz_tomography.html#module-binny.api.nz_tomography">binny.api.nz_tomography</a>
+</li>
+          <li><a href="api/binny.axes.html#module-binny.axes">binny.axes</a>
+</li>
+          <li><a href="api/binny.axes.bin_edges.html#module-binny.axes.bin_edges">binny.axes.bin_edges</a>
+</li>
+          <li><a href="api/binny.axes.grids.html#module-binny.axes.grids">binny.axes.grids</a>
+</li>
+          <li><a href="api/binny.axes.mixed_edges.html#module-binny.axes.mixed_edges">binny.axes.mixed_edges</a>
+</li>
+          <li><a href="api/binny.correlations.html#module-binny.correlations">binny.correlations</a>
+</li>
+          <li><a href="api/binny.correlations.bin_combo_filter.html#module-binny.correlations.bin_combo_filter">binny.correlations.bin_combo_filter</a>
+</li>
+          <li><a href="api/binny.correlations.filters.html#module-binny.correlations.filters">binny.correlations.filters</a>
+</li>
+          <li><a href="api/binny.correlations.metrics.html#module-binny.correlations.metrics">binny.correlations.metrics</a>
+</li>
+          <li><a href="api/binny.correlations.scores.html#module-binny.correlations.scores">binny.correlations.scores</a>
+</li>
+          <li><a href="api/binny.correlations.topology.html#module-binny.correlations.topology">binny.correlations.topology</a>
+</li>
+          <li><a href="api/binny.nz.html#module-binny.nz">binny.nz</a>
+</li>
+          <li><a href="api/binny.nz.calibration.html#module-binny.nz.calibration">binny.nz.calibration</a>
+</li>
+          <li><a href="api/binny.nz.models.html#module-binny.nz.models">binny.nz.models</a>
+</li>
+          <li><a href="api/binny.nz.registry.html#module-binny.nz.registry">binny.nz.registry</a>
+</li>
+          <li><a href="api/binny.nz_tomo.html#module-binny.nz_tomo">binny.nz_tomo</a>
+</li>
+          <li><a href="api/binny.nz_tomo.between_sample_metrics.html#module-binny.nz_tomo.between_sample_metrics">binny.nz_tomo.between_sample_metrics</a>
+</li>
+          <li><a href="api/binny.nz_tomo.bin_similarity.html#module-binny.nz_tomo.bin_similarity">binny.nz_tomo.bin_similarity</a>
+</li>
+          <li><a href="api/binny.nz_tomo.bin_stats.html#module-binny.nz_tomo.bin_stats">binny.nz_tomo.bin_stats</a>
+</li>
+          <li><a href="api/binny.nz_tomo.binning_core.html#module-binny.nz_tomo.binning_core">binny.nz_tomo.binning_core</a>
+</li>
+          <li><a href="api/binny.nz_tomo.nz_tomo_utils.html#module-binny.nz_tomo.nz_tomo_utils">binny.nz_tomo.nz_tomo_utils</a>
+</li>
+          <li><a href="api/binny.nz_tomo.photoz.html#module-binny.nz_tomo.photoz">binny.nz_tomo.photoz</a>
+</li>
+          <li><a href="api/binny.nz_tomo.specz.html#module-binny.nz_tomo.specz">binny.nz_tomo.specz</a>
+</li>
+          <li><a href="api/binny.surveys.html#module-binny.surveys">binny.surveys</a>
+</li>
+          <li><a href="api/binny.surveys.config_utils.html#module-binny.surveys.config_utils">binny.surveys.config_utils</a>
+</li>
+          <li><a href="api/binny.surveys.configs.html#module-binny.surveys.configs">binny.surveys.configs</a>
+</li>
+          <li><a href="api/binny.surveys.sky.html#module-binny.surveys.sky">binny.surveys.sky</a>
+</li>
+          <li><a href="api/binny.utils.html#module-binny.utils">binny.utils</a>
+</li>
+          <li><a href="api/binny.utils.broadcasting.html#module-binny.utils.broadcasting">binny.utils.broadcasting</a>
+</li>
+          <li><a href="api/binny.utils.io.html#module-binny.utils.io">binny.utils.io</a>
+</li>
+          <li><a href="api/binny.utils.metadata.html#module-binny.utils.metadata">binny.utils.metadata</a>
+</li>
+          <li><a href="api/binny.utils.normalization.html#module-binny.utils.normalization">binny.utils.normalization</a>
+</li>
+          <li><a href="api/binny.utils.pairwise_metrics.html#module-binny.utils.pairwise_metrics">binny.utils.pairwise_metrics</a>
+</li>
+          <li><a href="api/binny.utils.relations.html#module-binny.utils.relations">binny.utils.relations</a>
+</li>
+          <li><a href="api/binny.utils.types.html#module-binny.utils.types">binny.utils.types</a>
+</li>
+          <li><a href="api/binny.utils.validators.html#module-binny.utils.validators">binny.utils.validators</a>
+</li>
+        </ul></li>
+    </ul></td>
+  </tr></table>
+</section>
+
+<section id="N" class="genindex-section">
+  <h2>N</h2>
+  <table style="width: 100%" class="indextable genindextable"><tr>
+    <td style="width: 33%; vertical-align: top;"><ul>
+        <li><a href="api/binny.utils.normalization.html#binny.utils.normalization.normalize_1d">normalize_1d() (in module binny.utils.normalization)</a>
+</li>
+        <li><a href="api/binny.utils.normalization.html#binny.utils.normalization.normalize_edges">normalize_edges() (in module binny.utils.normalization)</a>
+</li>
+        <li><a href="api/binny.utils.normalization.html#binny.utils.normalization.normalize_or_check_curves">normalize_or_check_curves() (in module binny.utils.normalization)</a>
+</li>
+        <li><a href="api/binny.utils.normalization.html#binny.utils.normalization.normalize_over_z">normalize_over_z() (in module binny.utils.normalization)</a>
+</li>
+        <li><a href="api/binny.api.nz_tomography.html#binny.api.nz_tomography.NZTomography.nz">nz (binny.api.nz_tomography.NZTomography property)</a>
+
+        <ul>
+          <li><a href="api/binny.html#binny.NZTomography.nz">(binny.NZTomography property)</a>
+</li>
+        </ul></li>
+    </ul></td>
+    <td style="width: 33%; vertical-align: top;"><ul>
+        <li><a href="api/binny.api.nz_tomography.html#binny.api.nz_tomography.NZTomography.nz_model">nz_model() (binny.api.nz_tomography.NZTomography static method)</a>
+
+        <ul>
+          <li><a href="api/binny.html#binny.NZTomography.nz_model">(binny.NZTomography static method)</a>
+</li>
+          <li><a href="api/binny.nz.html#binny.nz.nz_model">(in module binny.nz)</a>
+</li>
+          <li><a href="api/binny.nz.registry.html#binny.nz.registry.nz_model">(in module binny.nz.registry)</a>
+</li>
+        </ul></li>
+        <li><a href="api/binny.html#binny.NZTomography">NZTomography (class in binny)</a>
+
+        <ul>
+          <li><a href="api/binny.api.nz_tomography.html#binny.api.nz_tomography.NZTomography">(class in binny.api.nz_tomography)</a>
+</li>
+        </ul></li>
+    </ul></td>
+  </tr></table>
+</section>
+
+<section id="O" class="genindex-section">
+  <h2>O</h2>
+  <table style="width: 100%" class="indextable genindextable"><tr>
+    <td style="width: 33%; vertical-align: top;"><ul>
+        <li><a href="api/binny.nz_tomo.between_sample_metrics.html#binny.nz_tomo.between_sample_metrics.overlap_pairs">overlap_pairs() (in module binny.nz_tomo.between_sample_metrics)</a>
+
+        <ul>
+          <li><a href="api/binny.nz_tomo.bin_similarity.html#binny.nz_tomo.bin_similarity.overlap_pairs">(in module binny.nz_tomo.bin_similarity)</a>
+</li>
+        </ul></li>
+    </ul></td>
+  </tr></table>
+</section>
+
+<section id="P" class="genindex-section">
+  <h2>P</h2>
+  <table style="width: 100%" class="indextable genindextable"><tr>
+    <td style="width: 33%; vertical-align: top;"><ul>
+        <li><a href="api/binny.utils.pairwise_metrics.html#binny.utils.pairwise_metrics.pair_cosine">pair_cosine() (in module binny.utils.pairwise_metrics)</a>
+</li>
+        <li><a href="api/binny.utils.pairwise_metrics.html#binny.utils.pairwise_metrics.pair_hellinger">pair_hellinger() (in module binny.utils.pairwise_metrics)</a>
+</li>
+        <li><a href="api/binny.utils.pairwise_metrics.html#binny.utils.pairwise_metrics.pair_js">pair_js() (in module binny.utils.pairwise_metrics)</a>
+</li>
+        <li><a href="api/binny.utils.pairwise_metrics.html#binny.utils.pairwise_metrics.pair_min">pair_min() (in module binny.utils.pairwise_metrics)</a>
+</li>
+        <li><a href="api/binny.utils.pairwise_metrics.html#binny.utils.pairwise_metrics.pair_tv">pair_tv() (in module binny.utils.pairwise_metrics)</a>
+</li>
+        <li><a href="api/binny.correlations.topology.html#binny.correlations.topology.pairs_all">pairs_all() (in module binny.correlations.topology)</a>
+</li>
+        <li><a href="api/binny.correlations.topology.html#binny.correlations.topology.pairs_cartesian">pairs_cartesian() (in module binny.correlations.topology)</a>
+</li>
+        <li><a href="api/binny.correlations.topology.html#binny.correlations.topology.pairs_diagonal">pairs_diagonal() (in module binny.correlations.topology)</a>
+</li>
+        <li><a href="api/binny.correlations.topology.html#binny.correlations.topology.pairs_lower_triangle">pairs_lower_triangle() (in module binny.correlations.topology)</a>
+</li>
+        <li><a href="api/binny.correlations.topology.html#binny.correlations.topology.pairs_off_diagonal">pairs_off_diagonal() (in module binny.correlations.topology)</a>
+</li>
+    </ul></td>
+    <td style="width: 33%; vertical-align: top;"><ul>
+        <li><a href="api/binny.correlations.topology.html#binny.correlations.topology.pairs_upper_triangle">pairs_upper_triangle() (in module binny.correlations.topology)</a>
+</li>
+        <li><a href="api/binny.nz_tomo.bin_stats.html#binny.nz_tomo.bin_stats.peak_flags">peak_flags() (in module binny.nz_tomo.bin_stats)</a>
+</li>
+        <li><a href="api/binny.nz_tomo.bin_stats.html#binny.nz_tomo.bin_stats.peak_flags_per_bin">peak_flags_per_bin() (in module binny.nz_tomo.bin_stats)</a>
+</li>
+        <li><a href="api/binny.nz_tomo.between_sample_metrics.html#binny.nz_tomo.between_sample_metrics.pearson_matrix">pearson_matrix() (in module binny.nz_tomo.between_sample_metrics)</a>
+
+        <ul>
+          <li><a href="api/binny.nz_tomo.bin_similarity.html#binny.nz_tomo.bin_similarity.pearson_matrix">(in module binny.nz_tomo.bin_similarity)</a>
+</li>
+        </ul></li>
+        <li><a href="api/binny.nz_tomo.nz_tomo_utils.html#binny.nz_tomo.nz_tomo_utils.photoz_segments_to_axes">photoz_segments_to_axes() (in module binny.nz_tomo.nz_tomo_utils)</a>
+</li>
+        <li><a href="api/binny.api.nz_tomography.html#binny.api.nz_tomography.NZTomography.population_stats">population_stats() (binny.api.nz_tomography.NZTomography method)</a>
+
+        <ul>
+          <li><a href="api/binny.html#binny.NZTomography.population_stats">(binny.NZTomography method)</a>
+</li>
+          <li><a href="api/binny.nz_tomo.bin_stats.html#binny.nz_tomo.bin_stats.population_stats">(in module binny.nz_tomo.bin_stats)</a>
+</li>
+        </ul></li>
+        <li><a href="api/binny.utils.normalization.html#binny.utils.normalization.prepare_metric_inputs">prepare_metric_inputs() (in module binny.utils.normalization)</a>
+
+        <ul>
+          <li><a href="api/binny.utils.pairwise_metrics.html#binny.utils.pairwise_metrics.prepare_metric_inputs">(in module binny.utils.pairwise_metrics)</a>
+</li>
+        </ul></li>
+    </ul></td>
+  </tr></table>
+</section>
+
+<section id="R" class="genindex-section">
+  <h2>R</h2>
+  <table style="width: 100%" class="indextable genindextable"><tr>
+    <td style="width: 33%; vertical-align: top;"><ul>
+        <li><a href="api/binny.html#binny.register_metric_kernel">register_metric_kernel() (in module binny)</a>
+
+        <ul>
+          <li><a href="api/binny.api.nz_tomography.html#binny.api.nz_tomography.register_metric_kernel">(in module binny.api.nz_tomography)</a>
+</li>
+        </ul></li>
+        <li><a href="api/binny.utils.normalization.html#binny.utils.normalization.require_bins">require_bins() (in module binny.utils.normalization)</a>
+</li>
+        <li><a href="api/binny.nz_tomo.binning_core.html#binny.nz_tomo.binning_core.resolve_bin_edges">resolve_bin_edges() (in module binny.nz_tomo.binning_core)</a>
+</li>
+    </ul></td>
+    <td style="width: 33%; vertical-align: top;"><ul>
+        <li><a href="api/binny.nz_tomo.nz_tomo_utils.html#binny.nz_tomo.nz_tomo_utils.resolve_bin_edges_for_leakage">resolve_bin_edges_for_leakage() (in module binny.nz_tomo.nz_tomo_utils)</a>
+</li>
+        <li><a href="api/binny.utils.validators.html#binny.utils.validators.resolve_binning_method">resolve_binning_method() (in module binny.utils.validators)</a>
+</li>
+        <li><a href="api/binny.nz_tomo.nz_tomo_utils.html#binny.nz_tomo.nz_tomo_utils.resolve_n_bins_for_builder">resolve_n_bins_for_builder() (in module binny.nz_tomo.nz_tomo_utils)</a>
+</li>
+        <li><a href="api/binny.utils.metadata.html#binny.utils.metadata.round_floats">round_floats() (in module binny.utils.metadata)</a>
+</li>
+    </ul></td>
+  </tr></table>
+</section>
+
+<section id="S" class="genindex-section">
+  <h2>S</h2>
+  <table style="width: 100%" class="indextable genindextable"><tr>
+    <td style="width: 33%; vertical-align: top;"><ul>
+        <li><a href="api/binny.utils.metadata.html#binny.utils.metadata.save_metadata_txt">save_metadata_txt() (in module binny.utils.metadata)</a>
+</li>
+        <li><a href="api/binny.nz.models.html#binny.nz.models.schechter_like_distribution">schechter_like_distribution() (in module binny.nz.models)</a>
+</li>
+        <li><a href="api/binny.correlations.scores.html#binny.correlations.scores.score_credible_width">score_credible_width() (in module binny.correlations.scores)</a>
+</li>
+        <li><a href="api/binny.correlations.scores.html#binny.correlations.scores.score_mean_location">score_mean_location() (in module binny.correlations.scores)</a>
+</li>
+        <li><a href="api/binny.correlations.scores.html#binny.correlations.scores.score_median_location">score_median_location() (in module binny.correlations.scores)</a>
+</li>
+        <li><a href="api/binny.correlations.scores.html#binny.correlations.scores.score_peak_location">score_peak_location() (in module binny.correlations.scores)</a>
+</li>
+        <li><a href="api/binny.utils.pairwise_metrics.html#binny.utils.pairwise_metrics.segment_mass_probs">segment_mass_probs() (in module binny.utils.pairwise_metrics)</a>
+</li>
+        <li><a href="api/binny.correlations.bin_combo_filter.html#binny.correlations.bin_combo_filter.BinComboFilter.select">select() (binny.correlations.bin_combo_filter.BinComboFilter method)</a>
+</li>
+        <li><a href="api/binny.correlations.bin_combo_filter.html#binny.correlations.bin_combo_filter.BinComboFilter.set_topology">set_topology() (binny.correlations.bin_combo_filter.BinComboFilter method)</a>
+</li>
+        <li><a href="api/binny.api.nz_tomography.html#binny.api.nz_tomography.NZTomography.shape_stats">shape_stats() (binny.api.nz_tomography.NZTomography method)</a>
+
+        <ul>
+          <li><a href="api/binny.html#binny.NZTomography.shape_stats">(binny.NZTomography method)</a>
+</li>
+          <li><a href="api/binny.nz_tomo.bin_stats.html#binny.nz_tomo.bin_stats.shape_stats">(in module binny.nz_tomo.bin_stats)</a>
+</li>
+        </ul></li>
+    </ul></td>
+    <td style="width: 33%; vertical-align: top;"><ul>
+        <li><a href="api/binny.nz.models.html#binny.nz.models.shifted_smail_distribution">shifted_smail_distribution() (in module binny.nz.models)</a>
+</li>
+        <li><a href="api/binny.nz.models.html#binny.nz.models.skew_normal_distribution">skew_normal_distribution() (in module binny.nz.models)</a>
+</li>
+        <li><a href="api/binny.nz.models.html#binny.nz.models.smail_like_distribution">smail_like_distribution() (in module binny.nz.models)</a>
+</li>
+        <li><a href="api/binny.nz_tomo.specz.html#binny.nz_tomo.specz.specz_gaussian_response_matrix">specz_gaussian_response_matrix() (in module binny.nz_tomo.specz)</a>
+</li>
+        <li><a href="api/binny.nz_tomo.specz.html#binny.nz_tomo.specz.specz_selection_in_bin">specz_selection_in_bin() (in module binny.nz_tomo.specz)</a>
+</li>
+        <li><a href="api/binny.surveys.sky.html#binny.surveys.sky.sr_to_arcmin2">sr_to_arcmin2() (in module binny.surveys.sky)</a>
+</li>
+        <li><a href="api/binny.surveys.sky.html#binny.surveys.sky.sr_to_deg2">sr_to_deg2() (in module binny.surveys.sky)</a>
+</li>
+        <li><a href="api/binny.surveys.sky.html#binny.surveys.sky.sr_to_f_sky">sr_to_f_sky() (in module binny.surveys.sky)</a>
+</li>
+        <li><a href="api/binny.nz.models.html#binny.nz.models.student_t_distribution">student_t_distribution() (in module binny.nz.models)</a>
+</li>
+        <li><a href="api/binny.surveys.config_utils.html#binny.surveys.config_utils.SurveyFootprint.survey_area">survey_area (binny.surveys.config_utils.SurveyFootprint attribute)</a>
+</li>
+        <li><a href="api/binny.surveys.config_utils.html#binny.surveys.config_utils.SurveyFootprint">SurveyFootprint (class in binny.surveys.config_utils)</a>
+</li>
+    </ul></td>
+  </tr></table>
+</section>
+
+<section id="T" class="genindex-section">
+  <h2>T</h2>
+  <table style="width: 100%" class="indextable genindextable"><tr>
+    <td style="width: 33%; vertical-align: top;"><ul>
+        <li><a href="api/binny.nz.models.html#binny.nz.models.tabulated_distribution">tabulated_distribution() (in module binny.nz.models)</a>
+</li>
+        <li><a href="api/binny.nz.models.html#binny.nz.models.tophat_distribution">tophat_distribution() (in module binny.nz.models)</a>
+</li>
+        <li><a href="api/binny.utils.normalization.html#binny.utils.normalization.trapz_weights">trapz_weights() (in module binny.utils.normalization)</a>
+</li>
+        <li><a href="api/binny.nz_tomo.photoz.html#binny.nz_tomo.photoz.true_redshift_distribution">true_redshift_distribution() (in module binny.nz_tomo.photoz)</a>
+</li>
+    </ul></td>
+    <td style="width: 33%; vertical-align: top;"><ul>
+        <li><a href="api/binny.correlations.topology.html#binny.correlations.topology.tuples_all">tuples_all() (in module binny.correlations.topology)</a>
+</li>
+        <li><a href="api/binny.correlations.topology.html#binny.correlations.topology.tuples_cartesian">tuples_cartesian() (in module binny.correlations.topology)</a>
+</li>
+        <li><a href="api/binny.correlations.topology.html#binny.correlations.topology.tuples_diagonal">tuples_diagonal() (in module binny.correlations.topology)</a>
+</li>
+        <li><a href="api/binny.correlations.topology.html#binny.correlations.topology.tuples_nondecreasing">tuples_nondecreasing() (in module binny.correlations.topology)</a>
+</li>
+    </ul></td>
+  </tr></table>
+</section>
+
+<section id="V" class="genindex-section">
+  <h2>V</h2>
+  <table style="width: 100%" class="indextable genindextable"><tr>
+    <td style="width: 33%; vertical-align: top;"><ul>
+        <li><a href="api/binny.utils.validators.html#binny.utils.validators.validate_axis_and_weights">validate_axis_and_weights() (in module binny.utils.validators)</a>
+</li>
+        <li><a href="api/binny.nz_tomo.binning_core.html#binny.nz_tomo.binning_core.validate_bin_edges">validate_bin_edges() (in module binny.nz_tomo.binning_core)</a>
+</li>
+        <li><a href="api/binny.utils.validators.html#binny.utils.validators.validate_grid_spec">validate_grid_spec() (in module binny.utils.validators)</a>
+</li>
+        <li><a href="api/binny.utils.validators.html#binny.utils.validators.validate_interval">validate_interval() (in module binny.utils.validators)</a>
+</li>
+        <li><a href="api/binny.utils.validators.html#binny.utils.validators.validate_mixed_segments">validate_mixed_segments() (in module binny.utils.validators)</a>
+</li>
+        <li><a href="api/binny.utils.validators.html#binny.utils.validators.validate_n_bins">validate_n_bins() (in module binny.utils.validators)</a>
+</li>
+    </ul></td>
+    <td style="width: 33%; vertical-align: top;"><ul>
+        <li><a href="api/binny.utils.validators.html#binny.utils.validators.validate_probability_vector">validate_probability_vector() (in module binny.utils.validators)</a>
+</li>
+        <li><a href="api/binny.utils.relations.html#binny.utils.relations.validate_relation">validate_relation() (in module binny.utils.relations)</a>
+</li>
+        <li><a href="api/binny.utils.validators.html#binny.utils.validators.validate_response_matrix">validate_response_matrix() (in module binny.utils.validators)</a>
+</li>
+        <li><a href="api/binny.utils.validators.html#binny.utils.validators.validate_same_shape">validate_same_shape() (in module binny.utils.validators)</a>
+</li>
+        <li><a href="api/binny.utils.validators.html#binny.utils.validators.validated_float_arrays">validated_float_arrays() (in module binny.utils.validators)</a>
+</li>
+        <li><a href="api/binny.correlations.bin_combo_filter.html#binny.correlations.bin_combo_filter.BinComboFilter.values">values() (binny.correlations.bin_combo_filter.BinComboFilter method)</a>
+</li>
+    </ul></td>
+  </tr></table>
+</section>
+
+<section id="W" class="genindex-section">
+  <h2>W</h2>
+  <table style="width: 100%" class="indextable genindextable"><tr>
+    <td style="width: 33%; vertical-align: top;"><ul>
+        <li><a href="api/binny.utils.normalization.html#binny.utils.normalization.weighted_quantile_from_cdf">weighted_quantile_from_cdf() (in module binny.utils.normalization)</a>
+</li>
+    </ul></td>
+  </tr></table>
+</section>
+
+<section id="Z" class="genindex-section">
+  <h2>Z</h2>
+  <table style="width: 100%" class="indextable genindextable"><tr>
+    <td style="width: 33%; vertical-align: top;"><ul>
+        <li><a href="api/binny.api.nz_tomography.html#binny.api.nz_tomography.NZTomography.z">z (binny.api.nz_tomography.NZTomography property)</a>
+
+        <ul>
+          <li><a href="api/binny.html#binny.NZTomography.z">(binny.NZTomography property)</a>
+</li>
+        </ul></li>
+    </ul></td>
+  </tr></table>
+</section>
+
+
+        </article>
+      </div>
+      <footer>
+        
+        <div class="related-pages">
+          
+          
+        </div>
+        <div class="bottom-of-page">
+          <div class="left-details">
+            <div class="copyright">
+                Copyright &#169; 2026, Nikolina Šarčević, Matthijs van der Wild
+            </div>
+            Made with <a href="https://www.sphinx-doc.org/">Sphinx</a> and <a class="muted-link" href="https://pradyunsg.me">@pradyunsg</a>'s
+            
+            <a href="https://github.com/pradyunsg/furo">Furo</a>
+            
+          </div>
+          <div class="right-details">
+            
+          </div>
+        </div>
+        
+      </footer>
+    </div>
+    <aside class="toc-drawer no-toc">
+      
+      
+      
+    </aside>
+  </div>
+</div><script src="_static/documentation_options.js?v=5929fcd5"></script>
+    <script src="_static/doctools.js?v=9bcbadda"></script>
+    <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="_static/scripts/furo.js?v=46bd48cc"></script>
+    <script src="_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="_static/copybutton.js?v=f16c4c56"></script>
+    <script src="_static/design-tabs.js?v=f930bc37"></script>
+    </body>
+</html>

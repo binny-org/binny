@@ -1,0 +1,816 @@
+<!doctype html>
+<html class="no-js" lang="en" data-content_root="../">
+  <head><meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <meta name="color-scheme" content="light dark"><meta name="viewport" content="width=device-width, initial-scale=1" />
+<link rel="index" title="Index" href="../genindex.html"><link rel="search" title="Search" href="../search.html"><link rel="next" title="Survey presets" href="survey_presets.html"><link rel="prev" title="Bin summaries" href="bin_summaries.html">
+        <link rel="prefetch" href="../_static/assets/logo.png" as="image">
+        <link rel="prefetch" href="../_static/assets/logo.png" as="image">
+
+    <link rel="shortcut icon" href="../_static/favicon.png"><!-- Generated with Sphinx 8.2.3 and Furo 2025.12.19 -->
+        <title>Bin diagnostics - Binny documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=d111a655" />
+    <link rel="stylesheet" type="text/css" href="../_static/styles/furo.css?v=7bdb33bb" />
+    <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
+    <link rel="stylesheet" type="text/css" href="../_static/plot_directive.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/sphinx-design.min.css?v=95c83b7e" />
+    <link rel="stylesheet" type="text/css" href="../_static/styles/furo-extensions.css?v=8dab3a3b" />
+    <link rel="stylesheet" type="text/css" href="../_static/binny.css?v=9dc84726" />
+    
+    
+
+
+<style>
+  body {
+    --color-code-background: #f2f2f2;
+  --color-code-foreground: #1e1e1e;
+  --color-brand-primary: #440154;
+  --color-brand-content: #31688E;
+  --color-link: #35B779;
+  --color-link--hover: #31688E;
+  --color-link--visited: #FDE725;
+  
+  }
+  @media not print {
+    body[data-theme="dark"] {
+      --color-code-background: #202020;
+  --color-code-foreground: #d0d0d0;
+  --color-brand-primary: #440154;
+  --color-brand-content: #31688E;
+  --color-link: #35B779;
+  --color-link--hover: #31688E;
+  --color-link--visited: #FDE725;
+  
+    }
+    @media (prefers-color-scheme: dark) {
+      body:not([data-theme="light"]) {
+        --color-code-background: #202020;
+  --color-code-foreground: #d0d0d0;
+  --color-brand-primary: #440154;
+  --color-brand-content: #31688E;
+  --color-link: #35B779;
+  --color-link--hover: #31688E;
+  --color-link--visited: #FDE725;
+  
+      }
+    }
+  }
+</style></head>
+  <body>
+    
+    <script>
+      document.body.dataset.theme = localStorage.getItem("theme") || "auto";
+    </script>
+    
+
+<svg xmlns="http://www.w3.org/2000/svg" style="display: none;">
+  <symbol id="svg-toc" viewBox="0 0 24 24">
+    <title>Contents</title>
+    <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 1024 1024">
+      <path d="M408 442h480c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8H408c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8zm-8 204c0 4.4 3.6 8 8 8h480c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8H408c-4.4 0-8 3.6-8 8v56zm504-486H120c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h784c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8zm0 632H120c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h784c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8zM115.4 518.9L271.7 642c5.8 4.6 14.4.5 14.4-6.9V388.9c0-7.4-8.5-11.5-14.4-6.9L115.4 505.1a8.74 8.74 0 0 0 0 13.8z"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-menu" viewBox="0 0 24 24">
+    <title>Menu</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather-menu">
+      <line x1="3" y1="12" x2="21" y2="12"></line>
+      <line x1="3" y1="6" x2="21" y2="6"></line>
+      <line x1="3" y1="18" x2="21" y2="18"></line>
+    </svg>
+  </symbol>
+  <symbol id="svg-arrow-right" viewBox="0 0 24 24">
+    <title>Expand</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather-chevron-right">
+      <polyline points="9 18 15 12 9 6"></polyline>
+    </svg>
+  </symbol>
+  <symbol id="svg-sun" viewBox="0 0 24 24">
+    <title>Light mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="feather-sun">
+      <circle cx="12" cy="12" r="5"></circle>
+      <line x1="12" y1="1" x2="12" y2="3"></line>
+      <line x1="12" y1="21" x2="12" y2="23"></line>
+      <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+      <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+      <line x1="1" y1="12" x2="3" y2="12"></line>
+      <line x1="21" y1="12" x2="23" y2="12"></line>
+      <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+      <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+    </svg>
+  </symbol>
+  <symbol id="svg-moon" viewBox="0 0 24 24">
+    <title>Dark mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-moon">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+      <path d="M12 3c.132 0 .263 0 .393 0a7.5 7.5 0 0 0 7.92 12.446a9 9 0 1 1 -8.313 -12.454z" />
+    </svg>
+  </symbol>
+  <symbol id="svg-sun-with-moon" viewBox="0 0 24 24">
+    <title>Auto light/dark, in light mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round"
+      class="icon-custom-derived-from-feather-sun-and-tabler-moon">
+      <path style="opacity: 50%" d="M 5.411 14.504 C 5.471 14.504 5.532 14.504 5.591 14.504 C 3.639 16.319 4.383 19.569 6.931 20.352 C 7.693 20.586 8.512 20.551 9.25 20.252 C 8.023 23.207 4.056 23.725 2.11 21.184 C 0.166 18.642 1.702 14.949 4.874 14.536 C 5.051 14.512 5.231 14.5 5.411 14.5 L 5.411 14.504 Z"/>
+      <line x1="14.5" y1="3.25" x2="14.5" y2="1.25"/>
+      <line x1="14.5" y1="15.85" x2="14.5" y2="17.85"/>
+      <line x1="10.044" y1="5.094" x2="8.63" y2="3.68"/>
+      <line x1="19" y1="14.05" x2="20.414" y2="15.464"/>
+      <line x1="8.2" y1="9.55" x2="6.2" y2="9.55"/>
+      <line x1="20.8" y1="9.55" x2="22.8" y2="9.55"/>
+      <line x1="10.044" y1="14.006" x2="8.63" y2="15.42"/>
+      <line x1="19" y1="5.05" x2="20.414" y2="3.636"/>
+      <circle cx="14.5" cy="9.55" r="3.6"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-moon-with-sun" viewBox="0 0 24 24">
+    <title>Auto light/dark, in dark mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round"
+      class="icon-custom-derived-from-feather-sun-and-tabler-moon">
+      <path d="M 8.282 7.007 C 8.385 7.007 8.494 7.007 8.595 7.007 C 5.18 10.184 6.481 15.869 10.942 17.24 C 12.275 17.648 13.706 17.589 15 17.066 C 12.851 22.236 5.91 23.143 2.505 18.696 C -0.897 14.249 1.791 7.786 7.342 7.063 C 7.652 7.021 7.965 7 8.282 7 L 8.282 7.007 Z"/>
+      <line style="opacity: 50%" x1="18" y1="3.705" x2="18" y2="2.5"/>
+      <line style="opacity: 50%" x1="18" y1="11.295" x2="18" y2="12.5"/>
+      <line style="opacity: 50%" x1="15.316" y1="4.816" x2="14.464" y2="3.964"/>
+      <line style="opacity: 50%" x1="20.711" y1="10.212" x2="21.563" y2="11.063"/>
+      <line style="opacity: 50%" x1="14.205" y1="7.5" x2="13.001" y2="7.5"/>
+      <line style="opacity: 50%" x1="21.795" y1="7.5" x2="23" y2="7.5"/>
+      <line style="opacity: 50%" x1="15.316" y1="10.184" x2="14.464" y2="11.036"/>
+      <line style="opacity: 50%" x1="20.711" y1="4.789" x2="21.563" y2="3.937"/>
+      <circle style="opacity: 50%" cx="18" cy="7.5" r="2.169"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-pencil" viewBox="0 0 24 24">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-pencil-code">
+      <path d="M4 20h4l10.5 -10.5a2.828 2.828 0 1 0 -4 -4l-10.5 10.5v4" />
+      <path d="M13.5 6.5l4 4" />
+      <path d="M20 21l2 -2l-2 -2" />
+      <path d="M17 17l-2 2l2 2" />
+    </svg>
+  </symbol>
+  <symbol id="svg-eye" viewBox="0 0 24 24">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-eye-code">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+      <path d="M10 12a2 2 0 1 0 4 0a2 2 0 0 0 -4 0" />
+      <path
+        d="M11.11 17.958c-3.209 -.307 -5.91 -2.293 -8.11 -5.958c2.4 -4 5.4 -6 9 -6c3.6 0 6.6 2 9 6c-.21 .352 -.427 .688 -.647 1.008" />
+      <path d="M20 21l2 -2l-2 -2" />
+      <path d="M17 17l-2 2l2 2" />
+    </svg>
+  </symbol>
+</svg>
+
+<input type="checkbox" class="sidebar-toggle" name="__navigation" id="__navigation" aria-label="Toggle site navigation sidebar">
+<input type="checkbox" class="sidebar-toggle" name="__toc" id="__toc" aria-label="Toggle table of contents sidebar">
+<label class="overlay sidebar-overlay" for="__navigation"></label>
+<label class="overlay toc-overlay" for="__toc"></label>
+
+<a class="skip-to-content muted-link" href="#furo-main-content">Skip to content</a>
+
+
+
+<div class="page">
+  <header class="mobile-header">
+    <div class="header-left">
+      <label class="nav-overlay-icon" for="__navigation">
+        <span class="icon"><svg><use href="#svg-menu"></use></svg></span>
+      </label>
+    </div>
+    <div class="header-center">
+      <a href="../index.html"><div class="brand">Binny  documentation</div></a>
+    </div>
+    <div class="header-right">
+      <div class="theme-toggle-container theme-toggle-header">
+        <button class="theme-toggle" aria-label="Toggle Light / Dark / Auto color theme">
+          <svg class="theme-icon-when-auto-light"><use href="#svg-sun-with-moon"></use></svg>
+          <svg class="theme-icon-when-auto-dark"><use href="#svg-moon-with-sun"></use></svg>
+          <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
+          <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
+        </button>
+      </div>
+      <label class="toc-overlay-icon toc-header-icon" for="__toc">
+        <span class="icon"><svg><use href="#svg-toc"></use></svg></span>
+      </label>
+    </div>
+  </header>
+  <aside class="sidebar-drawer">
+    <div class="sidebar-container">
+      
+      <div class="sidebar-sticky"><a class="sidebar-brand" href="../index.html">
+  <div class="sidebar-logo-container">
+    <img class="sidebar-logo only-light" src="../_static/assets/logo.png" alt="Light Logo"/>
+    <img class="sidebar-logo only-dark" src="../_static/assets/logo.png" alt="Dark Logo"/>
+  </div>
+  
+  <span class="sidebar-brand-text">Binny  documentation</span>
+  
+</a><form class="sidebar-search-container" method="get" action="../search.html" role="search">
+  <input class="sidebar-search" placeholder="Search" name="q" aria-label="Search">
+  <input type="hidden" name="check_keywords" value="yes">
+  <input type="hidden" name="area" value="default">
+</form>
+<div id="searchbox"></div><div class="sidebar-scroll"><div class="sidebar-tree">
+  <ul class="current">
+<li class="toctree-l1 has-children"><a class="reference internal" href="../theory/index.html"> Theory</a><input aria-label="Toggle navigation of  Theory" class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" role="switch" type="checkbox"/><label for="toctree-checkbox-1"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../theory/parent_nz.html"> Parent n(z)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../theory/tomography.html"> Tomography</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../theory/uncertainties/index.html"> Redshift uncertainties</a><input aria-label="Toggle navigation of  Redshift uncertainties" class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" role="switch" type="checkbox"/><label for="toctree-checkbox-2"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="../theory/uncertainties/photoz.html"> Photometric-redshift uncertainties</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../theory/uncertainties/specz.html"> Spectroscopic-redshift uncertainties</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../theory/statistics.html"> Bin summaries</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../theory/diagnostics.html"> Bin diagnostics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../theory/bin_combos.html"> Bin-index combinations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../theory/conventions.html"> Conventions</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../workflow.html"> Workflow</a></li>
+<li class="toctree-l1 current has-children"><a class="reference internal" href="index.html"> Examples</a><input aria-label="Toggle navigation of  Examples" checked="" class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" role="switch" type="checkbox"/><label for="toctree-checkbox-3"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="nz_modelling.html"> Parent n(z) models</a></li>
+<li class="toctree-l2"><a class="reference internal" href="nz_calibration.html"> Parent n(z) from mocks</a></li>
+<li class="toctree-l2"><a class="reference internal" href="photoz_bins.html"> Photometric bins</a></li>
+<li class="toctree-l2"><a class="reference internal" href="specz_bins.html"> Spectroscopic bins</a></li>
+<li class="toctree-l2"><a class="reference internal" href="bin_summaries.html"> Bin summaries</a></li>
+<li class="toctree-l2 current current-page"><a class="current reference internal" href="#"> Bin diagnostics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="survey_presets.html"> Survey presets</a></li>
+<li class="toctree-l2"><a class="reference internal" href="selections.html"> Bin-pair selections</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../installation.html"> Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../citation.html"> Citation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../contributing.html"> Contributing</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../api/index.html">Binny API</a><input aria-label="Toggle navigation of Binny API" class="toctree-checkbox" id="toctree-checkbox-4" name="toctree-checkbox-4" role="switch" type="checkbox"/><label for="toctree-checkbox-4"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../api/modules.html">binny</a><input aria-label="Toggle navigation of binny" class="toctree-checkbox" id="toctree-checkbox-5" name="toctree-checkbox-5" role="switch" type="checkbox"/><label for="toctree-checkbox-5"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l3 has-children"><a class="reference internal" href="../api/binny.html">binny package</a><input aria-label="Toggle navigation of binny package" class="toctree-checkbox" id="toctree-checkbox-6" name="toctree-checkbox-6" role="switch" type="checkbox"/><label for="toctree-checkbox-6"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l4 has-children"><a class="reference internal" href="../api/binny.api.html">binny.api package</a><input aria-label="Toggle navigation of binny.api package" class="toctree-checkbox" id="toctree-checkbox-7" name="toctree-checkbox-7" role="switch" type="checkbox"/><label for="toctree-checkbox-7"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l5"><a class="reference internal" href="../api/binny.api.nz_tomography.html">binny.api.nz_tomography module</a></li>
+</ul>
+</li>
+<li class="toctree-l4 has-children"><a class="reference internal" href="../api/binny.axes.html">binny.axes package</a><input aria-label="Toggle navigation of binny.axes package" class="toctree-checkbox" id="toctree-checkbox-8" name="toctree-checkbox-8" role="switch" type="checkbox"/><label for="toctree-checkbox-8"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l5"><a class="reference internal" href="../api/binny.axes.bin_edges.html">binny.axes.bin_edges module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../api/binny.axes.grids.html">binny.axes.grids module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../api/binny.axes.mixed_edges.html">binny.axes.mixed_edges module</a></li>
+</ul>
+</li>
+<li class="toctree-l4 has-children"><a class="reference internal" href="../api/binny.correlations.html">binny.correlations package</a><input aria-label="Toggle navigation of binny.correlations package" class="toctree-checkbox" id="toctree-checkbox-9" name="toctree-checkbox-9" role="switch" type="checkbox"/><label for="toctree-checkbox-9"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l5"><a class="reference internal" href="../api/binny.correlations.bin_combo_filter.html">binny.correlations.bin_combo_filter module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../api/binny.correlations.filters.html">binny.correlations.filters module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../api/binny.correlations.metrics.html">binny.correlations.metrics module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../api/binny.correlations.scores.html">binny.correlations.scores module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../api/binny.correlations.topology.html">binny.correlations.topology module</a></li>
+</ul>
+</li>
+<li class="toctree-l4 has-children"><a class="reference internal" href="../api/binny.nz.html">binny.nz package</a><input aria-label="Toggle navigation of binny.nz package" class="toctree-checkbox" id="toctree-checkbox-10" name="toctree-checkbox-10" role="switch" type="checkbox"/><label for="toctree-checkbox-10"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l5"><a class="reference internal" href="../api/binny.nz.calibration.html">binny.nz.calibration module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../api/binny.nz.models.html">binny.nz.models module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../api/binny.nz.registry.html">binny.nz.registry module</a></li>
+</ul>
+</li>
+<li class="toctree-l4 has-children"><a class="reference internal" href="../api/binny.nz_tomo.html">binny.nz_tomo package</a><input aria-label="Toggle navigation of binny.nz_tomo package" class="toctree-checkbox" id="toctree-checkbox-11" name="toctree-checkbox-11" role="switch" type="checkbox"/><label for="toctree-checkbox-11"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l5"><a class="reference internal" href="../api/binny.nz_tomo.between_sample_metrics.html">binny.nz_tomo.between_sample_metrics module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../api/binny.nz_tomo.bin_similarity.html">binny.nz_tomo.bin_similarity module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../api/binny.nz_tomo.bin_stats.html">binny.nz_tomo.bin_stats module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../api/binny.nz_tomo.binning_core.html">binny.nz_tomo.binning_core module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../api/binny.nz_tomo.nz_tomo_utils.html">binny.nz_tomo.nz_tomo_utils module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../api/binny.nz_tomo.photoz.html">binny.nz_tomo.photoz module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../api/binny.nz_tomo.specz.html">binny.nz_tomo.specz module</a></li>
+</ul>
+</li>
+<li class="toctree-l4 has-children"><a class="reference internal" href="../api/binny.surveys.html">binny.surveys package</a><input aria-label="Toggle navigation of binny.surveys package" class="toctree-checkbox" id="toctree-checkbox-12" name="toctree-checkbox-12" role="switch" type="checkbox"/><label for="toctree-checkbox-12"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l5"><a class="reference internal" href="../api/binny.surveys.configs.html">binny.surveys.configs package</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../api/binny.surveys.config_utils.html">binny.surveys.config_utils module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../api/binny.surveys.sky.html">binny.surveys.sky module</a></li>
+</ul>
+</li>
+<li class="toctree-l4 has-children"><a class="reference internal" href="../api/binny.utils.html">binny.utils package</a><input aria-label="Toggle navigation of binny.utils package" class="toctree-checkbox" id="toctree-checkbox-13" name="toctree-checkbox-13" role="switch" type="checkbox"/><label for="toctree-checkbox-13"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l5"><a class="reference internal" href="../api/binny.utils.broadcasting.html">binny.utils.broadcasting module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../api/binny.utils.io.html">binny.utils.io module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../api/binny.utils.metadata.html">binny.utils.metadata module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../api/binny.utils.normalization.html">binny.utils.normalization module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../api/binny.utils.pairwise_metrics.html">binny.utils.pairwise_metrics module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../api/binny.utils.relations.html">binny.utils.relations module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../api/binny.utils.types.html">binny.utils.types module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../api/binny.utils.validators.html">binny.utils.validators module</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+</div>
+</div>
+
+      </div>
+      
+    </div>
+  </aside>
+  <div class="main">
+    <div class="content">
+      <div class="article-container">
+        <a href="#" class="back-to-top muted-link">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+            <path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8v12z"></path>
+          </svg>
+          <span>Back to top</span>
+        </a>
+        <div class="content-icon-container">
+          <div class="view-this-page">
+  <a class="muted-link" href="../_sources/examples/bin_diagnostics.rst.txt" title="View this page">
+    <svg><use href="#svg-eye"></use></svg>
+    <span class="visually-hidden">View this page</span>
+  </a>
+</div>
+<div class="theme-toggle-container theme-toggle-content">
+            <button class="theme-toggle" aria-label="Toggle Light / Dark / Auto color theme">
+              <svg class="theme-icon-when-auto-light"><use href="#svg-sun-with-moon"></use></svg>
+              <svg class="theme-icon-when-auto-dark"><use href="#svg-moon-with-sun"></use></svg>
+              <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
+              <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
+            </button>
+          </div>
+          <label class="toc-overlay-icon toc-content-icon" for="__toc">
+            <span class="icon"><svg><use href="#svg-toc"></use></svg></span>
+          </label>
+        </div>
+        <article role="main" id="furo-main-content">
+          <section id="logo-bin-diagnostics">
+<h1><a class="reference internal" href="../_images/logo.png"><img alt="logo" src="../_images/logo.png" style="width: 32px;" /></a> Bin diagnostics<a class="headerlink" href="#logo-bin-diagnostics" title="Link to this heading"><span>#</span></a></h1>
+<p>Once tomographic bins have been built, it is often useful to inspect
+their statistical properties before using them in a forecast or analysis.</p>
+<p>Binny provides several diagnostics through <a class="reference internal" href="../api/binny.html#binny.NZTomography" title="binny.NZTomography"><code class="xref py py-class docutils literal notranslate"><span class="pre">binny.NZTomography</span></code></a>
+that quantify several complementary aspects of a tomographic binning
+scheme: the <strong>shape of the bin curves</strong>, the <strong>distribution of galaxies
+across bins</strong>, and the <strong>degree of coupling within or between bin
+families</strong> through overlap, leakage, interval-based mass transfer, or
+correlated structure. Together, these diagnostics help assess whether
+the resulting bins are well separated, well populated, and suitable for
+downstream forecasting or cosmological analysis.</p>
+<p>This page illustrates these diagnostics for a simple four-bin
+photometric example and compares two common binning schemes:</p>
+<ul class="simple">
+<li><p><strong>equipopulated binning</strong>, where each bin contains a similar fraction
+of the galaxy sample,</p></li>
+<li><p><strong>equidistant binning</strong>, where the redshift interval is divided into
+bins of similar width.</p></li>
+</ul>
+<p>The examples below focus on three parts of the diagnostic workflow:</p>
+<ul class="simple">
+<li><p>visual inspection of the binned redshift curves,</p></li>
+<li><p>within-sample diagnostics, such as overlap, leakage, pair rankings,
+and Pearson correlation between bins from the same sample,</p></li>
+<li><p>between-sample diagnostics, such as overlap, interval-mass
+summaries, pair rankings, and Pearson correlation between bins from
+different samples.</p></li>
+</ul>
+<p>Together, these quantities provide a practical way to inspect both the
+internal structure of a single tomographic sample and the relationship
+between two different tomographic samples, for example lens and source
+bins in galaxy-galaxy lensing.</p>
+<p>All examples below are executable via <code class="docutils literal notranslate"><span class="pre">..</span> <span class="pre">plot::</span></code>.</p>
+<section id="building-a-representative-photo-z-example">
+<h2>Building a representative photo-z example<a class="headerlink" href="#building-a-representative-photo-z-example" title="Link to this heading"><span>#</span></a></h2>
+<p>We begin with a smooth parent redshift distribution and construct two
+photometric tomographic realizations of the same sample: one using
+equipopulated bins and one using equidistant bins.</p>
+<p>Both cases use the same photo-z uncertainty model, so differences in the
+resulting diagnostics can be attributed primarily to the binning scheme
+rather than to changes in the underlying uncertainty assumptions.</p>
+<p>(<a class="reference download internal" download="" href="../_downloads/6d39b975c3522243a64a91a9f6fbe666/bin_diagnostics-1.py"><code class="xref download docutils literal notranslate"><span class="pre">Source</span> <span class="pre">code</span></code></a>, <a class="reference download internal" download="" href="../_downloads/324d0faeed161e2f5baade67b33b2481/bin_diagnostics-1.png"><code class="xref download docutils literal notranslate"><span class="pre">png</span></code></a>, <a class="reference download internal" download="" href="../_downloads/6b17c893445c6894150a30ad477a8bc6/bin_diagnostics-1.hires.png"><code class="xref download docutils literal notranslate"><span class="pre">hires.png</span></code></a>, <a class="reference download internal" download="" href="../_downloads/efe0923554e98f6b523fdb80d6562a56/bin_diagnostics-1.pdf"><code class="xref download docutils literal notranslate"><span class="pre">pdf</span></code></a>)</p>
+<figure class="align-default">
+<a class="plot-directive reference internal image-reference" href="../_images/bin_diagnostics-1.png"><img alt="../_images/bin_diagnostics-1.png" class="plot-directive" src="../_images/bin_diagnostics-1.png" style="width: 760px;" />
+</a>
+</figure>
+</section>
+<section id="within-sample-diagnostics">
+<h2>Within-sample diagnostics<a class="headerlink" href="#within-sample-diagnostics" title="Link to this heading"><span>#</span></a></h2>
+<p>These diagnostics describe how bins from a single tomographic sample
+relate to one another. They are useful for assessing practical bin
+separation, internal mixing, and pairwise similarity within one
+tomographic realization.</p>
+<section id="core-cross-bin-matrices">
+<h3>Core cross-bin matrices<a class="headerlink" href="#core-cross-bin-matrices" title="Link to this heading"><span>#</span></a></h3>
+<p>Per-bin summaries describe each tomographic bin on its own, but they do
+not show how strongly different bins mix with one another. For that, it
+is useful to look at <strong>cross-bin diagnostics</strong>.</p>
+<p>Binny provides three simple diagnostics for this purpose:</p>
+<ul class="simple">
+<li><p><strong>overlap</strong>, which measures how much two bin curves lie on top of one
+another in redshift,</p></li>
+<li><p><strong>leakage</strong>, which measures how much of one bin falls inside the
+nominal redshift range of another bin,</p></li>
+<li><p><strong>Pearson correlation</strong>, which measures how similar two bin curves are
+when sampled on the same redshift grid.</p></li>
+</ul>
+<p>Although these quantities are related, they answer slightly different
+questions.</p>
+<p><strong>Overlap</strong> is the most direct measure of shared support. If two bins
+occupy much of the same redshift range, their overlap will be large. If
+they are well separated, their overlap will be small.</p>
+<p><strong>Leakage</strong> is more directional. It asks how much of the content of a
+given bin falls inside the intended redshift interval of another bin.
+This is useful because a bin can spill into its neighbor more strongly
+in one direction than the other, especially when the bin shapes are
+asymmetric or when outliers are present.</p>
+<p><strong>Pearson correlation</strong> focuses on shape similarity rather than on
+physical bin assignment. Two bins can have a similar overall profile and
+therefore a high Pearson correlation even if they are centered at
+different redshifts or have different total mass inside their nominal
+ranges. Pearson values lie between <strong>-1 and 1</strong>, where <strong>1</strong> indicates
+perfect positive correlation, <strong>0</strong> indicates no correlation, and
+<strong>-1</strong> indicates perfect negative correlation.</p>
+<p>The figure below shows these three diagnostics for a simple four-bin
+equidistant photo-z example.</p>
+<p>In all three matrices, the diagonal corresponds to comparing a bin with
+itself, so those entries are usually the largest or among the largest.
+The more interesting part is the off-diagonal structure, because it
+shows how strongly different bins are coupled.</p>
+<p>A simple way to read the matrices is:</p>
+<ul class="simple">
+<li><p><strong>small off-diagonal values</strong> usually mean the bins are well separated,</p></li>
+<li><p><strong>large off-diagonal overlap</strong> means two bins share a noticeable part
+of the same redshift range,</p></li>
+<li><p><strong>large off-diagonal leakage</strong> means galaxies assigned to one bin are
+spilling into the nominal interval of another,</p></li>
+<li><p><strong>large off-diagonal Pearson correlation</strong> means two bins have similar
+shapes, even if they do not represent exactly the same redshift slice.</p></li>
+</ul>
+<p>None of these diagnostics by itself determines whether a binning scheme
+is “good” or “bad”. Instead, they help reveal different kinds of bin
+coupling. In practice, cleaner tomographic binning usually shows a
+strong diagonal and weaker off-diagonal structure, while broader
+smearing, stronger outliers, or less well-separated bins tend to produce
+more visible off-diagonal patterns.</p>
+<p>(<a class="reference download internal" download="" href="../_downloads/26fb4481348eaa5233af135b8a6ea4b1/bin_diagnostics-2.py"><code class="xref download docutils literal notranslate"><span class="pre">Source</span> <span class="pre">code</span></code></a>, <a class="reference download internal" download="" href="../_downloads/5f417e73008e9d07e86239f3497c82ef/bin_diagnostics-2.png"><code class="xref download docutils literal notranslate"><span class="pre">png</span></code></a>, <a class="reference download internal" download="" href="../_downloads/55f0654f6c7c1b7b0774edc5a0e477b7/bin_diagnostics-2.hires.png"><code class="xref download docutils literal notranslate"><span class="pre">hires.png</span></code></a>, <a class="reference download internal" download="" href="../_downloads/17f4057de8ea4c4ee4395bc084441367/bin_diagnostics-2.pdf"><code class="xref download docutils literal notranslate"><span class="pre">pdf</span></code></a>)</p>
+<figure class="align-default">
+<a class="plot-directive reference internal image-reference" href="../_images/bin_diagnostics-2.png"><img alt="../_images/bin_diagnostics-2.png" class="plot-directive" src="../_images/bin_diagnostics-2.png" style="width: 900px;" />
+</a>
+</figure>
+<p>In all three matrices, values near the diagonal typically indicate the
+strongest self-association, while off-diagonal structure reveals
+coupling between different bins. Large off-diagonal overlap or leakage
+usually signals reduced bin separation, whereas large off-diagonal
+Pearson correlation indicates that two bins have similar shapes even if
+their normalization or interpretation differs.</p>
+</section>
+<section id="comparing-multiple-similarity-metrics">
+<h3>Comparing multiple similarity metrics<a class="headerlink" href="#comparing-multiple-similarity-metrics" title="Link to this heading"><span>#</span></a></h3>
+<p>Different cross-bin metrics highlight different aspects of similarity or
+separation between tomographic bins. For that reason, it is often useful
+to compare several metrics side by side rather than relying on only one.</p>
+<p>Binny provides a range of pairwise diagnostics for this purpose. In the
+figure below, the same tomographic bin set is compared using five common
+measures:</p>
+<ul class="simple">
+<li><p><strong>min overlap</strong>, which measures the shared support between two
+normalized bin curves,</p></li>
+<li><p><strong>cosine similarity</strong>, which measures how closely aligned two sampled
+bin vectors are,</p></li>
+<li><p><strong>Jensen–Shannon distance</strong>, which measures how different two
+normalized distributions are,</p></li>
+<li><p><strong>Hellinger distance</strong>, which measures geometric dissimilarity between
+two probability distributions,</p></li>
+<li><p><strong>total variation distance</strong>, which measures the overall discrepancy
+between two normalized distributions.</p></li>
+</ul>
+<p>These metrics do not all follow the same convention.</p>
+<p><strong>Min overlap</strong> and <strong>cosine similarity</strong> are similarity measures, so
+<strong>larger values</strong> mean that two bins are more alike.</p>
+<p>By contrast, <strong>Jensen–Shannon distance</strong>, <strong>Hellinger distance</strong>, and
+<strong>total variation distance</strong> are distance measures, so <strong>smaller
+values</strong> mean that two bins are more alike.</p>
+<p>This means the matrices should be read in two slightly different ways:</p>
+<ul class="simple">
+<li><p>for <strong>similarity</strong> measures, larger off-diagonal values indicate more
+similar or less well-separated bins,</p></li>
+<li><p>for <strong>distance</strong> measures, smaller off-diagonal values indicate more
+similar bins, while larger values indicate stronger separation.</p></li>
+</ul>
+<p>Looking at several metrics together is useful because two bin pairs can
+appear similar under one definition and less similar under another. A
+pair may share substantial support in redshift, for example, while still
+differing in detailed shape, or it may have similar overall structure
+without strongly overlapping in the regions that matter most for another
+metric.</p>
+<p>The diagonal entries again correspond to comparing each bin with itself.
+For similarity measures, those entries are typically among the largest.
+For distance measures, they are typically <strong>0</strong> or very close to <strong>0</strong>.</p>
+<p>The figure below therefore provides a broader view of bin coupling than
+any single metric alone. Strong agreement across several metrics usually
+indicates a robust pattern, whereas differences between metrics show
+that the apparent closeness of two bins depends on how similarity is
+being defined.</p>
+<p>(<a class="reference download internal" download="" href="../_downloads/4e9c5e45f2f7105906b0db7b1c508e04/bin_diagnostics-3.py"><code class="xref download docutils literal notranslate"><span class="pre">Source</span> <span class="pre">code</span></code></a>, <a class="reference download internal" download="" href="../_downloads/3049f159672f8ca5bed88b423d1f6dde/bin_diagnostics-3.png"><code class="xref download docutils literal notranslate"><span class="pre">png</span></code></a>, <a class="reference download internal" download="" href="../_downloads/967d25778ef61663714b32e443a938a7/bin_diagnostics-3.hires.png"><code class="xref download docutils literal notranslate"><span class="pre">hires.png</span></code></a>, <a class="reference download internal" download="" href="../_downloads/b66c4f1f2ca7fa067a242a72fa9254bb/bin_diagnostics-3.pdf"><code class="xref download docutils literal notranslate"><span class="pre">pdf</span></code></a>)</p>
+<figure class="align-default">
+<a class="plot-directive reference internal image-reference" href="../_images/bin_diagnostics-3.png"><img alt="../_images/bin_diagnostics-3.png" class="plot-directive" src="../_images/bin_diagnostics-3.png" style="width: 980px;" />
+</a>
+</figure>
+</section>
+<section id="pair-level-summaries">
+<h3>Pair-level summaries<a class="headerlink" href="#pair-level-summaries" title="Link to this heading"><span>#</span></a></h3>
+<p>Matrix views are useful for seeing the full coupling pattern at once,
+but compact summaries can make the main trends easier to interpret.
+The following diagnostics reduce the pairwise information into rankings
+or per-bin summaries that are often easier to compare visually.</p>
+<section id="ranking-the-most-overlapping-bin-pairs">
+<h4>Ranking the most overlapping bin pairs<a class="headerlink" href="#ranking-the-most-overlapping-bin-pairs" title="Link to this heading"><span>#</span></a></h4>
+<p>A pair ranking provides a compact summary of which tomographic bin pairs
+are most strongly coupled according to a chosen pairwise metric.</p>
+<p>Here the ranking is based on <strong>min overlap</strong>, so pairs with larger values
+share more support in redshift and are less cleanly separated. In many
+practical cases, the most strongly overlapping pairs are neighboring
+bins, since photo-z scatter tends to move galaxies preferentially into
+adjacent redshift intervals.</p>
+<p>The bar chart below shows the largest pairwise min-overlap values for a
+four-bin photo-z example.</p>
+<p>(<a class="reference download internal" download="" href="../_downloads/213e6bb76f7eff7ba33c1beef49ce05d/bin_diagnostics-4.py"><code class="xref download docutils literal notranslate"><span class="pre">Source</span> <span class="pre">code</span></code></a>, <a class="reference download internal" download="" href="../_downloads/02599a1a5a7553ae208bf78bd03694a3/bin_diagnostics-4.png"><code class="xref download docutils literal notranslate"><span class="pre">png</span></code></a>, <a class="reference download internal" download="" href="../_downloads/4da0d81a6f0e3189cc10e4e805888acc/bin_diagnostics-4.hires.png"><code class="xref download docutils literal notranslate"><span class="pre">hires.png</span></code></a>, <a class="reference download internal" download="" href="../_downloads/007b858698e1cb3680010c8839d9cd74/bin_diagnostics-4.pdf"><code class="xref download docutils literal notranslate"><span class="pre">pdf</span></code></a>)</p>
+<figure class="align-default">
+<a class="plot-directive reference internal image-reference" href="../_images/bin_diagnostics-4.png"><img alt="../_images/bin_diagnostics-4.png" class="plot-directive" src="../_images/bin_diagnostics-4.png" style="width: 760px;" />
+</a>
+</figure>
+</section>
+<section id="completeness-and-contamination-per-bin">
+<h4>Completeness and contamination per bin<a class="headerlink" href="#completeness-and-contamination-per-bin" title="Link to this heading"><span>#</span></a></h4>
+<p>The leakage matrix can be summarized into per-bin <strong>completeness</strong> and
+<strong>contamination</strong> measures.</p>
+<p>For a given input bin, the diagonal leakage entry gives the fraction of
+its weight that remains inside its own nominal redshift interval. This
+is the <strong>completeness</strong> of that bin. Its complement measures the fraction
+that falls outside the intended interval and therefore quantifies
+<strong>contamination</strong> by leakage into other nominal bins.</p>
+<p>Large completeness indicates that a bin remains well confined to its
+target redshift range, while large contamination indicates stronger
+mixing with neighboring bins.</p>
+<p>(<a class="reference download internal" download="" href="../_downloads/8329332156a0116ed2076e3beb1e5bf2/bin_diagnostics-5.py"><code class="xref download docutils literal notranslate"><span class="pre">Source</span> <span class="pre">code</span></code></a>, <a class="reference download internal" download="" href="../_downloads/81fcb945a60a7f379a05cb87634c4b7a/bin_diagnostics-5.png"><code class="xref download docutils literal notranslate"><span class="pre">png</span></code></a>, <a class="reference download internal" download="" href="../_downloads/867fbece9af390eac61223f3acd891cb/bin_diagnostics-5.hires.png"><code class="xref download docutils literal notranslate"><span class="pre">hires.png</span></code></a>, <a class="reference download internal" download="" href="../_downloads/aac00d7956a942e63785c1919dd625de/bin_diagnostics-5.pdf"><code class="xref download docutils literal notranslate"><span class="pre">pdf</span></code></a>)</p>
+<figure class="align-default">
+<a class="plot-directive reference internal image-reference" href="../_images/bin_diagnostics-5.png"><img alt="../_images/bin_diagnostics-5.png" class="plot-directive" src="../_images/bin_diagnostics-5.png" style="width: 760px;" />
+</a>
+</figure>
+</section>
+<section id="leakage-composition-by-nominal-bin">
+<h4>Leakage composition by nominal bin<a class="headerlink" href="#leakage-composition-by-nominal-bin" title="Link to this heading"><span>#</span></a></h4>
+<p>A stacked leakage view shows how the weight of each input bin is
+distributed across the nominal redshift intervals.</p>
+<p>Each bar corresponds to one input bin. The stacked segments show what
+fraction of that bin lies inside each target nominal interval. The
+diagonal component therefore represents self-consistency, while the
+off-diagonal components reveal where leaked weight ends up.</p>
+<p>This visualization is especially useful for identifying whether leakage
+is mostly local, for example into adjacent bins, or whether there are
+longer-range tails and outlier-driven transfers across more distant bins.</p>
+<p>(<a class="reference download internal" download="" href="../_downloads/6c9185ce521b40f38f0b45bb1abcd60f/bin_diagnostics-6.py"><code class="xref download docutils literal notranslate"><span class="pre">Source</span> <span class="pre">code</span></code></a>, <a class="reference download internal" download="" href="../_downloads/d2aaf8a0342ae66f1a70b86918d6699a/bin_diagnostics-6.png"><code class="xref download docutils literal notranslate"><span class="pre">png</span></code></a>, <a class="reference download internal" download="" href="../_downloads/b40eece4816c6bf3b2b77848a872e458/bin_diagnostics-6.hires.png"><code class="xref download docutils literal notranslate"><span class="pre">hires.png</span></code></a>, <a class="reference download internal" download="" href="../_downloads/3fa750546256254990c4c4a4797edad6/bin_diagnostics-6.pdf"><code class="xref download docutils literal notranslate"><span class="pre">pdf</span></code></a>)</p>
+<figure class="align-default">
+<a class="plot-directive reference internal image-reference" href="../_images/bin_diagnostics-6.png"><img alt="../_images/bin_diagnostics-6.png" class="plot-directive" src="../_images/bin_diagnostics-6.png" style="width: 820px;" />
+</a>
+</figure>
+</section>
+<section id="pearson-correlation-versus-overlap">
+<h4>Pearson correlation versus overlap<a class="headerlink" href="#pearson-correlation-versus-overlap" title="Link to this heading"><span>#</span></a></h4>
+<p>Different pairwise metrics can highlight different aspects of similarity
+between tomographic bins.</p>
+<p>Here, <strong>min overlap</strong> measures how much two bins directly share support
+in redshift, whereas <strong>Pearson correlation</strong> measures how similarly the
+two sampled bin curves vary across the redshift grid. Two bins can
+therefore exhibit modest direct overlap while still having a relatively
+strong shape correlation, or vice versa.</p>
+<p>The figure below compares these two metrics for all unique off-diagonal
+bin pairs. Each pair of bars corresponds to one bin combination, showing
+its min-overlap value and its Pearson correlation side by side.</p>
+<p>Because the two metrics capture different aspects of similarity, their
+values need not track each other exactly. Some bin pairs may share a
+substantial fraction of their redshift support, leading to relatively
+large overlap, while still differing in detailed shape. Other pairs may
+show similar overall profiles across the redshift grid, producing a
+larger Pearson correlation even when their direct overlap is smaller.</p>
+<p>Comparing the two metrics in this way helps illustrate how different
+definitions of bin similarity emphasize different features of the
+tomographic bin curves.</p>
+<p>(<a class="reference download internal" download="" href="../_downloads/72dd3aafaa7cf8c71bfcf08626341f6f/bin_diagnostics-7.py"><code class="xref download docutils literal notranslate"><span class="pre">Source</span> <span class="pre">code</span></code></a>, <a class="reference download internal" download="" href="../_downloads/80a51d1c92fd48c8fceccd60e612b976/bin_diagnostics-7.png"><code class="xref download docutils literal notranslate"><span class="pre">png</span></code></a>, <a class="reference download internal" download="" href="../_downloads/22adae1ab811782bef0d886ee4e2bc3c/bin_diagnostics-7.hires.png"><code class="xref download docutils literal notranslate"><span class="pre">hires.png</span></code></a>, <a class="reference download internal" download="" href="../_downloads/69c58d01a8b798bd3cebf81c08c1031c/bin_diagnostics-7.pdf"><code class="xref download docutils literal notranslate"><span class="pre">pdf</span></code></a>)</p>
+<figure class="align-default">
+<a class="plot-directive reference internal image-reference" href="../_images/bin_diagnostics-7.png"><img alt="../_images/bin_diagnostics-7.png" class="plot-directive" src="../_images/bin_diagnostics-7.png" style="width: 760px;" />
+</a>
+</figure>
+</section>
+</section>
+</section>
+<section id="between-sample-diagnostics">
+<h2>Between-sample diagnostics<a class="headerlink" href="#between-sample-diagnostics" title="Link to this heading"><span>#</span></a></h2>
+<p>These diagnostics compare bins from two different tomographic samples
+rather than within a single one. This is especially useful in joint
+analyses, where one often wants to assess how cleanly two samples are
+separated or how strongly particular cross-sample bin pairs are coupled.</p>
+<p>In the examples below we adopt a simple convention: <strong>lens bins</strong> define
+the reference intervals and appear along the horizontal axis, while
+<strong>source bins</strong> appear along the vertical axis. For illustration, the
+lens sample uses <strong>equidistant binning</strong> and the source sample uses
+<strong>equipopulated binning</strong>.</p>
+<section id="cross-sample-matrices">
+<h3>Cross-sample matrices<a class="headerlink" href="#cross-sample-matrices" title="Link to this heading"><span>#</span></a></h3>
+<p>In joint analyses it is often useful to compare tomographic bins between
+two different samples rather than only within a single sample. A common
+example is comparing <strong>lens bins</strong> and <strong>source bins</strong> in a
+galaxy-galaxy lensing setup.</p>
+<p>Binny provides <a class="reference internal" href="../api/binny.html#binny.NZTomography.between_sample_stats" title="binny.NZTomography.between_sample_stats"><code class="xref py py-meth docutils literal notranslate"><span class="pre">binny.NZTomography.between_sample_stats()</span></code></a> for this
+purpose. These diagnostics can be used to quantify how strongly bins
+from one sample overlap or correlate with bins from another sample, and
+how much of one sample falls inside the nominal redshift intervals of
+the other.</p>
+<p>The example below constructs a simple lens-like and source-like
+photo-z setup on the same redshift grid, then compares them using
+between-sample overlap, interval-mass, and Pearson correlation.</p>
+<p>(<a class="reference download internal" download="" href="../_downloads/41404dbb7aeb71f0155149b40cd84d66/bin_diagnostics-8.py"><code class="xref download docutils literal notranslate"><span class="pre">Source</span> <span class="pre">code</span></code></a>, <a class="reference download internal" download="" href="../_downloads/8d9b4386afd6ce32c8d2137ddf435cd1/bin_diagnostics-8.png"><code class="xref download docutils literal notranslate"><span class="pre">png</span></code></a>, <a class="reference download internal" download="" href="../_downloads/cd2395ce32cd798f9f5edca9e20b53ea/bin_diagnostics-8.hires.png"><code class="xref download docutils literal notranslate"><span class="pre">hires.png</span></code></a>, <a class="reference download internal" download="" href="../_downloads/2602c8500a29db89d885a124c76309ca/bin_diagnostics-8.pdf"><code class="xref download docutils literal notranslate"><span class="pre">pdf</span></code></a>)</p>
+<figure class="align-default">
+<a class="plot-directive reference internal image-reference" href="../_images/bin_diagnostics-8.png"><img alt="../_images/bin_diagnostics-8.png" class="plot-directive" src="../_images/bin_diagnostics-8.png" style="width: 980px;" />
+</a>
+</figure>
+<p>These matrices are generally rectangular rather than square because the
+two samples need not have the same binning scheme, bin edges, or parent
+redshift distribution. The only requirement is that both tomographic
+realizations are evaluated on the same redshift grid. In practice, large
+values usually identify lens-source bin combinations that are less cleanly
+separated in redshift and may therefore deserve closer inspection in a
+joint analysis.</p>
+</section>
+<section id="cross-sample-interval-mass-composition">
+<h3>Cross-sample interval-mass composition<a class="headerlink" href="#cross-sample-interval-mass-composition" title="Link to this heading"><span>#</span></a></h3>
+<p>While the interval-mass matrix gives the full rectangular pattern of how
+one sample maps onto the nominal intervals of another, a stacked
+composition view can make the main structure easier to read at a glance.</p>
+<p>In the figure below, each bar corresponds to one <strong>source bin</strong>. The
+stacked segments show what fraction of that source-bin mass falls inside
+each <strong>lens nominal interval</strong>. The full height of a bar therefore
+represents the total source-bin mass accounted for across the chosen
+lens intervals, while the relative segment sizes show how that mass is
+distributed.</p>
+<p>This view is useful for diagnosing whether a source bin is associated
+primarily with a single lens interval or whether its weight is spread
+more broadly across several intervals. A source bin whose bar is
+dominated by one segment is more cleanly aligned with a particular lens
+interval, whereas a bar with several substantial segments indicates
+broader cross-sample mixing.</p>
+<p>In many practical cases, neighboring intervals receive the largest
+secondary contributions, reflecting partial redshift overlap between the
+two samples. More extended tails across distant intervals can instead
+indicate broader smearing or stronger outlier-driven transfer.</p>
+<p>(<a class="reference download internal" download="" href="../_downloads/a3774ac279cbd16fa55e34798c95097a/bin_diagnostics-9.py"><code class="xref download docutils literal notranslate"><span class="pre">Source</span> <span class="pre">code</span></code></a>, <a class="reference download internal" download="" href="../_downloads/fb8d82ab8cd62199c7597d9141b0c0d0/bin_diagnostics-9.png"><code class="xref download docutils literal notranslate"><span class="pre">png</span></code></a>, <a class="reference download internal" download="" href="../_downloads/2557bb9f7f2051b658d613012b2c05b1/bin_diagnostics-9.hires.png"><code class="xref download docutils literal notranslate"><span class="pre">hires.png</span></code></a>, <a class="reference download internal" download="" href="../_downloads/0e899e9e9647969220ba716f95af4ff7/bin_diagnostics-9.pdf"><code class="xref download docutils literal notranslate"><span class="pre">pdf</span></code></a>)</p>
+<figure class="align-default">
+<a class="plot-directive reference internal image-reference" href="../_images/bin_diagnostics-9.png"><img alt="../_images/bin_diagnostics-9.png" class="plot-directive" src="../_images/bin_diagnostics-9.png" style="width: 820px;" />
+</a>
+</figure>
+<p>A bar dominated by one segment indicates that most of the corresponding
+source-bin mass falls inside a single lens interval, suggesting cleaner
+cross-sample alignment. By contrast, bars with several sizable segments
+show that the source bin is distributed more broadly across the lens
+intervals and is therefore less cleanly separated in redshift.</p>
+<p>As in the matrix view, the most informative structure is usually in the
+off-dominant components. Small secondary segments suggest modest
+spillover into neighboring lens intervals, whereas larger secondary
+contributions indicate stronger cross-sample mixing.</p>
+</section>
+<section id="cross-sample-pair-rankings">
+<h3>Cross-sample pair rankings<a class="headerlink" href="#cross-sample-pair-rankings" title="Link to this heading"><span>#</span></a></h3>
+<p>Between-sample pair rankings provide a compact way to identify which bin
+combinations across two tomographic samples are most strongly coupled
+according to a chosen metric.</p>
+<p>This is often useful in joint analyses, for example when identifying
+which lens-source bin combinations are most strongly overlapping in
+redshift. Such rankings can help diagnose where sample separation is
+cleanest and where additional care may be needed in downstream analysis.</p>
+<p>The example below ranks lens-source bin pairs by their between-sample
+min-overlap score.</p>
+<p>(<a class="reference download internal" download="" href="../_downloads/aa0c6df8791ed9436eca82baec2fd8c4/bin_diagnostics-10.py"><code class="xref download docutils literal notranslate"><span class="pre">Source</span> <span class="pre">code</span></code></a>, <a class="reference download internal" download="" href="../_downloads/669ffd6a0787ddfa17dfadd250f6177d/bin_diagnostics-10.png"><code class="xref download docutils literal notranslate"><span class="pre">png</span></code></a>, <a class="reference download internal" download="" href="../_downloads/d499440abfdd9aff56f6fde69cc364fa/bin_diagnostics-10.hires.png"><code class="xref download docutils literal notranslate"><span class="pre">hires.png</span></code></a>, <a class="reference download internal" download="" href="../_downloads/dbfd23746ded46d22e6723c187fe4d50/bin_diagnostics-10.pdf"><code class="xref download docutils literal notranslate"><span class="pre">pdf</span></code></a>)</p>
+<figure class="align-default">
+<a class="plot-directive reference internal image-reference" href="../_images/bin_diagnostics-10.png"><img alt="../_images/bin_diagnostics-10.png" class="plot-directive" src="../_images/bin_diagnostics-10.png" style="width: 760px;" />
+</a>
+</figure>
+</section>
+</section>
+<section id="notes">
+<h2>Notes<a class="headerlink" href="#notes" title="Link to this heading"><span>#</span></a></h2>
+<ul class="simple">
+<li><p><strong>Within-sample diagnostics</strong> summarize how strongly bins from the
+same tomographic sample are coupled to one another. Large overlap,
+large off-diagonal leakage, or strong off-diagonal correlations
+generally indicate weaker practical separation between tomographic
+bins.</p></li>
+<li><p><strong>Between-sample diagnostics</strong> compare bins from two different
+tomographic samples, such as lens and source populations. They are
+useful for assessing redshift separation, cross-sample similarity,
+interval-based overlap, and possible foreground contamination in joint
+analyses.</p></li>
+<li><p>Equipopulated and equidistant binning can lead to noticeably different
+population balances and coupling patterns, even when they are
+constructed from the same parent distribution and photo-z uncertainty
+model.</p></li>
+<li><p>The diagnostics returned by <a class="reference internal" href="../api/binny.html#binny.NZTomography" title="binny.NZTomography"><code class="xref py py-class docutils literal notranslate"><span class="pre">binny.NZTomography</span></code></a> are ordinary
+Python dictionaries, so the quantities shown here can be inspected,
+saved, or reused directly in downstream analysis workflows.</p></li>
+</ul>
+</section>
+</section>
+
+        </article>
+      </div>
+      <footer>
+        
+        <div class="related-pages">
+          <a class="next-page" href="survey_presets.html">
+              <div class="page-info">
+                <div class="context">
+                  <span>Next</span>
+                </div>
+                <div class="title"> Survey presets</div>
+              </div>
+              <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
+            </a>
+          <a class="prev-page" href="bin_summaries.html">
+              <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
+              <div class="page-info">
+                <div class="context">
+                  <span>Previous</span>
+                </div>
+                
+                <div class="title"> Bin summaries</div>
+                
+              </div>
+            </a>
+        </div>
+        <div class="bottom-of-page">
+          <div class="left-details">
+            <div class="copyright">
+                Copyright &#169; 2026, Nikolina Šarčević, Matthijs van der Wild
+            </div>
+            Made with <a href="https://www.sphinx-doc.org/">Sphinx</a> and <a class="muted-link" href="https://pradyunsg.me">@pradyunsg</a>'s
+            
+            <a href="https://github.com/pradyunsg/furo">Furo</a>
+            
+          </div>
+          <div class="right-details">
+            
+          </div>
+        </div>
+        
+      </footer>
+    </div>
+    <aside class="toc-drawer">
+      
+      
+      <div class="toc-sticky toc-scroll">
+        <div class="toc-title-container">
+          <span class="toc-title">
+            On this page
+          </span>
+        </div>
+        <div class="toc-tree-container">
+          <div class="toc-tree">
+            <ul>
+<li><a class="reference internal" href="#"> Bin diagnostics</a><ul>
+<li><a class="reference internal" href="#building-a-representative-photo-z-example">Building a representative photo-z example</a></li>
+<li><a class="reference internal" href="#within-sample-diagnostics">Within-sample diagnostics</a><ul>
+<li><a class="reference internal" href="#core-cross-bin-matrices">Core cross-bin matrices</a></li>
+<li><a class="reference internal" href="#comparing-multiple-similarity-metrics">Comparing multiple similarity metrics</a></li>
+<li><a class="reference internal" href="#pair-level-summaries">Pair-level summaries</a><ul>
+<li><a class="reference internal" href="#ranking-the-most-overlapping-bin-pairs">Ranking the most overlapping bin pairs</a></li>
+<li><a class="reference internal" href="#completeness-and-contamination-per-bin">Completeness and contamination per bin</a></li>
+<li><a class="reference internal" href="#leakage-composition-by-nominal-bin">Leakage composition by nominal bin</a></li>
+<li><a class="reference internal" href="#pearson-correlation-versus-overlap">Pearson correlation versus overlap</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><a class="reference internal" href="#between-sample-diagnostics">Between-sample diagnostics</a><ul>
+<li><a class="reference internal" href="#cross-sample-matrices">Cross-sample matrices</a></li>
+<li><a class="reference internal" href="#cross-sample-interval-mass-composition">Cross-sample interval-mass composition</a></li>
+<li><a class="reference internal" href="#cross-sample-pair-rankings">Cross-sample pair rankings</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#notes">Notes</a></li>
+</ul>
+</li>
+</ul>
+
+          </div>
+        </div>
+      </div>
+      
+      
+    </aside>
+  </div>
+</div><script src="../_static/documentation_options.js?v=5929fcd5"></script>
+    <script src="../_static/doctools.js?v=9bcbadda"></script>
+    <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../_static/scripts/furo.js?v=46bd48cc"></script>
+    <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="../_static/copybutton.js?v=f16c4c56"></script>
+    <script src="../_static/design-tabs.js?v=f930bc37"></script>
+    </body>
+</html>

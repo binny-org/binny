@@ -1,0 +1,739 @@
+<!doctype html>
+<html class="no-js" lang="en" data-content_root="../">
+  <head><meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <meta name="color-scheme" content="light dark"><meta name="viewport" content="width=device-width, initial-scale=1" />
+<link rel="index" title="Index" href="../genindex.html"><link rel="search" title="Search" href="../search.html"><link rel="next" title="Redshift uncertainties" href="uncertainties/index.html"><link rel="prev" title="Parent n(z)" href="parent_nz.html">
+        <link rel="prefetch" href="../_static/assets/logo.png" as="image">
+        <link rel="prefetch" href="../_static/assets/logo.png" as="image">
+
+    <link rel="shortcut icon" href="../_static/favicon.png"><!-- Generated with Sphinx 8.2.3 and Furo 2025.12.19 -->
+        <title>Tomography - Binny documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=d111a655" />
+    <link rel="stylesheet" type="text/css" href="../_static/styles/furo.css?v=7bdb33bb" />
+    <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
+    <link rel="stylesheet" type="text/css" href="../_static/plot_directive.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/sphinx-design.min.css?v=95c83b7e" />
+    <link rel="stylesheet" type="text/css" href="../_static/styles/furo-extensions.css?v=8dab3a3b" />
+    <link rel="stylesheet" type="text/css" href="../_static/binny.css?v=9dc84726" />
+    
+    
+
+
+<style>
+  body {
+    --color-code-background: #f2f2f2;
+  --color-code-foreground: #1e1e1e;
+  --color-brand-primary: #440154;
+  --color-brand-content: #31688E;
+  --color-link: #35B779;
+  --color-link--hover: #31688E;
+  --color-link--visited: #FDE725;
+  
+  }
+  @media not print {
+    body[data-theme="dark"] {
+      --color-code-background: #202020;
+  --color-code-foreground: #d0d0d0;
+  --color-brand-primary: #440154;
+  --color-brand-content: #31688E;
+  --color-link: #35B779;
+  --color-link--hover: #31688E;
+  --color-link--visited: #FDE725;
+  
+    }
+    @media (prefers-color-scheme: dark) {
+      body:not([data-theme="light"]) {
+        --color-code-background: #202020;
+  --color-code-foreground: #d0d0d0;
+  --color-brand-primary: #440154;
+  --color-brand-content: #31688E;
+  --color-link: #35B779;
+  --color-link--hover: #31688E;
+  --color-link--visited: #FDE725;
+  
+      }
+    }
+  }
+</style></head>
+  <body>
+    
+    <script>
+      document.body.dataset.theme = localStorage.getItem("theme") || "auto";
+    </script>
+    
+
+<svg xmlns="http://www.w3.org/2000/svg" style="display: none;">
+  <symbol id="svg-toc" viewBox="0 0 24 24">
+    <title>Contents</title>
+    <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 1024 1024">
+      <path d="M408 442h480c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8H408c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8zm-8 204c0 4.4 3.6 8 8 8h480c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8H408c-4.4 0-8 3.6-8 8v56zm504-486H120c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h784c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8zm0 632H120c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h784c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8zM115.4 518.9L271.7 642c5.8 4.6 14.4.5 14.4-6.9V388.9c0-7.4-8.5-11.5-14.4-6.9L115.4 505.1a8.74 8.74 0 0 0 0 13.8z"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-menu" viewBox="0 0 24 24">
+    <title>Menu</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather-menu">
+      <line x1="3" y1="12" x2="21" y2="12"></line>
+      <line x1="3" y1="6" x2="21" y2="6"></line>
+      <line x1="3" y1="18" x2="21" y2="18"></line>
+    </svg>
+  </symbol>
+  <symbol id="svg-arrow-right" viewBox="0 0 24 24">
+    <title>Expand</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather-chevron-right">
+      <polyline points="9 18 15 12 9 6"></polyline>
+    </svg>
+  </symbol>
+  <symbol id="svg-sun" viewBox="0 0 24 24">
+    <title>Light mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="feather-sun">
+      <circle cx="12" cy="12" r="5"></circle>
+      <line x1="12" y1="1" x2="12" y2="3"></line>
+      <line x1="12" y1="21" x2="12" y2="23"></line>
+      <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+      <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+      <line x1="1" y1="12" x2="3" y2="12"></line>
+      <line x1="21" y1="12" x2="23" y2="12"></line>
+      <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+      <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+    </svg>
+  </symbol>
+  <symbol id="svg-moon" viewBox="0 0 24 24">
+    <title>Dark mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-moon">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+      <path d="M12 3c.132 0 .263 0 .393 0a7.5 7.5 0 0 0 7.92 12.446a9 9 0 1 1 -8.313 -12.454z" />
+    </svg>
+  </symbol>
+  <symbol id="svg-sun-with-moon" viewBox="0 0 24 24">
+    <title>Auto light/dark, in light mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round"
+      class="icon-custom-derived-from-feather-sun-and-tabler-moon">
+      <path style="opacity: 50%" d="M 5.411 14.504 C 5.471 14.504 5.532 14.504 5.591 14.504 C 3.639 16.319 4.383 19.569 6.931 20.352 C 7.693 20.586 8.512 20.551 9.25 20.252 C 8.023 23.207 4.056 23.725 2.11 21.184 C 0.166 18.642 1.702 14.949 4.874 14.536 C 5.051 14.512 5.231 14.5 5.411 14.5 L 5.411 14.504 Z"/>
+      <line x1="14.5" y1="3.25" x2="14.5" y2="1.25"/>
+      <line x1="14.5" y1="15.85" x2="14.5" y2="17.85"/>
+      <line x1="10.044" y1="5.094" x2="8.63" y2="3.68"/>
+      <line x1="19" y1="14.05" x2="20.414" y2="15.464"/>
+      <line x1="8.2" y1="9.55" x2="6.2" y2="9.55"/>
+      <line x1="20.8" y1="9.55" x2="22.8" y2="9.55"/>
+      <line x1="10.044" y1="14.006" x2="8.63" y2="15.42"/>
+      <line x1="19" y1="5.05" x2="20.414" y2="3.636"/>
+      <circle cx="14.5" cy="9.55" r="3.6"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-moon-with-sun" viewBox="0 0 24 24">
+    <title>Auto light/dark, in dark mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round"
+      class="icon-custom-derived-from-feather-sun-and-tabler-moon">
+      <path d="M 8.282 7.007 C 8.385 7.007 8.494 7.007 8.595 7.007 C 5.18 10.184 6.481 15.869 10.942 17.24 C 12.275 17.648 13.706 17.589 15 17.066 C 12.851 22.236 5.91 23.143 2.505 18.696 C -0.897 14.249 1.791 7.786 7.342 7.063 C 7.652 7.021 7.965 7 8.282 7 L 8.282 7.007 Z"/>
+      <line style="opacity: 50%" x1="18" y1="3.705" x2="18" y2="2.5"/>
+      <line style="opacity: 50%" x1="18" y1="11.295" x2="18" y2="12.5"/>
+      <line style="opacity: 50%" x1="15.316" y1="4.816" x2="14.464" y2="3.964"/>
+      <line style="opacity: 50%" x1="20.711" y1="10.212" x2="21.563" y2="11.063"/>
+      <line style="opacity: 50%" x1="14.205" y1="7.5" x2="13.001" y2="7.5"/>
+      <line style="opacity: 50%" x1="21.795" y1="7.5" x2="23" y2="7.5"/>
+      <line style="opacity: 50%" x1="15.316" y1="10.184" x2="14.464" y2="11.036"/>
+      <line style="opacity: 50%" x1="20.711" y1="4.789" x2="21.563" y2="3.937"/>
+      <circle style="opacity: 50%" cx="18" cy="7.5" r="2.169"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-pencil" viewBox="0 0 24 24">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-pencil-code">
+      <path d="M4 20h4l10.5 -10.5a2.828 2.828 0 1 0 -4 -4l-10.5 10.5v4" />
+      <path d="M13.5 6.5l4 4" />
+      <path d="M20 21l2 -2l-2 -2" />
+      <path d="M17 17l-2 2l2 2" />
+    </svg>
+  </symbol>
+  <symbol id="svg-eye" viewBox="0 0 24 24">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-eye-code">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+      <path d="M10 12a2 2 0 1 0 4 0a2 2 0 0 0 -4 0" />
+      <path
+        d="M11.11 17.958c-3.209 -.307 -5.91 -2.293 -8.11 -5.958c2.4 -4 5.4 -6 9 -6c3.6 0 6.6 2 9 6c-.21 .352 -.427 .688 -.647 1.008" />
+      <path d="M20 21l2 -2l-2 -2" />
+      <path d="M17 17l-2 2l2 2" />
+    </svg>
+  </symbol>
+</svg>
+
+<input type="checkbox" class="sidebar-toggle" name="__navigation" id="__navigation" aria-label="Toggle site navigation sidebar">
+<input type="checkbox" class="sidebar-toggle" name="__toc" id="__toc" aria-label="Toggle table of contents sidebar">
+<label class="overlay sidebar-overlay" for="__navigation"></label>
+<label class="overlay toc-overlay" for="__toc"></label>
+
+<a class="skip-to-content muted-link" href="#furo-main-content">Skip to content</a>
+
+
+
+<div class="page">
+  <header class="mobile-header">
+    <div class="header-left">
+      <label class="nav-overlay-icon" for="__navigation">
+        <span class="icon"><svg><use href="#svg-menu"></use></svg></span>
+      </label>
+    </div>
+    <div class="header-center">
+      <a href="../index.html"><div class="brand">Binny  documentation</div></a>
+    </div>
+    <div class="header-right">
+      <div class="theme-toggle-container theme-toggle-header">
+        <button class="theme-toggle" aria-label="Toggle Light / Dark / Auto color theme">
+          <svg class="theme-icon-when-auto-light"><use href="#svg-sun-with-moon"></use></svg>
+          <svg class="theme-icon-when-auto-dark"><use href="#svg-moon-with-sun"></use></svg>
+          <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
+          <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
+        </button>
+      </div>
+      <label class="toc-overlay-icon toc-header-icon" for="__toc">
+        <span class="icon"><svg><use href="#svg-toc"></use></svg></span>
+      </label>
+    </div>
+  </header>
+  <aside class="sidebar-drawer">
+    <div class="sidebar-container">
+      
+      <div class="sidebar-sticky"><a class="sidebar-brand" href="../index.html">
+  <div class="sidebar-logo-container">
+    <img class="sidebar-logo only-light" src="../_static/assets/logo.png" alt="Light Logo"/>
+    <img class="sidebar-logo only-dark" src="../_static/assets/logo.png" alt="Dark Logo"/>
+  </div>
+  
+  <span class="sidebar-brand-text">Binny  documentation</span>
+  
+</a><form class="sidebar-search-container" method="get" action="../search.html" role="search">
+  <input class="sidebar-search" placeholder="Search" name="q" aria-label="Search">
+  <input type="hidden" name="check_keywords" value="yes">
+  <input type="hidden" name="area" value="default">
+</form>
+<div id="searchbox"></div><div class="sidebar-scroll"><div class="sidebar-tree">
+  <ul class="current">
+<li class="toctree-l1 current has-children"><a class="reference internal" href="index.html"> Theory</a><input aria-label="Toggle navigation of  Theory" checked="" class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" role="switch" type="checkbox"/><label for="toctree-checkbox-1"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="parent_nz.html"> Parent n(z)</a></li>
+<li class="toctree-l2 current current-page"><a class="current reference internal" href="#"> Tomography</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="uncertainties/index.html"> Redshift uncertainties</a><input aria-label="Toggle navigation of  Redshift uncertainties" class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" role="switch" type="checkbox"/><label for="toctree-checkbox-2"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="uncertainties/photoz.html"> Photometric-redshift uncertainties</a></li>
+<li class="toctree-l3"><a class="reference internal" href="uncertainties/specz.html"> Spectroscopic-redshift uncertainties</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="statistics.html"> Bin summaries</a></li>
+<li class="toctree-l2"><a class="reference internal" href="diagnostics.html"> Bin diagnostics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="bin_combos.html"> Bin-index combinations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="conventions.html"> Conventions</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../workflow.html"> Workflow</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../examples/index.html"> Examples</a><input aria-label="Toggle navigation of  Examples" class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" role="switch" type="checkbox"/><label for="toctree-checkbox-3"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../examples/nz_modelling.html"> Parent n(z) models</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../examples/nz_calibration.html"> Parent n(z) from mocks</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../examples/photoz_bins.html"> Photometric bins</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../examples/specz_bins.html"> Spectroscopic bins</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../examples/bin_summaries.html"> Bin summaries</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../examples/bin_diagnostics.html"> Bin diagnostics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../examples/survey_presets.html"> Survey presets</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../examples/selections.html"> Bin-pair selections</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../installation.html"> Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../citation.html"> Citation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../contributing.html"> Contributing</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../api/index.html">Binny API</a><input aria-label="Toggle navigation of Binny API" class="toctree-checkbox" id="toctree-checkbox-4" name="toctree-checkbox-4" role="switch" type="checkbox"/><label for="toctree-checkbox-4"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../api/modules.html">binny</a><input aria-label="Toggle navigation of binny" class="toctree-checkbox" id="toctree-checkbox-5" name="toctree-checkbox-5" role="switch" type="checkbox"/><label for="toctree-checkbox-5"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l3 has-children"><a class="reference internal" href="../api/binny.html">binny package</a><input aria-label="Toggle navigation of binny package" class="toctree-checkbox" id="toctree-checkbox-6" name="toctree-checkbox-6" role="switch" type="checkbox"/><label for="toctree-checkbox-6"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l4 has-children"><a class="reference internal" href="../api/binny.api.html">binny.api package</a><input aria-label="Toggle navigation of binny.api package" class="toctree-checkbox" id="toctree-checkbox-7" name="toctree-checkbox-7" role="switch" type="checkbox"/><label for="toctree-checkbox-7"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l5"><a class="reference internal" href="../api/binny.api.nz_tomography.html">binny.api.nz_tomography module</a></li>
+</ul>
+</li>
+<li class="toctree-l4 has-children"><a class="reference internal" href="../api/binny.axes.html">binny.axes package</a><input aria-label="Toggle navigation of binny.axes package" class="toctree-checkbox" id="toctree-checkbox-8" name="toctree-checkbox-8" role="switch" type="checkbox"/><label for="toctree-checkbox-8"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l5"><a class="reference internal" href="../api/binny.axes.bin_edges.html">binny.axes.bin_edges module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../api/binny.axes.grids.html">binny.axes.grids module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../api/binny.axes.mixed_edges.html">binny.axes.mixed_edges module</a></li>
+</ul>
+</li>
+<li class="toctree-l4 has-children"><a class="reference internal" href="../api/binny.correlations.html">binny.correlations package</a><input aria-label="Toggle navigation of binny.correlations package" class="toctree-checkbox" id="toctree-checkbox-9" name="toctree-checkbox-9" role="switch" type="checkbox"/><label for="toctree-checkbox-9"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l5"><a class="reference internal" href="../api/binny.correlations.bin_combo_filter.html">binny.correlations.bin_combo_filter module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../api/binny.correlations.filters.html">binny.correlations.filters module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../api/binny.correlations.metrics.html">binny.correlations.metrics module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../api/binny.correlations.scores.html">binny.correlations.scores module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../api/binny.correlations.topology.html">binny.correlations.topology module</a></li>
+</ul>
+</li>
+<li class="toctree-l4 has-children"><a class="reference internal" href="../api/binny.nz.html">binny.nz package</a><input aria-label="Toggle navigation of binny.nz package" class="toctree-checkbox" id="toctree-checkbox-10" name="toctree-checkbox-10" role="switch" type="checkbox"/><label for="toctree-checkbox-10"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l5"><a class="reference internal" href="../api/binny.nz.calibration.html">binny.nz.calibration module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../api/binny.nz.models.html">binny.nz.models module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../api/binny.nz.registry.html">binny.nz.registry module</a></li>
+</ul>
+</li>
+<li class="toctree-l4 has-children"><a class="reference internal" href="../api/binny.nz_tomo.html">binny.nz_tomo package</a><input aria-label="Toggle navigation of binny.nz_tomo package" class="toctree-checkbox" id="toctree-checkbox-11" name="toctree-checkbox-11" role="switch" type="checkbox"/><label for="toctree-checkbox-11"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l5"><a class="reference internal" href="../api/binny.nz_tomo.between_sample_metrics.html">binny.nz_tomo.between_sample_metrics module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../api/binny.nz_tomo.bin_similarity.html">binny.nz_tomo.bin_similarity module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../api/binny.nz_tomo.bin_stats.html">binny.nz_tomo.bin_stats module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../api/binny.nz_tomo.binning_core.html">binny.nz_tomo.binning_core module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../api/binny.nz_tomo.nz_tomo_utils.html">binny.nz_tomo.nz_tomo_utils module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../api/binny.nz_tomo.photoz.html">binny.nz_tomo.photoz module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../api/binny.nz_tomo.specz.html">binny.nz_tomo.specz module</a></li>
+</ul>
+</li>
+<li class="toctree-l4 has-children"><a class="reference internal" href="../api/binny.surveys.html">binny.surveys package</a><input aria-label="Toggle navigation of binny.surveys package" class="toctree-checkbox" id="toctree-checkbox-12" name="toctree-checkbox-12" role="switch" type="checkbox"/><label for="toctree-checkbox-12"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l5"><a class="reference internal" href="../api/binny.surveys.configs.html">binny.surveys.configs package</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../api/binny.surveys.config_utils.html">binny.surveys.config_utils module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../api/binny.surveys.sky.html">binny.surveys.sky module</a></li>
+</ul>
+</li>
+<li class="toctree-l4 has-children"><a class="reference internal" href="../api/binny.utils.html">binny.utils package</a><input aria-label="Toggle navigation of binny.utils package" class="toctree-checkbox" id="toctree-checkbox-13" name="toctree-checkbox-13" role="switch" type="checkbox"/><label for="toctree-checkbox-13"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l5"><a class="reference internal" href="../api/binny.utils.broadcasting.html">binny.utils.broadcasting module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../api/binny.utils.io.html">binny.utils.io module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../api/binny.utils.metadata.html">binny.utils.metadata module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../api/binny.utils.normalization.html">binny.utils.normalization module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../api/binny.utils.pairwise_metrics.html">binny.utils.pairwise_metrics module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../api/binny.utils.relations.html">binny.utils.relations module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../api/binny.utils.types.html">binny.utils.types module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../api/binny.utils.validators.html">binny.utils.validators module</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+</div>
+</div>
+
+      </div>
+      
+    </div>
+  </aside>
+  <div class="main">
+    <div class="content">
+      <div class="article-container">
+        <a href="#" class="back-to-top muted-link">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+            <path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8v12z"></path>
+          </svg>
+          <span>Back to top</span>
+        </a>
+        <div class="content-icon-container">
+          <div class="view-this-page">
+  <a class="muted-link" href="../_sources/theory/tomography.rst.txt" title="View this page">
+    <svg><use href="#svg-eye"></use></svg>
+    <span class="visually-hidden">View this page</span>
+  </a>
+</div>
+<div class="theme-toggle-container theme-toggle-content">
+            <button class="theme-toggle" aria-label="Toggle Light / Dark / Auto color theme">
+              <svg class="theme-icon-when-auto-light"><use href="#svg-sun-with-moon"></use></svg>
+              <svg class="theme-icon-when-auto-dark"><use href="#svg-moon-with-sun"></use></svg>
+              <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
+              <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
+            </button>
+          </div>
+          <label class="toc-overlay-icon toc-content-icon" for="__toc">
+            <span class="icon"><svg><use href="#svg-toc"></use></svg></span>
+          </label>
+        </div>
+        <article role="main" id="furo-main-content">
+          <section id="logo-tomography">
+<h1><a class="reference internal" href="../_images/logo.png"><img alt="logo" src="../_images/logo.png" style="width: 32px;" /></a> Tomography<a class="headerlink" href="#logo-tomography" title="Link to this heading"><span>#</span></a></h1>
+<p>Tomography in cosmological analyses refers to the practice of subdividing a
+galaxy sample into redshift bins and measuring correlations both within and
+between these bins. By retaining partial redshift information, tomographic
+analyses recover information that would otherwise be lost in fully projected
+(two-dimensional) measurements.</p>
+<p>Binny provides utilities for constructing such tomographic binning schemes
+and inspecting their statistical properties.</p>
+<section id="tomographic-construction">
+<h2>Tomographic construction<a class="headerlink" href="#tomographic-construction" title="Link to this heading"><span>#</span></a></h2>
+<p>At the core of tomography is the redshift distribution of galaxies,
+<span class="math notranslate nohighlight">\(n(z)\)</span>, which describes the number density of objects (galaxies) as a
+function of redshift <span class="math notranslate nohighlight">\(z\)</span>. A tomographic binning scheme partitions this
+distribution into a set of bins indexed by
+<span class="math notranslate nohighlight">\(i = 1, \ldots, N_{\mathrm{bin}}\)</span>.</p>
+<p>Each bin is defined through a window function <span class="math notranslate nohighlight">\(W_i(z)\)</span>, such that the
+binned distribution becomes</p>
+<div class="math-wrapper docutils container">
+<div class="math notranslate nohighlight">
+\[n_i(z) = n(z)\, W_i(z).\]</div>
+</div>
+<p>Here</p>
+<ul class="simple">
+<li><p><span class="math notranslate nohighlight">\(z\)</span> denotes the redshift,</p></li>
+<li><p><span class="math notranslate nohighlight">\(n(z)\)</span> is the <strong>parent redshift distribution</strong>, describing the number
+density of galaxies as a function of redshift before binning,</p></li>
+<li><p><span class="math notranslate nohighlight">\(W_i(z)\)</span> is the <strong>window function</strong> for bin <span class="math notranslate nohighlight">\(i\)</span>, specifying how
+galaxies at redshift <span class="math notranslate nohighlight">\(z\)</span> contribute to that bin,</p></li>
+<li><p><span class="math notranslate nohighlight">\(n_i(z)\)</span> is the resulting <strong>binned redshift distribution</strong> for bin
+<span class="math notranslate nohighlight">\(i\)</span>,</p></li>
+<li><p><span class="math notranslate nohighlight">\(N_{\mathrm{bin}}\)</span> is the total number of tomographic bins in the
+analysis.</p></li>
+</ul>
+<p>The window functions determine which galaxies contribute to each bin and how
+their contributions are weighted.</p>
+<p>In the simplest case, the window function corresponds to a hard redshift cut,</p>
+<div class="math-wrapper docutils container">
+<div class="math notranslate nohighlight">
+\[\begin{split}W_i(z) =
+\begin{cases}
+  1 &amp; z_i^{\mathrm{min}} \le z &lt; z_i^{\mathrm{max}}, \\
+  0 &amp; \text{otherwise}.
+\end{cases}\end{split}\]</div>
+</div>
+<p>where <span class="math notranslate nohighlight">\(z_i^{\mathrm{min}}\)</span> and <span class="math notranslate nohighlight">\(z_i^{\mathrm{max}}\)</span> denote the lower
+and upper redshift boundaries of bin <span class="math notranslate nohighlight">\(i\)</span>.</p>
+<p>More general window functions are often used in practice, for example when bins
+overlap or when galaxies contribute probabilistically to multiple bins.</p>
+<a class="reference internal image-reference" href="../_images/tomo_window_function_product.gif"><img alt="Window functions selecting parts of the parent redshift distribution" class="align-center" src="../_images/tomo_window_function_product.gif" style="width: 900px;" />
+</a>
+<p>This illustrates the tomographic construction directly: a window
+<span class="math notranslate nohighlight">\(W_i(z)\)</span> selects part of the parent distribution <span class="math notranslate nohighlight">\(n(z)\)</span>,
+yielding the binned distribution <span class="math notranslate nohighlight">\(n_i(z) = n(z)\,W_i(z)\)</span>.</p>
+<p>Applying this construction for a set of windows
+<span class="math notranslate nohighlight">\(\{W_i(z)\}_{i=1}^{N_{\mathrm{bin}}}\)</span> produces the full collection of
+tomographic bin curves <span class="math notranslate nohighlight">\(n_i(z)\)</span>.</p>
+<a class="reference internal image-reference" href="../_images/tomo_parent_to_bins.gif"><img alt="Parent redshift distribution splitting into tomographic bins" class="align-center" src="../_images/tomo_parent_to_bins.gif" style="width: 760px;" />
+</a>
+<p>A parent redshift distribution can therefore be partitioned into a set of
+tomographic bin curves <span class="math notranslate nohighlight">\(n_i(z)\)</span>, each defined on the same redshift grid.</p>
+<section id="normalization-and-bin-overlap">
+<h3>Normalization and bin overlap<a class="headerlink" href="#normalization-and-bin-overlap" title="Link to this heading"><span>#</span></a></h3>
+<p>In many analyses, each tomographic bin curve <span class="math notranslate nohighlight">\(n_i(z)\)</span> is normalized
+independently so that</p>
+<div class="math-wrapper docutils container">
+<div class="math notranslate nohighlight">
+\[\int n_i(z)\,\mathrm{d}z = 1.\]</div>
+</div>
+<p>The bin curves therefore represent <strong>conditional redshift distributions</strong>
+rather than fractions of the parent population. As a consequence, the
+amplitude of a normalized bin curve may exceed that of the parent
+distribution <span class="math notranslate nohighlight">\(n(z)\)</span>, since each bin is normalized independently.</p>
+<p>In realistic photometric surveys the bin curves typically overlap in true
+redshift because galaxies are assigned to bins using photometric redshift
+estimates rather than precise spectroscopic measurements.</p>
+</section>
+</section>
+<section id="spectroscopic-vs-photometric-tomography">
+<h2>Spectroscopic vs photometric tomography<a class="headerlink" href="#spectroscopic-vs-photometric-tomography" title="Link to this heading"><span>#</span></a></h2>
+<p>Tomographic analyses are used in both spectroscopic and photometric surveys,
+though the practical implementation differs.</p>
+<section id="photometric-tomography">
+<h3>Photometric tomography<a class="headerlink" href="#photometric-tomography" title="Link to this heading"><span>#</span></a></h3>
+<p>In photometric surveys, redshifts are estimated from galaxy colors rather than
+spectral lines. The resulting bins are typically broader in true redshift and
+may overlap even when the nominal bin edges are well separated.</p>
+<a class="reference internal image-reference" href="../_images/tomo_photoz_example.gif"><img alt="Comparison of hard redshift bins and photometric bins with overlap" class="align-center" src="../_images/tomo_photoz_example.gif" style="width: 560px;" />
+</a>
+</section>
+<section id="spectroscopic-tomography">
+<h3>Spectroscopic tomography<a class="headerlink" href="#spectroscopic-tomography" title="Link to this heading"><span>#</span></a></h3>
+<p>In spectroscopic surveys, redshifts are measured with high precision.
+Tomographic bins can therefore be defined with minimal overlap in true redshift,
+and the corresponding window functions are often treated as sharply bounded.</p>
+<a class="reference internal image-reference" href="../_images/tomo_specz_example.gif"><img alt="Comparison of hard redshift bins and spectroscopic bins with overlap" class="align-center" src="../_images/tomo_specz_example.gif" style="width: 560px;" />
+</a>
+</section>
+</section>
+<section id="why-tomography-is-useful">
+<h2>Why tomography is useful<a class="headerlink" href="#why-tomography-is-useful" title="Link to this heading"><span>#</span></a></h2>
+<p>Tomographic binning allows cosmological correlations to be studied as a function
+of redshift, thereby probing the time evolution of large-scale structure. This
+is particularly important for observables that integrate information along the
+line of sight, such as galaxy clustering or weak gravitational lensing.</p>
+<p>By splitting the galaxy sample into multiple bins, one gains access to</p>
+<ul class="simple">
+<li><p><strong>auto-correlations</strong>, measured between galaxies within the same redshift bin;</p></li>
+<li><p><strong>cross-correlations</strong>, measured between galaxies in different redshift bins.</p></li>
+</ul>
+<a class="reference internal image-reference" href="../_images/tomo_bin_pair_sweep.gif"><img alt="Sweep through tomographic auto- and cross-bin pairs" class="align-center" src="../_images/tomo_bin_pair_sweep.gif" style="width: 760px;" />
+</a>
+<p>Tomography produces both auto-bin and cross-bin observables, corresponding to
+different pairs <span class="math notranslate nohighlight">\((i,j)\)</span> in the tomographic data vector.</p>
+<p>The joint analysis of auto- and cross-correlations enables sensitivity to
+redshift-dependent physical effects such as the growth of structure, geometric
+distances, and galaxy bias evolution. These effects are partially degenerate in
+fully projected measurements but become separable when redshift information is
+retained.</p>
+<p>Tomographic weak-lensing analyses were formalized by Hu (1999) <a class="reference internal" href="#hu1999" id="id1"><span>[Hu1999]</span></a>,
+who showed that even coarse redshift binning can recover a large
+fraction of the available three-dimensional information.</p>
+</section>
+<section id="tomographic-observables-in-different-probes">
+<h2>Tomographic observables in different probes<a class="headerlink" href="#tomographic-observables-in-different-probes" title="Link to this heading"><span>#</span></a></h2>
+<p>In practice, correlations often involve <strong>two distinct galaxy samples</strong>
+rather than a single one. A common example is <strong>galaxy–galaxy lensing</strong>,
+where galaxies are divided into a <strong>lens sample</strong> and a <strong>source sample</strong>,
+each with its own set of tomographic bins.</p>
+<p>In this case, the primary observable is the <strong>cross-correlation between
+lens and source bins</strong>, which probes how foreground lens galaxies distort
+the shapes of background source galaxies through gravitational lensing.
+Depending on the analysis strategy, additional correlations may also be
+included, such as the <strong>auto-correlations of the lens sample</strong> (galaxy
+clustering) or the <strong>auto-correlations of the source sample</strong> (cosmic
+shear).</p>
+<p>Different cosmological probes therefore make use of <strong>different subsets
+of the possible bin–pair correlations</strong>.</p>
+<p>For example:</p>
+<ul class="simple">
+<li><p><strong>Cosmic shear</strong> uses correlations between source bins only. Because
+shear–shear correlations are symmetric, the pair <span class="math notranslate nohighlight">\((i, j)\)</span> is
+equivalent to <span class="math notranslate nohighlight">\((j, i)\)</span>, so only one of the two needs to be
+computed.</p></li>
+<li><p><strong>Galaxy clustering</strong> uses correlations between <strong>lens bins</strong>, and
+these correlations are also symmetric in <span class="math notranslate nohighlight">\((i, j)\)</span>.</p></li>
+<li><p><strong>Galaxy–galaxy lensing</strong> uses <strong>cross-correlations between lens and
+source bins</strong>. In this case the ordering matters: the pair
+<span class="math notranslate nohighlight">\((\mathrm{lens}\,i, \mathrm{source}\,j)\)</span> corresponds to the
+lensing signal, whereas <span class="math notranslate nohighlight">\((\mathrm{source}\,j, \mathrm{lens}\,i)\)</span>
+does not represent the same observable.</p></li>
+</ul>
+<p>In combined analyses such as <strong>3×2pt</strong> (<em>the joint analysis of cosmic
+shear, galaxy–galaxy lensing, and galaxy clustering two-point
+correlations</em>), several probes are used simultaneously. The resulting
+data vector may therefore contain a mix of auto- and cross-correlations
+between the tomographic bins of different samples.</p>
+</section>
+<section id="binning-schemes">
+<h2>Binning schemes<a class="headerlink" href="#binning-schemes" title="Link to this heading"><span>#</span></a></h2>
+<p>A tomographic analysis requires a rule for defining the bin boundaries
+<span class="math notranslate nohighlight">\(\{z_i^{\mathrm{min}}, z_i^{\mathrm{max}}\}\)</span>. Several binning strategies
+are commonly used.</p>
+<section id="equidistant-binning">
+<h3>Equidistant binning<a class="headerlink" href="#equidistant-binning" title="Link to this heading"><span>#</span></a></h3>
+<p>In equidistant binning, the redshift interval is divided into bins of equal
+width,</p>
+<div class="math-wrapper docutils container">
+<div class="math notranslate nohighlight">
+\[z_i^{\mathrm{min}} = z_{\mathrm{min}} + (i-1)\Delta z,
+\qquad
+z_i^{\mathrm{max}} = z_{\mathrm{min}} + i\,\Delta z,\]</div>
+</div>
+<p>where <span class="math notranslate nohighlight">\(\Delta z = (z_{\mathrm{max}} - z_{\mathrm{min}})/N_{\mathrm{bin}}\)</span>.</p>
+<p>This scheme provides uniform redshift coverage and is frequently used when the
+analysis requires a simple geometric partition of the redshift range.</p>
+</section>
+<section id="equipopulated-binning">
+<h3>Equipopulated binning<a class="headerlink" href="#equipopulated-binning" title="Link to this heading"><span>#</span></a></h3>
+<p>In equipopulated binning, the bin edges are chosen such that each bin contains
+approximately the same fraction of galaxies,</p>
+<div class="math-wrapper docutils container">
+<div class="math notranslate nohighlight">
+\[\int_{z_i^{\mathrm{min}}}^{z_i^{\mathrm{max}}} n(z)\,\mathrm{d}z
+\approx
+\frac{1}{N_{\mathrm{bin}}}
+\int n(z)\,\mathrm{d}z.\]</div>
+</div>
+<p>This approach produces bins with comparable statistical weight and is commonly
+used in photometric weak-lensing analyses.</p>
+</section>
+<section id="segmented-or-mixed-binning">
+<h3>Segmented or mixed binning<a class="headerlink" href="#segmented-or-mixed-binning" title="Link to this heading"><span>#</span></a></h3>
+<p>More flexible schemes can be constructed by combining different binning
+strategies across redshift segments. For example, one may apply equal-number
+binning at low redshift while switching to equidistant bins at higher redshift.</p>
+<p>Such hybrid approaches allow the binning scheme to adapt to features in the
+underlying redshift distribution while preserving control over bin boundaries.</p>
+<a class="reference internal image-reference" href="../_images/tomo_equidist_vs_equipop.gif"><img alt="Comparison of equidistant and equipopulated tomographic binning" class="align-center" src="../_images/tomo_equidist_vs_equipop.gif" style="width: 760px;" />
+</a>
+<p>Equidistant binning divides the redshift range into equal-width intervals,
+whereas equipopulated binning places edges so that each bin contains a similar
+fraction of the parent galaxy sample.</p>
+</section>
+</section>
+<section id="role-of-binning-in-cosmological-analyses">
+<h2>Role of binning in cosmological analyses<a class="headerlink" href="#role-of-binning-in-cosmological-analyses" title="Link to this heading"><span>#</span></a></h2>
+<p>Tomographic bins define the set of observables used in a cosmological
+analysis. For example, a tomographic clustering measurement produces
+angular power spectra</p>
+<div class="math-wrapper docutils container">
+<div class="math notranslate nohighlight">
+\[C_\ell^{ij}\]</div>
+</div>
+<p>for all combinations of bins <span class="math notranslate nohighlight">\(i\)</span> and <span class="math notranslate nohighlight">\(j\)</span>.</p>
+<p>Similarly, weak-lensing tomography produces shear correlations between
+source bins, while joint analyses may combine clustering,
+galaxy–galaxy lensing, and cosmic shear measurements across multiple
+bin pairs.</p>
+<p>The number of bins and the choice of binning scheme therefore determine
+both the dimensionality of the data vector and the redshift resolution
+of the analysis.</p>
+<p>In general, tomographic angular power spectra are computed as a
+projection of the three-dimensional matter power spectrum along the
+line of sight,</p>
+<div class="math-wrapper docutils container">
+<div class="math notranslate nohighlight">
+\[C_\ell^{ij}
+=
+\int \frac{\mathrm{d}z}{H(z)}
+W_i(z)\,W_j(z)\,
+P\!\left(k=\frac{\ell}{\chi(z)}, z\right),\]</div>
+</div>
+<p>where</p>
+<ul class="simple">
+<li><p><span class="math notranslate nohighlight">\(P(k,z)\)</span> is the three-dimensional matter power spectrum,</p></li>
+<li><p><span class="math notranslate nohighlight">\(\chi(z)\)</span> is the comoving radial distance,</p></li>
+<li><p><span class="math notranslate nohighlight">\(H(z)\)</span> is the Hubble parameter,</p></li>
+<li><p><span class="math notranslate nohighlight">\(W_i(z)\)</span> and <span class="math notranslate nohighlight">\(W_j(z)\)</span> are the projection kernels for bins
+<span class="math notranslate nohighlight">\(i\)</span> and <span class="math notranslate nohighlight">\(j\)</span>.</p></li>
+</ul>
+<p>These kernels depend on the tomographic bin distributions
+<span class="math notranslate nohighlight">\(n_i(z)\)</span> returned by Binny. Different binning schemes therefore
+modify the kernels <span class="math notranslate nohighlight">\(W_i(z)\)</span> and ultimately change the structure
+of the observable correlations <span class="math notranslate nohighlight">\(C_\ell^{ij}\)</span>.</p>
+<p>For example, in galaxy clustering the kernel typically takes the form</p>
+<div class="math-wrapper docutils container">
+<div class="math notranslate nohighlight">
+\[W_i(z) = b_i(z)\,n_i(z),\]</div>
+</div>
+<p>where <span class="math notranslate nohighlight">\(b_i(z)\)</span> is the galaxy bias.</p>
+</section>
+<section id="binning-in-binny">
+<h2>Binning in Binny<a class="headerlink" href="#binning-in-binny" title="Link to this heading"><span>#</span></a></h2>
+<p>Binny provides tools for constructing tomographic bins directly from a parent
+redshift distribution <span class="math notranslate nohighlight">\(n(z)\)</span>. Several binning schemes are supported,
+including</p>
+<ul class="simple">
+<li><p><strong>equidistant bins</strong> (uniform redshift spacing),</p></li>
+<li><p><strong>equipopulated bins</strong> (approximately equal galaxy counts per bin),</p></li>
+<li><p><strong>mixed segmented schemes</strong> that combine multiple strategies.</p></li>
+</ul>
+<p>The resulting bins are represented as curves <span class="math notranslate nohighlight">\(n_i(z)\)</span> on a shared redshift
+grid, allowing them to be analyzed, visualized, and compared consistently across
+different binning configurations.</p>
+<p>Practical usage examples are provided throughout the documentation:</p>
+<ul class="simple">
+<li><p>Examples of <strong>parent redshift models</strong> and analytic <span class="math notranslate nohighlight">\(n(z)\)</span> functions are
+shown in <a class="reference internal" href="../examples/nz_modelling.html"><span class="doc"> Parent n(z) models</span></a>.</p></li>
+<li><p>Methods for <strong>calibrating redshift distributions from simulations or mock
+catalogs</strong> are demonstrated in <a class="reference internal" href="../examples/nz_calibration.html"><span class="doc"> Parent n(z) from mocks</span></a>.</p></li>
+<li><p>Detailed examples of <strong>photometric tomography</strong>, including overlapping bins
+constructed from photometric redshift estimates, are provided in
+<a class="reference internal" href="../examples/photoz_bins.html"><span class="doc"> Photometric bins</span></a>.</p></li>
+<li><p>Examples of <strong>spectroscopic binning</strong>, where bins correspond to sharply
+defined redshift intervals, are shown in <a class="reference internal" href="../examples/specz_bins.html"><span class="doc"> Spectroscopic bins</span></a>.</p></li>
+<li><p>Additional diagnostics for inspecting bin shapes, overlaps, and statistical
+properties are illustrated in <a class="reference internal" href="../examples/bin_diagnostics.html"><span class="doc"> Bin diagnostics</span></a> and
+<a class="reference internal" href="../examples/bin_summaries.html"><span class="doc"> Bin summaries</span></a>.</p></li>
+<li><p>Survey-specific binning configurations used in forecasting studies can
+also be constructed using the utilities described in <a class="reference internal" href="../examples/survey_presets.html"><span class="doc"> Survey presets</span></a>.</p></li>
+</ul>
+</section>
+<section id="references">
+<h2>References<a class="headerlink" href="#references" title="Link to this heading"><span>#</span></a></h2>
+<div role="list" class="citation-list">
+<div class="citation" id="hu1999" role="doc-biblioentry">
+<span class="label"><span class="fn-bracket">[</span><a role="doc-backlink" href="#id1">Hu1999</a><span class="fn-bracket">]</span></span>
+<p>Hu, W. (1999),
+<em>Power Spectrum Tomography with Weak Lensing</em>,
+ApJL 522, L21–L24.
+<a class="reference external" href="https://arxiv.org/abs/astro-ph/9904153">https://arxiv.org/abs/astro-ph/9904153</a></p>
+</div>
+</div>
+</section>
+</section>
+
+        </article>
+      </div>
+      <footer>
+        
+        <div class="related-pages">
+          <a class="next-page" href="uncertainties/index.html">
+              <div class="page-info">
+                <div class="context">
+                  <span>Next</span>
+                </div>
+                <div class="title"> Redshift uncertainties</div>
+              </div>
+              <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
+            </a>
+          <a class="prev-page" href="parent_nz.html">
+              <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
+              <div class="page-info">
+                <div class="context">
+                  <span>Previous</span>
+                </div>
+                
+                <div class="title"> Parent n(z)</div>
+                
+              </div>
+            </a>
+        </div>
+        <div class="bottom-of-page">
+          <div class="left-details">
+            <div class="copyright">
+                Copyright &#169; 2026, Nikolina Šarčević, Matthijs van der Wild
+            </div>
+            Made with <a href="https://www.sphinx-doc.org/">Sphinx</a> and <a class="muted-link" href="https://pradyunsg.me">@pradyunsg</a>'s
+            
+            <a href="https://github.com/pradyunsg/furo">Furo</a>
+            
+          </div>
+          <div class="right-details">
+            
+          </div>
+        </div>
+        
+      </footer>
+    </div>
+    <aside class="toc-drawer">
+      
+      
+      <div class="toc-sticky toc-scroll">
+        <div class="toc-title-container">
+          <span class="toc-title">
+            On this page
+          </span>
+        </div>
+        <div class="toc-tree-container">
+          <div class="toc-tree">
+            <ul>
+<li><a class="reference internal" href="#"> Tomography</a><ul>
+<li><a class="reference internal" href="#tomographic-construction">Tomographic construction</a><ul>
+<li><a class="reference internal" href="#normalization-and-bin-overlap">Normalization and bin overlap</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#spectroscopic-vs-photometric-tomography">Spectroscopic vs photometric tomography</a><ul>
+<li><a class="reference internal" href="#photometric-tomography">Photometric tomography</a></li>
+<li><a class="reference internal" href="#spectroscopic-tomography">Spectroscopic tomography</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#why-tomography-is-useful">Why tomography is useful</a></li>
+<li><a class="reference internal" href="#tomographic-observables-in-different-probes">Tomographic observables in different probes</a></li>
+<li><a class="reference internal" href="#binning-schemes">Binning schemes</a><ul>
+<li><a class="reference internal" href="#equidistant-binning">Equidistant binning</a></li>
+<li><a class="reference internal" href="#equipopulated-binning">Equipopulated binning</a></li>
+<li><a class="reference internal" href="#segmented-or-mixed-binning">Segmented or mixed binning</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#role-of-binning-in-cosmological-analyses">Role of binning in cosmological analyses</a></li>
+<li><a class="reference internal" href="#binning-in-binny">Binning in Binny</a></li>
+<li><a class="reference internal" href="#references">References</a></li>
+</ul>
+</li>
+</ul>
+
+          </div>
+        </div>
+      </div>
+      
+      
+    </aside>
+  </div>
+</div><script src="../_static/documentation_options.js?v=5929fcd5"></script>
+    <script src="../_static/doctools.js?v=9bcbadda"></script>
+    <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../_static/scripts/furo.js?v=46bd48cc"></script>
+    <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="../_static/copybutton.js?v=f16c4c56"></script>
+    <script src="../_static/design-tabs.js?v=f930bc37"></script>
+    <script async="async" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    </body>
+</html>

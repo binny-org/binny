@@ -1,0 +1,793 @@
+<!doctype html>
+<html class="no-js" lang="en" data-content_root="../">
+  <head><meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <meta name="color-scheme" content="light dark"><meta name="viewport" content="width=device-width, initial-scale=1" />
+<link rel="index" title="Index" href="../genindex.html"><link rel="search" title="Search" href="../search.html"><link rel="next" title="Tomography" href="tomography.html"><link rel="prev" title="Theory" href="index.html">
+        <link rel="prefetch" href="../_static/assets/logo.png" as="image">
+        <link rel="prefetch" href="../_static/assets/logo.png" as="image">
+
+    <link rel="shortcut icon" href="../_static/favicon.png"><!-- Generated with Sphinx 8.2.3 and Furo 2025.12.19 -->
+        <title>Parent n(z) - Binny documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=d111a655" />
+    <link rel="stylesheet" type="text/css" href="../_static/styles/furo.css?v=7bdb33bb" />
+    <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
+    <link rel="stylesheet" type="text/css" href="../_static/plot_directive.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/sphinx-design.min.css?v=95c83b7e" />
+    <link rel="stylesheet" type="text/css" href="../_static/styles/furo-extensions.css?v=8dab3a3b" />
+    <link rel="stylesheet" type="text/css" href="../_static/binny.css?v=9dc84726" />
+    
+    
+
+
+<style>
+  body {
+    --color-code-background: #f2f2f2;
+  --color-code-foreground: #1e1e1e;
+  --color-brand-primary: #440154;
+  --color-brand-content: #31688E;
+  --color-link: #35B779;
+  --color-link--hover: #31688E;
+  --color-link--visited: #FDE725;
+  
+  }
+  @media not print {
+    body[data-theme="dark"] {
+      --color-code-background: #202020;
+  --color-code-foreground: #d0d0d0;
+  --color-brand-primary: #440154;
+  --color-brand-content: #31688E;
+  --color-link: #35B779;
+  --color-link--hover: #31688E;
+  --color-link--visited: #FDE725;
+  
+    }
+    @media (prefers-color-scheme: dark) {
+      body:not([data-theme="light"]) {
+        --color-code-background: #202020;
+  --color-code-foreground: #d0d0d0;
+  --color-brand-primary: #440154;
+  --color-brand-content: #31688E;
+  --color-link: #35B779;
+  --color-link--hover: #31688E;
+  --color-link--visited: #FDE725;
+  
+      }
+    }
+  }
+</style></head>
+  <body>
+    
+    <script>
+      document.body.dataset.theme = localStorage.getItem("theme") || "auto";
+    </script>
+    
+
+<svg xmlns="http://www.w3.org/2000/svg" style="display: none;">
+  <symbol id="svg-toc" viewBox="0 0 24 24">
+    <title>Contents</title>
+    <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 1024 1024">
+      <path d="M408 442h480c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8H408c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8zm-8 204c0 4.4 3.6 8 8 8h480c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8H408c-4.4 0-8 3.6-8 8v56zm504-486H120c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h784c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8zm0 632H120c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h784c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8zM115.4 518.9L271.7 642c5.8 4.6 14.4.5 14.4-6.9V388.9c0-7.4-8.5-11.5-14.4-6.9L115.4 505.1a8.74 8.74 0 0 0 0 13.8z"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-menu" viewBox="0 0 24 24">
+    <title>Menu</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather-menu">
+      <line x1="3" y1="12" x2="21" y2="12"></line>
+      <line x1="3" y1="6" x2="21" y2="6"></line>
+      <line x1="3" y1="18" x2="21" y2="18"></line>
+    </svg>
+  </symbol>
+  <symbol id="svg-arrow-right" viewBox="0 0 24 24">
+    <title>Expand</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather-chevron-right">
+      <polyline points="9 18 15 12 9 6"></polyline>
+    </svg>
+  </symbol>
+  <symbol id="svg-sun" viewBox="0 0 24 24">
+    <title>Light mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="feather-sun">
+      <circle cx="12" cy="12" r="5"></circle>
+      <line x1="12" y1="1" x2="12" y2="3"></line>
+      <line x1="12" y1="21" x2="12" y2="23"></line>
+      <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+      <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+      <line x1="1" y1="12" x2="3" y2="12"></line>
+      <line x1="21" y1="12" x2="23" y2="12"></line>
+      <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+      <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+    </svg>
+  </symbol>
+  <symbol id="svg-moon" viewBox="0 0 24 24">
+    <title>Dark mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-moon">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+      <path d="M12 3c.132 0 .263 0 .393 0a7.5 7.5 0 0 0 7.92 12.446a9 9 0 1 1 -8.313 -12.454z" />
+    </svg>
+  </symbol>
+  <symbol id="svg-sun-with-moon" viewBox="0 0 24 24">
+    <title>Auto light/dark, in light mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round"
+      class="icon-custom-derived-from-feather-sun-and-tabler-moon">
+      <path style="opacity: 50%" d="M 5.411 14.504 C 5.471 14.504 5.532 14.504 5.591 14.504 C 3.639 16.319 4.383 19.569 6.931 20.352 C 7.693 20.586 8.512 20.551 9.25 20.252 C 8.023 23.207 4.056 23.725 2.11 21.184 C 0.166 18.642 1.702 14.949 4.874 14.536 C 5.051 14.512 5.231 14.5 5.411 14.5 L 5.411 14.504 Z"/>
+      <line x1="14.5" y1="3.25" x2="14.5" y2="1.25"/>
+      <line x1="14.5" y1="15.85" x2="14.5" y2="17.85"/>
+      <line x1="10.044" y1="5.094" x2="8.63" y2="3.68"/>
+      <line x1="19" y1="14.05" x2="20.414" y2="15.464"/>
+      <line x1="8.2" y1="9.55" x2="6.2" y2="9.55"/>
+      <line x1="20.8" y1="9.55" x2="22.8" y2="9.55"/>
+      <line x1="10.044" y1="14.006" x2="8.63" y2="15.42"/>
+      <line x1="19" y1="5.05" x2="20.414" y2="3.636"/>
+      <circle cx="14.5" cy="9.55" r="3.6"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-moon-with-sun" viewBox="0 0 24 24">
+    <title>Auto light/dark, in dark mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round"
+      class="icon-custom-derived-from-feather-sun-and-tabler-moon">
+      <path d="M 8.282 7.007 C 8.385 7.007 8.494 7.007 8.595 7.007 C 5.18 10.184 6.481 15.869 10.942 17.24 C 12.275 17.648 13.706 17.589 15 17.066 C 12.851 22.236 5.91 23.143 2.505 18.696 C -0.897 14.249 1.791 7.786 7.342 7.063 C 7.652 7.021 7.965 7 8.282 7 L 8.282 7.007 Z"/>
+      <line style="opacity: 50%" x1="18" y1="3.705" x2="18" y2="2.5"/>
+      <line style="opacity: 50%" x1="18" y1="11.295" x2="18" y2="12.5"/>
+      <line style="opacity: 50%" x1="15.316" y1="4.816" x2="14.464" y2="3.964"/>
+      <line style="opacity: 50%" x1="20.711" y1="10.212" x2="21.563" y2="11.063"/>
+      <line style="opacity: 50%" x1="14.205" y1="7.5" x2="13.001" y2="7.5"/>
+      <line style="opacity: 50%" x1="21.795" y1="7.5" x2="23" y2="7.5"/>
+      <line style="opacity: 50%" x1="15.316" y1="10.184" x2="14.464" y2="11.036"/>
+      <line style="opacity: 50%" x1="20.711" y1="4.789" x2="21.563" y2="3.937"/>
+      <circle style="opacity: 50%" cx="18" cy="7.5" r="2.169"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-pencil" viewBox="0 0 24 24">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-pencil-code">
+      <path d="M4 20h4l10.5 -10.5a2.828 2.828 0 1 0 -4 -4l-10.5 10.5v4" />
+      <path d="M13.5 6.5l4 4" />
+      <path d="M20 21l2 -2l-2 -2" />
+      <path d="M17 17l-2 2l2 2" />
+    </svg>
+  </symbol>
+  <symbol id="svg-eye" viewBox="0 0 24 24">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-eye-code">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+      <path d="M10 12a2 2 0 1 0 4 0a2 2 0 0 0 -4 0" />
+      <path
+        d="M11.11 17.958c-3.209 -.307 -5.91 -2.293 -8.11 -5.958c2.4 -4 5.4 -6 9 -6c3.6 0 6.6 2 9 6c-.21 .352 -.427 .688 -.647 1.008" />
+      <path d="M20 21l2 -2l-2 -2" />
+      <path d="M17 17l-2 2l2 2" />
+    </svg>
+  </symbol>
+</svg>
+
+<input type="checkbox" class="sidebar-toggle" name="__navigation" id="__navigation" aria-label="Toggle site navigation sidebar">
+<input type="checkbox" class="sidebar-toggle" name="__toc" id="__toc" aria-label="Toggle table of contents sidebar">
+<label class="overlay sidebar-overlay" for="__navigation"></label>
+<label class="overlay toc-overlay" for="__toc"></label>
+
+<a class="skip-to-content muted-link" href="#furo-main-content">Skip to content</a>
+
+
+
+<div class="page">
+  <header class="mobile-header">
+    <div class="header-left">
+      <label class="nav-overlay-icon" for="__navigation">
+        <span class="icon"><svg><use href="#svg-menu"></use></svg></span>
+      </label>
+    </div>
+    <div class="header-center">
+      <a href="../index.html"><div class="brand">Binny  documentation</div></a>
+    </div>
+    <div class="header-right">
+      <div class="theme-toggle-container theme-toggle-header">
+        <button class="theme-toggle" aria-label="Toggle Light / Dark / Auto color theme">
+          <svg class="theme-icon-when-auto-light"><use href="#svg-sun-with-moon"></use></svg>
+          <svg class="theme-icon-when-auto-dark"><use href="#svg-moon-with-sun"></use></svg>
+          <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
+          <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
+        </button>
+      </div>
+      <label class="toc-overlay-icon toc-header-icon" for="__toc">
+        <span class="icon"><svg><use href="#svg-toc"></use></svg></span>
+      </label>
+    </div>
+  </header>
+  <aside class="sidebar-drawer">
+    <div class="sidebar-container">
+      
+      <div class="sidebar-sticky"><a class="sidebar-brand" href="../index.html">
+  <div class="sidebar-logo-container">
+    <img class="sidebar-logo only-light" src="../_static/assets/logo.png" alt="Light Logo"/>
+    <img class="sidebar-logo only-dark" src="../_static/assets/logo.png" alt="Dark Logo"/>
+  </div>
+  
+  <span class="sidebar-brand-text">Binny  documentation</span>
+  
+</a><form class="sidebar-search-container" method="get" action="../search.html" role="search">
+  <input class="sidebar-search" placeholder="Search" name="q" aria-label="Search">
+  <input type="hidden" name="check_keywords" value="yes">
+  <input type="hidden" name="area" value="default">
+</form>
+<div id="searchbox"></div><div class="sidebar-scroll"><div class="sidebar-tree">
+  <ul class="current">
+<li class="toctree-l1 current has-children"><a class="reference internal" href="index.html"> Theory</a><input aria-label="Toggle navigation of  Theory" checked="" class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" role="switch" type="checkbox"/><label for="toctree-checkbox-1"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul class="current">
+<li class="toctree-l2 current current-page"><a class="current reference internal" href="#"> Parent n(z)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tomography.html"> Tomography</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="uncertainties/index.html"> Redshift uncertainties</a><input aria-label="Toggle navigation of  Redshift uncertainties" class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" role="switch" type="checkbox"/><label for="toctree-checkbox-2"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="uncertainties/photoz.html"> Photometric-redshift uncertainties</a></li>
+<li class="toctree-l3"><a class="reference internal" href="uncertainties/specz.html"> Spectroscopic-redshift uncertainties</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="statistics.html"> Bin summaries</a></li>
+<li class="toctree-l2"><a class="reference internal" href="diagnostics.html"> Bin diagnostics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="bin_combos.html"> Bin-index combinations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="conventions.html"> Conventions</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../workflow.html"> Workflow</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../examples/index.html"> Examples</a><input aria-label="Toggle navigation of  Examples" class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" role="switch" type="checkbox"/><label for="toctree-checkbox-3"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../examples/nz_modelling.html"> Parent n(z) models</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../examples/nz_calibration.html"> Parent n(z) from mocks</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../examples/photoz_bins.html"> Photometric bins</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../examples/specz_bins.html"> Spectroscopic bins</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../examples/bin_summaries.html"> Bin summaries</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../examples/bin_diagnostics.html"> Bin diagnostics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../examples/survey_presets.html"> Survey presets</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../examples/selections.html"> Bin-pair selections</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../installation.html"> Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../citation.html"> Citation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../contributing.html"> Contributing</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../api/index.html">Binny API</a><input aria-label="Toggle navigation of Binny API" class="toctree-checkbox" id="toctree-checkbox-4" name="toctree-checkbox-4" role="switch" type="checkbox"/><label for="toctree-checkbox-4"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../api/modules.html">binny</a><input aria-label="Toggle navigation of binny" class="toctree-checkbox" id="toctree-checkbox-5" name="toctree-checkbox-5" role="switch" type="checkbox"/><label for="toctree-checkbox-5"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l3 has-children"><a class="reference internal" href="../api/binny.html">binny package</a><input aria-label="Toggle navigation of binny package" class="toctree-checkbox" id="toctree-checkbox-6" name="toctree-checkbox-6" role="switch" type="checkbox"/><label for="toctree-checkbox-6"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l4 has-children"><a class="reference internal" href="../api/binny.api.html">binny.api package</a><input aria-label="Toggle navigation of binny.api package" class="toctree-checkbox" id="toctree-checkbox-7" name="toctree-checkbox-7" role="switch" type="checkbox"/><label for="toctree-checkbox-7"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l5"><a class="reference internal" href="../api/binny.api.nz_tomography.html">binny.api.nz_tomography module</a></li>
+</ul>
+</li>
+<li class="toctree-l4 has-children"><a class="reference internal" href="../api/binny.axes.html">binny.axes package</a><input aria-label="Toggle navigation of binny.axes package" class="toctree-checkbox" id="toctree-checkbox-8" name="toctree-checkbox-8" role="switch" type="checkbox"/><label for="toctree-checkbox-8"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l5"><a class="reference internal" href="../api/binny.axes.bin_edges.html">binny.axes.bin_edges module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../api/binny.axes.grids.html">binny.axes.grids module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../api/binny.axes.mixed_edges.html">binny.axes.mixed_edges module</a></li>
+</ul>
+</li>
+<li class="toctree-l4 has-children"><a class="reference internal" href="../api/binny.correlations.html">binny.correlations package</a><input aria-label="Toggle navigation of binny.correlations package" class="toctree-checkbox" id="toctree-checkbox-9" name="toctree-checkbox-9" role="switch" type="checkbox"/><label for="toctree-checkbox-9"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l5"><a class="reference internal" href="../api/binny.correlations.bin_combo_filter.html">binny.correlations.bin_combo_filter module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../api/binny.correlations.filters.html">binny.correlations.filters module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../api/binny.correlations.metrics.html">binny.correlations.metrics module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../api/binny.correlations.scores.html">binny.correlations.scores module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../api/binny.correlations.topology.html">binny.correlations.topology module</a></li>
+</ul>
+</li>
+<li class="toctree-l4 has-children"><a class="reference internal" href="../api/binny.nz.html">binny.nz package</a><input aria-label="Toggle navigation of binny.nz package" class="toctree-checkbox" id="toctree-checkbox-10" name="toctree-checkbox-10" role="switch" type="checkbox"/><label for="toctree-checkbox-10"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l5"><a class="reference internal" href="../api/binny.nz.calibration.html">binny.nz.calibration module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../api/binny.nz.models.html">binny.nz.models module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../api/binny.nz.registry.html">binny.nz.registry module</a></li>
+</ul>
+</li>
+<li class="toctree-l4 has-children"><a class="reference internal" href="../api/binny.nz_tomo.html">binny.nz_tomo package</a><input aria-label="Toggle navigation of binny.nz_tomo package" class="toctree-checkbox" id="toctree-checkbox-11" name="toctree-checkbox-11" role="switch" type="checkbox"/><label for="toctree-checkbox-11"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l5"><a class="reference internal" href="../api/binny.nz_tomo.between_sample_metrics.html">binny.nz_tomo.between_sample_metrics module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../api/binny.nz_tomo.bin_similarity.html">binny.nz_tomo.bin_similarity module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../api/binny.nz_tomo.bin_stats.html">binny.nz_tomo.bin_stats module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../api/binny.nz_tomo.binning_core.html">binny.nz_tomo.binning_core module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../api/binny.nz_tomo.nz_tomo_utils.html">binny.nz_tomo.nz_tomo_utils module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../api/binny.nz_tomo.photoz.html">binny.nz_tomo.photoz module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../api/binny.nz_tomo.specz.html">binny.nz_tomo.specz module</a></li>
+</ul>
+</li>
+<li class="toctree-l4 has-children"><a class="reference internal" href="../api/binny.surveys.html">binny.surveys package</a><input aria-label="Toggle navigation of binny.surveys package" class="toctree-checkbox" id="toctree-checkbox-12" name="toctree-checkbox-12" role="switch" type="checkbox"/><label for="toctree-checkbox-12"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l5"><a class="reference internal" href="../api/binny.surveys.configs.html">binny.surveys.configs package</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../api/binny.surveys.config_utils.html">binny.surveys.config_utils module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../api/binny.surveys.sky.html">binny.surveys.sky module</a></li>
+</ul>
+</li>
+<li class="toctree-l4 has-children"><a class="reference internal" href="../api/binny.utils.html">binny.utils package</a><input aria-label="Toggle navigation of binny.utils package" class="toctree-checkbox" id="toctree-checkbox-13" name="toctree-checkbox-13" role="switch" type="checkbox"/><label for="toctree-checkbox-13"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l5"><a class="reference internal" href="../api/binny.utils.broadcasting.html">binny.utils.broadcasting module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../api/binny.utils.io.html">binny.utils.io module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../api/binny.utils.metadata.html">binny.utils.metadata module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../api/binny.utils.normalization.html">binny.utils.normalization module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../api/binny.utils.pairwise_metrics.html">binny.utils.pairwise_metrics module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../api/binny.utils.relations.html">binny.utils.relations module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../api/binny.utils.types.html">binny.utils.types module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../api/binny.utils.validators.html">binny.utils.validators module</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+</div>
+</div>
+
+      </div>
+      
+    </div>
+  </aside>
+  <div class="main">
+    <div class="content">
+      <div class="article-container">
+        <a href="#" class="back-to-top muted-link">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+            <path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8v12z"></path>
+          </svg>
+          <span>Back to top</span>
+        </a>
+        <div class="content-icon-container">
+          <div class="view-this-page">
+  <a class="muted-link" href="../_sources/theory/parent_nz.rst.txt" title="View this page">
+    <svg><use href="#svg-eye"></use></svg>
+    <span class="visually-hidden">View this page</span>
+  </a>
+</div>
+<div class="theme-toggle-container theme-toggle-content">
+            <button class="theme-toggle" aria-label="Toggle Light / Dark / Auto color theme">
+              <svg class="theme-icon-when-auto-light"><use href="#svg-sun-with-moon"></use></svg>
+              <svg class="theme-icon-when-auto-dark"><use href="#svg-moon-with-sun"></use></svg>
+              <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
+              <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
+            </button>
+          </div>
+          <label class="toc-overlay-icon toc-content-icon" for="__toc">
+            <span class="icon"><svg><use href="#svg-toc"></use></svg></span>
+          </label>
+        </div>
+        <article role="main" id="furo-main-content">
+          <section id="logo-parent-n-z">
+<h1><a class="reference internal" href="../_images/logo.png"><img alt="logo" src="../_images/logo.png" style="width: 32px;" /></a> Parent n(z)<a class="headerlink" href="#logo-parent-n-z" title="Link to this heading"><span>#</span></a></h1>
+<p>A tomographic analysis begins with an underlying <strong>parent redshift
+distribution</strong> <span class="math notranslate nohighlight">\(n(z)\)</span>, which describes how galaxies are distributed
+in redshift before any tomographic binning is applied.</p>
+<p>In Binny, this parent distribution plays a central role. It is the
+starting point from which tomographic bins are constructed, and it sets
+the baseline population that later enters diagnostics, overlap
+statistics, and downstream forecasting calculations.</p>
+<p>This page describes the parent <span class="math notranslate nohighlight">\(n(z)\)</span> models currently implemented
+in Binny, why such models are useful, and how they can also be
+calibrated from mock catalogs rather than specified purely by hand.</p>
+<section id="why-model-a-parent-n-z">
+<h2>Why model a parent <span class="math notranslate nohighlight">\(n(z)\)</span>?<a class="headerlink" href="#why-model-a-parent-n-z" title="Link to this heading"><span>#</span></a></h2>
+<p>In many forecasting or methodology studies, one does not begin from a
+fully observed galaxy catalog. Instead, one works with an analytic or
+semi-analytic description of the source population. A parent
+distribution <span class="math notranslate nohighlight">\(n(z)\)</span> is useful because it provides a compact way to
+encode the overall redshift structure of the sample before introducing
+tomographic cuts, photo-<span class="math notranslate nohighlight">\(z\)</span> uncertainties, or survey-specific
+selection effects.</p>
+<p>This has several advantages:</p>
+<ul class="simple">
+<li><p>it provides a smooth, controllable baseline population,</p></li>
+<li><p>it makes synthetic or survey-inspired tests reproducible,</p></li>
+<li><p>it allows one to vary depth or shape parameters in a simple way,</p></li>
+<li><p>and it separates the description of the overall galaxy population from
+the later step of constructing tomographic bins.</p></li>
+</ul>
+<p>Conceptually, Binny treats the parent <span class="math notranslate nohighlight">\(n(z)\)</span> as the continuous
+distribution from which the tomographic bin curves are derived. The bin
+curves therefore inherit many of their qualitative properties from the
+choice of parent model.</p>
+</section>
+<section id="what-is-implemented-in-binny">
+<h2>What is implemented in Binny<a class="headerlink" href="#what-is-implemented-in-binny" title="Link to this heading"><span>#</span></a></h2>
+<p>Binny provides a registry of named parent redshift-distribution models.
+At present, the following models are implemented:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">smail</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">shifted_smail</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">gaussian</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">gaussian_mixture</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">gamma</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">schechter</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">lognormal</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">skew_normal</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">student_t</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">tophat</span></code></p></li>
+</ul>
+<p>These models are exposed through the parent-distribution registry and
+can be evaluated through <a class="reference internal" href="../api/binny.html#binny.NZTomography.nz_model" title="binny.NZTomography.nz_model"><code class="xref py py-meth docutils literal notranslate"><span class="pre">binny.NZTomography.nz_model()</span></code></a>.</p>
+<p>The purpose of the registry is not to claim that all of these models are
+equally realistic for survey forecasting. Rather, Binny supports a small
+family of parent distributions because different use cases benefit from
+different levels of realism, simplicity, or flexibility. Some models are
+well suited to survey-like baseline populations, while others are useful
+as controlled toy models for testing, pedagogy, or stress tests of a
+binning workflow.</p>
+<section id="survey-like-baseline-models">
+<h3>Survey-like baseline models<a class="headerlink" href="#survey-like-baseline-models" title="Link to this heading"><span>#</span></a></h3>
+<p>Among the implemented models, the <strong>Smail distribution</strong> <a class="reference internal" href="#smail1994" id="id1"><span>[Smail1994]</span></a> is the most
+natural default for many survey-like applications. It is widely used in
+forecasting because it provides a smooth, unimodal distribution with a
+rising low-redshift part and a decaying high-redshift tail. This makes
+it a convenient phenomenological description of a magnitude-limited
+galaxy sample.</p>
+<p>In Binny, the Smail-like parent distribution is parameterized through a
+redshift scale <span class="math notranslate nohighlight">\(z_0\)</span> and two shape parameters, usually written as
+<span class="math notranslate nohighlight">\(\alpha\)</span> and <span class="math notranslate nohighlight">\(\beta\)</span>. In schematic form,</p>
+<div class="math-wrapper docutils container">
+<div class="math notranslate nohighlight">
+\[n(z) \propto \left(\frac{z}{z_0}\right)^{\alpha}
+\exp\!\left[-\left(\frac{z}{z_0}\right)^{\beta}\right].\]</div>
+</div>
+<p>The role of these parameters is intuitive:</p>
+<ul class="simple">
+<li><p><span class="math notranslate nohighlight">\(z_0\)</span> sets the characteristic redshift scale,</p></li>
+<li><p><span class="math notranslate nohighlight">\(\alpha\)</span> controls how rapidly the distribution rises at low redshift,</p></li>
+<li><p><span class="math notranslate nohighlight">\(\beta\)</span> controls how quickly the high-redshift tail falls off.</p></li>
+</ul>
+<p>This functional form is especially useful because it is simple enough to
+work with analytically and numerically, while still being flexible
+enough to mimic the broad shape of galaxy samples encountered in many
+forecasting studies.</p>
+<p>The typical values of the shape parameters are not arbitrary. In many
+forecasting applications one often encounters values around</p>
+<div class="math-wrapper docutils container">
+<div class="math notranslate nohighlight">
+\[\alpha \approx 2, \qquad \beta \sim 1\text{–}1.5.\]</div>
+</div>
+<p>This choice reflects two broad features of magnitude-limited galaxy
+samples.</p>
+<p>At low redshift, the number of galaxies in a thin redshift shell scales
+approximately with the comoving volume element,</p>
+<div class="math-wrapper docutils container">
+<div class="math notranslate nohighlight">
+\[\mathrm{d}V \propto z^2\, \mathrm{d}z,\]</div>
+</div>
+<p>which is the leading-order behavior of the cosmological volume element
+for small redshift. If the galaxy population evolves slowly over this range,
+the redshift distribution therefore rises approximately as
+<span class="math notranslate nohighlight">\(n(z) \propto z^2\)</span>.</p>
+<p>At higher redshift, the distribution must eventually decline. This turnover is
+primarily driven by survey selection effects. As distance increases,
+galaxies appear fainter and a magnitude-limited survey progressively loses
+objects beyond a characteristic depth set by the survey flux limit and the
+galaxy luminosity function. The exponential factor in
+the Smail model mimics this suppression, with the parameter
+<span class="math notranslate nohighlight">\(\beta\)</span> controlling how sharply the high-redshift tail falls.</p>
+<p>Values of <span class="math notranslate nohighlight">\(\beta\)</span> around unity therefore produce a gradual
+survey-like decline, while larger values lead to a steeper cutoff.</p>
+<p>The parameter <span class="math notranslate nohighlight">\(z_0\)</span> sets the characteristic redshift scale at
+which the distribution transitions from the low-redshift power-law rise
+to the high-redshift exponential suppression. The actual peak of the
+distribution occurs at</p>
+<div class="math-wrapper docutils container">
+<div class="math notranslate nohighlight">
+\[z_{\rm peak} = z_0 \left(\frac{\alpha}{\beta}\right)^{1/\beta},\]</div>
+</div>
+<p>so <span class="math notranslate nohighlight">\(z_0\)</span> should be interpreted as a scale parameter rather than
+the peak location itself.</p>
+<a class="reference internal image-reference" href="../_images/smail_parameter_sweep.gif"><img alt="Animated Smail parameter sweep" class="align-center" src="../_images/smail_parameter_sweep.gif" style="width: 100%;" />
+</a>
+<p>In practice these parameters are rarely interpreted as physical
+constants. Instead, they serve as convenient phenomenological controls
+that allow the analytic distribution to reproduce the broad statistical
+shape of a magnitude-limited galaxy population.</p>
+<p>For this reason, the Smail model is often a natural first choice when one wants
+a survey-like parent <span class="math notranslate nohighlight">\(n(z)\)</span> without committing to a more complicated
+catalog-level model.</p>
+<p>That said, it should be viewed as a <strong>practical baseline model</strong>, not as
+a universally correct description of every galaxy sample. Real survey
+populations can contain asymmetries, shoulders, broader tails, or
+multi-component structure that are not always captured by a single Smail
+profile.</p>
+</section>
+<section id="other-useful-parent-models">
+<h3>Other useful parent models<a class="headerlink" href="#other-useful-parent-models" title="Link to this heading"><span>#</span></a></h3>
+<p>Although Smail is a natural baseline, the other implemented models serve
+important purposes.</p>
+<dl class="simple">
+<dt><strong>Shifted Smail</strong></dt><dd><p>This is a variation of the standard Smail profile in which the
+distribution is displaced toward higher redshift by a fixed offset.
+It is useful when the population effectively begins above some
+nonzero redshift, or when one wants a survey-like shape with a
+delayed onset.</p>
+</dd>
+<dt><strong>Gaussian</strong></dt><dd><p>A simple single-peaked toy model. It is not usually intended as a
+realistic description of a magnitude-limited galaxy sample, but it is
+extremely useful for controlled tests because its width and center are
+easy to interpret.</p>
+</dd>
+<dt><strong>Gaussian mixture</strong></dt><dd><p>A flexible extension that allows more than one component. This is
+useful for studying multimodality, secondary structure, or
+population mixtures that a single-peaked model cannot represent.</p>
+</dd>
+<dt><strong>Gamma</strong></dt><dd><p>A positive-support distribution with a survey-like asymmetry. It can
+resemble a smooth galaxy population while offering a slightly
+different parameterization from Smail.</p>
+</dd>
+<dt><strong>Schechter-like</strong></dt><dd><p>A phenomenological form inspired by shapes that combine a low-redshift
+rise with an exponential suppression. It can be useful when one wants
+a smooth asymmetric profile with behavior different from the standard
+Smail parameterization.</p>
+</dd>
+<dt><strong>Lognormal</strong></dt><dd><p>Useful for positively supported, skewed distributions. It can provide
+broader asymmetric shapes and is sometimes a convenient alternative
+when one wants stronger skewness.</p>
+</dd>
+<dt><strong>Skew-normal</strong></dt><dd><p>A generalization of the Gaussian that introduces asymmetry in a more
+direct way. It is useful when a single peak is still appropriate but
+symmetric Gaussian behavior is too restrictive.</p>
+</dd>
+<dt><strong>Student-t</strong></dt><dd><p>Useful when one wants heavier tails than a Gaussian. This can be
+helpful for stress tests in which broad wings or outlying structure
+are intentionally emphasized.</p>
+</dd>
+<dt><strong>Top-hat</strong></dt><dd><p>A compact-support toy model that is nonzero only over a finite
+interval. This is not intended as a realistic survey population, but
+it is very useful for debugging, pedagogy, and clean demonstrations
+of how binning and overlap behave in idealized settings.</p>
+</dd>
+</dl>
+<p>Taken together, these models allow Binny to cover three broad use cases:</p>
+<ul class="simple">
+<li><p>survey-like baseline populations,</p></li>
+<li><p>flexible alternatives with skewness or multiple components,</p></li>
+<li><p>and deliberately simple toy models for controlled tests.</p></li>
+</ul>
+</section>
+</section>
+<section id="choosing-a-model-in-practice">
+<h2>Choosing a model in practice<a class="headerlink" href="#choosing-a-model-in-practice" title="Link to this heading"><span>#</span></a></h2>
+<p>The choice of parent <span class="math notranslate nohighlight">\(n(z)\)</span> should reflect the goal of the
+calculation.</p>
+<p>If the goal is a simple survey-motivated forecast, the Smail model is
+usually the most appropriate default. It is smooth, interpretable, and
+widely used as a compact description of magnitude-limited galaxy
+samples.</p>
+<p>If the goal is to study more complicated parent-population structure,
+models such as <code class="docutils literal notranslate"><span class="pre">gaussian_mixture</span></code>, <code class="docutils literal notranslate"><span class="pre">skew_normal</span></code>, or <code class="docutils literal notranslate"><span class="pre">lognormal</span></code>
+can be useful because they introduce asymmetry or multiple components in
+a controlled way.</p>
+<p>If the goal is to test the mechanics of a tomographic pipeline rather
+than emulate a realistic survey population, simpler toy models such as
+<code class="docutils literal notranslate"><span class="pre">gaussian</span></code> or <code class="docutils literal notranslate"><span class="pre">tophat</span></code> are often preferable because they make the
+effect of each modeling choice easier to isolate and interpret.</p>
+<p>In other words, the “best” model is not universal: it depends on whether
+one is prioritizing realism, flexibility, or controlled simplicity.</p>
+</section>
+<section id="normalization-and-interpretation">
+<h2>Normalization and interpretation<a class="headerlink" href="#normalization-and-interpretation" title="Link to this heading"><span>#</span></a></h2>
+<p>In Binny, parent distributions are typically evaluated on a supplied
+redshift grid and may optionally be normalized on that grid.</p>
+<p>When <code class="docutils literal notranslate"><span class="pre">normalize=True</span></code> is used, the returned parent distribution is
+scaled so that its integral over the provided redshift grid is unity:</p>
+<div class="math-wrapper docutils container">
+<div class="math notranslate nohighlight">
+\[\int n(z)\,\mathrm{d}z = 1.\]</div>
+</div>
+<p>In that case, <span class="math notranslate nohighlight">\(n(z)\)</span> should be interpreted as a <strong>normalized
+redshift probability density</strong> rather than an absolute number count.</p>
+<p>This distinction matters. A normalized parent <span class="math notranslate nohighlight">\(n(z)\)</span> describes the
+<strong>shape</strong> of the galaxy population in redshift, while the overall number
+of galaxies must be supplied separately through quantities such as the
+effective number density <span class="math notranslate nohighlight">\(n_{\rm gal}\)</span>.</p>
+<p>This separation is deliberate and useful. It allows Binny to treat the
+redshift structure of the sample independently from the survey surface
+density, which is especially convenient in forecasting workflows.</p>
+</section>
+<section id="calibration-from-mocks">
+<h2>Calibration from mocks<a class="headerlink" href="#calibration-from-mocks" title="Link to this heading"><span>#</span></a></h2>
+<p>Binny also implements a second workflow in which the parent
+distribution is not specified purely by hand. Instead, the parameters of
+a Smail model can be <strong>calibrated from a mock catalog</strong> containing true
+redshifts and apparent magnitudes.</p>
+<p>This is important because in realistic survey-design or forecasting
+studies one often wants the parent <span class="math notranslate nohighlight">\(n(z)\)</span> to reflect an underlying
+simulated galaxy population rather than an arbitrary analytic choice.</p>
+<p>The calibration tools implemented in Binny perform three related tasks:</p>
+<ol class="arabic simple">
+<li><p>infer the Smail shape parameters <span class="math notranslate nohighlight">\(\alpha\)</span> and <span class="math notranslate nohighlight">\(\beta\)</span>
+from a representative mock sample,</p></li>
+<li><p>calibrate how the Smail redshift scale <span class="math notranslate nohighlight">\(z_0\)</span> changes with
+limiting magnitude,</p></li>
+<li><p>calibrate how the effective galaxy surface density
+<span class="math notranslate nohighlight">\(n_{\rm gal}\)</span> changes with limiting magnitude.</p></li>
+</ol>
+<p>This is exposed through
+<a class="reference internal" href="../api/binny.html#binny.NZTomography.calibrate_smail_from_mock" title="binny.NZTomography.calibrate_smail_from_mock"><code class="xref py py-meth docutils literal notranslate"><span class="pre">binny.NZTomography.calibrate_smail_from_mock()</span></code></a>.</p>
+<p>The idea is straightforward. Given a mock catalog with true galaxy
+redshifts and magnitudes, one considers a sequence of magnitude cuts
+representing surveys of different depth. For each magnitude limit, one
+selects the galaxies that would be observed and fits a smooth analytic
+description to the resulting redshift distribution. One also counts how
+many galaxies remain, converting this to an effective surface density.</p>
+<p>The output is therefore not only a fitted parent <span class="math notranslate nohighlight">\(n(z)\)</span>, but also
+a set of depth-scaling relations that describe how the population shifts
+as the survey becomes deeper.</p>
+<section id="why-depth-calibration-matters">
+<h3>Why depth calibration matters<a class="headerlink" href="#why-depth-calibration-matters" title="Link to this heading"><span>#</span></a></h3>
+<p>A deeper survey typically includes fainter galaxies. In practice, this
+usually changes the sample in two ways:</p>
+<ul class="simple">
+<li><p>the galaxy population extends to higher redshift,</p></li>
+<li><p>the total galaxy surface density increases.</p></li>
+</ul>
+<p>In the Binny calibration workflow, these two effects are captured by
+fitting</p>
+<ul class="simple">
+<li><p>a relation <span class="math notranslate nohighlight">\(z_0(m_{\rm lim})\)</span>, describing how the characteristic
+redshift scale varies with limiting magnitude,</p></li>
+<li><p>and a relation <span class="math notranslate nohighlight">\(n_{\rm gal}(m_{\rm lim})\)</span>, describing how the
+effective number density varies with limiting magnitude.</p></li>
+</ul>
+<p>This provides a compact analytic summary of the mock catalog that can be
+reused in later forecasting calculations. Instead of storing or
+reprocessing the full mock each time, one can work with fitted scaling
+relations that preserve the main statistical trends relevant for survey
+depth.</p>
+<p>This is one of the main reasons Smail remains useful: it is simple
+enough to calibrate robustly, yet flexible enough to capture the broad
+survey-level evolution of the parent galaxy population.</p>
+</section>
+<section id="what-the-calibration-does-not-do">
+<h3>What the calibration does not do<a class="headerlink" href="#what-the-calibration-does-not-do" title="Link to this heading"><span>#</span></a></h3>
+<p>The calibration tools are designed to provide a smooth phenomenological
+summary of a mock galaxy sample. They are not intended to reproduce
+every detailed feature of a simulation or data set.</p>
+<p>In particular, a fitted Smail model should not be interpreted as a
+complete physical model of galaxy evolution or selection. Rather, it is
+a compact approximation to the overall redshift structure of the sample.</p>
+<p>Similarly, the fitted depth relations are empirical summaries of how the
+mock population changes with limiting magnitude. They are useful for
+forecasting and controlled survey studies, but they do not replace the
+full information content of a realistic mock catalog.</p>
+<p>This distinction is important for the theory documentation: Binny
+implements a practical interface for <strong>analytic parent-distribution
+modeling</strong>, not a full end-to-end simulation framework.</p>
+</section>
+</section>
+<section id="connection-to-tomography">
+<h2>Connection to tomography<a class="headerlink" href="#connection-to-tomography" title="Link to this heading"><span>#</span></a></h2>
+<p>Once a parent <span class="math notranslate nohighlight">\(n(z)\)</span> has been specified or calibrated, Binny uses
+it as the starting point for tomographic bin construction.</p>
+<p>The parent distribution itself is not yet a tomographic object. It
+contains the full galaxy population before splitting it into bins. The
+later tomography step introduces bin edges, selection rules, and
+possibly photometric uncertainty models that transform the parent
+population into a set of tomographic bin curves.</p>
+<p>It is therefore helpful to keep the conceptual separation clear:</p>
+<ul class="simple">
+<li><p>the <strong>parent</strong> <span class="math notranslate nohighlight">\(n(z)\)</span> describes the overall galaxy population,</p></li>
+<li><p>the <strong>tomographic bins</strong> describe how that population is partitioned.</p></li>
+</ul>
+<p>Many diagnostics of the tomographic bins, such as overlap, leakage, or
+cross-bin coupling, depend not only on the binning scheme itself but
+also on the structure of the underlying parent distribution. A broader
+or more skewed parent <span class="math notranslate nohighlight">\(n(z)\)</span> can lead to qualitatively different
+bin behavior than a narrow or sharply bounded one.</p>
+</section>
+<section id="summary">
+<h2>Summary<a class="headerlink" href="#summary" title="Link to this heading"><span>#</span></a></h2>
+<p>Binny implements a registry-based framework for parent redshift
+distributions because tomographic workflows need a flexible but
+well-defined description of the underlying galaxy population.</p>
+<p>The Smail model is the default survey-like choice because it provides a
+smooth, interpretable, and widely used phenomenological description of
+magnitude-limited samples. Other models are included because they are
+useful for flexible alternatives, multimodal structure, asymmetric
+profiles, and controlled toy tests.</p>
+<p>In addition, Binny supports calibration of Smail-based parent
+distributions from mock catalogs, including depth-scaling relations for
+the characteristic redshift scale and the galaxy number density. This
+allows survey-motivated parent populations to be constructed from mocks
+without requiring the full catalog to be propagated through every later
+step of the workflow.</p>
+<p>For executable usage examples, see the example pages on parent
+<span class="math notranslate nohighlight">\(n(z)\)</span> models and calibration from mocks.</p>
+</section>
+<section id="references">
+<h2>References<a class="headerlink" href="#references" title="Link to this heading"><span>#</span></a></h2>
+<div role="list" class="citation-list">
+<div class="citation" id="smail1994" role="doc-biblioentry">
+<span class="label"><span class="fn-bracket">[</span><a role="doc-backlink" href="#id1">Smail1994</a><span class="fn-bracket">]</span></span>
+<p>Smail, I., Ellis, R. S., &amp; Fitchett, M. J. (1994),
+<em>Gravitational Lensing of Distant Field Galaxies by Rich Clusters</em>,
+MNRAS.
+<a class="reference external" href="https://articles.adsabs.harvard.edu/pdf/1994MNRAS.270..245S">https://articles.adsabs.harvard.edu/pdf/1994MNRAS.270..245S</a></p>
+</div>
+</div>
+</section>
+</section>
+
+        </article>
+      </div>
+      <footer>
+        
+        <div class="related-pages">
+          <a class="next-page" href="tomography.html">
+              <div class="page-info">
+                <div class="context">
+                  <span>Next</span>
+                </div>
+                <div class="title"> Tomography</div>
+              </div>
+              <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
+            </a>
+          <a class="prev-page" href="index.html">
+              <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
+              <div class="page-info">
+                <div class="context">
+                  <span>Previous</span>
+                </div>
+                
+                <div class="title"> Theory</div>
+                
+              </div>
+            </a>
+        </div>
+        <div class="bottom-of-page">
+          <div class="left-details">
+            <div class="copyright">
+                Copyright &#169; 2026, Nikolina Šarčević, Matthijs van der Wild
+            </div>
+            Made with <a href="https://www.sphinx-doc.org/">Sphinx</a> and <a class="muted-link" href="https://pradyunsg.me">@pradyunsg</a>'s
+            
+            <a href="https://github.com/pradyunsg/furo">Furo</a>
+            
+          </div>
+          <div class="right-details">
+            
+          </div>
+        </div>
+        
+      </footer>
+    </div>
+    <aside class="toc-drawer">
+      
+      
+      <div class="toc-sticky toc-scroll">
+        <div class="toc-title-container">
+          <span class="toc-title">
+            On this page
+          </span>
+        </div>
+        <div class="toc-tree-container">
+          <div class="toc-tree">
+            <ul>
+<li><a class="reference internal" href="#"> Parent n(z)</a><ul>
+<li><a class="reference internal" href="#why-model-a-parent-n-z">Why model a parent <span class="math notranslate nohighlight">\(n(z)\)</span>?</a></li>
+<li><a class="reference internal" href="#what-is-implemented-in-binny">What is implemented in Binny</a><ul>
+<li><a class="reference internal" href="#survey-like-baseline-models">Survey-like baseline models</a></li>
+<li><a class="reference internal" href="#other-useful-parent-models">Other useful parent models</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#choosing-a-model-in-practice">Choosing a model in practice</a></li>
+<li><a class="reference internal" href="#normalization-and-interpretation">Normalization and interpretation</a></li>
+<li><a class="reference internal" href="#calibration-from-mocks">Calibration from mocks</a><ul>
+<li><a class="reference internal" href="#why-depth-calibration-matters">Why depth calibration matters</a></li>
+<li><a class="reference internal" href="#what-the-calibration-does-not-do">What the calibration does not do</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#connection-to-tomography">Connection to tomography</a></li>
+<li><a class="reference internal" href="#summary">Summary</a></li>
+<li><a class="reference internal" href="#references">References</a></li>
+</ul>
+</li>
+</ul>
+
+          </div>
+        </div>
+      </div>
+      
+      
+    </aside>
+  </div>
+</div><script src="../_static/documentation_options.js?v=5929fcd5"></script>
+    <script src="../_static/doctools.js?v=9bcbadda"></script>
+    <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../_static/scripts/furo.js?v=46bd48cc"></script>
+    <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="../_static/copybutton.js?v=f16c4c56"></script>
+    <script src="../_static/design-tabs.js?v=f930bc37"></script>
+    <script async="async" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    </body>
+</html>
