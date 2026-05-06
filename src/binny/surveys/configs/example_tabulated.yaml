@@ -1,0 +1,42 @@
+name: example_tabulated
+
+z_grid:
+  start: 0.0
+  stop: 2.0
+  n: 501
+
+tomography:
+  - role: source
+    year: file
+    name: file-backed-tabulated-example
+
+    kind: specz
+
+    nz:
+      model: tabulated
+      source:
+        path: example_tabulated_nz.txt
+        z_col: 0
+        nz_col: 1
+        skiprows: 1
+      params:
+        normalize: true
+
+    bins:
+      edges: [0.0, 0.5, 1.0, 1.5, 2.0]
+
+  - role: source
+    year: arrays
+    name: array-backed-tabulated-example
+
+    kind: specz
+
+    nz:
+      model: tabulated
+      z_input: [0.0, 0.2, 0.4, 0.7, 1.0, 1.4, 1.8, 2.0]
+      nz_input: [0.0, 0.15, 0.75, 1.0, 0.55, 0.18, 0.04, 0.0]
+      params:
+        normalize: true
+
+    bins:
+      edges: [0.0, 0.5, 1.0, 1.5, 2.0]

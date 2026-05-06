@@ -38,6 +38,7 @@ def test_available_models_returns_sorted_list() -> None:
         "shifted_smail",
         "skew_normal",
         "student_t",
+        "tabulated",
     ],
 )
 def test_get_model_returns_callable_for_known_names(name: str) -> None:
@@ -46,7 +47,7 @@ def test_get_model_returns_callable_for_known_names(name: str) -> None:
     assert callable(fn)
 
 
-@pytest.mark.parametrize("name", ["SMAIL", "SmAiL", "GAUSSIAN", "Schechter"])
+@pytest.mark.parametrize("name", ["SMAIL", "SmAiL", "GAUSSIAN", "Schechter", "TABULATED"])
 def test_get_model_is_case_insensitive(name: str) -> None:
     """Tests that get_model is case-insensitive for model names."""
     fn1 = reg.get_model(name)
@@ -71,6 +72,7 @@ def test_get_model_unknown_raises_value_error() -> None:
         msg = str(e)
         assert "Available:" in msg
         assert "smail" in msg
+        assert "tabulated" in msg
 
 
 def test_nz_model_returns_float64_array(z: np.ndarray, monkeypatch: pytest.MonkeyPatch) -> None:
@@ -126,3 +128,54 @@ def test_nz_model_unknown_raises_value_error(z: np.ndarray) -> None:
     """Tests that nz_model raises ValueError for unknown model names."""
     with pytest.raises(ValueError, match=r"Unknown redshift distribution model"):
         _ = reg.nz_model("nope", z)
+
+
+def test_nz_model_evaluates_tabulated_model(z: np.ndarray) -> None:
+    """Tests that nz_model evaluates the tabulated model."""
+    z_input = np.array([0.0, 1.0, 2.0, 3.0], dtype=np.float64)
+    nz_input = np.array([0.0, 1.0, 0.5, 0.0], dtype=np.float64)
+
+    out = reg.nz_model("tabulated", z, z_input=z_input, nz_input=nz_input)
+
+    assert isinstance(out, np.ndarray)
+    assert out.dtype == np.float64
+    assert out.shape == z.shape
+    assert np.all(np.isfinite(out))
+    assert np.all(out >= 0.0)
+
+
+def test_available_models_includes_tabulated() -> None:
+    """Tests that available_models includes the tabulated model."""
+    assert "tabulated" in reg.available_models()
+
+
+def test_get_model_returns_tabulated_callable() -> None:
+    """Tests that get_model returns the tabulated model callable."""
+    fn = reg.get_model("tabulated")
+    assert callable(fn)
+
+
+def test_nz_model_tabulated_interpolates_expected_values() -> None:
+    """Tests that nz_model interpolates expected values for tabulated input."""
+    z_eval = np.array([0.0, 0.5, 1.0, 1.5, 2.0], dtype=np.float64)
+    z_input = np.array([0.0, 1.0, 2.0], dtype=np.float64)
+    nz_input = np.array([0.0, 2.0, 0.0], dtype=np.float64)
+
+    out = reg.nz_model("tabulated", z_eval, z_input=z_input, nz_input=nz_input)
+
+    expected = np.array([0.0, 1.0, 2.0, 1.0, 0.0], dtype=np.float64)
+
+    assert np.allclose(out, expected)
+
+
+def test_nz_model_tabulated_returns_zero_outside_table_range() -> None:
+    """Tests that tabulated model returns zero outside the table range."""
+    z_eval = np.array([-0.5, 0.0, 1.0, 2.0, 2.5], dtype=np.float64)
+    z_input = np.array([0.0, 1.0, 2.0], dtype=np.float64)
+    nz_input = np.array([0.0, 1.0, 0.0], dtype=np.float64)
+
+    out = reg.nz_model("tabulated", z_eval, z_input=z_input, nz_input=nz_input)
+
+    expected = np.array([0.0, 0.0, 1.0, 0.0, 0.0], dtype=np.float64)
+
+    assert np.allclose(out, expected)
