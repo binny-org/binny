@@ -1,0 +1,53 @@
+name: desi
+
+survey_meta:
+  description: DESI LRG and ELG tabulated lens redshift distributions.
+  notes:
+    - Plain DESI LRG uses the legacy Dani window 0.4 <= z <= 1.0.
+    - DESI/4MOST-style ELG uses the legacy Dani window 0.6 <= z <= 1.5.
+
+z_grid:
+  start: 0.0
+  stop: 2.0
+  n: 500
+
+tomography:
+  # LRGs
+  - role: lens
+    year: lrg
+    name: DESI LRG
+
+    kind: specz
+
+    nz:
+      model: tabulated
+      source:
+        path: desi_lrg_nz.txt
+        z_col: 0
+        nz_col: 1
+        skiprows: 1
+      params:
+        normalize: true
+
+    bins:
+      edges: [0.4, 1.0]
+
+  # ELGs
+  - role: lens
+    year: elg
+    name: DESI ELG
+
+    kind: specz
+
+    nz:
+      model: tabulated
+      source:
+        path: desi_elg_nz.txt
+        z_col: 0
+        nz_col: 1
+        skiprows: 1
+      params:
+        normalize: true
+
+    bins:
+      edges: [0.6, 1.5]
