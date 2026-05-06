@@ -30,6 +30,7 @@ __all__ = [
     "shifted_smail_distribution",
     "skew_normal_distribution",
     "student_t_distribution",
+    "tabulated_distribution",
 ]
 
 
@@ -451,3 +452,49 @@ def student_t_distribution(
     t = (z_arr - mu) / sigma
     nz = (1.0 + (t**2) / nu) ** (-(nu + 1.0) / 2.0)
     return _maybe_normalize(z_arr, nz, normalize)
+
+
+def tabulated_distribution(
+    z: float | FloatArray,
+    z_input: FloatArray,
+    nz_input: FloatArray,
+    *,
+    normalize: bool = False,
+) -> FloatArray:
+    """Returns a tabulated redshift distribution interpolated onto ``z``.
+
+    This function linearly interpolates a tabulated redshift distribution
+    onto the requested redshift grid. Values outside the tabulated redshift
+    range are set to zero.
+
+    Args:
+        z: Redshift or array of redshifts where the distribution is evaluated.
+        z_input: Tabulated redshift values. Must be 1D and strictly increasing.
+        nz_input: Tabulated distribution values. Must have the same shape as
+            ``z_input``.
+        normalize: If ``True``, normalizes the interpolated curve to have
+            integral 1 over ``z``.
+
+    Returns:
+        Tabulated distribution interpolated onto ``z``.
+
+    Raises:
+        ValueError: If ``z_table`` and ``nz_table`` are not valid 1D arrays,
+            have different shapes, contain fewer than two points, or if
+            ``z_table`` is not strictly increasing.
+    """
+    z_arr = np.asarray(z, dtype=np.float64)
+    z_tab = np.asarray(z_input, dtype=np.float64)
+    nz_tab = np.asarray(nz_input, dtype=np.float64)
+
+    if z_tab.ndim != 1 or nz_tab.ndim != 1:
+        raise ValueError("z_table and nz_table must be 1D arrays.")
+    if z_tab.shape != nz_tab.shape:
+        raise ValueError("z_table and nz_table must have the same shape.")
+    if z_tab.size < 2:
+        raise ValueError("z_table and nz_table must contain at least two points.")
+    if np.any(np.diff(z_tab) <= 0.0):
+        raise ValueError("z_table must be strictly increasing.")
+
+    nz = np.interp(z_arr, z_tab, nz_tab, left=0.0, right=0.0)
+    return _maybe_normalize(z_arr, np.asarray(nz, dtype=np.float64), normalize)

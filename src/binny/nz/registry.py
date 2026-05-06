@@ -25,6 +25,7 @@ from binny.nz.models import (
     skew_normal_distribution,
     smail_like_distribution,
     student_t_distribution,
+    tabulated_distribution,
     tophat_distribution,
 )
 from binny.utils.types import FloatArray
@@ -61,6 +62,7 @@ _MODELS: dict[str, DistFunc] = {
     "shifted_smail": shifted_smail_distribution,
     "skew_normal": skew_normal_distribution,
     "student_t": student_t_distribution,
+    "tabulated": tabulated_distribution,
 }
 
 

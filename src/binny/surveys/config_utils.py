@@ -248,19 +248,9 @@ def _extract_survey_meta(cfg: Mapping[Any, Any]) -> dict[str, Any] | None:
 def _build_parent_nz(entry: Mapping[Any, Any], z: np.ndarray) -> np.ndarray:
     """Builds the parent n(z) on the provided true-redshift grid.
 
-    This reads the ``nz`` block (model name + params) and evaluates the
-    registered n(z) model on the common grid.
-
-    Args:
-        entry: Tomography entry mapping containing an ``nz`` block.
-        z: True-redshift grid to evaluate on.
-
-    Returns:
-        Parent distribution values ``n(z)`` evaluated on ``z``.
-
-    Raises:
-        ValueError: If the ``nz`` block is missing required fields or has
-            invalid types.
+    This reads the ``nz`` block and evaluates the registered n(z) model on
+    the common grid. For tabulated distributions, this also supports either
+    inline arrays or a file-backed ``source`` block.
     """
     nz_cfg = _require_mapping(entry.get("nz"), what="tomography entry.nz")
     try:
@@ -271,7 +261,54 @@ def _build_parent_nz(entry: Mapping[Any, Any], z: np.ndarray) -> np.ndarray:
     params = nz_cfg.get("params") or {}
     if not isinstance(params, Mapping):
         raise ValueError("tomography entry.nz.params must be a mapping.")
-    return nz_model(model, z, **dict(params))
+
+    model_params = dict(params)
+
+    if model == "tabulated":
+        model_params.update(_tabulated_params_from_config(nz_cfg))
+
+    return nz_model(model, z, **model_params)
+
+
+def _tabulated_params_from_config(nz_cfg: Mapping[Any, Any]) -> dict[str, Any]:
+    """Extract tabulated n(z) inputs from inline arrays or a source file."""
+    if "z_input" in nz_cfg or "nz_input" in nz_cfg:
+        if "z_input" not in nz_cfg or "nz_input" not in nz_cfg:
+            raise ValueError(
+                "Tabulated n(z) requires both 'z_input' and 'nz_input' when using inline arrays."
+            )
+        return {
+            "z_input": nz_cfg["z_input"],
+            "nz_input": nz_cfg["nz_input"],
+        }
+
+    source = nz_cfg.get("source")
+    if source is None:
+        return {}
+
+    source = _require_mapping(source, what="tomography entry.nz.source")
+
+    try:
+        path = Path(source["path"])
+    except KeyError as e:
+        raise ValueError("tomography entry.nz.source must contain a 'path' field.") from e
+
+    if not path.is_absolute():
+        path = resources.files("binny.surveys.data") / str(path)
+
+    with resources.as_file(path) as real_path:
+        table = np.loadtxt(
+            real_path,
+            skiprows=int(source.get("skiprows", 0)),
+        )
+
+    z_col = int(source.get("z_col", 0))
+    nz_col = int(source.get("nz_col", 1))
+
+    return {
+        "z_input": table[:, z_col],
+        "nz_input": table[:, nz_col],
+    }
 
 
 def _iter_tomography_entries(cfg: Mapping[Any, Any]) -> list[Mapping[Any, Any]]:
