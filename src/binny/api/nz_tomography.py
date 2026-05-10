@@ -209,6 +209,8 @@ class NZTomography:
         role: str | None = None,
         year: Any | None = None,
         kind: str | None = None,
+        scenario: Any | None = None,
+        sample: Any | None = None,
         overrides: Mapping[str, Any] | None = None,
         include_survey_metadata: bool = False,
         include_tomo_metadata: bool = False,
@@ -238,6 +240,10 @@ class NZTomography:
                 (e.g., "lens" or "source").
             year: Optional selector for a tomography entry (e.g., "1", "10").
             kind: Optional tomography kind override ("photoz" or "specz").
+            scenario: Optional selector for a tomography entry, useful for survey
+                variants such as "hls_optimistic", "hls_conservative", or "wide".
+            sample: Optional selector for a tomography entry, useful for sample labels
+                such as "lrg" or "elg".
             overrides: Optional mapping of values merged into the resolved
                 tomography spec.
                 Nested mappings are merged shallowly at the first level.
@@ -268,6 +274,8 @@ class NZTomography:
             key=key,
             role=role,
             year=year,
+            scenario=scenario,
+            sample=sample,
             include_survey_metadata=include_survey_metadata,
         )
 
@@ -328,6 +336,8 @@ class NZTomography:
         *,
         role: str | None = None,
         year: Any | None = None,
+        scenario: Any | None = None,
+        sample: Any | None = None,
         z: Any | None = None,
         overrides: Mapping[str, Any] | None = None,
         include_survey_metadata: bool = False,
@@ -374,6 +384,8 @@ class NZTomography:
             config_file=config_file,
             role=role,
             year=year,
+            scenario=scenario,
+            sample=sample,
             z=z,
             overrides=overrides,
             include_survey_metadata=include_survey_metadata,
@@ -691,6 +703,8 @@ class NZTomography:
         key: str | None,
         role: str | None,
         year: Any | None,
+        scenario: Any | None,
+        sample: Any | None,
         include_survey_metadata: bool,
     ) -> tuple[dict[str, Any], dict[str, Any]]:
         """Resolve the parent distribution and tomography specification.
@@ -713,6 +727,8 @@ class NZTomography:
             key: Optional config entry key for selection.
             role: Optional selector for tomography entry matching.
             year: Optional selector for tomography entry matching.
+            scenario: Optional selector for tomography entry matching.
+            sample: Optional selector for tomography entry matching.
             include_survey_metadata: Whether to compute and include survey metadata when
                 building from a config mapping.
 
@@ -752,6 +768,8 @@ class NZTomography:
                 key=resolved_key,
                 role=role,
                 year=year,
+                scenario=scenario,
+                sample=sample,
                 include_survey_metadata=include_survey_metadata,
             )
 
@@ -761,7 +779,13 @@ class NZTomography:
             z_arr = cu._extract_z_grid(cfg, z)
 
             entries = cu._iter_tomography_entries(cfg)
-            matches = cu._select_entries(entries, role=role, year=year)
+            matches = cu._select_entries(
+                entries,
+                role=role,
+                year=year,
+                scenario=scenario,
+                sample=sample,
+            )
             entry = cu._require_single(matches, what="tomography entry")
 
             spec = cu._parse_entry(entry)
@@ -778,6 +802,8 @@ class NZTomography:
                         resolved_key=str(key or "survey"),
                         role=spec["role"],
                         year=spec["year"],
+                        scenario=spec["scenario"],
+                        sample=spec["sample"],
                     )
                     if include_survey_metadata
                     else None

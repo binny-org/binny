@@ -40,6 +40,7 @@ def minimal_cfg() -> dict[str, Any]:
             {
                 "role": "lens",
                 "year": "1",
+                "sample": "samplename",
                 "kind": "photoz",
                 "nz": {"model": "smail", "params": {}},
                 "bins": {"scheme": "equidistant", "n_bins": 2},
@@ -145,11 +146,24 @@ def test_select_entries_filters_by_role_and_year(
     """Tests that _select_entries filters entries correctly."""
     entries = _iter_tomography_entries(minimal_cfg)
 
-    sel = _select_entries(entries, role="lens", year="1")
+    sel = _select_entries(entries, role="lens", year="1", sample=None)
     assert len(sel) == 1
 
-    sel = _select_entries(entries, role="source", year="1")
+    sel = _select_entries(entries, role="source", year="1", sample=None)
     assert sel == []
+
+
+def test_select_entries_filters_by_sample() -> None:
+    """Tests that _select_entries can distinguish samples."""
+    entries = [
+        {"role": "lens", "sample": "lrg"},
+        {"role": "lens", "sample": "elg"},
+    ]
+
+    sel = _select_entries(entries, role="lens", year=None, sample="lrg")
+
+    assert len(sel) == 1
+    assert sel[0]["sample"] == "lrg"
 
 
 def test_require_single_rejects_ambiguity(
@@ -181,13 +195,119 @@ def test_parse_entry_handles_optional_fields() -> None:
         "kind": "photoz",
         "nz": {"model": "smail", "params": {}},
         "bins": {"scheme": "equidistant", "n_bins": 2},
-        "n_gal_arcmin2": None,
     }
 
     spec = _parse_entry(entry)
+
     assert spec["kind"] == "photoz"
-    assert spec["n_gal_arcmin2"] is None
+    assert spec["sample"] is None
+    assert spec["sample_properties"] == {}
+    assert spec["normalize_bins"] is True
     assert isinstance(spec["bins"], dict)
+
+
+def test_parse_entry_preserves_sample_properties() -> None:
+    """Tests that _parse_entry preserves sample-level observational metadata."""
+    entry = {
+        "role": "source",
+        "kind": "photoz",
+        "nz": {"model": "smail", "params": {}},
+        "bins": {"scheme": "equidistant", "n_bins": 2},
+        "sample_properties": {
+            "number_density": {
+                "n_gal_arcmin2": 10.0,
+            },
+            "shape_noise": {
+                "sigma_e": 0.26,
+            },
+            "shot_noise": {
+                "model": "poisson",
+            },
+            "footprint": {
+                "survey_area": 12000.0,
+                "frac_sky": 0.29,
+            },
+        },
+    }
+
+    spec = _parse_entry(entry)
+    props = spec["sample_properties"]
+
+    assert props["number_density"]["n_gal_arcmin2"] == pytest.approx(10.0)
+    assert props["shape_noise"]["sigma_e"] == pytest.approx(0.26)
+    assert props["shot_noise"]["model"] == "poisson"
+    assert props["footprint"]["survey_area"] == pytest.approx(12000.0)
+    assert props["footprint"]["frac_sky"] == pytest.approx(0.29)
+
+
+def test_parse_entry_rejects_non_mapping_sample_properties() -> None:
+    """Tests that _parse_entry rejects malformed sample_properties."""
+    with pytest.raises(ValueError, match="sample_properties must be a mapping"):
+        _parse_entry(
+            {
+                "kind": "photoz",
+                "nz": {"model": "smail", "params": {}},
+                "bins": {"scheme": "equidistant", "n_bins": 2},
+                "sample_properties": 3,
+            }
+        )
+
+
+@pytest.mark.parametrize(
+    "bad_key",
+    [
+        "number_density",
+        "shape_noise",
+        "shot_noise",
+        "volume",
+        "footprint",
+    ],
+)
+def test_parse_entry_rejects_non_mapping_sample_property_blocks(
+    bad_key: str,
+) -> None:
+    """Tests that known sample_properties blocks must be mappings."""
+    with pytest.raises(
+        ValueError,
+        match=rf"sample_properties.{bad_key} must be a mapping",
+    ):
+        _parse_entry(
+            {
+                "kind": "photoz",
+                "nz": {"model": "smail", "params": {}},
+                "bins": {"scheme": "equidistant", "n_bins": 2},
+                "sample_properties": {
+                    bad_key: 1.0,
+                },
+            }
+        )
+
+
+def test_parse_entry_preserves_normalize_bins() -> None:
+    """Tests that _parse_entry preserves the normalize_bins flag."""
+    entry = {
+        "kind": "specz",
+        "nz": {"model": "smail", "params": {}},
+        "bins": {"edges": [0.0, 0.5, 1.0]},
+        "normalize_bins": False,
+    }
+
+    spec = _parse_entry(entry)
+
+    assert spec["normalize_bins"] is False
+
+
+def test_parse_entry_rejects_non_bool_normalize_bins() -> None:
+    """Tests that _parse_entry rejects non-boolean normalize_bins values."""
+    with pytest.raises(ValueError, match="normalize_bins must be a boolean"):
+        _parse_entry(
+            {
+                "kind": "photoz",
+                "nz": {"model": "smail", "params": {}},
+                "bins": {"scheme": "equidistant", "n_bins": 2},
+                "normalize_bins": "true",
+            }
+        )
 
 
 def test_survey_meta_builds_expected_mapping(
@@ -199,12 +319,14 @@ def test_survey_meta_builds_expected_mapping(
         resolved_key="k",
         role="lens",
         year="1",
+        sample=None,
     )
 
     assert meta["survey"] == "test"
     assert meta["key"] == "k"
     assert meta["role"] == "lens"
     assert meta["year"] == "1"
+    assert meta["sample"] is None
 
 
 def test_resolve_config_entry_rejects_missing_tomography(tmp_path) -> None:
@@ -401,7 +523,7 @@ def test_parse_entry_accepts_tabulated_source_block() -> None:
     """Tests that _parse_entry preserves tabulated source blocks."""
     entry = {
         "role": "lens",
-        "year": "lrg",
+        "sample": "lrg",
         "kind": "specz",
         "nz": {
             "model": "tabulated",
@@ -419,7 +541,7 @@ def test_parse_entry_accepts_tabulated_source_block() -> None:
     spec = _parse_entry(entry)
 
     assert spec["role"] == "lens"
-    assert spec["year"] == "lrg"
+    assert spec["sample"] == "lrg"
     assert spec["kind"] == "specz"
     assert spec["nz"]["model"] == "tabulated"
     assert spec["nz"]["source"]["path"] == "desi_lrg_nz.txt"

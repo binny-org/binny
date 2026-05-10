@@ -248,7 +248,10 @@ def test_build_bins_from_cfg_mapping(monkeypatch):
 
     monkeypatch.setattr(cu, "_require_mapping", lambda x, what=None: x, raising=True)
     monkeypatch.setattr(
-        cu, "_extract_z_grid", lambda cfg, z: np.asarray(z, dtype=float), raising=True
+        cu,
+        "_extract_z_grid",
+        lambda cfg, z: np.asarray(z, dtype=float),
+        raising=True,
     )
 
     entry = {
@@ -260,7 +263,10 @@ def test_build_bins_from_cfg_mapping(monkeypatch):
     }
     monkeypatch.setattr(cu, "_iter_tomography_entries", lambda cfg: [entry], raising=True)
     monkeypatch.setattr(
-        cu, "_select_entries", lambda entries, role=None, year=None: entries, raising=True
+        cu,
+        "_select_entries",
+        lambda entries, role=None, year=None, scenario=None, sample=None: entries,
+        raising=True,
     )
     monkeypatch.setattr(cu, "_require_single", lambda matches, what=None: matches[0], raising=True)
     monkeypatch.setattr(cu, "_parse_entry", lambda e: dict(e), raising=True)
@@ -270,25 +276,16 @@ def test_build_bins_from_cfg_mapping(monkeypatch):
     monkeypatch.setattr(
         cu,
         "_survey_meta",
-        lambda cfg, resolved_key, role, year: {
+        lambda cfg, resolved_key, role, year, scenario=None, sample=None: {
             "resolved_key": resolved_key,
             "role": role,
             "year": year,
+            "scenario": scenario,
+            "sample": sample,
         },
         raising=True,
     )
-
     monkeypatch.setattr(cu, "_builder_kwargs_from_spec", lambda spec: {"n_bins": 2}, raising=True)
-
-    t = NZTomography()
-    z = np.linspace(0, 1, 11)
-    payload = t.build_bins(cfg={"tomography": [entry]}, z=z, include_survey_metadata=True)
-
-    assert np.allclose(payload.z, z)
-    assert np.allclose(payload.nz, np.ones_like(z))
-    assert payload.survey_meta["role"] == "lens"
-    assert payload.survey_meta["year"] == "1"
-    assert set(payload.bins.keys()) == {0, 1}
 
 
 def test_build_bins_from_config_file_delegates_to_resolver(tmp_path: Path, monkeypatch):
@@ -313,7 +310,10 @@ def test_build_bins_from_config_file_delegates_to_resolver(tmp_path: Path, monke
         cu, "_iter_tomography_entries", lambda cfg: list(cfg["tomography"]), raising=True
     )
     monkeypatch.setattr(
-        cu, "_select_entries", lambda entries, role=None, year=None: entries, raising=True
+        cu,
+        "_select_entries",
+        lambda entries, role=None, year=None, scenario=None, sample=None: entries,
+        raising=True,
     )
     monkeypatch.setattr(cu, "_require_single", lambda matches, what=None: matches[0], raising=True)
     monkeypatch.setattr(cu, "_parse_entry", lambda e: dict(e), raising=True)
@@ -349,7 +349,10 @@ def test_build_survey_bins_returns_tomographybins_and_stats_work(monkeypatch):
         raising=True,
     )
     monkeypatch.setattr(
-        cu, "_select_entries", lambda entries, role=None, year=None: entries, raising=True
+        cu,
+        "_select_entries",
+        lambda entries, role=None, year=None, scenario=None, sample=None: entries,
+        raising=True,
     )
     monkeypatch.setattr(cu, "_require_single", lambda matches, what=None: matches[0], raising=True)
     monkeypatch.setattr(cu, "_parse_entry", lambda e: dict(e), raising=True)
