@@ -32,26 +32,24 @@ samples for both **year 1** and **year 10**.
 Visualizing the preset
 ~~~~~~~~~~~~~~~~~~~~~~
 
-The figure below loads the LSST preset directly, constructs the
-corresponding tomographic bins, and plots the resulting redshift
+The figure below loads the LSST preset directly through Binny, constructs
+the corresponding tomographic bins, and plots the resulting redshift
 distributions for lens and source samples in years 1 and 10.
-
 
 .. plot::
    :include-source: False
    :width: 900
 
-   from pathlib import Path
-
    import cmasher as cmr
    import matplotlib.pyplot as plt
    import numpy as np
-   import yaml
 
    from binny import NZTomography
 
 
-   def plot_bins(ax, z, bin_dict, title):
+   def plot_bins(ax, result, title):
+       z = result.z
+       bin_dict = result.bins
        keys = sorted(bin_dict.keys())
 
        colors = cmr.take_cmap_colors(
@@ -88,75 +86,18 @@ distributions for lens and source samples in years 1 and 10.
        ax.set_xlabel("Redshift $z$")
 
 
-   def build_tomo_spec(entry):
-       return {
-           "kind": entry["kind"],
-           "bins": entry["bins"],
-           "uncertainties": entry["uncertainties"],
-           "normalize_bins": True,
-       }
-
-
-   # Load LSST preset
-   preset_path = Path("../../src/binny/surveys/configs/lsst_survey_specs.yaml")
-
-   with preset_path.open("r", encoding="utf-8") as f:
-       config = yaml.safe_load(f)
-
-
-   # Redshift grid
-   z_cfg = config["z_grid"]
-
-   z = np.linspace(
-       z_cfg["start"],
-       z_cfg["stop"],
-       z_cfg["n"],
-   )
-
-
-   # Select entries
-   entries = config["tomography"]
-
-   selected = {
-       ("lens", "1"): None,
-       ("lens", "10"): None,
-       ("source", "1"): None,
-       ("source", "10"): None,
-   }
-
-   for entry in entries:
-       key = (entry["role"], entry["year"])
-       if key in selected:
-           selected[key] = entry
-
-
-   # Build tomography
    results = {}
 
-   for key, entry in selected.items():
+   for role in ["lens", "source"]:
+       for year in ["1", "10"]:
+           tomo = NZTomography()
+           results[(role, year)] = tomo.build_survey_bins(
+               "lsst",
+               role=role,
+               year=year,
+               include_tomo_metadata=True,
+           )
 
-       nz = NZTomography.nz_model(
-           entry["nz"]["model"],
-           z,
-           normalize=True,
-           **entry["nz"]["params"],
-       )
-
-       tomo = NZTomography()
-
-       result = tomo.build_bins(
-           z=z,
-           nz=nz,
-           tomo_spec=build_tomo_spec(entry),
-           include_tomo_metadata=True,
-       )
-
-       results[key] = result
-
-
-   # Plot layout:
-   # lens Y1   source Y1
-   # lens Y10  source Y10
 
    fig, axes = plt.subplots(
        2,
@@ -172,15 +113,14 @@ distributions for lens and source samples in years 1 and 10.
    ]
 
    for ax, (key, title) in zip(axes.ravel(), panel_order, strict=True):
-       plot_bins(ax, z, results[key].bins, title)
+       plot_bins(ax, results[key], title)
 
        role, year = key
        if role == "lens":
            ax.set_xlim(0.0, 1.5)
 
-
-   axes[0,0].set_ylabel(r"Normalized $n_i(z)$")
-   axes[1,0].set_ylabel(r"Normalized $n_i(z)$")
+   axes[0, 0].set_ylabel(r"Normalized $n_i(z)$")
+   axes[1, 0].set_ylabel(r"Normalized $n_i(z)$")
 
    plt.suptitle("LSST survey preset tomography", fontsize=16)
 
@@ -210,24 +150,24 @@ sample over the Euclid clustering redshift range.
 Visualizing the preset
 ~~~~~~~~~~~~~~~~~~~~~~
 
-The figure below loads the Euclid preset and visualizes the resulting
-spectroscopic lens bins and photometric source bins.
+The figure below loads the Euclid preset directly through Binny and
+visualizes the resulting spectroscopic lens bins and photometric source
+bins.
 
 .. plot::
    :include-source: False
    :width: 900
 
-   from pathlib import Path
-
    import cmasher as cmr
    import matplotlib.pyplot as plt
    import numpy as np
-   import yaml
 
    from binny import NZTomography
 
 
-   def plot_bins(ax, z, bin_dict, title):
+   def plot_bins(ax, result, title):
+       z = result.z
+       bin_dict = result.bins
        keys = sorted(bin_dict.keys())
 
        colors = cmr.take_cmap_colors(
@@ -264,71 +204,18 @@ spectroscopic lens bins and photometric source bins.
        ax.set_xlabel("Redshift $z$")
 
 
-   def build_tomo_spec(entry):
-       return {
-           "kind": entry["kind"],
-           "bins": entry["bins"],
-           "uncertainties": entry["uncertainties"],
-           "normalize_bins": entry.get("normalize_bins", True),
-       }
-
-
-   # Load Euclid preset
-   preset_path = Path("../../src/binny/surveys/configs/euclid_survey_specs.yaml")
-
-   with preset_path.open("r", encoding="utf-8") as f:
-       config = yaml.safe_load(f)
-
-
-   # Redshift grid
-   z_cfg = config["z_grid"]
-
-   z = np.linspace(
-       z_cfg["start"],
-       z_cfg["stop"],
-       z_cfg["n"],
-   )
-
-
-   # Select tomography entries
-   entries = config["tomography"]
-
-   selected = {
-       ("lens", "nominal"): None,
-       ("source", "nominal"): None,
-   }
-
-   for entry in entries:
-       key = (entry["role"], entry["year"])
-       if key in selected:
-           selected[key] = entry
-
-
-   # Build tomography
    results = {}
 
-   for key, entry in selected.items():
-
-       nz = NZTomography.nz_model(
-           entry["nz"]["model"],
-           z,
-           normalize=True,
-           **entry["nz"]["params"],
-       )
-
+   for role in ["lens", "source"]:
        tomo = NZTomography()
-
-       result = tomo.build_bins(
-           z=z,
-           nz=nz,
-           tomo_spec=build_tomo_spec(entry),
+       results[role] = tomo.build_survey_bins(
+           "euclid",
+           role=role,
+           year="nominal",
            include_tomo_metadata=True,
        )
 
-       results[key] = result
 
-
-   # Plot
    fig, axes = plt.subplots(
        1,
        2,
@@ -336,12 +223,12 @@ spectroscopic lens bins and photometric source bins.
    )
 
    panel_order = [
-       (("lens", "nominal"), "Euclid lens bins"),
-       (("source", "nominal"), "Euclid source bins"),
+       ("lens", "Euclid lens bins"),
+       ("source", "Euclid source bins"),
    ]
 
-   for ax, (key, title) in zip(axes, panel_order, strict=True):
-       plot_bins(ax, z, results[key].bins, title)
+   for ax, (role, title) in zip(axes, panel_order, strict=True):
+       plot_bins(ax, results[role], title)
 
    axes[0].set_xlim(0.75, 1.9)
    axes[1].set_xlim(0.0, 2.6)
@@ -349,7 +236,6 @@ spectroscopic lens bins and photometric source bins.
    axes[0].set_ylabel(r"Normalized $n_i(z)$")
 
    plt.tight_layout()
-
 
 
 DES survey preset
@@ -374,24 +260,23 @@ shallower redshift reach.
 Visualizing the preset
 ~~~~~~~~~~~~~~~~~~~~~~
 
-The figure below loads the DES preset and visualizes the resulting
-lens and source tomographic bins.
+The figure below loads the DES preset directly through Binny and
+visualizes the resulting lens and source tomographic bins.
 
 .. plot::
    :include-source: False
    :width: 850
 
-   from pathlib import Path
-
    import cmasher as cmr
    import matplotlib.pyplot as plt
    import numpy as np
-   import yaml
 
    from binny import NZTomography
 
 
-   def plot_bins(ax, z, bin_dict, title):
+   def plot_bins(ax, result, title):
+       z = result.z
+       bin_dict = result.bins
        keys = sorted(bin_dict.keys())
 
        colors = cmr.take_cmap_colors(
@@ -428,71 +313,18 @@ lens and source tomographic bins.
        ax.set_xlabel("Redshift $z$")
 
 
-   def build_tomo_spec(entry):
-       return {
-           "kind": entry["kind"],
-           "bins": entry["bins"],
-           "uncertainties": entry["uncertainties"],
-           "normalize_bins": True,
-       }
-
-
-   # Load DES preset
-   preset_path = Path("../../src/binny/surveys/configs/des_survey_specs.yaml")
-
-   with preset_path.open("r", encoding="utf-8") as f:
-       config = yaml.safe_load(f)
-
-
-   # Redshift grid
-   z_cfg = config["z_grid"]
-
-   z = np.linspace(
-       z_cfg["start"],
-       z_cfg["stop"],
-       z_cfg["n"],
-   )
-
-
-   # Select tomography entries
-   entries = config["tomography"]
-
-   selected = {
-       ("lens", "y1"): None,
-       ("source", "y1"): None,
-   }
-
-   for entry in entries:
-       key = (entry["role"], entry["year"])
-       if key in selected:
-           selected[key] = entry
-
-
-   # Build tomography
    results = {}
 
-   for key, entry in selected.items():
-
-       nz = NZTomography.nz_model(
-           entry["nz"]["model"],
-           z,
-           normalize=True,
-           **entry["nz"]["params"],
-       )
-
+   for role in ["lens", "source"]:
        tomo = NZTomography()
-
-       result = tomo.build_bins(
-           z=z,
-           nz=nz,
-           tomo_spec=build_tomo_spec(entry),
+       results[role] = tomo.build_survey_bins(
+           "des",
+           role=role,
+           year="y1",
            include_tomo_metadata=True,
        )
 
-       results[key] = result
 
-
-   # Plot
    fig, axes = plt.subplots(
        1,
        2,
@@ -500,17 +332,15 @@ lens and source tomographic bins.
    )
 
    panel_order = [
-       (("lens", "y1"), "DES lens bins"),
-       (("source", "y1"), "DES source bins"),
+       ("lens", "DES lens bins"),
+       ("source", "DES source bins"),
    ]
 
-   for ax, (key, title) in zip(axes, panel_order, strict=True):
-       plot_bins(ax, z, results[key].bins, title)
+   for ax, (role, title) in zip(axes, panel_order, strict=True):
+       plot_bins(ax, results[role], title)
 
-       role, year = key
        if role == "lens":
            ax.set_xlim(0.0, 1.0)
-
 
    axes[0].set_ylabel(r"Normalized $n_i(z)$")
 
@@ -538,22 +368,19 @@ the optimistic HLS, conservative HLS, and wide Roman scenarios.
 Visualizing the preset
 ~~~~~~~~~~~~~~~~~~~~~~
 
-The figure below loads the Roman preset and visualizes the resulting
-photometric lens and source tomographic bins. The top row compares
-the optimistic High Latitude Survey (HLS) configuration against the conservative HLS
-configuration, while the bottom row shows the wide survey
-configuration.
+The figure below loads the Roman preset directly through Binny and
+visualizes the resulting photometric lens and source tomographic bins.
+The top row compares the optimistic High Latitude Survey (HLS)
+configuration against the conservative HLS configuration, while the
+bottom row shows the wide survey configuration.
 
 .. plot::
    :include-source: False
    :width: 900
 
-   from pathlib import Path
-
    import cmasher as cmr
    import matplotlib.pyplot as plt
    import numpy as np
-   import yaml
 
    from binny import NZTomography
 
@@ -571,7 +398,9 @@ configuration.
        return keys, colors
 
 
-   def plot_bins(ax, z, bin_dict, title):
+   def plot_bins(ax, result, title):
+       z = result.z
+       bin_dict = result.bins
        keys, colors = get_bin_colors(bin_dict)
 
        for i, (color, key) in enumerate(zip(colors, keys, strict=True)):
@@ -601,7 +430,9 @@ configuration.
        ax.set_xlabel("Redshift $z$")
 
 
-   def plot_bins_dashed(ax, z, bin_dict):
+   def plot_bins_dashed(ax, result):
+       z = result.z
+       bin_dict = result.bins
        keys, colors = get_bin_colors(bin_dict)
 
        for i, key in enumerate(keys):
@@ -617,77 +448,18 @@ configuration.
            )
 
 
-   def build_tomo_spec(entry):
-       return {
-           "kind": entry["kind"],
-           "bins": entry["bins"],
-           "uncertainties": entry["uncertainties"],
-           "normalize_bins": True,
-       }
-
-
-   # Load Roman preset
-   preset_path = Path("../../src/binny/surveys/configs/roman_survey_specs.yaml")
-
-   with preset_path.open("r", encoding="utf-8") as f:
-       config = yaml.safe_load(f)
-
-
-   # Redshift grid
-   z_cfg = config["z_grid"]
-
-   z = np.linspace(
-       z_cfg["start"],
-       z_cfg["stop"],
-       z_cfg["n"],
-   )
-
-
-   # Select tomography entries
-   entries = config["tomography"]
-
-   selected = {
-       ("lens", "hls_optimistic"): None,
-       ("source", "hls_optimistic"): None,
-       ("lens", "hls_conservative"): None,
-       ("source", "hls_conservative"): None,
-       ("lens", "wide"): None,
-       ("source", "wide"): None,
-   }
-
-   for entry in entries:
-       key = (entry["role"], entry["scenario"])
-       if key in selected:
-           selected[key] = entry
-
-
-   # Build tomography
    results = {}
 
-   for key, entry in selected.items():
+   for scenario in ["hls_optimistic", "hls_conservative", "wide"]:
+       for role in ["lens", "source"]:
+           tomo = NZTomography()
+           results[(role, scenario)] = tomo.build_survey_bins(
+               "roman",
+               role=role,
+               scenario=scenario,
+               include_tomo_metadata=True,
+           )
 
-       nz = NZTomography.nz_model(
-           entry["nz"]["model"],
-           z,
-           normalize=True,
-           **entry["nz"]["params"],
-       )
-
-       tomo = NZTomography()
-
-       result = tomo.build_bins(
-           z=z,
-           nz=nz,
-           tomo_spec=build_tomo_spec(entry),
-           include_tomo_metadata=True,
-       )
-
-       results[key] = result
-
-
-   # Plot layout:
-   # HLS lens     HLS source
-   # wide lens    wide source
 
    fig, axes = plt.subplots(
        2,
@@ -697,39 +469,33 @@ configuration.
 
    plot_bins(
        axes[0, 0],
-       z,
-       results[("lens", "hls_optimistic")].bins,
+       results[("lens", "hls_optimistic")],
        "Roman HLS lens bins",
    )
    plot_bins_dashed(
        axes[0, 0],
-       z,
-       results[("lens", "hls_conservative")].bins,
+       results[("lens", "hls_conservative")],
    )
 
    plot_bins(
        axes[0, 1],
-       z,
-       results[("source", "hls_optimistic")].bins,
+       results[("source", "hls_optimistic")],
        "Roman HLS source bins",
    )
    plot_bins_dashed(
        axes[0, 1],
-       z,
-       results[("source", "hls_conservative")].bins,
+       results[("source", "hls_conservative")],
    )
 
    plot_bins(
        axes[1, 0],
-       z,
-       results[("lens", "wide")].bins,
+       results[("lens", "wide")],
        "Roman wide lens bins",
    )
 
    plot_bins(
        axes[1, 1],
-       z,
-       results[("source", "wide")].bins,
+       results[("source", "wide")],
        "Roman wide source bins",
    )
 
@@ -780,26 +546,25 @@ The default preset uses the legacy Dani redshift windows:
 Visualizing the preset
 ~~~~~~~~~~~~~~~~~~~~~~
 
-The figure below loads the DESI preset and visualizes the tabulated
-LRG and ELG redshift distributions. The rows show the same redshift
-windows split into one, three, and five equal-width tomographic bins.
+The figure below loads the DESI preset directly through Binny and
+visualizes the tabulated LRG and ELG redshift distributions. The rows
+show the same redshift windows split into one, three, and five
+equal-width tomographic bins.
 
 .. plot::
    :include-source: False
    :width: 900
 
-   from copy import deepcopy
-   from pathlib import Path
-
    import cmasher as cmr
    import matplotlib.pyplot as plt
    import numpy as np
-   import yaml
 
    from binny import NZTomography
 
 
-   def plot_bins(ax, z, bin_dict, title):
+   def plot_bins(ax, result, title):
+       z = result.z
+       bin_dict = result.bins
        keys = sorted(bin_dict.keys())
 
        colors = cmr.take_cmap_colors(
@@ -836,90 +601,6 @@ windows split into one, three, and five equal-width tomographic bins.
        ax.set_xlabel("Redshift $z$")
 
 
-   def build_tomo_spec(entry):
-       return {
-           "kind": entry["kind"],
-           "bins": entry["bins"],
-           "normalize_bins": True,
-       }
-
-
-   def load_tabulated_nz(entry, z, data_dir):
-       source = entry["nz"]["source"]
-       path = data_dir / source["path"]
-
-       table = np.loadtxt(
-           path,
-           skiprows=source.get("skiprows", 0),
-       )
-
-       z_file = table[:, source.get("z_col", 0)]
-       nz_file = table[:, source.get("nz_col", 1)]
-
-       nz = np.interp(
-           z,
-           z_file,
-           nz_file,
-           left=0.0,
-           right=0.0,
-       )
-
-       if entry["nz"].get("params", {}).get("normalize", False):
-           norm = np.trapezoid(nz, z)
-           if norm > 0.0:
-               nz = nz / norm
-
-       return nz
-
-
-   def build_result(entry, z, data_dir, edges):
-       local_entry = deepcopy(entry)
-       local_entry["bins"]["edges"] = edges
-
-       nz = load_tabulated_nz(local_entry, z, data_dir)
-
-       tomo = NZTomography()
-
-       return tomo.build_bins(
-           z=z,
-           nz=nz,
-           tomo_spec=build_tomo_spec(local_entry),
-           include_tomo_metadata=True,
-       )
-
-
-   # Load DESI preset
-   preset_path = Path("../../src/binny/surveys/configs/desi_survey_specs.yaml")
-   data_dir = Path("../../src/binny/surveys/data")
-
-   with preset_path.open("r", encoding="utf-8") as f:
-       config = yaml.safe_load(f)
-
-
-   # Redshift grid
-   z_cfg = config["z_grid"]
-
-   z = np.linspace(
-       z_cfg["start"],
-       z_cfg["stop"],
-       z_cfg["n"],
-   )
-
-
-   # Select DESI entries
-   entries = config["tomography"]
-
-   selected = {
-       "lrg": None,
-       "elg": None,
-   }
-
-   for entry in entries:
-       if entry["role"] == "lens" and entry["year"] in selected:
-           selected[entry["year"]] = entry
-
-
-   # One-bin, three-bin, and five-bin DESI windows
    edges = {
        ("lrg", "one_bin"): [0.4, 1.0],
        ("lrg", "three_bins"): [0.4, 0.6, 0.8, 1.0],
@@ -930,24 +611,20 @@ windows split into one, three, and five equal-width tomographic bins.
    }
 
 
-   # Build tomography
    results = {}
 
    for key, bin_edges in edges.items():
-       tracer, _ = key
+       sample, _ = key
 
-       results[key] = build_result(
-           selected[tracer],
-           z,
-           data_dir,
-           bin_edges,
+       tomo = NZTomography()
+       results[key] = tomo.build_survey_bins(
+           "desi",
+           role="lens",
+           sample=sample,
+           overrides={"bins": {"edges": bin_edges}},
+           include_tomo_metadata=True,
        )
 
-
-   # Plot layout:
-   # LRG one bin       ELG one bin
-   # LRG three bins    ELG three bins
-   # LRG five bins     ELG five bins
 
    fig, axes = plt.subplots(
        3,
@@ -965,7 +642,7 @@ windows split into one, three, and five equal-width tomographic bins.
    ]
 
    for ax, (key, title) in zip(axes.ravel(), panel_order, strict=True):
-       plot_bins(ax, z, results[key].bins, title)
+       plot_bins(ax, results[key], title)
 
    axes[0, 0].set_xlim(0.35, 1.05)
    axes[1, 0].set_xlim(0.35, 1.05)

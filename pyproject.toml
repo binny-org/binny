@@ -80,7 +80,10 @@ package-dir = { "" = "src" }
 where = ["src"]
 
 [tool.setuptools.package-data]
-"binny.surveys" = ["configs/*.yaml"]
+"binny.surveys" = [
+  "configs/*.yaml",
+  "data/*",
+]
 
 [tool.bumpversion]
 current_version = "0.2.0"
