@@ -1,26 +1,70 @@
 """Survey config parsing utilities.
 
-This module provides small, reusable helpers for reading survey YAML files and
-selecting entries from a flat tomography list schema.
+This module reads survey YAML files using a flat tomography-list schema. Each
+tomography entry defines one sample, its parent redshift distribution, its bin
+definition, and optional observational sample metadata.
 
-Schema::
+Expected schema::
 
     name: <optional str>
-    survey_meta: <optional mapping>  # ignored unless requested
-    z_grid: {start: float, stop: float, n: int}  # optional
-    nz: {model: str, params: {…}}  # required parent distribution
-    tomography:  # required
+
+    survey_meta:
+      description: <optional str>
+      footprint:
+        nominal:
+          survey_area: <optional float>
+          frac_sky: <optional float>
+
+    z_grid:
+      start: <float>
+      stop: <float>
+      n: <int>
+
+    tomography:
       - role: <optional str>
         year: <optional str>
-        n_gal_arcmin2: <optional float>
-        kind: photoz|specz  # optional; defaults to photoz
+        sample: <optional str>
+        scenario: <optional str>
+        name: <optional str>
+        kind: photoz|specz
+
+        nz:
+          model: <str>
+          params: <optional mapping>
+          # For tabulated n(z), either inline arrays:
+          z_input: <optional list[float]>
+          nz_input: <optional list[float]>
+          # Or a packaged source file:
+          source:
+            path: <str>
+            skiprows: <optional int>
+            z_col: <optional int>
+            nz_col: <optional int>
+
+        sample_properties:
+          number_density:
+            n_gal_arcmin2: <optional float>
+            n_gal_comoving_h3_mpc3: <optional float | list[float]>
+            dndz_deg2: <optional list[float]>
+          shape_noise:
+            sigma_e: <optional float>
+          shot_noise:
+            model: <optional str>
+          volume:
+            gpc3_hminus3: <optional float | list[float]>
+          footprint:
+            survey_area: <optional float>
+            frac_sky: <optional float>
+
         bins:
-          edges: [...]  # explicit edges
+          edges: <list[float]>
           # OR
           scheme: <str>
           n_bins: <int>
-          range: [z_min, z_max]  # optional
-        uncertainties: {…}  # optional kwargs passed to builders
+          range: <optional [float, float]>
+
+        uncertainties:
+          <builder kwargs>
 """
 
 from __future__ import annotations
@@ -28,7 +72,7 @@ from __future__ import annotations
 from collections.abc import Mapping, Sequence
 from importlib import resources
 from pathlib import Path
-from typing import Any, TypedDict
+from typing import Any
 
 import numpy as np
 import yaml
@@ -37,69 +81,19 @@ from binny.axes.grids import linear_grid
 from binny.nz.registry import nz_model
 
 __all__ = [
-    "SurveyFootprint",
-    "list_configs",
     "config_path",
+    "list_configs",
 ]
 
 _CONFIG_PKG = "binny.surveys.configs"
-
-
-class SurveyFootprint(TypedDict, total=False):
-    """Typed footprint metadata returned from survey configs."""
-
-    survey_area: float
-    frac_sky: float
-
-
-def _load_yaml_mapping(path: str | Path) -> Mapping[Any, Any]:
-    """Loads a YAML file and require a mapping at the document root.
-
-    Args:
-        path: Path to a YAML file.
-
-    Returns:
-        Parsed YAML content as a mapping.
-
-    Raises:
-        ValueError: If the YAML root document is not a mapping.
-    """
-    p = Path(path)
-    with p.open("r", encoding="utf-8") as f:
-        data = yaml.safe_load(f)
-    if not isinstance(data, Mapping):
-        raise ValueError("Config root must be a mapping.")
-    return data
-
-
-def _require_mapping(obj: Any, *, what: str) -> Mapping[Any, Any]:
-    """Validates that an object is a mapping.
-
-    This is a small schema helper used to enforce that nested YAML blocks
-    (e.g., ``bins``, ``nz``, ``survey_meta``) are mappings before they are
-    accessed.
-
-    Args:
-        obj: Object to validate.
-        what: Human-readable label used in error messages.
-
-    Returns:
-        The input object, typed as a mapping.
-
-    Raises:
-        ValueError: If ``obj`` is not a mapping.
-    """
-    if not isinstance(obj, Mapping):
-        raise ValueError(f"{what} must be a mapping.")
-    return obj
+_DATA_PKG = "binny.surveys.data"
 
 
 def list_configs() -> list[str]:
-    """Lists shipped survey configuration filenames.
+    """List shipped survey configuration filenames.
 
     Returns:
-        Sorted list of YAML filenames shipped in the ``binny.surveys.configs``
-        package directory.
+        Sorted YAML filenames shipped in the survey config package.
     """
     root = resources.files(_CONFIG_PKG)
     return sorted(
@@ -108,28 +102,69 @@ def list_configs() -> list[str]:
 
 
 def config_path(filename: str) -> Path:
-    """Resolves a shipped config filename to a concrete filesystem path.
-
-    This helper locates configuration files bundled with the package and
-    returns a usable local path (via ``importlib.resources.as_file``).
+    """Resolve a shipped survey config filename.
 
     Args:
-        filename: Shipped YAML filename (``.yaml`` or ``.yml``).
+        filename: Name of a bundled YAML config file.
 
     Returns:
-        Local filesystem path to the shipped config.
+        Filesystem path to the bundled config.
 
     Raises:
-        FileNotFoundError: If no shipped config matches ``filename``.
+        FileNotFoundError: If no bundled config has the requested filename.
     """
     root = resources.files(_CONFIG_PKG)
-    p = root / filename
-    if not p.is_file():
+    path = root / filename
+
+    if not path.is_file():
         raise FileNotFoundError(
             f"No shipped config named {filename!r}. Available: {list_configs()}"
         )
-    with resources.as_file(p) as real_path:
+
+    with resources.as_file(path) as real_path:
         return Path(real_path)
+
+
+def _load_yaml_mapping(path: str | Path) -> Mapping[Any, Any]:
+    """Load a YAML file whose root must be a mapping.
+
+    Args:
+        path: YAML file path.
+
+    Returns:
+        Parsed YAML mapping.
+
+    Raises:
+        ValueError: If the YAML root is not a mapping.
+    """
+    p = Path(path)
+
+    with p.open("r", encoding="utf-8") as f:
+        data = yaml.safe_load(f)
+
+    if not isinstance(data, Mapping):
+        raise ValueError("Config root must be a mapping.")
+
+    return data
+
+
+def _require_mapping(obj: Any, *, what: str) -> Mapping[Any, Any]:
+    """Require an object to be a mapping.
+
+    Args:
+        obj: Object to validate.
+        what: Human-readable field name for error messages.
+
+    Returns:
+        ``obj`` typed as a mapping.
+
+    Raises:
+        ValueError: If ``obj`` is not a mapping.
+    """
+    if not isinstance(obj, Mapping):
+        raise ValueError(f"{what} must be a mapping.")
+
+    return obj
 
 
 def _resolve_config_entry(
@@ -137,77 +172,70 @@ def _resolve_config_entry(
     config_file: str | Path,
     key: str | None = None,
 ) -> tuple[Mapping[Any, Any], str]:
-    """Loads a survey config file for the new flat schema.
-
-    The config file MUST be a single mapping with keys like:
-    name, survey_meta, z_grid, nz, tomography.
+    """Load a survey config using the flat tomography-list schema.
 
     Args:
-        config_file: Path to a YAML file, or the filename of a shipped config.
-        key: Not supported in the new schema. Must be None.
+        config_file: Path to a YAML file or filename of a shipped config.
+        key: Unsupported legacy selector. Must be None.
 
     Returns:
-        Tuple of (cfg mapping, resolved_key_label).
+        Pair of parsed config mapping and resolved config label.
 
     Raises:
-        ValueError: If key is provided or required blocks are missing.
+        ValueError: If ``key`` is provided or the config has no tomography list.
     """
     if key is not None:
         raise ValueError(
             "This config schema does not support top-level keys. "
-            "Pass a YAML file whose root is the config mapping, "
-            "and omit key=..."
+            "Pass a YAML file whose root is the config mapping and omit key=..."
         )
 
-    p = Path(config_file)
-    if not p.exists():
-        p = config_path(str(config_file))
+    path = Path(config_file)
+    if not path.exists():
+        path = config_path(str(config_file))
 
-    cfg = _load_yaml_mapping(p)
+    cfg = _load_yaml_mapping(path)
 
-    # Light schema sanity checks (cheap and helpful)
     if "tomography" not in cfg:
         raise ValueError("Config must contain a 'tomography' list.")
 
-    resolved = str(cfg.get("name") or p.stem)
+    resolved = str(cfg.get("name") or path.stem)
     return cfg, resolved
 
 
 def _normalize_label(x: Any | None) -> str | None:
-    """Normalizes a label-like field from config input.
-
-    This trims whitespace and treats empty strings as missing. It is used for
-    optional selector fields such as ``role``, ``year``, and ``name``.
+    """Normalize optional selector labels.
 
     Args:
-        x: Input value from YAML (or None).
+        x: Label-like value from the config.
 
     Returns:
-        A stripped non-empty string, or None if missing/empty.
+        Stripped string, or None if the value is missing or empty.
     """
     if x is None:
         return None
+
     s = str(x).strip()
     return s if s else None
 
 
 def _extract_z_grid(cfg: Mapping[Any, Any], z: Any | None) -> np.ndarray:
-    """Selects the common true-redshift grid for all outputs.
+    """Return the redshift grid used to evaluate all distributions.
 
     Priority order:
-      1) explicit override ``z``
-      2) ``cfg["z_grid"]`` block
-      3) package default grid
+        1. Explicit ``z`` override.
+        2. ``cfg["z_grid"]``.
+        3. Default grid from 0 to 3 with 301 points.
 
     Args:
-        cfg: Parsed config mapping.
-        z: Optional override grid.
+        cfg: Parsed survey config.
+        z: Optional explicit grid override.
 
     Returns:
-        One-dimensional true-redshift grid as ``float64``.
+        One-dimensional redshift grid.
 
     Raises:
-        ValueError: If ``cfg["z_grid"]`` is present but missing required keys.
+        ValueError: If the config z-grid block is malformed.
     """
     if z is not None:
         return np.asarray(z, dtype=np.float64)
@@ -217,42 +245,284 @@ def _extract_z_grid(cfg: Mapping[Any, Any], z: Any | None) -> np.ndarray:
         return linear_grid(0.0, 3.0, 301)
 
     zspec = _require_mapping(zspec, what="Config.z_grid")
+
     try:
         z_min = float(zspec["start"])
         z_max = float(zspec["stop"])
         n = int(zspec["n"])
     except KeyError as e:
-        raise ValueError("z_grid must contain keys: start, stop, n") from e
+        raise ValueError("z_grid must contain keys: start, stop, n.") from e
 
     return linear_grid(z_min, z_max, n)
 
 
 def _extract_survey_meta(cfg: Mapping[Any, Any]) -> dict[str, Any] | None:
-    """Extracts optional survey metadata passthrough.
+    """Return optional top-level survey metadata.
 
     Args:
-        cfg: Parsed config mapping.
+        cfg: Parsed survey config.
 
     Returns:
-        ``cfg["survey_meta"]`` as a plain dict if present, otherwise None.
+        Plain dictionary containing ``survey_meta``, or None if absent.
 
     Raises:
-        ValueError: If ``survey_meta`` is present but not a mapping.
+        ValueError: If ``survey_meta`` is present but is not a mapping.
     """
     meta = cfg.get("survey_meta")
+
     if meta is None:
         return None
+
     return dict(_require_mapping(meta, what="Config.survey_meta"))
 
 
-def _build_parent_nz(entry: Mapping[Any, Any], z: np.ndarray) -> np.ndarray:
-    """Builds the parent n(z) on the provided true-redshift grid.
+def _iter_tomography_entries(cfg: Mapping[Any, Any]) -> list[Mapping[Any, Any]]:
+    """Return validated tomography entries.
 
-    This reads the ``nz`` block and evaluates the registered n(z) model on
-    the common grid. For tabulated distributions, this also supports either
-    inline arrays or a file-backed ``source`` block.
+    Args:
+        cfg: Parsed survey config.
+
+    Returns:
+        List of tomography entry mappings in file order.
+
+    Raises:
+        ValueError: If ``tomography`` is missing or is not a list of mappings.
+    """
+    tomo = cfg.get("tomography")
+
+    if tomo is None:
+        raise ValueError("Config must contain a 'tomography' list.")
+
+    if not isinstance(tomo, Sequence) or isinstance(tomo, str | bytes):
+        raise ValueError("tomography must be a list of mappings.")
+
+    return [_require_mapping(item, what=f"tomography[{i}]") for i, item in enumerate(tomo)]
+
+
+def _select_entries(
+    entries: list[Mapping[Any, Any]],
+    *,
+    role: Any | None = None,
+    year: Any | None = None,
+    scenario: Any | None = None,
+    sample: Any | None = None,
+) -> list[Mapping[Any, Any]]:
+    """Select tomography entries by optional labels.
+
+    Args:
+        entries: Tomography entries.
+        role: Optional role selector.
+        year: Optional year selector.
+        scenario: Optional scenario selector.
+        sample: Optional sample selector.
+
+    Returns:
+        Entries matching all provided selectors.
+    """
+    role_s = _normalize_label(role)
+    year_s = _normalize_label(year)
+    scenario_s = _normalize_label(scenario)
+    sample_s = _normalize_label(sample)
+
+    if role_s is None and year_s is None and scenario_s is None and sample_s is None:
+        return entries
+
+    def match(entry: Mapping[Any, Any]) -> bool:
+        return (
+            (role_s is None or _normalize_label(entry.get("role")) == role_s)
+            and (year_s is None or _normalize_label(entry.get("year")) == year_s)
+            and (scenario_s is None or _normalize_label(entry.get("scenario")) == scenario_s)
+            and (sample_s is None or _normalize_label(entry.get("sample")) == sample_s)
+        )
+
+    return [entry for entry in entries if match(entry)]
+
+
+def _require_single(
+    entries: list[Mapping[Any, Any]],
+    *,
+    what: str,
+) -> Mapping[Any, Any]:
+    """Require a selection to contain exactly one entry.
+
+    Args:
+        entries: Selected entries.
+        what: Human-readable label used in the error message.
+
+    Returns:
+        The single selected entry.
+
+    Raises:
+        ValueError: If zero or multiple entries match.
+    """
+    if len(entries) != 1:
+        raise ValueError(f"{what} is ambiguous; matched {len(entries)} entries.")
+
+    return entries[0]
+
+
+def _parse_bins(bins_block: Any) -> dict[str, Any]:
+    """Parse a bin specification.
+
+    A bin block must define either explicit edges or a named binning scheme with
+    a number of bins. Mixed definitions are rejected.
+
+    Args:
+        bins_block: Mapping describing bin edges or a binning scheme.
+
+    Returns:
+        Normalized bin specification.
+
+    Raises:
+        ValueError: If the bin block is missing, malformed, or ambiguous.
+    """
+    bins = _require_mapping(bins_block, what="bins")
+
+    edges = bins.get("edges")
+    scheme = bins.get("scheme")
+    n_bins = bins.get("n_bins")
+    z_range = bins.get("range")
+
+    if edges is not None:
+        if scheme is not None or n_bins is not None or z_range is not None:
+            raise ValueError("bins: if 'edges' is provided, do not provide scheme/n_bins/range.")
+
+        edges_arr = np.asarray(edges, dtype=np.float64)
+
+        if edges_arr.ndim != 1 or edges_arr.size < 2:
+            raise ValueError("bins.edges must be a 1D sequence with at least 2 values.")
+
+        return {"edges": edges_arr}
+
+    if scheme is None:
+        raise ValueError("bins must provide either 'edges' or 'scheme' + 'n_bins'.")
+
+    if n_bins is None:
+        raise ValueError("bins.n_bins is required when using bins.scheme.")
+
+    out: dict[str, Any] = {
+        "scheme": str(scheme),
+        "n_bins": int(n_bins),
+    }
+
+    if z_range is not None:
+        zlo, zhi = map(float, z_range)
+        out["range"] = (zlo, zhi)
+
+    return out
+
+
+def _parse_sample_properties(entry: Mapping[Any, Any]) -> dict[str, Any]:
+    """Parse sample-level observational metadata.
+
+    This preserves metadata such as number density, shape noise, shot noise,
+    volume, and footprint. These quantities describe the observed sample and are
+    intentionally separate from the redshift-distribution model.
+
+    Args:
+        entry: Tomography entry mapping.
+
+    Returns:
+        Plain dictionary of sample-level metadata.
+
+    Raises:
+        ValueError: If ``sample_properties`` or a known nested block is not a
+        mapping.
+    """
+    props = entry.get("sample_properties") or {}
+
+    if not isinstance(props, Mapping):
+        raise ValueError("sample_properties must be a mapping if provided.")
+
+    out = dict(props)
+
+    for key in (
+        "number_density",
+        "shape_noise",
+        "shot_noise",
+        "volume",
+        "footprint",
+    ):
+        value = out.get(key)
+
+        if value is None:
+            continue
+
+        if not isinstance(value, Mapping):
+            raise ValueError(f"sample_properties.{key} must be a mapping if provided.")
+
+        out[key] = dict(value)
+
+    return out
+
+
+def _parse_entry(entry: Mapping[Any, Any]) -> dict[str, Any]:
+    """Parse one tomography entry.
+
+    This validates the tomography kind, redshift-distribution block, bin
+    definition, optional uncertainty settings, and sample-level observational
+    metadata.
+
+    Args:
+        entry: Raw tomography entry from the config.
+
+    Returns:
+        Normalized tomography specification.
+
+    Raises:
+        ValueError: If the tomography entry is malformed.
+    """
+    kind = str(entry.get("kind", "photoz")).strip().lower()
+
+    if kind not in {"photoz", "specz"}:
+        raise ValueError("tomography entry kind must be 'photoz' or 'specz'.")
+
+    nz_block = entry.get("nz")
+
+    if nz_block is None:
+        raise ValueError("tomography entry must contain an 'nz' mapping.")
+
+    nz_block = _require_mapping(nz_block, what="tomography entry.nz")
+
+    uncertainties = entry.get("uncertainties") or {}
+    if not isinstance(uncertainties, Mapping):
+        raise ValueError("uncertainties must be a mapping if provided.")
+
+    normalize_bins = entry.get("normalize_bins", True)
+
+    if not isinstance(normalize_bins, bool):
+        raise ValueError("normalize_bins must be a boolean if provided.")
+
+    return {
+        "role": _normalize_label(entry.get("role")),
+        "year": _normalize_label(entry.get("year")),
+        "scenario": _normalize_label(entry.get("scenario")),
+        "sample": _normalize_label(entry.get("sample")),
+        "name": _normalize_label(entry.get("name")),
+        "kind": kind,
+        "nz": dict(nz_block),
+        "bins": _parse_bins(entry.get("bins")),
+        "uncertainties": dict(uncertainties),
+        "sample_properties": _parse_sample_properties(entry),
+        "normalize_bins": normalize_bins,
+    }
+
+
+def _build_parent_nz(entry: Mapping[Any, Any], z: np.ndarray) -> np.ndarray:
+    """Evaluate a tomography entry's parent redshift distribution.
+
+    Args:
+        entry: Tomography entry containing an ``nz`` block.
+        z: Redshift grid on which to evaluate the parent distribution.
+
+    Returns:
+        Parent redshift distribution evaluated on ``z``.
+
+    Raises:
+        ValueError: If the ``nz`` block is missing required fields.
     """
     nz_cfg = _require_mapping(entry.get("nz"), what="tomography entry.nz")
+
     try:
         model = str(nz_cfg["model"])
     except KeyError as e:
@@ -271,18 +541,32 @@ def _build_parent_nz(entry: Mapping[Any, Any], z: np.ndarray) -> np.ndarray:
 
 
 def _tabulated_params_from_config(nz_cfg: Mapping[Any, Any]) -> dict[str, Any]:
-    """Extract tabulated n(z) inputs from inline arrays or a source file."""
+    """Return tabulated n(z) inputs from inline arrays or a source file.
+
+    Args:
+        nz_cfg: Redshift-distribution config block.
+
+    Returns:
+        Keyword arguments containing ``z_input`` and ``nz_input`` when tabulated
+        data are provided. Returns an empty dictionary if no tabulated input is
+        specified.
+
+    Raises:
+        ValueError: If tabulated input is incomplete or malformed.
+    """
     if "z_input" in nz_cfg or "nz_input" in nz_cfg:
         if "z_input" not in nz_cfg or "nz_input" not in nz_cfg:
             raise ValueError(
                 "Tabulated n(z) requires both 'z_input' and 'nz_input' when using inline arrays."
             )
+
         return {
             "z_input": nz_cfg["z_input"],
             "nz_input": nz_cfg["nz_input"],
         }
 
     source = nz_cfg.get("source")
+
     if source is None:
         return {}
 
@@ -294,7 +578,7 @@ def _tabulated_params_from_config(nz_cfg: Mapping[Any, Any]) -> dict[str, Any]:
         raise ValueError("tomography entry.nz.source must contain a 'path' field.") from e
 
     if not path.is_absolute():
-        path = resources.files("binny.surveys.data") / str(path)
+        path = resources.files(_DATA_PKG) / str(path)
 
     with resources.as_file(path) as real_path:
         table = np.loadtxt(
@@ -311,250 +595,76 @@ def _tabulated_params_from_config(nz_cfg: Mapping[Any, Any]) -> dict[str, Any]:
     }
 
 
-def _iter_tomography_entries(cfg: Mapping[Any, Any]) -> list[Mapping[Any, Any]]:
-    """Returns the validated tomography list from a config mapping.
-
-    Args:
-        cfg: Parsed config mapping.
-
-    Returns:
-        List of validated tomography entry mappings, in file order.
-
-    Raises:
-        ValueError: If ``cfg["tomography"]`` is missing or not a list of
-            mappings.
-    """
-    tomo = cfg.get("tomography")
-    if tomo is None:
-        raise ValueError("Config must contain a 'tomography' list.")
-    if not isinstance(tomo, Sequence) or isinstance(tomo, str | bytes):
-        raise ValueError("tomography must be a list of mappings.")
-    out: list[Mapping[Any, Any]] = []
-    for i, item in enumerate(tomo):
-        out.append(_require_mapping(item, what=f"tomography[{i}]"))
-    return out
-
-
-def _select_entries(
-    entries: list[Mapping[Any, Any]],
-    *,
-    role: Any | None,
-    year: Any | None,
-) -> list[Mapping[Any, Any]]:
-    """Filters entries by optional role/year.
-
-    Args:
-        entries: List of tomography entries.
-        role: Optional role label.
-        year: Optional year label.
-
-    Returns:
-        A subset of entries matching the given role/year labels.
-    """
-    role_s = _normalize_label(role)
-    year_s = _normalize_label(year)
-
-    if role_s is None and year_s is None:
-        return entries
-
-    def match(e: Mapping[Any, Any]) -> bool:
-        if role_s is not None and _normalize_label(e.get("role")) != role_s:
-            return False
-        if year_s is not None and _normalize_label(e.get("year")) != year_s:
-            return False
-        return True
-
-    return [e for e in entries if match(e)]
-
-
-def _require_single(entries: list[Mapping[Any, Any]], *, what: str) -> Mapping[Any, Any]:
-    """Validates that exactly one entry matches the filter.
-
-    Args:
-        entries: List of tomography entries.
-        what: Description of the entries for error messages.
-
-    Returns:
-        A single matching entry.
-    """
-    if len(entries) != 1:
-        raise ValueError(f"{what} is ambiguous; matched {len(entries)} entries.")
-    return entries[0]
-
-
-def _parse_bins(bins_block: Any) -> dict[str, Any]:
-    """Parses and normalize a bin specification block.
-
-    The bin specification must define *either* explicit bin edges *or* a
-    binning scheme with a number of bins. Mixed specifications are rejected.
-
-    Supported inputs:
-      - Explicit edges via ``bins["edges"]``.
-      - Parametric binning via ``bins["scheme"]`` and ``bins["n_bins"]``,
-        optionally with a redshift range ``bins["range"]``.
-
-    Args:
-        bins_block: Mapping describing the bin configuration.
-
-    Returns:
-        A normalized dictionary describing the binning configuration.
-        This contains either:
-          - ``{"edges": np.ndarray}``, or
-          - ``{"scheme": str, "n_bins": int, "range": (float, float)}``
-            if a range is provided.
-
-    Raises:
-        ValueError: If the bin specification is missing required fields,
-            mixes incompatible options, or contains invalid values.
-    """
-    bins = _require_mapping(bins_block, what="bins")
-
-    edges = bins.get("edges")
-    scheme = bins.get("scheme")
-    n_bins = bins.get("n_bins")
-    z_range = bins.get("range")
-
-    if edges is not None:
-        if scheme is not None or n_bins is not None or z_range is not None:
-            raise ValueError("bins: if 'edges' is provided, do not provide scheme/n_bins/range.")
-        edges_arr = np.asarray(edges, dtype=np.float64)
-        if edges_arr.ndim != 1 or edges_arr.size < 2:
-            raise ValueError("bins.edges must be a 1D sequence with at least 2 values.")
-        return {"edges": edges_arr}
-
-    if scheme is None:
-        raise ValueError("bins must provide either 'edges' or 'scheme' + 'n_bins'.")
-    if n_bins is None:
-        raise ValueError("bins.n_bins is required when using bins.scheme.")
-
-    out: dict[str, Any] = {"scheme": str(scheme), "n_bins": int(n_bins)}
-    if z_range is not None:
-        zlo, zhi = map(float, z_range)
-        out["range"] = (zlo, zhi)
-    return out
-
-
-def _parse_entry(entry: Mapping[Any, Any]) -> dict[str, Any]:
-    """Parses and normalize a single tomography entry.
-
-    This normalizes label-like fields (role/year/name), validates the entry
-    kind, and ensures required nested blocks (nz, bins) are present.
-
-    Args:
-        entry: Tomography entry mapping from ``cfg["tomography"]``.
-
-    Returns:
-        Normalized entry dictionary with keys:
-        ``role``, ``year``, ``name``, ``kind``, ``nz``, ``bins``,
-        ``uncertainties``, and ``n_gal_arcmin2``.
-
-    Raises:
-        ValueError: If required blocks are missing, the kind is unsupported,
-            or nested blocks are invalid.
-    """
-    kind = str(entry.get("kind", "photoz")).strip().lower()
-    if kind not in {"photoz", "specz"}:
-        raise ValueError("tomography entry kind must be 'photoz' or 'specz'.")
-
-    nz_block = entry.get("nz")
-    if nz_block is None:
-        raise ValueError("tomography entry must contain an 'nz' mapping.")
-    nz_block = _require_mapping(nz_block, what="tomography entry.nz")
-
-    bins = _parse_bins(entry.get("bins"))
-
-    unc = entry.get("uncertainties") or {}
-    if not isinstance(unc, Mapping):
-        raise ValueError("uncertainties must be a mapping if provided.")
-    unc = dict(unc)
-
-    entry_dict = {
-        "role": _normalize_label(entry.get("role")),
-        "year": _normalize_label(entry.get("year")),
-        "name": _normalize_label(entry.get("name")),
-        "kind": kind,
-        "nz": dict(nz_block),
-        "bins": bins,
-        "uncertainties": unc,
-        "n_gal_arcmin2": (
-            float(entry["n_gal_arcmin2"]) if entry.get("n_gal_arcmin2") is not None else None
-        ),
-    }
-
-    return entry_dict
-
-
 def _survey_meta(
     *,
     cfg: Mapping[Any, Any],
     resolved_key: str,
-    role: str | None,
-    year: str | None,
+    role: str | None = None,
+    year: str | None = None,
+    scenario: str | None = None,
+    sample: str | None = None,
 ) -> dict[str, Any]:
-    """Build standardized metadata for a config selection.
+    """Build metadata for a selected survey config entry.
 
     Args:
-        cfg: Parsed config mapping.
-        resolved_key: Resolved label for the config (e.g., cfg.name or stem).
-        role: Optional role filter applied to tomography entries.
-        year: Optional year filter applied to tomography entries.
+        cfg: Parsed survey config.
+        resolved_key: Resolved config label.
+        role: Optional role selector.
+        year: Optional year selector.
+        scenario: Optional scenario selector.
+        sample: Optional sample selector.
 
     Returns:
-        Metadata dictionary including the survey label, selection filters,
-        and optional ``survey_meta`` passthrough.
+        Metadata dictionary containing the survey label, selectors, and optional
+        top-level survey metadata.
     """
     return {
         "survey": str(cfg.get("name", resolved_key)),
         "key": resolved_key,
         "role": role,
         "year": year,
+        "scenario": scenario,
+        "sample": sample,
         "survey_meta": _extract_survey_meta(cfg),
     }
 
 
 def _builder_kwargs_from_spec(spec: Mapping[str, Any]) -> dict[str, Any]:
-    """Translates schema-facing bin/uncertainty fields into builder kwargs.
-
-    This converts a normalized tomography spec into the keyword arguments
-    expected by the tomo builders.
+    """Convert a normalized tomography spec into builder keyword arguments.
 
     Args:
         spec: Normalized tomography spec containing ``bins`` and optional
             ``uncertainties``.
 
     Returns:
-        Dictionary of builder kwargs. This always includes:
-        ``bin_edges``, ``binning_scheme``, and ``n_bins``. If a bin range is
-        present in the schema, this adds ``bin_range`` (unless already
-        provided in uncertainties). All uncertainty entries are passed through.
+        Keyword arguments expected by the tomography builders.
 
     Raises:
-        ValueError: If ``spec["bins"]`` is missing or not a mapping.
+        ValueError: If the normalized spec does not contain a valid ``bins``
+        mapping.
     """
-    if "bins" not in spec or not isinstance(spec["bins"], Mapping):
+    bins = spec.get("bins")
+
+    if not isinstance(bins, Mapping):
         raise ValueError("tomo_spec must contain a 'bins' mapping.")
 
-    bins = spec["bins"]
-
     if "edges" in bins:
-        kw: dict[str, Any] = {
+        kwargs: dict[str, Any] = {
             "bin_edges": bins["edges"],
             "binning_scheme": None,
             "n_bins": None,
         }
     else:
-        kw = {
+        kwargs = {
             "bin_edges": None,
             "binning_scheme": bins["scheme"],
             "n_bins": bins["n_bins"],
         }
 
-    # passthrough builder kwargs
     params: dict[str, Any] = dict(spec.get("uncertainties") or {})
 
-    # normalize range naming (optional)
     if "range" in bins:
         params.setdefault("bin_range", bins["range"])
 
-    kw.update(params)
-    return kw
+    kwargs.update(params)
+    return kwargs
