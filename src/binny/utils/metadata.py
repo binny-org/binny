@@ -1,4 +1,14 @@
-"""Metadata utilities."""
+"""Metadata helpers for tomographic redshift-bin products.
+
+This module builds and writes metadata for generated tomography outputs. The
+metadata records the redshift grid, parent distribution, returned bin curves,
+bin-population summaries, and the user-facing inputs used to produce the bins.
+
+The metadata is intentionally descriptive only: this module does not decide how
+number densities, bin fractions, counts, shape noise, or shot noise should be
+computed. Callers compute those quantities under their own conventions and pass
+them in explicitly.
+"""
 
 from __future__ import annotations
 
@@ -8,7 +18,11 @@ from typing import Any, Literal
 
 import numpy as np
 
-__all__ = ["build_tomo_bins_metadata", "save_metadata_txt", "round_floats"]
+__all__ = [
+    "build_tomo_bins_metadata",
+    "round_floats",
+    "save_metadata_txt",
+]
 
 
 def build_tomo_bins_metadata(
@@ -24,54 +38,50 @@ def build_tomo_bins_metadata(
     frac_per_bin: Mapping[int, float] | None = None,
     density_per_bin: Mapping[int, float] | None = None,
     count_per_bin: Mapping[int, float] | None = None,
+    normalize_bins: bool | None = None,
     notes: Mapping[str, Any] | None = None,
 ) -> dict[str, Any]:
-    """Builds metadata for tomographic redshift-bin products.
+    """Build metadata for tomographic redshift-bin outputs.
 
-    This function packages tomographic bin outputs into a self-describing,
-    serializable dictionary that can be saved alongside generated bin curves.
-    It records the redshift grid, the parent distribution, the bin definition,
-    the returned per-bin curves, and any optional population summaries supplied
-    by the caller.
+    The returned dictionary is designed to be saved alongside generated bin
+    curves. It records the common redshift grid, the parent redshift
+    distribution, the nominal bin definition, the returned per-bin curves, and
+    optional summaries such as per-bin fractions, number densities, and counts.
 
-    The function is intentionally non-opinionated: it does not compute
-    normalization constants, per-bin fractions, number densities, or counts.
-    Callers that need population summaries should compute them under their own
-    conventions and pass them in explicitly.
+    The bin curves may be normalized per bin or may carry population
+    information, depending on the calling convention. This function only records
+    what it is given.
 
     Args:
-      kind: Tomography mode label. Supported values are ``"photoz"`` and
-        ``"specz"``.
-      z: Redshift grid shared by the parent distribution and all bin curves.
-      parent_nz: Parent redshift distribution evaluated on ``z``. This may be
-        normalized or unnormalized.
-      bin_edges: Bin edges that define the tomographic selection (edge convention
-        is controlled by the caller).
-      bins_returned: Mapping from bin index to the per-bin curve ``n_i(z)``
-        evaluated on ``z``. These curves may be normalized per bin or may carry
-        population information, depending on the caller.
-      inputs: User-facing configuration that fully specifies how the bins were
-        generated (e.g., binning scheme, scatter model parameters, completeness,
-        leakage settings).
-      parent_norm: Optional scalar associated with the parent distribution under
-        the caller's convention (for example, the integral of the unnormalized
-        parent curve on ``z``).
-      bins_norms: Optional mapping from bin index to a population-carrying scalar
-        under the caller's convention (for example, integrals of raw bin curves).
-      frac_per_bin: Optional mapping from bin index to population fraction.
-      density_per_bin: Optional mapping from bin index to number density.
-      count_per_bin: Optional mapping from bin index to counts.
-      notes: Optional free-form annotations to store verbatim.
+        kind: Tomography mode. Use ``"photoz"`` for photo-z selected bins and
+            ``"specz"`` for spectroscopic/redshift-sharp bins.
+        z: Redshift grid shared by the parent distribution and all bin curves.
+        parent_nz: Parent redshift distribution evaluated on ``z``.
+        bin_edges: Nominal tomographic bin edges.
+        bins_returned: Mapping from bin index to the returned per-bin curve
+            ``n_i(z)`` evaluated on ``z``.
+        inputs: User-facing configuration used to generate the bins.
+        parent_norm: Optional scalar normalization associated with the parent
+            distribution.
+        bins_norms: Optional mapping from bin index to per-bin normalization
+            values.
+        frac_per_bin: Optional mapping from bin index to the fraction of the
+            parent sample in that bin.
+        density_per_bin: Optional mapping from bin index to a number density
+            associated with that bin. The unit convention should be documented
+            in ``inputs``.
+        count_per_bin: Optional mapping from bin index to galaxy counts.
+        normalize_bins: Optional flag recording whether returned bin curves were
+            normalized to unit integral.
+        notes: Optional free-form annotations to store verbatim.
 
     Returns:
-      A nested dictionary containing metadata suitable for deterministic text or
-      JSON dumps.
+        A nested dictionary suitable for deterministic text or JSON output.
     """
     z_arr = np.asarray(z, dtype=float)
     parent_arr = np.asarray(parent_nz, dtype=float)
     edges_arr = np.asarray(bin_edges, dtype=float)
 
-    # Store returned bins as lists for deterministic, text/JSON-friendly dumps.
     bins_out: dict[int, list[float]] = {
         int(k): np.asarray(v, dtype=float).tolist() for k, v in bins_returned.items()
     }
@@ -94,6 +104,7 @@ def build_tomo_bins_metadata(
             "indices": sorted(int(i) for i in bins_returned.keys()),
             "n_bins": int(len(bins_returned)),
             "bin_edges": edges_arr.tolist(),
+            "normalize_bins": normalize_bins,
             "bins_returned": bins_out,
             "bins_norms": None
             if bins_norms is None
@@ -110,43 +121,27 @@ def build_tomo_bins_metadata(
             "truez_summary": truez_summary,
         },
         "inputs": dict(inputs),
+        "description": _metadata_description(),
     }
 
     if notes is not None:
         meta["notes"] = dict(notes)
 
-    meta["description"] = _metadata_description()
-
     return meta
 
 
-def _format(meta: Any, indent: int = 0) -> str:
-    """Format metadata as deterministic, human-readable text."""
-    pad = "  " * indent
-    if isinstance(meta, Mapping):
-        lines: list[str] = []
-        for k in sorted(meta):
-            v = meta[k]
-            if isinstance(v, Mapping | list | tuple):
-                lines.append(f"{pad}{k}:")
-                lines.append(_format(v, indent + 1))
-            else:
-                lines.append(f"{pad}{k}: {v}")
-        return "\n".join(lines)
-    if isinstance(meta, (list | tuple)):
-        lines: list[str] = []
-        for item in meta:
-            if isinstance(item, (Mapping | list | tuple)):
-                lines.append(f"{pad}-")
-                lines.append(_format(item, indent + 1))
-            else:
-                lines.append(f"{pad}- {item}")
-        return "\n".join(lines)
-    return f"{pad}{meta}"
-
-
 def round_floats(obj: Any, decimal_places: int | None) -> Any:
-    """Recursively rounds floats in nested metadata."""
+    """Round floating-point values in nested metadata.
+
+    Args:
+        obj: Metadata object to process. May be a scalar, mapping, list, tuple,
+            NumPy scalar, or nested combination of these.
+        decimal_places: Number of decimal places to keep. If None, ``obj`` is
+            returned unchanged.
+
+    Returns:
+        A copy of ``obj`` with floating-point values rounded where applicable.
+    """
     if decimal_places is None:
         return obj
 
@@ -174,11 +169,49 @@ def save_metadata_txt(
     *,
     decimal_places: int | None = 2,
 ) -> Path:
-    """Writes metadata to a UTF-8 text file."""
+    """Write metadata to a deterministic UTF-8 text file.
+
+    Args:
+        meta: Metadata mapping to write.
+        path: Output text-file path.
+        decimal_places: Optional number of decimal places used when writing
+            floating-point values. If None, values are written without rounding.
+
+    Returns:
+        Path to the written file.
+    """
     p = Path(path)
     rounded = round_floats(dict(meta), decimal_places)
     p.write_text(_format(rounded) + "\n", encoding="utf-8")
     return p
+
+
+def _format(meta: Any, indent: int = 0) -> str:
+    """Format nested metadata as deterministic, human-readable text."""
+    pad = "  " * indent
+
+    if isinstance(meta, Mapping):
+        lines: list[str] = []
+        for key in sorted(meta):
+            value = meta[key]
+            if isinstance(value, Mapping | list | tuple):
+                lines.append(f"{pad}{key}:")
+                lines.append(_format(value, indent + 1))
+            else:
+                lines.append(f"{pad}{key}: {value}")
+        return "\n".join(lines)
+
+    if isinstance(meta, list | tuple):
+        lines = []
+        for item in meta:
+            if isinstance(item, Mapping | list | tuple):
+                lines.append(f"{pad}-")
+                lines.append(_format(item, indent + 1))
+            else:
+                lines.append(f"{pad}- {item}")
+        return "\n".join(lines)
+
+    return f"{pad}{meta}"
 
 
 def _weighted_quantile(
@@ -186,29 +219,18 @@ def _weighted_quantile(
     pdf: np.ndarray,
     q: float,
 ) -> float | None:
-    """Return the quantile of a 1D probability distribution on a grid.
-
-    This function computes the quantile corresponding to cumulative probability
-    ``q`` for a distribution defined by ``pdf`` evaluated on a grid ``z``.
-    The distribution is interpreted as a continuous function and normalized
-    internally using trapezoidal integration.
-
-    The cumulative distribution function (CDF) is constructed via trapezoidal
-    integration, and the quantile is obtained by interpolation.
+    """Return a quantile of a one-dimensional distribution on a grid.
 
     Args:
-        z: Monotonic 1D array representing the grid (e.g., redshift).
-        pdf: 1D array of the same shape as ``z`` representing the probability
-            density evaluated on the grid. Does not need to be normalized.
-        q: Desired quantile in the interval [0, 1].
+        z: Monotonic one-dimensional grid.
+        pdf: Distribution values evaluated on ``z``. The distribution does not
+            need to be normalized.
+        q: Quantile in the interval [0, 1].
 
     Returns:
-        The value of ``z`` at which the cumulative probability reaches ``q``.
-        Returns ``None`` if the input distribution has zero total weight or if
-        the grid is empty.
-
-    Raises:
-        ValueError: If ``z`` and ``pdf`` have different shapes.
+        Redshift value where the cumulative probability reaches ``q``.
+        Returns None if the grid is empty or the distribution has zero total
+        weight.
     """
     if z.size == 0:
         return None
@@ -239,40 +261,21 @@ def _compute_effective_truez(
     z: Any,
     bins_returned: Mapping[int, Any],
 ) -> dict[int, dict[str, float | None]]:
-    """Compute true-redshift summary statistics for tomographic bins.
+    """Summarize the effective true-redshift distribution of each bin.
 
-    For each returned bin distribution ``n_i(z)``, this function computes a set
-    of summary statistics describing its location, width, and shape in true
-    redshift space.
-
-    The input distributions may be normalized or unnormalized; all statistics
-    are computed from the normalized shape.
-
-    The following quantities are computed per bin:
-        - Mean (z_mean)
-        - Median (z_median)
-        - Mode (z_mode)
-        - Central 68% interval (z_lo_68, z_hi_68)
-        - Central 95% interval (z_lo_95, z_hi_95)
-        - Additional quantiles (z_q05, z_q25, z_q75, z_q95)
-
-    These summaries provide a probabilistic description of each bin in true
-    redshift space, complementing the imposed bin edges defined in photo-z
-    space.
+    For each returned bin curve ``n_i(z)``, this computes location and width
+    summaries of the bin in true-redshift space. These summaries are useful for
+    photo-z bins because the nominal photo-z bin edges do not correspond to
+    sharp true-redshift boundaries.
 
     Args:
-        z: 1D array-like representing the true-redshift grid shared by all bins.
-        bins_returned: Mapping from bin index to arrays representing the
-            corresponding bin distributions evaluated on ``z``.
+        z: Redshift grid shared by all bin curves.
+        bins_returned: Mapping from bin index to per-bin distributions evaluated
+            on ``z``.
 
     Returns:
-        Dictionary mapping each bin index to a dictionary of summary statistics.
-        If a bin has zero total weight, all summary values are set to ``None``.
-
-    Notes:
-        These statistics describe the effective support of each bin in true-z.
-        Due to photo-z scatter and bias, bins are generally overlapping and do
-        not correspond to sharp intervals in true redshift space.
+        Mapping from bin index to summary statistics. Empty or zero-weight bins
+        receive None-valued summaries.
     """
     z_arr = np.asarray(z, dtype=float)
 
@@ -280,34 +283,18 @@ def _compute_effective_truez(
 
     for i, n_bin in bins_returned.items():
         pdf = np.asarray(n_bin, dtype=float)
-
         area = float(np.trapezoid(pdf, z_arr))
 
         if area <= 0.0:
-            out[int(i)] = {
-                "z_mean": None,
-                "z_median": None,
-                "z_mode": None,
-                "z_lo_68": None,
-                "z_hi_68": None,
-                "z_lo_95": None,
-                "z_hi_95": None,
-                "z_q05": None,
-                "z_q25": None,
-                "z_q75": None,
-                "z_q95": None,
-            }
+            out[int(i)] = _empty_truez_summary()
             continue
 
         pdf_norm = pdf / area
 
-        z_mean = float(np.trapezoid(z_arr * pdf_norm, z_arr))
-        z_mode = float(z_arr[np.argmax(pdf_norm)])
-
         out[int(i)] = {
-            "z_mean": z_mean,
-            "z_median": _weighted_quantile(z_arr, pdf_norm, 0.5),
-            "z_mode": z_mode,
+            "z_mean": float(np.trapezoid(z_arr * pdf_norm, z_arr)),
+            "z_median": _weighted_quantile(z_arr, pdf_norm, 0.50),
+            "z_mode": float(z_arr[np.argmax(pdf_norm)]),
             "z_lo_68": _weighted_quantile(z_arr, pdf_norm, 0.16),
             "z_hi_68": _weighted_quantile(z_arr, pdf_norm, 0.84),
             "z_lo_95": _weighted_quantile(z_arr, pdf_norm, 0.025),
@@ -321,44 +308,65 @@ def _compute_effective_truez(
     return out
 
 
-def _metadata_description() -> dict[str, Any]:
-    """Return human-readable descriptions of metadata fields.
-
-    This provides a concise explanation of the meaning of each top-level
-    metadata field and key subfields. It is intended for inspection,
-    debugging, and reproducibility, and does not affect any computations.
-
-    Returns:
-        Dictionary mapping metadata keys to short textual descriptions.
-    """
+def _empty_truez_summary() -> dict[str, float | None]:
+    """Return the true-redshift summary used for empty bins."""
     return {
-        "kind": "Tomography type: 'photoz' (photo-z selected bins) or 'specz'.",
+        "z_mean": None,
+        "z_median": None,
+        "z_mode": None,
+        "z_lo_68": None,
+        "z_hi_68": None,
+        "z_lo_95": None,
+        "z_hi_95": None,
+        "z_q05": None,
+        "z_q25": None,
+        "z_q75": None,
+        "z_q95": None,
+    }
+
+
+def _metadata_description() -> dict[str, Any]:
+    """Return descriptions of the metadata fields."""
+    return {
+        "kind": "Tomography type: 'photoz' or 'specz'.",
         "grid": {
-            "z": "Redshift grid used for all distributions "
-            "(interpreted as true-z for photo-z bins)",
+            "z": "Redshift grid used for all distributions.",
             "z_min": "Minimum redshift of the grid.",
             "z_max": "Maximum redshift of the grid.",
             "n": "Number of grid points.",
         },
         "parent_nz": {
             "values": "Parent redshift distribution evaluated on z.",
-            "norm": "Optional normalization of the parent distribution (depends on convention).",
+            "norm": "Optional normalization of the parent distribution.",
         },
         "bins": {
             "indices": "Indices of tomographic bins.",
             "n_bins": "Total number of bins.",
-            "bin_edges": "Nominal bin edges (typically in photo-z space for photoz tomography).",
-            "bins_returned": "Per-bin distributions n_i(z) evaluated on the true-z grid.",
+            "bin_edges": "Nominal bin edges.",
+            "normalize_bins": (
+                "Whether returned per-bin curves were normalized to unit integral. "
+                "None means the convention was not recorded."
+            ),
+            "bins_returned": "Per-bin distributions n_i(z) evaluated on z.",
             "bins_norms": "Optional per-bin normalization values.",
             "frac_per_bin": "Optional fraction of galaxies per bin.",
-            "density_per_bin": "Optional number density per bin.",
+            "density_per_bin": (
+                "Optional number density per bin. The unit convention should "
+                "be documented in inputs."
+            ),
             "count_per_bin": "Optional galaxy counts per bin.",
             "truez_summary": (
-                "Summary statistics of the true-redshift distribution in each bin "
-                "(mean, median, mode, and quantiles). These describe the "
-                "true-redshift distribution of each bin and are not hard edges."
+                "Summary statistics of the effective true-redshift distribution in each bin."
             ),
         },
-        "inputs": "User-provided configuration used to generate the bins.",
+        "inputs": {
+            "description": "User-provided configuration used to generate the bins.",
+            "sample_properties": (
+                "Optional sample-level observational metadata, such as number "
+                "density, shape noise, shot noise, footprint, or volume. These "
+                "quantities describe the sample and are not part of the redshift "
+                "distribution model."
+            ),
+        },
         "notes": "Optional user-provided annotations.",
     }

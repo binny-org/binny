@@ -2,32 +2,56 @@ name: lsst  # https://arxiv.org/abs/1809.01669
 
 # Optional survey metadata (binning code can ignore unless requested)
 survey_meta:
+  description: LSST lens and source redshift distributions for Year 1 and Year 10.
+
   footprint:
     # Can provide either survey_area [deg^2] or frac_sky (or both).
-    nominal: {survey_area: 18000.0}
+    nominal:
+      survey_area: 18000.0
+      description: Nominal LSST wide survey area.
+
     years:
       # Year labels are strings on purpose (stable keys).
-      '1':  {survey_area: 12000.0}
-      '10': {survey_area: 14000.0}
+      '1':
+        survey_area: 14000.0
+        description: LSST Year 1 effective survey area.
+      '10':
+        survey_area: 18000.0
+        description: LSST Year 10 effective survey area.
+
+  notes:
+    - Year labels are strings to keep YAML keys stable.
+    - Number densities are stored as sample-level metadata.
+    - Shape noise is only attached to source samples.
+    - Shot noise is only attached to lens samples.
 
 # Redshift grid used for evaluating n(z) and all n_i(z) outputs
-z_grid: {start: 0.0, stop: 3.5, n: 500}
-
+z_grid:
+  start: 0.0
+  stop: 3.5
+  n: 500
 
 tomography:
   # LENS (Y1)
   - role: lens  # optional label (e.g. lens/source); used for bookkeeping/keys
     year: '1'   # optional label; string is recommended for stable YAML keys
 
-    # Optional population metadata (not needed to build bins)
-    n_gal_arcmin2: 18.0  # surface density [gal/arcmin^2]; optional
-
     # Tomography kind (dispatcher). If omitted, default could be "photoz".
     kind: photoz
 
+    # Optional population metadata (not needed to build bins)
+    sample_properties:
+      number_density:
+        n_gal_arcmin2: 18.0  # surface density [gal/arcmin^2]; optional
+      shot_noise:
+        model: poisson
+
     nz:
       model: smail
-      params: { z0: 0.26, alpha: 2.0, beta: 0.94}
+      params:
+        z0: 0.26
+        alpha: 2.0
+        beta: 0.94
 
     # Bin specification:
     # - Option A (scheme-based): provide scheme + n_bins (+ optional range)
@@ -44,49 +68,111 @@ tomography:
       mean_offset: 0.0     # mu(z) ~ mean_scale * z - mean_offset
       # mean_scale: 1.0     # optional (scalar broadcasts), if supported
 
+    normalize_bins: true
+
   # LENS (Y10)
   - role: lens
     year: '10'
-    n_gal_arcmin2: 48.0  # surface density [gal/arcmin^2]; optional
+
+    # Tomography kind (dispatcher). If omitted, default could be "photoz".
     kind: photoz
+
+    # Optional population metadata (not needed to build bins)
+    sample_properties:
+      number_density:
+        n_gal_arcmin2: 48.0  # surface density [gal/arcmin^2]; optional
+      shot_noise:
+        model: poisson
+
     nz:
       model: smail
-      params: { z0: 0.28, alpha: 2.0, beta: 0.9 }
+      params:
+        z0: 0.28
+        alpha: 2.0
+        beta: 0.9
+
+    # Bin specification:
+    # - Option A (scheme-based): provide scheme + n_bins (+ optional range)
+    # - Option B (explicit edges): provide edges only (no scheme / n_bins)
     bins:
       scheme: equidistant
       n_bins: 10
       range: [0.2, 1.2]
+
+    # Photo-z uncertainty / error model parameters (name intentionally not "photoz")
     uncertainties:
       scatter_scale: 0.03
       mean_offset: 0.0
 
+    normalize_bins: true
+
   # SOURCE (Y1)
   - role: source
     year: '1'
-    n_gal_arcmin2: 10.0  # surface density [gal/arcmin^2]; optional
+
+    # Tomography kind (dispatcher). If omitted, default could be "photoz".
     kind: photoz
+
+    # Optional population metadata (not needed to build bins)
+    sample_properties:
+      number_density:
+        n_gal_arcmin2: 10.0  # surface density [gal/arcmin^2]; optional
+      shape_noise:
+        sigma_e: 0.26  # ellipticity dispersion
+
     nz:
       model: smail
-      params: { z0: 0.13, alpha: 2.0, beta: 0.78 }
+      params:
+        z0: 0.13
+        alpha: 2.0
+        beta: 0.78
+
+    # Bin specification:
+    # - Option A (scheme-based): provide scheme + n_bins (+ optional range)
+    # - Option B (explicit edges): provide edges only (no scheme / n_bins)
     bins:
       scheme: equal_number
       n_bins: 5
       # edges: [...]  # alternative to scheme-based
+
+    # Photo-z uncertainty / error model parameters (name intentionally not "photoz")
     uncertainties:
       scatter_scale: 0.05
       mean_offset: 0.0
 
+    normalize_bins: true
+
   # SOURCE (Y10)
   - role: source
     year: '10'
-    n_gal_arcmin2: 27.0  # surface density [gal/arcmin^2]; optional
+
+    # Tomography kind (dispatcher). If omitted, default could be "photoz".
     kind: photoz
+
+    # Optional population metadata (not needed to build bins)
+    sample_properties:
+      number_density:
+        n_gal_arcmin2: 27.0  # surface density [gal/arcmin^2]; optional
+      shape_noise:
+        sigma_e: 0.26  # ellipticity dispersion
+
     nz:
       model: smail
-      params: { z0: 0.11, alpha: 2.0, beta: 0.68 }
+      params:
+        z0: 0.11
+        alpha: 2.0
+        beta: 0.68
+
+    # Bin specification:
+    # - Option A (scheme-based): provide scheme + n_bins (+ optional range)
+    # - Option B (explicit edges): provide edges only (no scheme / n_bins)
     bins:
       scheme: equal_number
       n_bins: 5
+
+    # Photo-z uncertainty / error model parameters (name intentionally not "photoz")
     uncertainties:
       scatter_scale: 0.05
       mean_offset: 0.0
+
+    normalize_bins: true

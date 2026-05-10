@@ -22,3 +22,5 @@ tomography:
     uncertainties:  # photometric redshift uncertainty model
       scatter_scale: 0.05  # fractional redshift scatter: sigma(z) = 0.05 * (1 + z)
       mean_offset: 0.01  # systematic photo-z bias shift of the mean z
+
+    normalize_bins: true
