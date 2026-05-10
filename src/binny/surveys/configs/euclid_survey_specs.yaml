@@ -1,8 +1,20 @@
 name: euclid  # based on Euclid forecast validation setup, arXiv:1910.09273
 
 survey_meta:
+  description: Euclid weak-lensing and spectroscopic clustering forecast validation setup.
+  reference: arXiv:1910.09273
+
   footprint:
-    nominal: {survey_area: 15000.0}
+    nominal:
+      survey_area: 15000.0
+      description: Nominal Euclid survey area used for the forecast validation setup.
+
+  notes:
+    - Euclid weak-lensing source density is n_gal_arcmin2 = 30.0.
+    - Euclid weak-lensing total intrinsic ellipticity dispersion is sigma_e = 0.30.
+    - Euclid spectroscopic clustering uses H-alpha emitters in 0.90 <= z <= 1.80.
+    - Spectroscopic redshift uncertainty follows sigma_z = 0.001 * (1 + z).
+    - Spectroscopic H-alpha number densities and galaxy biases are stored per redshift bin.
 
 z_grid:
   start: 0.0
@@ -14,7 +26,12 @@ tomography:
   - role: source
     year: "nominal"
     kind: photoz
-    n_gal_arcmin2: 30.0
+
+    sample_properties:
+      number_density:
+        n_gal_arcmin2: 30.0
+      shape_noise:
+        sigma_e: 0.30
 
     nz:
       model: smail
@@ -38,15 +55,24 @@ tomography:
       outlier_mean_offset: 0.10
       outlier_mean_scale: 1.0
 
-    normalize_bins: true
-
   # Euclid spectroscopic clustering sample
   - role: lens
     year: "nominal"
     kind: specz
 
+    sample_properties:
+      number_density:
+        n_gal_comoving_h3_mpc3: [6.86e-4, 5.58e-4, 4.21e-4, 2.61e-4]
+        dndz_deg2: [1815.0, 1701.5, 1410.0, 940.97]
+      volume:
+        gpc3_hminus3: [7.94, 9.15, 10.05, 16.22]
+      shot_noise:
+        model: poisson
+      galaxy_bias:
+        values: [1.46, 1.61, 1.75, 1.90]
+
     nz:
-      # simple approximation to the Hα sample; the actual paper uses the tabulated sample properties
+      # Simple approximation to the H-alpha sample; the actual paper uses the tabulated sample properties.
       model: smail
       params:
         z0: 1.0
@@ -66,8 +92,5 @@ tomography:
       specz_scatter_model: z_dependent
       sigma0: 0.001
       sigma1: 0.001
-
-    galaxy_bias:
-      values: [1.46, 1.61, 1.75, 1.90]
 
     normalize_bins: true

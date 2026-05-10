@@ -13,9 +13,13 @@ tomography:
   - role: lens
     year: 'y1'
 
-    n_gal_arcmin2: 0.6
-
     kind: photoz
+
+    sample_properties:
+      number_density:
+        n_gal_arcmin2: 0.6
+      shot_noise:
+        model: poisson
 
     nz:
       model: smail
@@ -33,9 +37,13 @@ tomography:
   - role: source
     year: 'y1'
 
-    n_gal_arcmin2: 8.0
-
     kind: photoz
+
+    sample_properties:
+      number_density:
+        n_gal_arcmin2: 8.0
+      # shape_noise:
+      #   sigma_e: TODO
 
     nz:
       model: smail
@@ -47,3 +55,5 @@ tomography:
     uncertainties:
       scatter_scale: 0.05
       mean_offset: 0.0
+
+    normalize_bins: true

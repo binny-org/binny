@@ -3,11 +3,22 @@ name: roman  # Wenzl22 / arXiv:2112.07681 Roman HLS + wide specs
 # Optional survey metadata
 survey_meta:
   reference: Wenzl22
+  notes:
+    - Roman HLS and wide survey specifications follow Wenzl22 / arXiv:2112.07681.
+    - Source shape noise uses sigma_e: 0.37 following the Wenzl22 two-component Roman covariance convention.
+    - Some newer Roman forecast setups use sigma_e: 0.26 per component, e.g. arXiv:2411.04088.
+
   footprint:
     scenarios:
-      hls_optimistic: {survey_area: 2000.0}
-      hls_conservative: {survey_area: 2000.0}
-      wide: {survey_area: 18000.0}
+      hls_optimistic:
+        survey_area: 2000.0
+        description: Roman HLS optimistic scenario.
+      hls_conservative:
+        survey_area: 2000.0
+        description: Roman HLS conservative scenario.
+      wide:
+        survey_area: 18000.0
+        description: Roman wide survey scenario.
 
 # Redshift grid used for evaluating n(z) and all n_i(z) outputs
 z_grid: {start: 0.0, stop: 4.0, n: 500}
@@ -16,8 +27,14 @@ tomography:
   # HLS OPTIMISTIC SOURCE
   - role: source
     scenario: hls_optimistic
-    n_gal_arcmin2: 51.0
     kind: photoz
+
+    # Optional population metadata (not needed to build bins)
+    sample_properties:
+      number_density:
+        n_gal_arcmin2: 51.0  # surface density [gal/arcmin^2]; optional
+      shape_noise:
+        sigma_e: 0.37  # ellipticity dispersion / Roman Wenzl22 covariance convention
 
     nz:
       model: smail
@@ -34,8 +51,14 @@ tomography:
   # HLS OPTIMISTIC LENS
   - role: lens
     scenario: hls_optimistic
-    n_gal_arcmin2: 66.0
     kind: photoz
+
+    # Optional population metadata (not needed to build bins)
+    sample_properties:
+      number_density:
+        n_gal_arcmin2: 66.0  # surface density [gal/arcmin^2]; optional
+      shot_noise:
+        model: poisson
 
     nz:
       model: smail
@@ -52,8 +75,14 @@ tomography:
   # HLS CONSERVATIVE SOURCE
   - role: source
     scenario: hls_conservative
-    n_gal_arcmin2: 51.0
     kind: photoz
+
+    # Optional population metadata (not needed to build bins)
+    sample_properties:
+      number_density:
+        n_gal_arcmin2: 51.0  # surface density [gal/arcmin^2]; optional
+      shape_noise:
+        sigma_e: 0.37  # ellipticity dispersion / Roman Wenzl22 covariance convention
 
     nz:
       model: smail
@@ -70,8 +99,14 @@ tomography:
   # HLS CONSERVATIVE LENS
   - role: lens
     scenario: hls_conservative
-    n_gal_arcmin2: 66.0
     kind: photoz
+
+    # Optional population metadata (not needed to build bins)
+    sample_properties:
+      number_density:
+        n_gal_arcmin2: 66.0  # surface density [gal/arcmin^2]; optional
+      shot_noise:
+        model: poisson
 
     nz:
       model: smail
@@ -88,8 +123,14 @@ tomography:
   # WIDE SOURCE
   - role: source
     scenario: wide
-    n_gal_arcmin2: 43.0
     kind: photoz
+
+    # Optional population metadata (not needed to build bins)
+    sample_properties:
+      number_density:
+        n_gal_arcmin2: 43.0  # surface density [gal/arcmin^2]; optional
+      shape_noise:
+        sigma_e: 0.37  # ellipticity dispersion / Roman Wenzl22 covariance convention
 
     nz:
       model: smail
@@ -106,8 +147,14 @@ tomography:
   # WIDE LENS
   - role: lens
     scenario: wide
-    n_gal_arcmin2: 59.0
     kind: photoz
+
+    # Optional population metadata (not needed to build bins)
+    sample_properties:
+      number_density:
+        n_gal_arcmin2: 59.0  # surface density [gal/arcmin^2]; optional
+      shot_noise:
+        model: poisson
 
     nz:
       model: smail
