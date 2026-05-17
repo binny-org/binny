@@ -16,6 +16,7 @@ import numpy as np
 from numpy import exp
 from scipy.special import erf
 
+from binny.nz.lf_nz_model import lf_nz_model
 from binny.utils.normalization import normalize_over_z
 from binny.utils.types import FloatArray
 
@@ -31,6 +32,7 @@ __all__ = [
     "skew_normal_distribution",
     "student_t_distribution",
     "tabulated_distribution",
+    "lf_nz_model",
 ]
 
 

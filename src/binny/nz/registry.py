@@ -11,7 +11,8 @@ The registry provides:
 
 from __future__ import annotations
 
-from typing import Any, Protocol
+from collections.abc import Callable
+from typing import Any
 
 import numpy as np
 
@@ -19,6 +20,7 @@ from binny.nz.models import (
     gamma_distribution,
     gaussian_distribution,
     gaussian_mixture_distribution,
+    lf_nz_model,
     lognormal_distribution,
     schechter_like_distribution,
     shifted_smail_distribution,
@@ -37,17 +39,7 @@ __all__ = [
 ]
 
 
-class DistFunc(Protocol):
-    """Protocol for redshift-distribution model callables.
-
-    Model functions take a redshift grid `z` and model-specific parameters, and
-    return an array of the same shape as `z`.
-
-    Methods:
-        __call__: Evaluates the distribution model on a redshift grid.
-    """
-
-    def __call__(self, z: FloatArray, /, **params: Any) -> FloatArray: ...
+DistFunc = Callable[..., FloatArray]
 
 
 _MODELS: dict[str, DistFunc] = {
@@ -63,6 +55,7 @@ _MODELS: dict[str, DistFunc] = {
     "skew_normal": skew_normal_distribution,
     "student_t": student_t_distribution,
     "tabulated": tabulated_distribution,
+    "lf_nz": lf_nz_model,
 }
 
 
@@ -70,8 +63,8 @@ def available_models() -> list[str]:
     """Lists the supported redshift-distribution model names.
 
     Returns:
-        A sorted list of registry keys that can be passed to `get_model` or
-        `nz_model`.
+        A sorted list of registry keys that can be passed to ``get_model`` or
+        ``nz_model``.
     """
     return sorted(_MODELS.keys())
 
@@ -80,13 +73,13 @@ def get_model(name: str) -> DistFunc:
     """Gets a registered redshift-distribution model by name.
 
     Args:
-        name: Model name (case-insensitive). Must be one of `available_models()`.
+        name: Model name. The lookup is case-insensitive.
 
     Returns:
-        The callable model associated with `name`.
+        The callable model associated with ``name``.
 
     Raises:
-        ValueError: If `name` is not a known model key.
+        ValueError: If ``name`` is not a known model key.
     """
     key = str(name).lower()
     try:
@@ -101,20 +94,19 @@ def get_model(name: str) -> DistFunc:
 def nz_model(name: str, z: Any, /, **params: Any) -> FloatArray:
     """Evaluates a named redshift-distribution model on a redshift grid.
 
-    This is a convenience wrapper around `get_model` that also ensures `z` and
-    the returned array are `np.float64`.
+    This is a convenience wrapper around ``get_model`` that also ensures ``z``
+    and the returned array are ``np.float64``.
 
     Args:
-        name: Model name (case-insensitive). Must be one of `available_models()`.
-        z: Redshift grid. Any array-like input accepted by `np.asarray`.
+        name: Model name. Must be one of ``available_models()``.
+        z: Redshift grid. Any array-like input accepted by ``np.asarray``.
         **params: Model-specific keyword parameters forwarded to the model.
 
     Returns:
-        The model evaluated on `z` as a float64 NumPy array with the same shape
-        as `z`.
+        The model evaluated on ``z`` as a float64 NumPy array.
 
     Raises:
-        ValueError: If `name` is not a known model key.
+        ValueError: If ``name`` is not a known model key.
     """
     z_arr = np.asarray(z, dtype=np.float64)
     fn = get_model(name)
