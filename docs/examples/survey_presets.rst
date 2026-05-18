@@ -567,7 +567,7 @@ Binny also includes a DESI-inspired survey preset containing
 tabulated spectroscopic **LRG** and **ELG** lens redshift
 distributions.
 
-The default preset uses the legacy Dani redshift windows:
+The default preset uses the redshift windows from arXiv:2511.19194:
 :math:`0.4 \leq z \leq 1.0` for LRGs and
 :math:`0.6 \leq z \leq 1.5` for ELGs.
 
