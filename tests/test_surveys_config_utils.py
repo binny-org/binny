@@ -12,6 +12,7 @@ import yaml
 
 from binny.surveys.config_utils import (
     _build_parent_nz,
+    _builder_kwargs_from_spec,
     _extract_survey_meta,
     _extract_z_grid,
     _iter_tomography_entries,
@@ -26,6 +27,7 @@ from binny.surveys.config_utils import (
     _tabulated_params_from_config,
     config_path,
     list_configs,
+    load_config,
 )
 
 
@@ -546,3 +548,179 @@ def test_parse_entry_accepts_tabulated_source_block() -> None:
     assert spec["nz"]["model"] == "tabulated"
     assert spec["nz"]["source"]["path"] == "desi_lrg_nz.txt"
     assert np.allclose(spec["bins"]["edges"], [0.4, 1.0])
+
+
+def test_load_config_loads_yaml_file(tmp_path) -> None:
+    """Tests that load_config loads a YAML config from a file path."""
+
+    cfg = {
+        "name": "x",
+        "tomography": [
+            {
+                "role": "source",
+                "kind": "photoz",
+                "nz": {"model": "smail", "params": {}},
+                "bins": {"scheme": "equidistant", "n_bins": 2},
+            }
+        ],
+    }
+
+    p = tmp_path / "cfg.yaml"
+    p.write_text(yaml.safe_dump(cfg), encoding="utf-8")
+
+    out = load_config(p)
+
+    assert isinstance(out, Mapping)
+    assert out["name"] == "x"
+    assert "tomography" in out
+
+
+def test_load_config_rejects_missing_tomography(tmp_path) -> None:
+    """Tests that load_config rejects configs without tomography."""
+
+    p = tmp_path / "cfg.yaml"
+    p.write_text(yaml.safe_dump({"name": "x"}), encoding="utf-8")
+
+    with pytest.raises(ValueError, match="must contain a 'tomography' list"):
+        load_config(p)
+
+
+def test_select_entries_filters_by_scenario() -> None:
+    """Tests that _select_entries can distinguish scenarios."""
+    entries = [
+        {"role": "source", "scenario": "hls_optimistic"},
+        {"role": "source", "scenario": "hls_conservative"},
+    ]
+
+    sel = _select_entries(
+        entries,
+        role="source",
+        scenario="hls_optimistic",
+    )
+
+    assert len(sel) == 1
+    assert sel[0]["scenario"] == "hls_optimistic"
+
+
+def test_select_entries_filters_by_year_scenario_and_sample() -> None:
+    """Tests that _select_entries matches all provided selectors."""
+    entries = [
+        {"role": "lens", "year": "1", "scenario": "hls", "sample": "wide"},
+        {"role": "lens", "year": "1", "scenario": "wide", "sample": "wide"},
+        {"role": "lens", "year": "10", "scenario": "hls", "sample": "wide"},
+    ]
+
+    sel = _select_entries(
+        entries,
+        role="lens",
+        year="1",
+        scenario="hls",
+        sample="wide",
+    )
+
+    assert len(sel) == 1
+    assert sel[0]["year"] == "1"
+    assert sel[0]["scenario"] == "hls"
+    assert sel[0]["sample"] == "wide"
+
+
+def test_parse_bins_with_scheme_and_range() -> None:
+    """Tests that _parse_bins preserves scheme bin ranges."""
+    bins = _parse_bins(
+        {
+            "scheme": "equidistant",
+            "n_bins": 3,
+            "range": [0.2, 1.4],
+        }
+    )
+
+    assert bins["scheme"] == "equidistant"
+    assert bins["n_bins"] == 3
+    assert bins["range"] == (0.2, 1.4)
+
+
+def test_parse_bins_rejects_missing_n_bins() -> None:
+    """Tests that _parse_bins requires n_bins for scheme-based bins."""
+    with pytest.raises(ValueError, match="bins.n_bins is required"):
+        _parse_bins({"scheme": "equidistant"})
+
+
+def test_parse_bins_rejects_missing_edges_or_scheme() -> None:
+    """Tests that _parse_bins requires either edges or scheme."""
+    with pytest.raises(ValueError, match="must provide either 'edges' or 'scheme'"):
+        _parse_bins({})
+
+
+def test_builder_kwargs_from_spec_uses_edges() -> None:
+    """Tests that _builder_kwargs_from_spec converts explicit edges."""
+    spec = {
+        "bins": {"edges": np.array([0.0, 0.5, 1.0])},
+        "uncertainties": {"sigma_z": 0.05},
+    }
+
+    kwargs = _builder_kwargs_from_spec(spec)
+
+    assert np.allclose(kwargs["bin_edges"], [0.0, 0.5, 1.0])
+    assert kwargs["binning_scheme"] is None
+    assert kwargs["n_bins"] is None
+    assert kwargs["sigma_z"] == pytest.approx(0.05)
+
+
+def test_builder_kwargs_from_spec_uses_scheme_and_range() -> None:
+    """Tests that _builder_kwargs_from_spec converts scheme bins."""
+
+    spec = {
+        "bins": {
+            "scheme": "equidistant",
+            "n_bins": 4,
+            "range": (0.2, 1.2),
+        },
+        "uncertainties": {"scatter_scale": 0.03},
+    }
+
+    kwargs = _builder_kwargs_from_spec(spec)
+
+    assert kwargs["bin_edges"] is None
+    assert kwargs["binning_scheme"] == "equidistant"
+    assert kwargs["n_bins"] == 4
+    assert kwargs["bin_range"] == (0.2, 1.2)
+    assert kwargs["scatter_scale"] == pytest.approx(0.03)
+
+
+def test_builder_kwargs_from_spec_preserves_explicit_bin_range_uncertainty() -> None:
+    """Tests that uncertainties can explicitly override bin_range."""
+
+    spec = {
+        "bins": {
+            "scheme": "equidistant",
+            "n_bins": 4,
+            "range": (0.2, 1.2),
+        },
+        "uncertainties": {"bin_range": (0.3, 1.1)},
+    }
+
+    kwargs = _builder_kwargs_from_spec(spec)
+
+    assert kwargs["bin_range"] == (0.3, 1.1)
+
+
+def test_survey_meta_preserves_scenario_and_survey_meta(
+    minimal_cfg: Mapping[str, Any],
+) -> None:
+    """Tests that _survey_meta includes scenario and top-level metadata."""
+    meta = _survey_meta(
+        cfg=minimal_cfg,
+        resolved_key="k",
+        role="lens",
+        year="1",
+        scenario="test_scenario",
+        sample="samplename",
+    )
+
+    assert meta["survey"] == "test"
+    assert meta["key"] == "k"
+    assert meta["role"] == "lens"
+    assert meta["year"] == "1"
+    assert meta["scenario"] == "test_scenario"
+    assert meta["sample"] == "samplename"
+    assert meta["survey_meta"] == {"a": 1}

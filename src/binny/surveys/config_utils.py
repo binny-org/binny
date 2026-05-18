@@ -83,6 +83,7 @@ from binny.nz.registry import nz_model
 __all__ = [
     "config_path",
     "list_configs",
+    "load_config",
 ]
 
 _CONFIG_PKG = "binny.surveys.configs"
@@ -668,3 +669,32 @@ def _builder_kwargs_from_spec(spec: Mapping[str, Any]) -> dict[str, Any]:
 
     kwargs.update(params)
     return kwargs
+
+
+def load_config(path: str | Path) -> Mapping[Any, Any]:
+    """Load a survey configuration from a YAML file.
+
+    Args:
+        path: Path to a YAML file, or the filename of a shipped Binny survey
+            configuration.
+
+    Returns:
+        Parsed survey configuration mapping.
+
+    Raises:
+        ValueError: If the YAML root is not a mapping or the config has no
+            tomography list.
+        FileNotFoundError: If ``path`` is neither an existing file nor a
+            shipped config filename.
+    """
+    p = Path(path)
+
+    if not p.exists():
+        p = config_path(str(path))
+
+    cfg = _load_yaml_mapping(p)
+
+    if "tomography" not in cfg:
+        raise ValueError("Config must contain a 'tomography' list.")
+
+    return cfg

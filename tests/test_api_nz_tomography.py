@@ -554,15 +554,28 @@ def test_list_nz_models_delegates(monkeypatch):
     assert NZTomography.list_nz_models() == ["a", "b"]
 
 
-def test_list_survey_presets_filters_suffix(monkeypatch):
-    """Tests that list_survey_presets filters out non-survey configs."""
+def test_list_survey_presets_delegates(monkeypatch):
+    """Tests that list_surveys delegates to the survey preset helper."""
     monkeypatch.setattr(
-        cu,
-        "list_configs",
-        lambda: ["lsst_survey_specs.yaml", "README.txt", "hsc_survey_specs.yaml", "foo.yaml"],
+        "binny.api.nz_tomography.list_survey_configs",
+        lambda: ["hsc", "lsst"],
         raising=True,
     )
+
     assert NZTomography.list_surveys() == ["hsc", "lsst"]
+
+
+def test_module_exports_survey_config_helpers():
+    """Tests that survey config helpers are importable from the public API module."""
+    from binny.api.nz_tomography import (
+        list_survey_configs,
+        load_survey_config,
+        show_survey_config,
+    )
+
+    assert callable(list_survey_configs)
+    assert callable(load_survey_config)
+    assert callable(show_survey_config)
 
 
 def test_registry_is_callable():
@@ -1034,3 +1047,75 @@ def test_between_sample_stats_delegates_to_between_sample_metrics(monkeypatch):
     assert calls["pearson"]["bins_a"] == t0.bins
     assert calls["pearson"]["bins_b"] == t1.bins
     assert calls["pearson"]["kw"] == {"clip": True}
+
+
+def test_load_survey_config_delegates(monkeypatch):
+    """Tests that NZTomography.load_survey_config delegates to the survey preset helper."""
+    called = {"survey": None}
+
+    def fake_load_survey_config(survey):
+        called["survey"] = survey
+        return {"name": survey, "tomography": []}
+
+    monkeypatch.setattr(
+        "binny.api.nz_tomography.load_survey_config",
+        fake_load_survey_config,
+        raising=True,
+    )
+
+    out = NZTomography.load_survey_config("lsst")
+
+    assert out == {"name": "lsst", "tomography": []}
+    assert called["survey"] == "lsst"
+
+
+def test_show_survey_config_delegates(monkeypatch):
+    """Tests that NZTomography.show_survey_config delegates to the survey preset helper."""
+    called = {"survey": None, "print_output": None}
+
+    def fake_show_survey_config(survey, *, print_output=True):
+        called["survey"] = survey
+        called["print_output"] = print_output
+        return "name: lsst\n"
+
+    monkeypatch.setattr(
+        "binny.api.nz_tomography.show_survey_config",
+        fake_show_survey_config,
+        raising=True,
+    )
+
+    out = NZTomography.show_survey_config("lsst", print_output=False)
+
+    assert out == "name: lsst\n"
+    assert called == {"survey": "lsst", "print_output": False}
+
+
+def test_list_surveys_matches_list_survey_configs(monkeypatch):
+    """Tests that list_surveys exposes the same values as list_survey_configs."""
+    monkeypatch.setattr(
+        "binny.api.nz_tomography.list_survey_configs",
+        lambda: ["desi", "lsst", "roman"],
+        raising=True,
+    )
+
+    assert NZTomography.list_surveys() == ["desi", "lsst", "roman"]
+
+
+def test_module_all_exports_survey_config_helpers():
+    """Tests that survey config helpers are included in __all__."""
+    from binny.api import nz_tomography
+
+    assert "list_survey_configs" in nz_tomography.__all__
+    assert "load_survey_config" in nz_tomography.__all__
+    assert "show_survey_config" in nz_tomography.__all__
+
+
+@pytest.mark.parametrize("survey", ["lsst", "desi", "roman"])
+def test_builtin_survey_configs_can_be_loaded(survey):
+    """Tests that representative built-in survey configs can be loaded."""
+    cfg = NZTomography.load_survey_config(survey)
+
+    assert cfg["name"] == survey
+    assert "tomography" in cfg
+    assert isinstance(cfg["tomography"], list)
+    assert len(cfg["tomography"]) > 0

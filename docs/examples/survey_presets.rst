@@ -13,6 +13,43 @@ metadata such as footprint or galaxy density.
 Using a YAML preset makes it easier to keep survey configurations
 consistent across forecasts, examples, and analyses.
 
+
+Discovering and loading presets
+-------------------------------
+
+Built-in survey presets can be discovered and loaded directly through
+``NZTomography``. The YAML files remain the single source of truth, while users
+can access them by survey name.
+
+.. code-block:: python
+
+   from binny import NZTomography
+
+
+   print(NZTomography.list_surveys())
+
+   cfg = NZTomography.load_survey_config("lsst")
+   NZTomography.show_survey_config("lsst")
+
+
+The returned ``cfg`` can be passed directly to ``build_bins``.
+
+.. code-block:: python
+
+   from binny import NZTomography
+
+
+   cfg = NZTomography.load_survey_config("lsst")
+
+   tomo = NZTomography()
+
+   source = tomo.build_bins(
+       cfg=cfg,
+       role="source",
+       year="1",
+   )
+
+
 LSST survey preset
 ------------------
 
@@ -530,7 +567,7 @@ Binny also includes a DESI-inspired survey preset containing
 tabulated spectroscopic **LRG** and **ELG** lens redshift
 distributions.
 
-The default preset uses the legacy Dani redshift windows:
+The default preset uses the redshift windows from arXiv:2511.19194:
 :math:`0.4 \leq z \leq 1.0` for LRGs and
 :math:`0.6 \leq z \leq 1.5` for ELGs.
 
