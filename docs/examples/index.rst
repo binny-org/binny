@@ -24,6 +24,7 @@ workflows.
 
          nz_modelling
          nz_calibration
+         lf_nz_modelling
          photoz_bins
          specz_bins
          bin_summaries
