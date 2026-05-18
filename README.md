@@ -6,12 +6,11 @@
 
 <p align="center">
 
-[![CI](https://github.com/binny-org/binny/actions/workflows/ci.yml/badge.svg)](https://github.com/binny-org/binny/actions/workflows/ci.yml)
-[![Deploy Sphinx Documentation](https://github.com/binny-org/binny/actions/workflows/docs.yml/badge.svg)](https://github.com/binny-org/binny/actions/workflows/docs.yml)
-[![codecov](https://codecov.io/gh/binny-org/binny/branch/main/graph/badge.svg)](https://codecov.io/gh/binny-org/binny)
-[![License](https://img.shields.io/github/license/binny-org/binny)](LICENSE)
-[![Documentation](https://img.shields.io/badge/docs-binny-fde725?style=for-the-badge)](https://binny-org.github.io/binny)
-
+[![CI](https://img.shields.io/github/actions/workflow/status/binny-org/binny/ci.yml?branch=main&label=CI&color=440154&style=flat-square)](https://github.com/binny-org/binny/actions/workflows/ci.yml)
+[![Docs](https://img.shields.io/github/actions/workflow/status/binny-org/binny/docs.yml?branch=main&label=docs&color=31688e&style=flat-square)](https://github.com/binny-org/binny/actions/workflows/docs.yml)
+[![License](https://img.shields.io/github/license/binny-org/binny?color=35b779&style=flat-square)](LICENSE)
+[![PyPI](https://img.shields.io/pypi/v/pybinny?color=fde725&style=flat-square)](https://pypi.org/project/pybinny/)
+[![Documentation](https://img.shields.io/badge/docs-binny-31688e?style=flat-square)](https://binny-org.github.io/binny)
 
 </p>
 
