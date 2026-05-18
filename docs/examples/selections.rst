@@ -238,6 +238,89 @@ prefer to compare bins of similar width.
 This keeps only pairs whose credible-width ratio does not exceed ``1.5``.
 
 
+Combining two criteria: source ordering and overlap
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+For lens-source analyses, such as galaxy-galaxy lensing or
+:math:`\Delta\Sigma`, the useful bin pairs are usually selected using more than
+one criterion. A common choice is to keep only pairs where the source bin is
+behind the lens bin and where the lens-source redshift overlap is sufficiently
+small.
+
+This can be expressed by combining a score-based ordering cut with an overlap
+cut. The first filter keeps pairs where the source-bin peak redshift is larger
+than the lens-bin peak redshift. The second filter excludes pairs whose
+minimum-overlap fraction is above the chosen threshold.
+
+For LSST Year 1, using a 10 per cent maximum overlap:
+
+.. code-block:: python
+
+   from binny import NZTomography
+
+   lens = NZTomography()
+   lens.build_survey_bins("lsst", role="lens", year="1")
+
+   source = NZTomography()
+   source.build_survey_bins("lsst", role="source", year="1")
+
+   spec = {
+       "topology": {"name": "pairs_cartesian"},
+       "filters": [
+           {
+               "name": "score_relation",
+               "score": "peak",
+               "pos_a": 0,
+               "pos_b": 1,
+               "relation": "gt",
+           },
+           {
+               "name": "overlap_fraction",
+               "threshold": 0.10,
+               "compare": "le",
+           },
+       ],
+   }
+
+   pairs_y1 = lens.bin_combo_filter(spec, other=source)
+
+   len(pairs_y1), pairs_y1
+
+For LSST Year 10, using 25 per cent maximum overlap:
+
+.. code-block:: python
+
+   from binny import NZTomography
+
+   lens = NZTomography()
+   lens.build_survey_bins("lsst", role="lens", year="10")
+
+   source = NZTomography()
+   source.build_survey_bins("lsst", role="source", year="10")
+
+   spec = {
+       "topology": {"name": "pairs_cartesian"},
+       "filters": [
+           {
+               "name": "score_relation",
+               "score": "peak",
+               "pos_a": 0,
+               "pos_b": 1,
+               "relation": "gt",
+           },
+           {
+               "name": "overlap_fraction",
+               "threshold": 0.25,
+               "compare": "le",
+           },
+       ],
+   }
+
+   pairs_y10 = lens.bin_combo_filter(spec, other=source)
+
+   len(pairs_y10), pairs_y10
+
+
 Available statistic-based filters
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
