@@ -34,11 +34,19 @@ from binny.nz.registry import nz_model as _nz_model
 from binny.nz_tomo._tomography_bins import TomographyBins
 from binny.nz_tomo.bin_stats import population_stats as _population_stats
 from binny.nz_tomo.bin_stats import shape_stats as _shape_stats
+from binny.surveys.survey_presets import (
+    list_survey_configs,
+    load_survey_config,
+    show_survey_config,
+)
 
 __all__ = [
     "NZTomography",
     "available_metric_kernels",
     "register_metric_kernel",
+    "list_survey_configs",
+    "load_survey_config",
+    "show_survey_config",
 ]
 
 
@@ -93,23 +101,45 @@ class NZTomography:
         return _available_nz_models()
 
     @staticmethod
-    def list_surveys() -> list[str]:
-        """List available shipped survey preset names.
+    def load_survey_config(survey: str) -> dict[str, Any]:
+        """Load a built-in survey configuration by survey name.
 
-        Survey presets are YAML configuration files shipped with the package,
-        following the naming convention ``<preset>_survey_specs.yaml``. This
-        method returns the available preset base names (without the suffix),
-        suitable for passing to :meth:`build_survey_bins`.
+        Args:
+            survey: Survey preset name, such as ``"lsst"``, ``"desi"``, or
+                ``"roman"``.
 
         Returns:
-            A sorted list of available survey preset base names.
+            Parsed survey configuration dictionary.
         """
-        presets: list[str] = []
-        for name in cu.list_configs():
-            s = str(name)
-            if s.endswith("_survey_specs.yaml"):
-                presets.append(s.removesuffix("_survey_specs.yaml"))
-        return sorted(set(presets))
+        return load_survey_config(survey)
+
+    @staticmethod
+    def show_survey_config(
+        survey: str,
+        *,
+        print_output: bool = True,
+    ) -> str:
+        """Show a built-in survey configuration as YAML text.
+
+        Args:
+            survey: Survey preset name, such as ``"lsst"``, ``"desi"``, or
+                ``"roman"``.
+            print_output: Whether to print the YAML text before returning it.
+
+        Returns:
+            The selected survey configuration formatted as YAML.
+        """
+        return show_survey_config(survey, print_output=print_output)
+
+    @staticmethod
+    def list_surveys() -> list[str]:
+        """List available built-in survey preset names.
+
+        Returns:
+            A sorted list of available survey preset names, such as ``"lsst"``,
+            ``"desi"``, or ``"roman"``.
+        """
+        return list_survey_configs()
 
     @property
     def z(self) -> np.ndarray:
