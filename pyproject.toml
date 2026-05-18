@@ -15,12 +15,24 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
+lf = [
+  "py-lfkit>=0.1.4",
+]
+cosmo = [
+  "pyccl>=3",
+]
+lf-cosmo = [
+  "py-lfkit>=0.1.4",
+  "pyccl>=3",
+]
 dev = [
   "bump-my-version>=0.26",
   "pytest>=8",
   "pytest-cov>=5",
   "ruff>=0.6",
   "tox>=4.22",
+  "py-lfkit>=0.1.4",
+  "pyccl>=3",
 ]
 docs = [
   "sphinx[doctest]<9",
@@ -29,6 +41,8 @@ docs = [
   "sphinx-multiversion",
   "sphinxawesome-theme",
   "furo",
+  "py-lfkit>=0.1.4",
+  "pyccl>=3",
 ]
 
 [build-system]
