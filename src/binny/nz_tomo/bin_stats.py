@@ -676,7 +676,12 @@ def population_stats(
     out: dict[str, Any] = {"fractions": frac}
 
     if density_total is not None:
-        density_per_bin = {i: float(density_total) * frac[i] for i in indices}
+        density_per_bin_all = galaxy_density_per_bin(
+            metadata,
+            density_total=float(density_total),
+        )
+        density_per_bin = {i: density_per_bin_all[i] for i in indices}
+
         out["density_total"] = float(density_total)
         out["density_per_bin"] = density_per_bin
 

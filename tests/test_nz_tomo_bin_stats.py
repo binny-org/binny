@@ -723,3 +723,53 @@ def test_galaxy_fraction_per_bin_reads_nested_bins_block_known() -> None:
     assert set(fr) == {0, 1}
     assert fr[0] == pytest.approx(0.5)
     assert fr[1] == pytest.approx(0.5)
+
+
+def test_population_stats_density_matches_galaxy_density_helper() -> None:
+    """Tests that population_stats uses the same density allocation as the helper."""
+    bins = _dummy_bins(2)
+    meta = {"frac_per_bin": {0: 1.0, 1: 3.0}}
+
+    out = population_stats(bins, meta, density_total=40.0)
+    expected = galaxy_density_per_bin(meta, density_total=40.0)
+
+    assert out["density_per_bin"] == pytest.approx(expected)
+
+
+def test_population_stats_density_uses_galaxy_density_helper(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Tests that population_stats routes density allocation through the helper."""
+    import binny.nz_tomo.bin_stats as bs
+
+    called = {"value": False}
+
+    def fake_galaxy_density_per_bin(metadata, density_total):
+        called["value"] = True
+        assert metadata == {"frac_per_bin": {0: 1.0, 1: 3.0}}
+        assert density_total == pytest.approx(40.0)
+        return {0: 10.0, 1: 30.0}
+
+    monkeypatch.setattr(
+        bs,
+        "galaxy_density_per_bin",
+        fake_galaxy_density_per_bin,
+    )
+
+    bins = _dummy_bins(2)
+    meta = {"frac_per_bin": {0: 1.0, 1: 3.0}}
+
+    out = bs.population_stats(bins, meta, density_total=40.0)
+
+    assert called["value"] is True
+    assert out["density_per_bin"] == {0: 10.0, 1: 30.0}
+
+
+def test_population_stats_density_helper_output_is_restricted_to_bins() -> None:
+    """Tests that population_stats only returns densities for requested bins."""
+    bins = _dummy_bins(2)
+    meta = {"frac_per_bin": {0: 1.0, 1: 3.0, 2: 6.0}}
+
+    out = population_stats(bins, meta, density_total=100.0)
+
+    assert set(out["density_per_bin"]) == {0, 1}
