@@ -244,6 +244,7 @@ class NZTomography:
         overrides: Mapping[str, Any] | None = None,
         include_survey_metadata: bool = False,
         include_tomo_metadata: bool = False,
+        include_photoz_diagnostics: bool = False,
     ) -> TomographyBins:
         """Builds tomographic bins from a config, mapping, or explicit arrays.
 
@@ -281,6 +282,8 @@ class NZTomography:
                 in the output when building from a config file or mapping.
             include_tomo_metadata: Whether to request tomography metadata
                 from the builder.
+            include_photoz_diagnostics: Whether to include photo-z assignment probabilities
+                and observed-bin diagnostic metadata in the output.
 
         Returns:
             A :class:`~binny.nz_tomo._tomography_bins.TomographyBins` object
@@ -332,14 +335,26 @@ class NZTomography:
 
         # 4) Build bins (schema -> builder kwargs)
         builder_kwargs = cu._builder_kwargs_from_spec(spec)
-        out = builder(
-            z=self._parent["z"],
-            nz=self._parent["nz"],
-            include_metadata=include_tomo_metadata,
-            **builder_kwargs,
-        )
 
-        if include_tomo_metadata:
+        if spec["kind"] == "photoz":
+            out = builder(
+                z=self._parent["z"],
+                nz=self._parent["nz"],
+                include_metadata=include_tomo_metadata,
+                include_photoz_diagnostics=include_photoz_diagnostics,
+                **builder_kwargs,
+            )
+            metadata_requested = include_tomo_metadata or include_photoz_diagnostics
+        else:
+            out = builder(
+                z=self._parent["z"],
+                nz=self._parent["nz"],
+                include_metadata=include_tomo_metadata,
+                **builder_kwargs,
+            )
+            metadata_requested = include_tomo_metadata
+
+        if metadata_requested:
             bins, tomo_meta = out
         else:
             bins, tomo_meta = out, None
@@ -372,6 +387,7 @@ class NZTomography:
         overrides: Mapping[str, Any] | None = None,
         include_survey_metadata: bool = False,
         include_tomo_metadata: bool = False,
+        include_photoz_diagnostics: bool = False,
         config_file: str | Path | None = None,
     ) -> TomographyBins:
         """Builds tomographic bins from a built-in survey preset.
@@ -387,6 +403,8 @@ class NZTomography:
             overrides: Optional mapping merged into the resolved tomography spec.
             include_survey_metadata: Whether to include survey-level metadata in the output.
             include_tomo_metadata: Whether to include tomography metadata in the output.
+            include_photoz_diagnostics: Whether to include photo-z assignment probabilities
+                and observed-bin diagnostic metadata in the output.
             config_file: Optional explicit path to a survey-spec YAML file. If provided, it
                 is used instead of resolving a shipped preset.
 
@@ -420,6 +438,7 @@ class NZTomography:
             overrides=overrides,
             include_survey_metadata=include_survey_metadata,
             include_tomo_metadata=include_tomo_metadata,
+            include_photoz_diagnostics=include_photoz_diagnostics,
         )
         return result.with_survey(_norm_str(survey))
 
