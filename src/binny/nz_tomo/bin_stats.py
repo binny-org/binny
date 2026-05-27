@@ -29,15 +29,16 @@ __all__ = [
     "bin_moments",
     "bin_quantiles",
     "bin_centers",
+    "comoving_density_per_bin",
+    "galaxy_fraction_per_bin",
+    "galaxy_count_per_bin",
+    "galaxy_density_per_bin",
     "in_range_fraction",
     "in_range_fraction_per_bin",
     "peak_flags",
     "peak_flags_per_bin",
-    "galaxy_fraction_per_bin",
-    "galaxy_count_per_bin",
-    "galaxy_density_per_bin",
-    "shape_stats",
     "population_stats",
+    "shape_stats",
 ]
 
 
@@ -593,6 +594,23 @@ def shape_stats(
     return round_floats(out, decimal_places)
 
 
+def comoving_density_per_bin(
+    total_count_per_bin: Mapping[int, float],
+    volume_per_bin: Mapping[int, float],
+) -> dict[int, float]:
+    """Compute per-bin comoving number densities from counts and volumes."""
+    out: dict[int, float] = {}
+
+    for idx, count in total_count_per_bin.items():
+        volume = float(volume_per_bin[int(idx)])
+        if volume <= 0.0:
+            raise ValueError(f"volume_per_bin[{idx}] must be positive.")
+
+        out[int(idx)] = float(count) / volume
+
+    return out
+
+
 def population_stats(
     bins: Mapping[int, Any],
     metadata: Mapping[str, Any],
@@ -602,50 +620,61 @@ def population_stats(
     normalize_frac: bool = True,
     rtol: float = 1e-2,
     atol: float = 1e-3,
+    total_count_per_bin: Mapping[int, float] | None = None,
+    volume_per_bin: Mapping[int, float] | None = None,
     decimal_places: int | None = 2,
 ) -> dict[str, Any]:
     """Compute population / normalization statistics for tomographic bins.
 
-    This function computes quantities that depend on *relative bin populations*,
-    using metadata produced by Binny's tomo builders (photo-z / spec-z).
+    This function computes quantities that depend on relative bin populations,
+    using metadata produced by Binny's tomo builders.
 
-    The primary input is ``metadata["frac_per_bin"]`` (mapping bin index -> fraction).
-    Fractions are always checked against the bin indices present in ``bins``.
+    The primary input is ``metadata["frac_per_bin"]`` (mapping bin index to
+    fraction). Fractions are checked against the bin indices present in
+    ``bins``.
 
-    Optional survey-level allocation:
+    Optional allocations:
 
-    - If ``density_total`` (gal/arcmin^2) is provided, return per-bin allocated
-      surface densities.
-    - If ``survey_area`` (arcmin^2) is also provided, return per-bin effective counts.
+    - If ``density_total`` is provided, return per-bin allocated surface
+      densities in galaxies per square arcminute.
+    - If ``survey_area`` is also provided, return effective counts using the
+      surface density and survey area in square arcminutes.
+    - If ``total_count_per_bin`` and ``volume_per_bin`` are provided, return
+      per-bin comoving densities computed as count divided by volume.
 
     Args:
         bins: Mapping from bin index to bin curves.
         metadata: Tomography metadata containing ``"frac_per_bin"``.
-        density_total: Optional total effective surface density (gal/arcmin^2).
-        survey_area: Optional survey area (arcmin^2). Requires ``density_total``.
+        density_total: Optional total effective surface density in
+            galaxies per square arcminute.
+        survey_area: Optional survey area in square arcminutes. Requires
+            ``density_total``.
         normalize_frac: If True, renormalize metadata fractions to sum to 1.
-            If False, require they sum to 1 within (rtol, atol).
-        rtol: Relative tolerance for sum-to-one checks when normalize_frac=False.
-        atol: Absolute tolerance for sum-to-one checks when normalize_frac=False.
+            If False, require they sum to 1 within ``rtol`` and ``atol``.
+        rtol: Relative tolerance for sum-to-one checks when
+            ``normalize_frac=False``.
+        atol: Absolute tolerance for sum-to-one checks when
+            ``normalize_frac=False``.
+        total_count_per_bin: Optional mapping from bin index to total galaxy
+            count in that bin.
+        volume_per_bin: Optional mapping from bin index to comoving volume in
+            that bin.
         decimal_places: Rounding precision for returned values.
 
     Returns:
-        Mapping with keys:
-
-        - ``"fractions"``: {bin_idx: fraction}
-
-        And optionally:
-
-        - ``"density_total"``: float
-        - ``"density_per_bin"``: {bin_idx: gal/arcmin^2}
-        - ``"survey_area"``: float
-        - ``"count_per_bin"``: {bin_idx: effective count}
+        Mapping with key ``"fractions"`` and, when requested, surface-density
+        fields, count fields, or comoving-density fields. Comoving densities are
+        returned under ``"density_per_bin"`` with ``"density_unit"`` set to
+        ``"h^3 Mpc^-3"``.
 
     Raises:
         ValueError: If bins is empty.
         ValueError: If metadata does not contain ``"frac_per_bin"``.
         ValueError: If metadata fractions are missing any bin index.
-        ValueError: If survey_area is provided without density_total.
+        ValueError: If ``survey_area`` is provided without ``density_total``.
+        ValueError: If only one of ``total_count_per_bin`` and
+            ``volume_per_bin`` is provided.
+        ValueError: If any requested comoving volume is non-positive.
         ValueError: If fractions cannot be normalized or validated.
     """
     indices = sorted(int(i) for i in bins.keys())
@@ -674,6 +703,18 @@ def population_stats(
         frac = {i: f / s for i, f in frac.items()}
 
     out: dict[str, Any] = {"fractions": frac}
+
+    if total_count_per_bin is not None or volume_per_bin is not None:
+        if total_count_per_bin is None or volume_per_bin is None:
+            raise ValueError("total_count_per_bin and volume_per_bin must be provided together.")
+
+        counts = {int(i): float(total_count_per_bin[i]) for i in indices}
+        volumes = {int(i): float(volume_per_bin[i]) for i in indices}
+
+        out["total_count_per_bin"] = counts
+        out["volume_per_bin"] = volumes
+        out["density_per_bin"] = comoving_density_per_bin(counts, volumes)
+        out["density_unit"] = "h^3 Mpc^-3"
 
     if density_total is not None:
         density_per_bin_all = galaxy_density_per_bin(

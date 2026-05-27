@@ -9,6 +9,7 @@ from binny.nz_tomo.bin_stats import (
     bin_centers,
     bin_moments,
     bin_quantiles,
+    comoving_density_per_bin,
     galaxy_count_per_bin,
     galaxy_density_per_bin,
     galaxy_fraction_per_bin,
@@ -773,3 +774,124 @@ def test_population_stats_density_helper_output_is_restricted_to_bins() -> None:
     out = population_stats(bins, meta, density_total=100.0)
 
     assert set(out["density_per_bin"]) == {0, 1}
+
+
+def test_comoving_density_per_bin_returns_count_over_volume() -> None:
+    """Tests that comoving density is computed as count divided by volume."""
+    counts = {0: 50.0, 1: 120.0}
+    volumes = {0: 1000.0, 1: 2000.0}
+
+    out = comoving_density_per_bin(counts, volumes)
+
+    assert out[0] == pytest.approx(0.05)
+    assert out[1] == pytest.approx(0.06)
+
+
+def test_comoving_density_per_bin_rejects_nonpositive_volume() -> None:
+    """Tests that comoving density requires positive volumes."""
+    counts = {0: 50.0}
+    volumes = {0: 0.0}
+
+    with pytest.raises(ValueError, match=r"volume_per_bin\[0\] must be positive"):
+        comoving_density_per_bin(counts, volumes)
+
+
+def test_population_stats_accepts_count_and_volume_per_bin() -> None:
+    """Tests population stats with externally supplied counts and volumes."""
+    bins = _dummy_bins(2)
+    meta = {"frac_per_bin": {0: 1.0, 1: 3.0}}
+
+    out = population_stats(
+        bins,
+        meta,
+        total_count_per_bin={0: 50.0, 1: 120.0},
+        volume_per_bin={0: 1000.0, 1: 2000.0},
+        decimal_places=None,
+    )
+
+    assert out["fractions"][0] == pytest.approx(0.25)
+    assert out["fractions"][1] == pytest.approx(0.75)
+
+    assert out["total_count_per_bin"][0] == pytest.approx(50.0)
+    assert out["total_count_per_bin"][1] == pytest.approx(120.0)
+
+    assert out["volume_per_bin"][0] == pytest.approx(1000.0)
+    assert out["volume_per_bin"][1] == pytest.approx(2000.0)
+
+    assert out["density_per_bin"][0] == pytest.approx(0.05)
+    assert out["density_per_bin"][1] == pytest.approx(0.06)
+    assert out["density_unit"] == "h^3 Mpc^-3"
+
+
+def test_population_stats_count_and_volume_inputs_must_be_paired() -> None:
+    """Tests that count and volume inputs must be supplied together."""
+    bins = _dummy_bins(2)
+    meta = {"frac_per_bin": {0: 1.0, 1: 1.0}}
+
+    with pytest.raises(
+        ValueError,
+        match="total_count_per_bin and volume_per_bin must be provided together",
+    ):
+        population_stats(
+            bins,
+            meta,
+            total_count_per_bin={0: 50.0, 1: 120.0},
+        )
+
+    with pytest.raises(
+        ValueError,
+        match="total_count_per_bin and volume_per_bin must be provided together",
+    ):
+        population_stats(
+            bins,
+            meta,
+            volume_per_bin={0: 1000.0, 1: 2000.0},
+        )
+
+
+def test_population_stats_count_volume_output_restricted_to_requested_bins() -> None:
+    """Tests that count, volume, and density outputs follow the requested bins."""
+    bins = _dummy_bins(2)
+    meta = {"frac_per_bin": {0: 1.0, 1: 1.0, 2: 1.0}}
+
+    out = population_stats(
+        bins,
+        meta,
+        total_count_per_bin={0: 50.0, 1: 120.0, 2: 999.0},
+        volume_per_bin={0: 1000.0, 1: 2000.0, 2: 9999.0},
+        decimal_places=None,
+    )
+
+    assert set(out["total_count_per_bin"]) == {0, 1}
+    assert set(out["volume_per_bin"]) == {0, 1}
+    assert set(out["density_per_bin"]) == {0, 1}
+
+
+def test_population_stats_count_volume_branch_rejects_bad_volume() -> None:
+    """Tests that population_stats propagates invalid volume checks."""
+    bins = _dummy_bins(1)
+    meta = {"frac_per_bin": {0: 1.0}}
+
+    with pytest.raises(ValueError, match=r"volume_per_bin\[0\] must be positive"):
+        population_stats(
+            bins,
+            meta,
+            total_count_per_bin={0: 50.0},
+            volume_per_bin={0: -1.0},
+            decimal_places=None,
+        )
+
+
+def test_tabulated_comoving_number_density_metadata_schema() -> None:
+    """Tests the generic tabulated-comoving number-density metadata schema."""
+    number_density = {
+        "model": "tabulated_comoving",
+        "n_gal_comoving_h3_mpc3_col": 3,
+        "total_count_col": 4,
+        "volume_col": 5,
+    }
+
+    assert number_density["model"] == "tabulated_comoving"
+    assert number_density["n_gal_comoving_h3_mpc3_col"] == 3
+    assert number_density["total_count_col"] == 4
+    assert number_density["volume_col"] == 5
