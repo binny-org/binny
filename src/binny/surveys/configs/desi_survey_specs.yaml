@@ -129,3 +129,72 @@ tomography:
       edges: [0.6, 1.5]
 
     normalize_bins: true
+
+
+  # BGS SGC
+  - role: lens
+    sample: bgs_sgc
+    name: DESI BGS SGC
+    kind: specz
+
+    sample_properties:
+      survey_area_deg2: 2173.1756
+      effective_area_deg2: 2147.7451156526713
+
+      number_density:
+        model: tabulated_comoving
+        n_gal_comoving_h3_mpc3_col: 3
+        volume_col: 5
+        total_count_col: 4
+
+      shot_noise:
+        model: poisson
+
+    nz:
+      model: tabulated
+      source:
+        path: desi_bgs_sgc_nz.txt
+        z_col: 0
+        nz_col: 4
+        skiprows: 1
+      params:
+        normalize: true
+
+    bins:
+      edges: [0.01, 0.5]
+
+    normalize_bins: true
+
+  # LRG SGC
+  - role: lens
+    sample: lrg_sgc
+    name: DESI LRG SGC
+    kind: specz
+
+    sample_properties:
+      survey_area_deg2: 1983.8884
+      effective_area_deg2: 1770.198402421271
+
+      number_density:
+        model: tabulated_comoving
+        n_gal_comoving_h3_mpc3_col: 3
+        volume_col: 5
+        total_count_col: 4
+
+      shot_noise:
+        model: poisson
+
+    nz:
+      model: tabulated
+      source:
+        path: desi_lrg_sgc_nz.txt
+        z_col: 0
+        nz_col: 4
+        skiprows: 1
+      params:
+        normalize: true
+
+    bins:
+      edges: [0.4, 0.75, 1.1]
+
+    normalize_bins: true

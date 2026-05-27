@@ -176,3 +176,58 @@ tomography:
       mean_offset: 0.0
 
     normalize_bins: true
+
+
+  # LSST DP2 degraded r < 24.5 sample
+  - role: source
+    sample: dp2_r24p5
+    name: LSST DP2 degraded r < 24.5
+    kind: photoz
+
+    sample_properties:
+      magnitude_limit:
+        band: r_lsst
+        value: 24.5
+        selection: mag_r_lsst <= 24.5
+
+      mask:
+        name: dp2_24p5_combined_mask_nmin=500_nside=512.fits
+        nside: 512
+        n_min: 500
+
+      counts:
+        n_total: 185018080
+        n_maglim: 137134326
+        n_final: 104471348
+
+      footprint:
+        survey_area: 1351.8398
+        frac_sky: 0.032770
+
+      number_density:
+        n_gal_arcmin2: 21.466907
+        n_gal_deg2: 77280.8652
+
+      shape_noise:
+        sigma_e: 0.26
+
+    nz:
+      model: tabulated
+      source:
+        path: lsst_dp2_nz_degraded_r24p5_masked.txt
+        z_col: 0
+        nz_col: 1
+        skiprows: 4
+      params:
+        normalize: true
+
+    bins:
+      scheme: equal_number
+      n_bins: 3
+      range: [ 0.6, 3.0 ]
+
+    uncertainties:
+      scatter_scale: 0.05
+      mean_offset: 0.0
+
+    normalize_bins: true
