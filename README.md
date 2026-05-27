@@ -9,7 +9,7 @@
 [![CI](https://img.shields.io/github/actions/workflow/status/binny-org/binny/ci.yml?branch=main&label=CI&color=440154&style=flat-square)](https://github.com/binny-org/binny/actions/workflows/ci.yml)
 [![Docs](https://img.shields.io/github/actions/workflow/status/binny-org/binny/docs.yml?branch=main&label=docs&color=31688e&style=flat-square)](https://github.com/binny-org/binny/actions/workflows/docs.yml)
 [![License](https://img.shields.io/github/license/binny-org/binny?color=35b779&style=flat-square)](LICENSE)
-[![PyPI](https://img.shields.io/pypi/v/pybinny?label=PyPI&color=fde725&style=flat-square)](https://pypi.org/project/pybinny/)
+[![PyPI](https://img.shields.io/pypi/v/pybinny?label=PyPI&color=fde725&style=flat-square&cacheSeconds=300)](https://pypi.org/project/pybinny/)
 [![Documentation](https://img.shields.io/badge/docs-binny-31688e?style=flat-square)](https://binny-org.github.io/binny)
 
 </p>
