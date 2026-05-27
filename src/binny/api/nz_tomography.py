@@ -523,13 +523,10 @@ class NZTomography:
                 "tabulated_comoving number_density requires 'total_count_col' and 'volume_col'."
             )
 
-        path = source.get("path")
-        skiprows = source.get("skiprows", 0)
-
-        if path is None:
+        if source.get("path") is None:
             raise ValueError("tabulated_comoving population statistics require nz.source.path.")
 
-        data = np.loadtxt(cu.data_path(path), skiprows=int(skiprows))
+        data = cu._load_tabulated_source_table(source)
 
         z_table = np.asarray(data[:, int(z_col)], dtype=float)
         counts = np.asarray(data[:, int(count_col)], dtype=float)

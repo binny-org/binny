@@ -541,6 +541,25 @@ def _build_parent_nz(entry: Mapping[Any, Any], z: np.ndarray) -> np.ndarray:
     return nz_model(model, z, **model_params)
 
 
+def _load_tabulated_source_table(source: Mapping[Any, Any]) -> np.ndarray:
+    """Load a packaged or absolute tabulated survey data source."""
+    source = _require_mapping(source, what="tomography entry.nz.source")
+
+    try:
+        path = Path(source["path"])
+    except KeyError as e:
+        raise ValueError("tomography entry.nz.source must contain a 'path' field.") from e
+
+    if not path.is_absolute():
+        path = resources.files(_DATA_PKG) / str(path)
+
+    with resources.as_file(path) as real_path:
+        return np.loadtxt(
+            real_path,
+            skiprows=int(source.get("skiprows", 0)),
+        )
+
+
 def _tabulated_params_from_config(nz_cfg: Mapping[Any, Any]) -> dict[str, Any]:
     """Return tabulated n(z) inputs from inline arrays or a source file.
 
@@ -572,20 +591,7 @@ def _tabulated_params_from_config(nz_cfg: Mapping[Any, Any]) -> dict[str, Any]:
         return {}
 
     source = _require_mapping(source, what="tomography entry.nz.source")
-
-    try:
-        path = Path(source["path"])
-    except KeyError as e:
-        raise ValueError("tomography entry.nz.source must contain a 'path' field.") from e
-
-    if not path.is_absolute():
-        path = resources.files(_DATA_PKG) / str(path)
-
-    with resources.as_file(path) as real_path:
-        table = np.loadtxt(
-            real_path,
-            skiprows=int(source.get("skiprows", 0)),
-        )
+    table = _load_tabulated_source_table(source)
 
     z_col = int(source.get("z_col", 0))
     nz_col = int(source.get("nz_col", 1))
