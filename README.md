@@ -28,7 +28,7 @@ for forecasting, inference pipelines, and survey analysis workflows.
 
 ```bash
 pip install pybinny
-````
+```
 
 ### Install from source
 ```bash
