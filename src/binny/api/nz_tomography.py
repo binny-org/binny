@@ -485,7 +485,76 @@ class NZTomography:
         meta = self._state.get("tomo_meta")
         if meta is None:
             raise ValueError("No tomo metadata cached. Rebuild with include_tomo_metadata=True.")
+        spec = self._state.get("tomo_spec", {})
+        sample_properties = spec.get("sample_properties", {})
+        number_density = sample_properties.get("number_density", {})
+
+        if (
+            number_density.get("model") == "tabulated_comoving"
+            and "total_count_per_bin" not in kwargs
+            and "volume_per_bin" not in kwargs
+        ):
+            extra = self._tabulated_comoving_population_stats(number_density)
+            kwargs = {**extra, **kwargs}
+
         return _population_stats(bins=self._state["bins"], metadata=meta, **kwargs)
+
+    def _tabulated_comoving_population_stats(
+        self,
+        number_density: Mapping[str, Any],
+    ) -> dict[str, dict[int, float]]:
+        """Return count and volume summaries for tabulated comoving densities."""
+        self._require_state()
+
+        state = self._state
+
+        if state is None:
+            raise ValueError("No cached entry. Call build_bins(...) first.")
+
+        spec = state["tomo_spec"]
+        source = spec.get("nz", {}).get("source", {})
+
+        count_col = number_density.get("total_count_col")
+        volume_col = number_density.get("volume_col")
+        z_col = source.get("z_col", 0)
+
+        if count_col is None or volume_col is None:
+            raise ValueError(
+                "tabulated_comoving number_density requires 'total_count_col' and 'volume_col'."
+            )
+
+        path = source.get("path")
+        skiprows = source.get("skiprows", 0)
+
+        if path is None:
+            raise ValueError("tabulated_comoving population statistics require nz.source.path.")
+
+        data = np.loadtxt(cu.data_path(path), skiprows=int(skiprows))
+
+        z_table = np.asarray(data[:, int(z_col)], dtype=float)
+        counts = np.asarray(data[:, int(count_col)], dtype=float)
+        volumes = np.asarray(data[:, int(volume_col)], dtype=float)
+
+        edges = np.asarray(spec["bins"]["edges"], dtype=float)
+
+        total_count_per_bin: dict[int, float] = {}
+        volume_per_bin: dict[int, float] = {}
+
+        for bin_index in range(len(edges) - 1):
+            z_min = float(edges[bin_index])
+            z_max = float(edges[bin_index + 1])
+
+            mask = (z_table >= z_min) & (z_table < z_max)
+            if bin_index == len(edges) - 2:
+                mask = (z_table >= z_min) & (z_table <= z_max)
+
+            total_count_per_bin[bin_index] = float(np.sum(counts[mask]))
+            volume_per_bin[bin_index] = float(np.sum(volumes[mask]))
+
+        return {
+            "total_count_per_bin": total_count_per_bin,
+            "volume_per_bin": volume_per_bin,
+        }
 
     def cross_bin_stats(
         self,
