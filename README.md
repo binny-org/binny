@@ -53,7 +53,7 @@ If you use **binny** in your research, please cite it.
 ```bibtex
 @software{sarcevic2026binny,
   title   = {binny: Flexible binning algorithms for cosmology},
-  author  = {Šarčević, Nikolina and van der Wild, Matthijs},
+  author  = {Šarčević, Nikolina and van der Wild, Matthijs and Polen, Rebekah},
   year    = {2026},
   url     = {https://github.com/binny-org/binny}
 }
@@ -73,5 +73,7 @@ testing, and code style guidelines.
 
 # License
 
-MIT License © 2026 Nikolina Šarčević, Matthijs van der Wild and contributors.
 
+and:
+
+MIT License © 2026 Nikolina Šarčević, Matthijs van der Wild, Rebekah Polen, and contributors.
