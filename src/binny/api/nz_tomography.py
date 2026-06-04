@@ -34,6 +34,21 @@ from binny.nz.registry import nz_model as _nz_model
 from binny.nz_tomo._tomography_bins import TomographyBins
 from binny.nz_tomo.bin_stats import population_stats as _population_stats
 from binny.nz_tomo.bin_stats import shape_stats as _shape_stats
+from binny.nz_tomo.sample_composition import (
+    combine_parent_nz as _combine_parent_nz,
+)
+from binny.nz_tomo.sample_composition import (
+    combine_tomography_bins as _combine_tomography_bins,
+)
+from binny.nz_tomo.sample_composition import (
+    sample_bin_labels as _sample_bin_labels,
+)
+from binny.nz_tomo.sample_composition import (
+    sample_bins as _sample_bins,
+)
+from binny.nz_tomo.sample_composition import (
+    sample_combinations as _sample_combinations,
+)
 from binny.surveys.survey_presets import (
     list_survey_configs,
     load_survey_config,
@@ -166,6 +181,55 @@ class NZTomography:
         """
         self._require_state()
         return self._parent["nz"]
+
+    @staticmethod
+    def combine_parent_nz(
+        samples: Sequence[Mapping[str, Any]],
+        *,
+        interpolate: bool = False,
+        z_target: np.ndarray | None = None,
+    ) -> tuple[np.ndarray, np.ndarray]:
+        """Combine parent redshift distributions into one parent sample."""
+        return _combine_parent_nz(
+            samples,
+            interpolate=interpolate,
+            z_target=z_target,
+        )
+
+    @staticmethod
+    def combine_tomography_bins(
+        samples: Sequence[TomographyBins],
+        *,
+        interpolate: bool = False,
+        z_target: np.ndarray | None = None,
+    ) -> TomographyBins:
+        """Combine matching tomographic samples into one ``TomographyBins`` object."""
+        return _combine_tomography_bins(
+            samples,
+            interpolate=interpolate,
+            z_target=z_target,
+        )
+
+    @staticmethod
+    def sample_bin_labels(
+        samples: Mapping[str, TomographyBins],
+    ) -> list[tuple[str, int]]:
+        """Return flattened ``(sample_name, bin_index)`` labels."""
+        return _sample_bin_labels(samples)
+
+    @staticmethod
+    def sample_bins(
+        samples: Mapping[str, TomographyBins],
+    ) -> dict[tuple[str, int], np.ndarray]:
+        """Return flattened bins keyed by ``(sample_name, bin_index)``."""
+        return _sample_bins(samples)
+
+    @staticmethod
+    def sample_combinations(
+        *collections: Mapping[str, TomographyBins],
+    ) -> list[tuple[tuple[str, int], ...]]:
+        """Return all bin combinations across any number of sample collections."""
+        return _sample_combinations(*collections)
 
     def clear(self) -> None:
         """Clears the cached parent distribution, spec, bins, and metadata."""
