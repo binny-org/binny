@@ -1119,3 +1119,136 @@ def test_builtin_survey_configs_can_be_loaded(survey):
     assert "tomography" in cfg
     assert isinstance(cfg["tomography"], list)
     assert len(cfg["tomography"]) > 0
+
+
+def test_combine_parent_nz_delegates(monkeypatch):
+    """Tests that combine_parent_nz delegates to sample_composition."""
+    called = {}
+
+    def fake_combine_parent_nz(samples, *, interpolate=False, z_target=None):
+        called["samples"] = samples
+        called["interpolate"] = interpolate
+        called["z_target"] = z_target
+        return np.array([0.0, 1.0]), np.array([3.0, 4.0])
+
+    monkeypatch.setattr(
+        "binny.api.nz_tomography._combine_parent_nz",
+        fake_combine_parent_nz,
+        raising=True,
+    )
+
+    samples = [{"z": np.array([0.0, 1.0]), "nz": np.array([1.0, 2.0])}]
+    z_target = np.array([0.0, 0.5, 1.0])
+
+    z, nz = NZTomography.combine_parent_nz(
+        samples,
+        interpolate=True,
+        z_target=z_target,
+    )
+
+    assert called["samples"] is samples
+    assert called["interpolate"] is True
+    assert np.allclose(called["z_target"], z_target)
+    assert np.allclose(z, [0.0, 1.0])
+    assert np.allclose(nz, [3.0, 4.0])
+
+
+def test_combine_tomography_bins_delegates(monkeypatch):
+    """Tests that combine_tomography_bins delegates to sample_composition."""
+    called = {}
+    result = object()
+
+    def fake_combine_tomography_bins(samples, *, interpolate=False, z_target=None):
+        called["samples"] = samples
+        called["interpolate"] = interpolate
+        called["z_target"] = z_target
+        return result
+
+    monkeypatch.setattr(
+        "binny.api.nz_tomography._combine_tomography_bins",
+        fake_combine_tomography_bins,
+        raising=True,
+    )
+
+    samples = [object(), object()]
+    z_target = np.array([0.0, 0.5, 1.0])
+
+    out = NZTomography.combine_tomography_bins(
+        samples,
+        interpolate=True,
+        z_target=z_target,
+    )
+
+    assert out is result
+    assert called["samples"] is samples
+    assert called["interpolate"] is True
+    assert np.allclose(called["z_target"], z_target)
+
+
+def test_sample_bin_labels_delegates(monkeypatch):
+    """Tests that sample_bin_labels delegates to sample_composition."""
+    called = {}
+
+    def fake_sample_bin_labels(samples):
+        called["samples"] = samples
+        return [("bgs", 0), ("lrg", 1)]
+
+    monkeypatch.setattr(
+        "binny.api.nz_tomography._sample_bin_labels",
+        fake_sample_bin_labels,
+        raising=True,
+    )
+
+    samples = {"bgs": object(), "lrg": object()}
+    out = NZTomography.sample_bin_labels(samples)
+
+    assert out == [("bgs", 0), ("lrg", 1)]
+    assert called["samples"] is samples
+
+
+def test_sample_bins_delegates(monkeypatch):
+    """Tests that sample_bins delegates to sample_composition."""
+    called = {}
+    expected = {
+        ("bgs", 0): np.array([1.0, 0.0]),
+        ("lrg", 1): np.array([0.0, 1.0]),
+    }
+
+    def fake_sample_bins(samples):
+        called["samples"] = samples
+        return expected
+
+    monkeypatch.setattr(
+        "binny.api.nz_tomography._sample_bins",
+        fake_sample_bins,
+        raising=True,
+    )
+
+    samples = {"bgs": object(), "lrg": object()}
+    out = NZTomography.sample_bins(samples)
+
+    assert out is expected
+    assert called["samples"] is samples
+
+
+def test_sample_combinations_delegates(monkeypatch):
+    """Tests that sample_combinations delegates to sample_composition."""
+    called = {}
+
+    def fake_sample_combinations(*collections):
+        called["collections"] = collections
+        return [(("lens", 0), ("source", 1))]
+
+    monkeypatch.setattr(
+        "binny.api.nz_tomography._sample_combinations",
+        fake_sample_combinations,
+        raising=True,
+    )
+
+    lenses = {"lens": object()}
+    sources = {"source": object()}
+
+    out = NZTomography.sample_combinations(lenses, sources)
+
+    assert out == [(("lens", 0), ("source", 1))]
+    assert called["collections"] == (lenses, sources)
