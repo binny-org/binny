@@ -30,6 +30,7 @@ workflows.
          bin_diagnostics
          survey_presets
          selections
+         sample_composition
 
    .. grid-item::
       :class: sd-text-center hero-logo
