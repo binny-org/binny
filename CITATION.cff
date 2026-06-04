@@ -16,6 +16,8 @@ authors:
     family-names: "van der Wild"
     email: "matthijs@vanderwild.com"
     orcid: "0000-0002-3949-3063"
+  - given-names: "Rebekah"
+    family-names: "Polen"
 
 repository-code: "https://github.com/binny-org/binny"
 url: "https://github.com/binny-org/binny"
