@@ -24,6 +24,7 @@ workflows.
 
          nz_modelling
          nz_calibration
+         luminosity_function_distribution
          photoz_bins
          specz_bins
          bin_summaries

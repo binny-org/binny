@@ -10,6 +10,7 @@ from binny.nz.models import (
     gaussian_distribution,
     gaussian_mixture_distribution,
     lognormal_distribution,
+    luminosity_function_distribution,
     schechter_like_distribution,
     shifted_smail_distribution,
     skew_normal_distribution,
@@ -414,3 +415,51 @@ def test_tabulated_distribution_raises_for_non_increasing_z_input(z_input):
 
     with pytest.raises(ValueError, match="z_table must be strictly increasing"):
         tabulated_distribution(z, z_input=z_input, nz_input=nz_input)
+
+
+def test_luminosity_function_distribution_is_imported_from_models_module():
+    """Tests that luminosity_function_distribution is available from binny.nz.models."""
+    from binny.nz.luminosity_function_distribution import luminosity_function_distribution as direct
+    from binny.nz.models import luminosity_function_distribution as from_models
+
+    assert from_models is direct
+
+
+def test_luminosity_function_distribution_is_listed_in_models_all():
+    """Tests that luminosity_function_distribution is exported by binny.nz.models."""
+    import binny.nz.models as models
+
+    assert "luminosity_function_distribution" in models.__all__
+
+
+def test_luminosity_function_distribution_from_models_works_like_direct_import():
+    """Tests that luminosity_function_distribution imported from models evaluates correctly."""
+    z = np.linspace(0.1, 1.0, 20)
+
+    def luminosity_distance_mpc(z_arr):
+        """Returns a simple luminosity-distance relation."""
+        return 100.0 * (1.0 + z_arr)
+
+    def volume_weight(z_arr):
+        """Returns a constant volume weight."""
+        return np.ones_like(z_arr)
+
+    def constant_lf(m_abs, z_arr):
+        """Returns a constant luminosity function."""
+        _ = z_arr
+        return np.ones_like(m_abs)
+
+    nz = luminosity_function_distribution(
+        z,
+        constant_lf,
+        m_bright=14.0,
+        m_lim=22.0,
+        n_m=64,
+        luminosity_distance_mpc_fn=luminosity_distance_mpc,
+        volume_weight_fn=volume_weight,
+        normalize=False,
+    )
+
+    expected = np.full_like(z, 8.0)
+
+    _assert_allclose(nz, expected)
