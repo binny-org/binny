@@ -8,7 +8,7 @@ result by a redshift-dependent volume factor.
 The model is intentionally backend-agnostic: distances, volume weights,
 K-corrections, and luminosity functions are supplied as callables. This keeps
 the redshift-distribution interface compatible with different cosmology and LF
-implementations.
+implementations, including LFKit ``LuminosityFunction`` objects.
 """
 
 from __future__ import annotations
@@ -18,28 +18,20 @@ from typing import Any
 
 import numpy as np
 
+from binny.cosmology.ccl_wrappers import (
+    comoving_volume_weight,
+    luminosity_distance_mpc,
+)
 from binny.utils.normalization import normalize_over_z
 from binny.utils.types import FloatArray
 
-__all__ = ["lf_nz_model"]
+__all__ = ["luminosity_function_distribution"]
 
 
 def _distance_modulus_from_luminosity_distance_mpc(
     luminosity_distance_mpc: FloatArray,
 ) -> FloatArray:
-    """Return distance modulus from luminosity distance in Mpc.
-
-    Args:
-        luminosity_distance_mpc:
-            Luminosity distance in Mpc.
-
-    Returns:
-        Distance modulus evaluated at each input distance.
-
-    Raises:
-        ValueError:
-            If any luminosity distance is non-finite or non-positive.
-    """
+    """Return distance modulus from luminosity distance in Mpc."""
     d_l = np.asarray(luminosity_distance_mpc, dtype=np.float64)
 
     if not np.all(np.isfinite(d_l)):
@@ -57,28 +49,7 @@ def _absolute_magnitude_grid(
     luminosity_distance_mpc_fn: Callable[[FloatArray], FloatArray],
     k_correction_fn: Callable[[FloatArray], FloatArray] | None = None,
 ) -> FloatArray:
-    """Return absolute magnitudes for a redshift and apparent-magnitude grid.
-
-    Args:
-        z:
-            One-dimensional redshift grid.
-        m_grid:
-            One-dimensional apparent-magnitude grid.
-        luminosity_distance_mpc_fn:
-            Callable returning luminosity distance in Mpc as a function of
-            redshift.
-        k_correction_fn:
-            Optional callable returning the K-correction as a function of
-            redshift. If omitted, zero K-correction is assumed.
-
-    Returns:
-        Absolute-magnitude grid with shape ``(len(z), len(m_grid))``.
-
-    Raises:
-        ValueError:
-            If the supplied callables return arrays with invalid shapes or
-            non-finite values.
-    """
+    """Return absolute magnitudes for a redshift and apparent-magnitude grid."""
     z_arr = np.asarray(z, dtype=np.float64)
     m_arr = np.asarray(m_grid, dtype=np.float64)
 
@@ -100,67 +71,93 @@ def _absolute_magnitude_grid(
     return m_arr[None, :] - distance_modulus[:, None] - k_correction[:, None]
 
 
-def lf_nz_model(
+def _as_lf_callable(
+    lf: Any,
+) -> tuple[Callable[..., FloatArray], bool]:
+    """Return an ``lf(M, z)`` callable and whether LFKit-style redshift is needed.
+
+    LFKit ``LuminosityFunction`` objects expose ``_as_callable`` and/or
+    ``phi``. Those APIs broadcast more naturally when redshift is supplied as
+    ``z[:, None]`` against the two-dimensional absolute-magnitude grid.
+
+    Plain callables are left unchanged so existing Binny callables continue to
+    receive the original one-dimensional redshift grid.
+    """
+    if hasattr(lf, "_as_callable"):
+        return lf._as_callable(), True
+
+    if hasattr(lf, "phi"):
+        return lambda absolute_mag, z: lf.phi(absolute_mag, z), True
+
+    return lf, False
+
+
+def luminosity_function_distribution(
     z: FloatArray,
     lf: Callable[..., FloatArray],
     *,
+    cosmo: Any | None = None,
     m_lim: float = 22.0,
-    m_min: float = 14.0,
+    m_bright: float = 14.0,
     n_m: int = 512,
-    luminosity_distance_mpc_fn: Callable[[FloatArray], FloatArray],
-    volume_weight_fn: Callable[[FloatArray], FloatArray],
+    luminosity_distance_mpc_fn: Callable[[FloatArray], FloatArray] | None = None,
+    volume_weight_fn: Callable[[FloatArray], FloatArray] | None = None,
     k_correction_fn: Callable[[FloatArray], FloatArray] | None = None,
     normalize: bool = False,
     **lf_kwargs: Any,
 ) -> FloatArray:
-    """Return an LF-dependent redshift distribution.
+    """Return a luminosity-function-weighted redshift distribution.
 
-    This constructs a redshift distribution proportional to
+    This constructs a parent redshift distribution proportional to
 
     .. math::
 
-        n(z) \\propto W_V(z) \\int \\Phi(M, z)\\, dM,
+        n(z) \\propto W_V(z)
+        \\int_{m_{\\rm bright}}^{m_{\\rm lim}} \\Phi(M(m, z), z)\\, dm,
 
-    where ``W_V(z)`` is the redshift-dependent volume weight. The absolute
-    magnitude range is determined from an internal apparent-magnitude grid and
-    the supplied luminosity-distance relation.
+    where ``W_V(z)`` is the redshift-dependent volume weight. Apparent
+    magnitudes are converted to absolute magnitudes using the luminosity
+    distance and optional K-correction.
 
     Args:
         z:
             One-dimensional redshift grid.
         lf:
-            Luminosity-function callable. It must accept an absolute-magnitude
-            grid with shape ``(len(z), n_m)`` and the one-dimensional redshift
-            grid, then return LF values with the same shape.
+            Luminosity-function callable or LFKit ``LuminosityFunction`` object.
+            Plain callables must accept ``lf(M, z, **kwargs)``. LFKit objects
+            are evaluated through their ``_as_callable`` or ``phi`` interface.
+        cosmo:
+            Optional PyCCL cosmology. If supplied, Binny uses its CCL-backed
+            luminosity-distance and comoving-volume helpers whenever explicit
+            helper callables are not provided.
         m_lim:
             Faint-end apparent-magnitude limit.
-        m_min:
-            Bright-end lower bound of the internal apparent-magnitude grid.
+        m_bright:
+            Bright-end apparent-magnitude bound of the internal magnitude grid.
         n_m:
             Number of apparent-magnitude samples used for the magnitude
             integral.
         luminosity_distance_mpc_fn:
-            Callable returning luminosity distance in Mpc as a function of
-            redshift.
+            Optional callable returning luminosity distance in Mpc as a
+            function of redshift. If omitted, ``cosmo`` must be supplied.
         volume_weight_fn:
-            Callable returning the redshift-dependent volume weight. This can
-            be a comoving-volume element, a survey-area-weighted volume
-            element, or any equivalent redshift-dependent weight. If
-            ``normalize=True``, constant normalization factors cancel.
+            Optional callable returning the redshift-dependent volume weight.
+            If omitted, ``cosmo`` must be supplied.
         k_correction_fn:
             Optional callable returning the K-correction as a function of
             redshift. If omitted, zero K-correction is assumed.
         normalize:
             If ``True``, normalize the output over the redshift grid.
         **lf_kwargs:
-            Extra keyword arguments passed directly to ``lf``.
+            Extra keyword arguments passed directly to plain LF callables.
 
     Returns:
         Redshift distribution evaluated on ``z``.
 
     Raises:
         ValueError:
-            If inputs are invalid or the supplied callables return arrays with
+            If inputs are invalid, neither ``cosmo`` nor the required helper
+            callables are supplied, or supplied callables return arrays with
             incompatible shapes.
     """
     z_arr = np.asarray(z, dtype=np.float64)
@@ -176,19 +173,49 @@ def lf_nz_model(
 
     if n_m < 2:
         raise ValueError("n_m must be at least 2.")
-    if m_lim <= m_min:
-        raise ValueError("m_lim must be greater than m_min.")
+    if m_lim <= m_bright:
+        raise ValueError("m_lim must be greater than m_bright.")
 
-    m_grid = np.linspace(m_min, m_lim, n_m, dtype=np.float64)
+    if cosmo is None and (luminosity_distance_mpc_fn is None or volume_weight_fn is None):
+        raise ValueError(
+            "Either cosmo or both luminosity_distance_mpc_fn and volume_weight_fn must be supplied."
+        )
+
+    if luminosity_distance_mpc_fn is None:
+
+        def luminosity_distance_mpc_fn(z_eval: FloatArray) -> FloatArray:
+            return luminosity_distance_mpc(cosmo, z_eval)
+
+    if volume_weight_fn is None:
+
+        def volume_weight_fn(z_eval: FloatArray) -> FloatArray:
+            return comoving_volume_weight(cosmo, z_eval)
+
+    m_grid = np.linspace(m_bright, m_lim, n_m, dtype=np.float64)
+
+    positive = z_arr > 0.0
+    nz = np.zeros_like(z_arr, dtype=np.float64)
+
+    if not np.any(positive):
+        return nz
+
+    z_positive = z_arr[positive]
 
     absolute_magnitude = _absolute_magnitude_grid(
-        z_arr,
+        z_positive,
         m_grid,
         luminosity_distance_mpc_fn=luminosity_distance_mpc_fn,
         k_correction_fn=k_correction_fn,
     )
 
-    phi = np.asarray(lf(absolute_magnitude, z_arr, **lf_kwargs), dtype=np.float64)
+    lf_callable, wants_2d_z = _as_lf_callable(lf)
+    z_for_lf = z_positive[:, None] if wants_2d_z else z_positive
+
+    phi = np.asarray(
+        lf_callable(absolute_magnitude, z_for_lf, **lf_kwargs),
+        dtype=np.float64,
+    )
+
     if phi.shape != absolute_magnitude.shape:
         raise ValueError("lf(M, z, ...) must return an array of shape (len(z), n_m).")
     if not np.all(np.isfinite(phi)):
@@ -196,15 +223,16 @@ def lf_nz_model(
     if np.any(phi < 0.0):
         raise ValueError("lf(M, z, ...) must return non-negative values.")
 
-    volume_weight = np.asarray(volume_weight_fn(z_arr), dtype=np.float64)
-    if volume_weight.shape != z_arr.shape:
+    volume_weight = np.asarray(volume_weight_fn(z_positive), dtype=np.float64)
+
+    if volume_weight.shape != z_positive.shape:
         raise ValueError("volume_weight_fn(z) must return shape (len(z),).")
     if not np.all(np.isfinite(volume_weight)):
         raise ValueError("volume_weight_fn(z) must return only finite values.")
     if np.any(volume_weight < 0.0):
         raise ValueError("volume_weight_fn(z) must return non-negative values.")
 
-    nz = np.trapezoid(phi, x=m_grid, axis=1) * volume_weight
+    nz[positive] = np.trapezoid(phi, x=m_grid, axis=1) * volume_weight
 
     if normalize:
         nz = normalize_over_z(z_arr, nz)

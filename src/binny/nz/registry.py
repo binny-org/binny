@@ -20,8 +20,8 @@ from binny.nz.models import (
     gamma_distribution,
     gaussian_distribution,
     gaussian_mixture_distribution,
-    lf_nz_model,
     lognormal_distribution,
+    luminosity_function_distribution,
     schechter_like_distribution,
     shifted_smail_distribution,
     skew_normal_distribution,
@@ -55,7 +55,8 @@ _MODELS: dict[str, DistFunc] = {
     "skew_normal": skew_normal_distribution,
     "student_t": student_t_distribution,
     "tabulated": tabulated_distribution,
-    "lf_nz": lf_nz_model,
+    "lumfunc": luminosity_function_distribution,
+    "lf_nz": luminosity_function_distribution,
 }
 
 
