@@ -20,9 +20,9 @@ The resulting parent redshift distribution has the form
 .. math::
 
    n(z) \propto
-   \frac{dV}{dz\,d\Omega}
+   \frac{\mathrm{d}V}{\mathrm{d}z\,\mathrm{d}\Omega}
    \int_{M_{\mathrm{bright}}}^{M_{\mathrm{lim}}(z)}
-   \phi(M, z)\,dM,
+   \phi(M, z)\,\mathrm{d}M,
 
 where :math:`M_{\mathrm{lim}}(z)` is obtained from the apparent-magnitude
 limit and the luminosity distance.
@@ -39,10 +39,11 @@ All plotting examples below are executable via ``.. plot::``.
 Basic LF-weighted n(z)
 ----------------------
 
-We begin with the simplest direct call to :func:`lf_nz_model`. The user
-supplies a redshift grid, an LFKit luminosity-function object, a PyCCL
-cosmology, and magnitude-limit settings. Binny then passes CCL-backed
-luminosity-distance and volume-weight helpers into LFKit.
+We begin with the simplest direct call to the registered
+``"lumfunc"`` model. The user supplies a redshift grid,
+an LFKit luminosity-function object, a PyCCL cosmology, and magnitude-limit
+settings. Binny then passes CCL-backed luminosity-distance and volume-weight
+helpers into LFKit.
 
 .. plot::
    :include-source: True
@@ -54,7 +55,7 @@ luminosity-distance and volume-weight helpers into LFKit.
    import pyccl as ccl
 
    from lfkit import LuminosityFunction
-   from binny.nz.lf_nz_model import lf_nz_model
+   from binny import NZTomography
 
    z = np.linspace(0.01, 3.0, 500)
 
@@ -77,9 +78,10 @@ luminosity-distance and volume-weight helpers into LFKit.
        },
    )
 
-   nz = lf_nz_model(
+   nz = NZTomography.nz_model(
+       "lumfunc",
        z,
-       lf,
+       lf=lf,
        cosmo=cosmo,
        m_lim=25.3,
        m_bright=-26.0,
@@ -140,7 +142,7 @@ LF contribution, survey volume contribution, and final redshift distribution.
        comoving_volume_weight,
        luminosity_distance_mpc,
    )
-   from binny.nz.lf_nz_model import lf_nz_model
+   from binny import NZTomography
 
    z = np.linspace(0.01, 3.5, 600)
 
@@ -163,15 +165,14 @@ LF contribution, survey volume contribution, and final redshift distribution.
        },
    )
 
-   lf_integral = lf.lf_weighted_redshift_density(
+   lf_integral = NZTomography.nz_model(
+       "lumfunc",
        z,
+       lf=lf,
+       cosmo=cosmo,
        m_lim=25.3,
        m_bright=-26.0,
        n_m=512,
-       luminosity_distance_mpc_fn=lambda z_eval: luminosity_distance_mpc(
-           cosmo,
-           z_eval,
-       ),
        volume_weight_fn=lambda z_eval: np.ones_like(z_eval),
        normalize=True,
    )
@@ -179,9 +180,10 @@ LF contribution, survey volume contribution, and final redshift distribution.
    volume = comoving_volume_weight(cosmo, z)
    volume_scaled = volume / np.trapezoid(volume, z)
 
-   nz = lf_nz_model(
+   nz = NZTomography.nz_model(
+       "lumfunc",
        z,
-       lf,
+       lf=lf,
        cosmo=cosmo,
        m_lim=25.3,
        m_bright=-26.0,
@@ -279,7 +281,7 @@ magnitude-limited redshift distribution.
    import pyccl as ccl
 
    from lfkit import LuminosityFunction
-   from binny.nz.lf_nz_model import lf_nz_model
+   from binny import NZTomography
 
    z = np.linspace(0.01, 3.0, 500)
 
@@ -332,9 +334,10 @@ magnitude-limited redshift distribution.
    fig, ax = plt.subplots(figsize=(7.0, 5.0))
 
    for (label, cosmo), color in zip(cosmologies.items(), colors, strict=True):
-       nz = lf_nz_model(
+       nz = NZTomography.nz_model(
+           "lumfunc",
            z,
-           lf,
+           lf=lf,
            cosmo=cosmo,
            m_lim=25.3,
            m_bright=-26.0,
@@ -375,7 +378,7 @@ parent redshift distribution.
    import pyccl as ccl
 
    from lfkit import LuminosityFunction
-   from binny.nz.lf_nz_model import lf_nz_model
+   from binny import NZTomography
 
    z = np.linspace(0.01, 3.0, 500)
 
@@ -426,9 +429,10 @@ parent redshift distribution.
    fig, ax = plt.subplots(figsize=(7.0, 5.0))
 
    for (label, lf), color in zip(luminosity_functions.items(), colors, strict=True):
-       nz = lf_nz_model(
+       nz = NZTomography.nz_model(
+           "lumfunc",
            z,
-           lf,
+           lf=lf,
            cosmo=cosmo,
            m_lim=25.3,
            m_bright=-26.0,
@@ -469,7 +473,7 @@ galaxies and usually push the redshift distribution toward larger redshift.
    import pyccl as ccl
 
    from lfkit import LuminosityFunction
-   from binny.nz.lf_nz_model import lf_nz_model
+   from binny import NZTomography
 
    z = np.linspace(0.01, 3.5, 600)
 
@@ -504,9 +508,10 @@ galaxies and usually push the redshift distribution toward larger redshift.
    fig, ax = plt.subplots(figsize=(7.0, 5.0))
 
    for m_lim, color in zip(magnitude_limits, colors, strict=True):
-       nz = lf_nz_model(
+       nz = NZTomography.nz_model(
+           "lumfunc",
            z,
-           lf,
+           lf=lf,
            cosmo=cosmo,
            m_lim=m_lim,
            m_bright=-26.0,
@@ -548,7 +553,7 @@ limit.
    import pyccl as ccl
 
    from lfkit import LuminosityFunction
-   from binny.nz.lf_nz_model import lf_nz_model
+   from binny import NZTomography
 
    z = np.linspace(0.01, 3.0, 500)
 
@@ -571,9 +576,10 @@ limit.
        },
    )
 
-   nz_unnormalized = lf_nz_model(
+   nz_unnormalized = NZTomography.nz_model(
+       "lumfunc",
        z,
-       lf,
+       lf=lf,
        cosmo=cosmo,
        m_lim=25.3,
        m_bright=-26.0,
@@ -581,9 +587,10 @@ limit.
        normalize=False,
    )
 
-   nz_normalized = lf_nz_model(
+   nz_normalized = NZTomography.nz_model(
+       "lumfunc",
        z,
-       lf,
+       lf=lf,
        cosmo=cosmo,
        m_lim=25.3,
        m_bright=-26.0,
@@ -638,7 +645,7 @@ This makes it easy to pass into later tomography steps.
    import pyccl as ccl
 
    from lfkit import LuminosityFunction
-   from binny.nz.lf_nz_model import lf_nz_model
+   from binny import NZTomography
 
    z = np.linspace(0.01, 3.0, 500)
 
@@ -661,9 +668,10 @@ This makes it easy to pass into later tomography steps.
        },
    )
 
-   nz = lf_nz_model(
+   nz = NZTomography.nz_model(
+       "lumfunc",
        z,
-       lf,
+       lf=lf,
        cosmo=cosmo,
        m_lim=25.3,
        m_bright=-26.0,
@@ -681,6 +689,117 @@ This makes it easy to pass into later tomography steps.
    print("All non-negative:", bool(np.all(nz >= 0.0)))
    print("Integral:", float(np.trapezoid(nz, z)))
 
+
+GAMA blue and red split modelling
+---------------------------------
+
+This example shows how the underlying parent :math:`n(z)` can be modelled
+from separate luminosity functions for blue and red galaxies. We use the
+GAMA r-band blue and red galaxy fits and evolve the Schechter parameters
+with the GAMA :math:`Q` and :math:`P` evolution model.
+
+.. plot::
+   :include-source: True
+   :width: 720
+
+   import cmasher as cmr
+   import matplotlib.pyplot as plt
+   import numpy as np
+   import pyccl as ccl
+
+   from lfkit import LuminosityFunction
+   from binny import NZTomography
+
+   def gama_lfkit_evolving_schechter(
+       absolute_mag,
+       z,
+       *,
+       phi_star,
+       m_star,
+       alpha,
+       q,
+       p,
+       z0=0.1,
+   ):
+       absolute_mag = np.asarray(absolute_mag)
+       z = np.asarray(z)
+
+       if absolute_mag.ndim > z.ndim:
+           z = z[..., None]
+
+       lf = LuminosityFunction.schechter(
+           phi_star=phi_star * 10.0 ** (0.4 * p * z),
+           m_star=m_star - q * (z - z0),
+           alpha=alpha,
+       )
+
+       return lf.phi(absolute_mag)
+
+   z = np.linspace(0.0, 0.8, 500)
+
+   cosmo = ccl.Cosmology(
+       Omega_c=0.2607,
+       Omega_b=0.049,
+       h=0.6766,
+       sigma8=0.8102,
+       n_s=0.9665,
+       transfer_function="bbks",
+       matter_power_spectrum="linear",
+   )
+
+   nz_blue = NZTomography.nz_model(
+       "lumfunc",
+       z,
+       lf=gama_lfkit_evolving_schechter,
+       cosmo=cosmo,
+       m_lim=19.8,
+       m_bright=-24.0,
+       n_m=512,
+       normalize=True,
+       phi_star=0.0038,
+       m_star=-20.45,
+       alpha=-1.49,
+       q=0.8,
+       p=2.9,
+   )
+
+   nz_red = NZTomography.nz_model(
+       "lumfunc",
+       z,
+       lf=gama_lfkit_evolving_schechter,
+       cosmo=cosmo,
+       m_lim=19.8,
+       m_bright=-24.0,
+       n_m=512,
+       normalize=True,
+       phi_star=0.0111,
+       m_star=-20.34,
+       alpha=-0.57,
+       q=1.8,
+       p=-1.2,
+   )
+
+   colors = cmr.take_cmap_colors(
+       "viridis",
+       2,
+       cmap_range=(0.2, 0.8),
+       return_fmt="hex",
+   )
+
+   fig, ax = plt.subplots(figsize=(7.4, 5.0))
+
+   ax.plot(z, nz_blue, color=colors[0], linewidth=3.0, label="Blue galaxies")
+   ax.fill_between(z, 0.0, nz_blue, color=colors[0], alpha=0.18, linewidth=0.0)
+
+   ax.plot(z, nz_red, color=colors[1], linewidth=3.0, label="Red galaxies")
+   ax.fill_between(z, 0.0, nz_red, color=colors[1], alpha=0.18, linewidth=0.0)
+
+   ax.set_xlabel("Redshift $z$")
+   ax.set_ylabel(r"Normalized $n(z)$")
+   ax.set_title("Blue and red split LF modelling of the parent redshift distribution")
+   ax.legend(frameon=False, loc="best")
+
+   plt.tight_layout()
 
 Notes
 -----
