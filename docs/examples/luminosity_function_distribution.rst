@@ -6,14 +6,14 @@
 ==============================
 
 This page provides executable examples showing how to build
-luminosity-function-weighted redshift distributions :math:`n(z)` with
+luminosity function-weighted redshift distributions :math:`n(z)` with
 Binny and LFKit.
 
 The model combines three ingredients:
 
-- a redshift grid supplied by Binny,
-- a PyCCL cosmology used for distances and volume weights,
-- an LFKit luminosity function used for the magnitude-limited LF integral.
+- a redshift grid supplied by ``Binny``,
+- a ``PyCCL`` cosmology used for distances and volume weights,
+- an ``LFKit`` luminosity function used for the magnitude-limited LF integral.
 
 The resulting parent redshift distribution has the form
 
@@ -24,24 +24,23 @@ The resulting parent redshift distribution has the form
    \int_{M_{\mathrm{bright}}}^{M_{\mathrm{lim}}(z)}
    \phi(M, z)\,\mathrm{d}M,
 
-where :math:`M_{\mathrm{lim}}(z)` is obtained from the apparent-magnitude
+where :math:`M_{\mathrm{lim}}(z)` is obtained from the apparent magnitude
 limit and the luminosity distance.
 
-This follows the same basic idea used in luminosity-function-based
+This follows the same basic idea used in luminosity function-based
 redshift-distribution modelling for weak-lensing source samples, as in
-Sarcevic et al. 2025, ``Joint Modelling of Astrophysical Systematics for
+Šarčević et al. 2025, ``Joint Modelling of Astrophysical Systematics for
 Cosmology with LSST Cosmic Shear`` (`arXiv:2406.03352
-<https://arxiv.org/abs/2406.03352>`_).
-
-All plotting examples below are executable via ``.. plot::``.
+<https://arxiv.org/abs/2406.03352>`_) and for galaxy clustering samples in
+Van Daalen and White 2018 (`arXiv:1703.05326 <https://arxiv.org/abs/1703.05326>`_).
 
 
 Basic LF-weighted n(z)
 ----------------------
 
 We begin with the simplest direct call to the registered
-``"lumfunc"`` model. The user supplies a redshift grid,
-an LFKit luminosity-function object, a PyCCL cosmology, and magnitude-limit
+``"luminosity_function"`` model. The user supplies a redshift grid,
+an LFKit luminosity function object, a PyCCL cosmology, and magnitude-limit
 settings. Binny then passes CCL-backed luminosity-distance and volume-weight
 helpers into LFKit.
 
@@ -79,7 +78,7 @@ helpers into LFKit.
    )
 
    nz = NZTomography.nz_model(
-       "lumfunc",
+       "luminosity_function",
        z,
        lf=lf,
        cosmo=cosmo,
@@ -120,7 +119,7 @@ helpers into LFKit.
 How LF and volume combine
 -------------------------
 
-This example shows the construction more explicitly. The luminosity-function
+This example shows the construction more explicitly. The luminosity function
 integral gives the magnitude-limited galaxy density as a function of redshift.
 The cosmology supplies the comoving volume weight. Their product gives the
 unnormalized redshift distribution.
@@ -166,7 +165,7 @@ LF contribution, survey volume contribution, and final redshift distribution.
    )
 
    lf_integral = NZTomography.nz_model(
-       "lumfunc",
+       "luminosity_function",
        z,
        lf=lf,
        cosmo=cosmo,
@@ -181,7 +180,7 @@ LF contribution, survey volume contribution, and final redshift distribution.
    volume_scaled = volume / np.trapezoid(volume, z)
 
    nz = NZTomography.nz_model(
-       "lumfunc",
+       "luminosity_function",
        z,
        lf=lf,
        cosmo=cosmo,
@@ -335,7 +334,7 @@ magnitude-limited redshift distribution.
 
    for (label, cosmo), color in zip(cosmologies.items(), colors, strict=True):
        nz = NZTomography.nz_model(
-           "lumfunc",
+           "luminosity_function",
            z,
            lf=lf,
            cosmo=cosmo,
@@ -365,7 +364,7 @@ Changing LF at fixed cosmology
 ------------------------------
 
 Now the cosmology is fixed and the LF parameters are changed. This isolates
-how the assumed luminosity-function shape affects the magnitude-limited
+how the assumed luminosity function shape affects the magnitude-limited
 parent redshift distribution.
 
 .. plot::
@@ -430,7 +429,7 @@ parent redshift distribution.
 
    for (label, lf), color in zip(luminosity_functions.items(), colors, strict=True):
        nz = NZTomography.nz_model(
-           "lumfunc",
+           "luminosity_function",
            z,
            lf=lf,
            cosmo=cosmo,
@@ -459,7 +458,7 @@ parent redshift distribution.
 Magnitude-limit dependence
 --------------------------
 
-The apparent-magnitude limit controls how faint the observed sample can be.
+The apparent magnitude limit controls how faint the observed sample can be.
 For a fixed LF and cosmology, deeper magnitude limits include more faint
 galaxies and usually push the redshift distribution toward larger redshift.
 
@@ -509,7 +508,7 @@ galaxies and usually push the redshift distribution toward larger redshift.
 
    for m_lim, color in zip(magnitude_limits, colors, strict=True):
        nz = NZTomography.nz_model(
-           "lumfunc",
+           "luminosity_function",
            z,
            lf=lf,
            cosmo=cosmo,
@@ -577,7 +576,7 @@ limit.
    )
 
    nz_unnormalized = NZTomography.nz_model(
-       "lumfunc",
+       "luminosity_function",
        z,
        lf=lf,
        cosmo=cosmo,
@@ -588,7 +587,7 @@ limit.
    )
 
    nz_normalized = NZTomography.nz_model(
-       "lumfunc",
+       "luminosity_function",
        z,
        lf=lf,
        cosmo=cosmo,
@@ -669,7 +668,7 @@ This makes it easy to pass into later tomography steps.
    )
 
    nz = NZTomography.nz_model(
-       "lumfunc",
+       "luminosity_function",
        z,
        lf=lf,
        cosmo=cosmo,
@@ -695,7 +694,8 @@ GAMA blue and red split modelling
 
 This example shows how the underlying parent :math:`n(z)` can be modelled
 from separate luminosity functions for blue and red galaxies. We use the
-GAMA r-band blue and red galaxy fits and evolve the Schechter parameters
+GAMA (Loveday et al. `arXiv:1111.0166
+<https://arxiv.org/abs/1111.0166>`_) `r-band blue and red galaxy fits and evolve the Schechter parameters
 with the GAMA :math:`Q` and :math:`P` evolution model.
 
 .. plot::
@@ -748,7 +748,7 @@ with the GAMA :math:`Q` and :math:`P` evolution model.
    )
 
    nz_blue = NZTomography.nz_model(
-       "lumfunc",
+       "luminosity_function",
        z,
        lf=gama_lfkit_evolving_schechter,
        cosmo=cosmo,
@@ -764,7 +764,7 @@ with the GAMA :math:`Q` and :math:`P` evolution model.
    )
 
    nz_red = NZTomography.nz_model(
-       "lumfunc",
+       "luminosity_function",
        z,
        lf=gama_lfkit_evolving_schechter,
        cosmo=cosmo,
