@@ -56,7 +56,7 @@ helpers into LFKit.
    from lfkit import LuminosityFunction
    from binny import NZTomography
 
-   z = np.linspace(0.01, 3.0, 500)
+   z = np.linspace(0.0, 3.0, 500)
 
    cosmo = ccl.Cosmology(
        Omega_c=0.2607,
@@ -143,7 +143,7 @@ LF contribution, survey volume contribution, and final redshift distribution.
    )
    from binny import NZTomography
 
-   z = np.linspace(0.01, 3.5, 600)
+   z = np.linspace(0.0, 3.5, 600)
 
    cosmo = ccl.Cosmology(
        Omega_c=0.2607,
@@ -250,7 +250,7 @@ LF contribution, survey volume contribution, and final redshift distribution.
        labels,
        frameon=False,
        loc="upper center",
-       bbox_to_anchor=(0.5, 1.05),
+       bbox_to_anchor=(0.5, 1.04),
        ncol=3,
    )
 
@@ -259,8 +259,6 @@ LF contribution, survey volume contribution, and final redshift distribution.
 
    ax1.set_xlim(z.min(), z.max())
    ax1.set_title("LF integral, volume weight, and final redshift distribution")
-
-   plt.tight_layout()
 
 
 Changing cosmology at fixed LF
@@ -282,7 +280,7 @@ magnitude-limited redshift distribution.
    from lfkit import LuminosityFunction
    from binny import NZTomography
 
-   z = np.linspace(0.01, 3.0, 500)
+   z = np.linspace(0.0, 3.0, 500)
 
    cosmologies = {
        r"$\Omega_m = 0.25$": ccl.Cosmology(
@@ -379,7 +377,7 @@ parent redshift distribution.
    from lfkit import LuminosityFunction
    from binny import NZTomography
 
-   z = np.linspace(0.01, 3.0, 500)
+   z = np.linspace(0.0, 3.0, 500)
 
    cosmo = ccl.Cosmology(
        Omega_c=0.2607,
@@ -474,7 +472,7 @@ galaxies and usually push the redshift distribution toward larger redshift.
    from lfkit import LuminosityFunction
    from binny import NZTomography
 
-   z = np.linspace(0.01, 3.5, 600)
+   z = np.linspace(0.0, 3.5, 600)
 
    cosmo = ccl.Cosmology(
        Omega_c=0.2607,
@@ -554,7 +552,7 @@ limit.
    from lfkit import LuminosityFunction
    from binny import NZTomography
 
-   z = np.linspace(0.01, 3.0, 500)
+   z = np.linspace(0.0, 3.0, 500)
 
    cosmo = ccl.Cosmology(
        Omega_c=0.2607,
@@ -646,7 +644,7 @@ This makes it easy to pass into later tomography steps.
    from lfkit import LuminosityFunction
    from binny import NZTomography
 
-   z = np.linspace(0.01, 3.0, 500)
+   z = np.linspace(0.0, 3.0, 500)
 
    cosmo = ccl.Cosmology(
        Omega_c=0.2607,
