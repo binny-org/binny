@@ -1,7 +1,7 @@
 """Luminosity-function-dependent redshift distribution model.
 
 This module defines a redshift distribution built from a luminosity function.
-The model converts an apparent-magnitude grid into absolute magnitude,
+The model converts an apparent magnitude grid into absolute magnitude,
 evaluates the luminosity function, integrates over magnitude, and weights the
 result by a redshift-dependent volume factor.
 
@@ -31,7 +31,17 @@ __all__ = ["luminosity_function_distribution"]
 def _distance_modulus_from_luminosity_distance_mpc(
     luminosity_distance_mpc: FloatArray,
 ) -> FloatArray:
-    """Return distance modulus from luminosity distance in Mpc."""
+    """Return distance modulus from luminosity distance in Mpc.
+
+    Args:
+        luminosity_distance_mpc: luminosity distance in Mpc.
+
+    Returns:
+        distance_modulus: distance modulus in Mpc.
+
+    Raises:
+        ValueError: If luminosity distance is not positive or not finite.
+    """
     d_l = np.asarray(luminosity_distance_mpc, dtype=np.float64)
 
     if not np.all(np.isfinite(d_l)):
@@ -49,7 +59,21 @@ def _absolute_magnitude_grid(
     luminosity_distance_mpc_fn: Callable[[FloatArray], FloatArray],
     k_correction_fn: Callable[[FloatArray], FloatArray] | None = None,
 ) -> FloatArray:
-    """Return absolute magnitudes for a redshift and apparent-magnitude grid."""
+    """Return absolute magnitudes for a redshift and apparent magnitude grid.
+
+    Args:
+        z: redshift grid.
+        m_grid: apparent magnitude grid.
+        luminosity_distance_mpc_fn: luminosity distance in Mpc.
+        k_correction_fn: apparent magnitude correction function.
+
+    Returns:
+        absolute magnitudes: absolute magnitudes in Mpc.
+
+    Raises:
+        ValueError: If luminosity distance shape does not match the
+            shape of m_grid.
+    """
     z_arr = np.asarray(z, dtype=np.float64)
     m_arr = np.asarray(m_grid, dtype=np.float64)
 
@@ -78,10 +102,16 @@ def _as_lf_callable(
 
     LFKit ``LuminosityFunction`` objects expose ``_as_callable`` and/or
     ``phi``. Those APIs broadcast more naturally when redshift is supplied as
-    ``z[:, None]`` against the two-dimensional absolute-magnitude grid.
+    ``z[:, None]`` against the two-dimensional absolute magnitude grid.
 
     Plain callables are left unchanged so existing Binny callables continue to
     receive the original one-dimensional redshift grid.
+
+    Args:
+        lf: Luminosity function.
+
+    Returns:
+        Luminosity function as a callable.
     """
     if hasattr(lf, "_as_callable"):
         return lf._as_callable(), True
@@ -106,7 +136,7 @@ def luminosity_function_distribution(
     normalize: bool = False,
     **lf_kwargs: Any,
 ) -> FloatArray:
-    """Return a luminosity-function-weighted redshift distribution.
+    """Return a luminosity function-weighted redshift distribution.
 
     This constructs a parent redshift distribution proportional to
 
@@ -131,11 +161,11 @@ def luminosity_function_distribution(
             luminosity-distance and comoving-volume helpers whenever explicit
             helper callables are not provided.
         m_lim:
-            Faint-end apparent-magnitude limit.
+            Faint-end apparent magnitude limit.
         m_bright:
-            Bright-end apparent-magnitude bound of the internal magnitude grid.
+            Bright-end apparent magnitude bound of the internal magnitude grid.
         n_m:
-            Number of apparent-magnitude samples used for the magnitude
+            Number of apparent magnitude samples used for the magnitude
             integral.
         luminosity_distance_mpc_fn:
             Optional callable returning luminosity distance in Mpc as a
