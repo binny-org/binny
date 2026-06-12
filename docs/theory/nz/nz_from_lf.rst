@@ -1,11 +1,11 @@
-|logo| image:: ../_static/assets/logo.png
+.. |logo| image:: ../../_static/assets/logo.png
    :alt: logo
    :width: 32px
 
 |logo| LF-weighted parent n(z)
 ==============================
 
-A luminosity-function-dependent redshift distribution builds the parent
+A luminosity function-dependent redshift distribution builds the parent
 redshift distribution directly from a luminosity function.
 
 The model converts an apparent magnitude grid into absolute magnitude,
@@ -23,7 +23,7 @@ The resulting parent distribution has the form
 .. math::
 
    n(z) \propto W_V(z)
-   \int_{m_{\rm bright}}^{m_{\rm lim}} \Phi(M(m, z), z)\, dm,
+   \int_{m_{\rm bright}}^{m_{\rm lim}} \Phi(M(m, z), z)\, \mathrm{d}m,
 
 where :math:`W_V(z)` is the redshift-dependent volume weight. Apparent
 magnitudes are converted to absolute magnitudes using the luminosity
@@ -64,7 +64,7 @@ The LF-weighted parent distribution combines four main ingredients.
 
 **Magnitude grid**
    Binny constructs an internal apparent magnitude grid between
-   ``m_bright`` and ``m_lim``. This grid is used for the luminosity-function
+   ``m_bright`` and ``m_lim``. This grid is used for the luminosity function
    integral.
 
 **Luminosity function**
@@ -113,9 +113,9 @@ over apparent magnitude,
 .. math::
 
    I_{\rm LF}(z) =
-   \int_{m_{\rm bright}}^{m_{\rm lim}} \Phi(M(m, z), z)\, dm.
+   \int_{m_{\rm bright}}^{m_{\rm lim}} \Phi(M(m, z), z)\, \mathrm{d}m.
 
-This quantity describes the magnitude-limited luminosity-function
+This quantity describes the magnitude-limited luminosity function
 contribution as a function of redshift.
 
 The final unnormalized redshift distribution is then
@@ -172,7 +172,7 @@ Connection to LFKit
 LFKit luminosity functions can be passed directly to the model. This allows
 Binny to use the LFKit interface for Schechter, evolving Schechter,
 double Schechter, power-law, Gaussian, lognormal, composite, or conditional
-luminosity-function models.
+luminosity function models.
 
 This is useful because the LF physics remains in LFKit, while Binny handles
 the redshift grid, cosmology-dependent distance and volume factors, and the
@@ -199,7 +199,7 @@ Summary
 -------
 
 The LF-weighted parent :math:`n(z)` model provides a bridge between
-luminosity-function modelling and tomographic redshift distributions.
+luminosity function modelling and tomographic redshift distributions.
 
 It is useful when the redshift distribution should be tied to an apparent
 magnitude limit, a luminosity function, luminosity distances, volume weights,
