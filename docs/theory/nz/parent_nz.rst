@@ -1,34 +1,19 @@
-.. |logo| image:: ../_static/assets/logo.png
+.. |logo| image:: ../../_static/assets/logo.png
    :alt: logo
    :width: 32px
 
-|logo| Parent n(z)
-==================
-
-A tomographic analysis begins with an underlying **parent redshift
-distribution** :math:`n(z)`, which describes how galaxies are distributed
-in redshift before any tomographic binning is applied.
-
-In Binny, this parent distribution plays a central role. It is the
-starting point from which tomographic bins are constructed, and it sets
-the baseline population that later enters diagnostics, overlap
-statistics, and downstream forecasting calculations.
-
-This page describes the parent :math:`n(z)` models currently implemented
-in Binny, why such models are useful, and how they can also be
-calibrated from mock catalogs rather than specified purely by hand.
-
+|logo| Analytic parent n(z) models
+==================================
 
 Why model a parent :math:`n(z)`?
 --------------------------------
 
-In many forecasting or methodology studies, one does not begin from a
-fully observed galaxy catalog. Instead, one works with an analytic or
-semi-analytic description of the source population. A parent
-distribution :math:`n(z)` is useful because it provides a compact way to
-encode the overall redshift structure of the sample before introducing
-tomographic cuts, photo-:math:`z` uncertainties, or survey-specific
-selection effects.
+In many forecasting or methodology studies, the starting point is not
+a fully observed galaxy catalog but an analytic or semi-analytic description
+of the source population. A parent distribution :math:`n(z)` is useful because
+it provides a compact way to encode the overall redshift structure of the sample
+before introducing tomographic cuts, photo-:math:`z` uncertainties,
+or survey-specific selection effects.
 
 This has several advantages:
 
@@ -60,6 +45,7 @@ At present, the following models are implemented:
 - ``skew_normal``
 - ``student_t``
 - ``tophat``
+- ``luminosity_function``
 
 These models are exposed through the parent-distribution registry and
 can be evaluated through :meth:`binny.NZTomography.nz_model`.
@@ -148,7 +134,7 @@ distribution occurs at
 so :math:`z_0` should be interpreted as a scale parameter rather than
 the peak location itself.
 
-.. image:: ../_static/animations/smail_parameter_sweep.gif
+.. image:: ../../_static/animations/smail_parameter_sweep.gif
    :alt: Animated Smail parameter sweep
    :width: 100%
    :align: center
@@ -282,139 +268,6 @@ effective number density :math:`n_{\rm gal}`.
 This separation is deliberate and useful. It allows Binny to treat the
 redshift structure of the sample independently from the survey surface
 density, which is especially convenient in forecasting workflows.
-
-
-Calibration from mocks
-----------------------
-
-Binny also implements a second workflow in which the parent
-distribution is not specified purely by hand. Instead, the parameters of
-a Smail model can be **calibrated from a mock catalog** containing true
-redshifts and apparent magnitudes.
-
-This is important because in realistic survey-design or forecasting
-studies one often wants the parent :math:`n(z)` to reflect an underlying
-simulated galaxy population rather than an arbitrary analytic choice.
-
-The calibration tools implemented in Binny perform three related tasks:
-
-1. infer the Smail shape parameters :math:`\alpha` and :math:`\beta`
-   from a representative mock sample,
-2. calibrate how the Smail redshift scale :math:`z_0` changes with
-   limiting magnitude,
-3. calibrate how the effective galaxy surface density
-   :math:`n_{\rm gal}` changes with limiting magnitude.
-
-This is exposed through
-:meth:`binny.NZTomography.calibrate_smail_from_mock`.
-
-The idea is straightforward. Given a mock catalog with true galaxy
-redshifts and magnitudes, one considers a sequence of magnitude cuts
-representing surveys of different depth. For each magnitude limit, one
-selects the galaxies that would be observed and fits a smooth analytic
-description to the resulting redshift distribution. One also counts how
-many galaxies remain, converting this to an effective surface density.
-
-The output is therefore not only a fitted parent :math:`n(z)`, but also
-a set of depth-scaling relations that describe how the population shifts
-as the survey becomes deeper.
-
-
-Why depth calibration matters
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-A deeper survey typically includes fainter galaxies. In practice, this
-usually changes the sample in two ways:
-
-- the galaxy population extends to higher redshift,
-- the total galaxy surface density increases.
-
-In the Binny calibration workflow, these two effects are captured by
-fitting
-
-- a relation :math:`z_0(m_{\rm lim})`, describing how the characteristic
-  redshift scale varies with limiting magnitude,
-- and a relation :math:`n_{\rm gal}(m_{\rm lim})`, describing how the
-  effective number density varies with limiting magnitude.
-
-This provides a compact analytic summary of the mock catalog that can be
-reused in later forecasting calculations. Instead of storing or
-reprocessing the full mock each time, one can work with fitted scaling
-relations that preserve the main statistical trends relevant for survey
-depth.
-
-This is one of the main reasons Smail remains useful: it is simple
-enough to calibrate robustly, yet flexible enough to capture the broad
-survey-level evolution of the parent galaxy population.
-
-
-What the calibration does not do
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-The calibration tools are designed to provide a smooth phenomenological
-summary of a mock galaxy sample. They are not intended to reproduce
-every detailed feature of a simulation or data set.
-
-In particular, a fitted Smail model should not be interpreted as a
-complete physical model of galaxy evolution or selection. Rather, it is
-a compact approximation to the overall redshift structure of the sample.
-
-Similarly, the fitted depth relations are empirical summaries of how the
-mock population changes with limiting magnitude. They are useful for
-forecasting and controlled survey studies, but they do not replace the
-full information content of a realistic mock catalog.
-
-This distinction is important for the theory documentation: Binny
-implements a practical interface for **analytic parent-distribution
-modeling**, not a full end-to-end simulation framework.
-
-
-Connection to tomography
-------------------------
-
-Once a parent :math:`n(z)` has been specified or calibrated, Binny uses
-it as the starting point for tomographic bin construction.
-
-The parent distribution itself is not yet a tomographic object. It
-contains the full galaxy population before splitting it into bins. The
-later tomography step introduces bin edges, selection rules, and
-possibly photometric uncertainty models that transform the parent
-population into a set of tomographic bin curves.
-
-It is therefore helpful to keep the conceptual separation clear:
-
-- the **parent** :math:`n(z)` describes the overall galaxy population,
-- the **tomographic bins** describe how that population is partitioned.
-
-Many diagnostics of the tomographic bins, such as overlap, leakage, or
-cross-bin coupling, depend not only on the binning scheme itself but
-also on the structure of the underlying parent distribution. A broader
-or more skewed parent :math:`n(z)` can lead to qualitatively different
-bin behavior than a narrow or sharply bounded one.
-
-
-Summary
--------
-
-Binny implements a registry-based framework for parent redshift
-distributions because tomographic workflows need a flexible but
-well-defined description of the underlying galaxy population.
-
-The Smail model is the default survey-like choice because it provides a
-smooth, interpretable, and widely used phenomenological description of
-magnitude-limited samples. Other models are included because they are
-useful for flexible alternatives, multimodal structure, asymmetric
-profiles, and controlled toy tests.
-
-In addition, Binny supports calibration of Smail-based parent
-distributions from mock catalogs, including depth-scaling relations for
-the characteristic redshift scale and the galaxy number density. This
-allows survey-motivated parent populations to be constructed from mocks
-without requiring the full catalog to be propagated through every later
-step of the workflow.
-
-For executable usage examples, see the example pages on parent
-:math:`n(z)` models and calibration from mocks.
 
 
 References

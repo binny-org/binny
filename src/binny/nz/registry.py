@@ -11,7 +11,6 @@ The registry provides:
 
 from __future__ import annotations
 
-from collections.abc import Callable
 from typing import Any
 
 import numpy as np
@@ -30,16 +29,13 @@ from binny.nz.models import (
     tabulated_distribution,
     tophat_distribution,
 )
-from binny.utils.types import FloatArray
+from binny.utils.types import DistFunc, FloatArray
 
 __all__ = [
     "available_models",
     "nz_model",
     "get_model",
 ]
-
-
-DistFunc = Callable[..., FloatArray]
 
 
 _MODELS: dict[str, DistFunc] = {
@@ -57,6 +53,7 @@ _MODELS: dict[str, DistFunc] = {
     "tabulated": tabulated_distribution,
     "lumfunc": luminosity_function_distribution,
     "lf_nz": luminosity_function_distribution,
+    "luminosity_function": luminosity_function_distribution,
 }
 
 

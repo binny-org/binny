@@ -30,7 +30,7 @@ Table of contents
       .. toctree::
          :maxdepth: 1
 
-         parent_nz
+         nz/index
          tomography
          uncertainties/index
          statistics

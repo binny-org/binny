@@ -1,13 +1,13 @@
-"""Luminosity-function-dependent redshift distribution model.
+"""Luminosity function-dependent redshift distribution model.
 
-This module defines a redshift distribution built from a luminosity function.
-The model converts an apparent-magnitude grid into absolute magnitude,
-evaluates the luminosity function, integrates over magnitude, and weights the
-result by a redshift-dependent volume factor.
+This module defines a parent redshift distribution from a luminosity function.
+It converts an apparent magnitude grid into absolute magnitude, evaluates the
+luminosity function on that grid, integrates over apparent magnitude, and
+weights the result by a redshift-dependent volume factor.
 
 The model is intentionally backend-agnostic: distances, volume weights,
 K-corrections, and luminosity functions are supplied as callables. This keeps
-the redshift-distribution interface compatible with different cosmology and LF
+the interface compatible with different cosmology backends and LF
 implementations, including LFKit ``LuminosityFunction`` objects.
 """
 
@@ -31,7 +31,17 @@ __all__ = ["luminosity_function_distribution"]
 def _distance_modulus_from_luminosity_distance_mpc(
     luminosity_distance_mpc: FloatArray,
 ) -> FloatArray:
-    """Return distance modulus from luminosity distance in Mpc."""
+    """Return distance modulus from luminosity distance in Mpc.
+
+    Args:
+        luminosity_distance_mpc: Luminosity distance in Mpc.
+
+    Returns:
+        Distance modulus evaluated from the supplied luminosity distance.
+
+    Raises:
+        ValueError: If luminosity distance is non-finite or not positive.
+    """
     d_l = np.asarray(luminosity_distance_mpc, dtype=np.float64)
 
     if not np.all(np.isfinite(d_l)):
@@ -49,7 +59,23 @@ def _absolute_magnitude_grid(
     luminosity_distance_mpc_fn: Callable[[FloatArray], FloatArray],
     k_correction_fn: Callable[[FloatArray], FloatArray] | None = None,
 ) -> FloatArray:
-    """Return absolute magnitudes for a redshift and apparent-magnitude grid."""
+    """Return absolute magnitudes on a redshift-apparent-magnitude grid.
+
+    Args:
+        z: Redshift grid.
+        m_grid: Apparent-magnitude grid.
+        luminosity_distance_mpc_fn: Callable returning luminosity distance in
+            Mpc as a function of redshift.
+        k_correction_fn: Optional callable returning K-correction as a function
+            of redshift.
+
+    Returns:
+        Two-dimensional absolute-magnitude grid with shape ``(len(z), len(m_grid))``.
+
+    Raises:
+        ValueError: If distance or K-correction callables return incompatible
+            shapes or invalid values.
+    """
     z_arr = np.asarray(z, dtype=np.float64)
     m_arr = np.asarray(m_grid, dtype=np.float64)
 
@@ -74,14 +100,21 @@ def _absolute_magnitude_grid(
 def _as_lf_callable(
     lf: Any,
 ) -> tuple[Callable[..., FloatArray], bool]:
-    """Return an ``lf(M, z)`` callable and whether LFKit-style redshift is needed.
+    """Return an LF callable and whether it expects two-dimensional redshift input.
 
     LFKit ``LuminosityFunction`` objects expose ``_as_callable`` and/or
-    ``phi``. Those APIs broadcast more naturally when redshift is supplied as
+    ``phi``. Those interfaces broadcast naturally when redshift is supplied as
     ``z[:, None]`` against the two-dimensional absolute-magnitude grid.
 
     Plain callables are left unchanged so existing Binny callables continue to
     receive the original one-dimensional redshift grid.
+
+    Args:
+        lf: Luminosity-function callable or LFKit-style object.
+
+    Returns:
+        A callable luminosity function and a flag indicating whether redshift
+        should be passed as ``z[:, None]``.
     """
     if hasattr(lf, "_as_callable"):
         return lf._as_callable(), True
@@ -106,7 +139,7 @@ def luminosity_function_distribution(
     normalize: bool = False,
     **lf_kwargs: Any,
 ) -> FloatArray:
-    """Return a luminosity-function-weighted redshift distribution.
+    """Return a luminosity function-weighted parent redshift distribution.
 
     This constructs a parent redshift distribution proportional to
 
@@ -127,13 +160,13 @@ def luminosity_function_distribution(
             Plain callables must accept ``lf(M, z, **kwargs)``. LFKit objects
             are evaluated through their ``_as_callable`` or ``phi`` interface.
         cosmo:
-            Optional PyCCL cosmology. If supplied, Binny uses its CCL-backed
-            luminosity-distance and comoving-volume helpers whenever explicit
-            helper callables are not provided.
+            Optional PyCCL cosmology object. If supplied, Binny uses its
+            CCL-backed luminosity-distance and comoving-volume helpers whenever
+            explicit helper callables are not provided.
         m_lim:
             Faint-end apparent-magnitude limit.
         m_bright:
-            Bright-end apparent-magnitude bound of the internal magnitude grid.
+            Bright-end apparent-magnitude bound of the integration grid.
         n_m:
             Number of apparent-magnitude samples used for the magnitude
             integral.
@@ -144,21 +177,21 @@ def luminosity_function_distribution(
             Optional callable returning the redshift-dependent volume weight.
             If omitted, ``cosmo`` must be supplied.
         k_correction_fn:
-            Optional callable returning the K-correction as a function of
-            redshift. If omitted, zero K-correction is assumed.
+            Optional callable returning K-correction as a function of redshift.
+            If omitted, zero K-correction is assumed.
         normalize:
             If ``True``, normalize the output over the redshift grid.
         **lf_kwargs:
             Extra keyword arguments passed directly to plain LF callables.
 
     Returns:
-        Redshift distribution evaluated on ``z``.
+        Parent redshift distribution evaluated on ``z``.
 
     Raises:
         ValueError:
             If inputs are invalid, neither ``cosmo`` nor the required helper
             callables are supplied, or supplied callables return arrays with
-            incompatible shapes.
+            incompatible shapes or invalid values.
     """
     z_arr = np.asarray(z, dtype=np.float64)
 

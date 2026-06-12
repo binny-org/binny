@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from collections.abc import Mapping, Sequence
+from collections.abc import Callable, Mapping, Sequence
 from typing import Any, TypeAlias
 
 import numpy as np
@@ -24,6 +24,7 @@ IntArray2D: TypeAlias = NDArray[np.int64]
 BoolArray: TypeAlias = NDArray[np.bool_]
 BoolArray1D: TypeAlias = NDArray[np.bool_]
 
+DistFunc = Callable[..., FloatArray]
 
 # Array-ish inputs
 FloatLike1D: TypeAlias = Sequence[float] | NDArray[np.floating]
