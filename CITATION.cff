@@ -4,7 +4,7 @@ message: >
   metadata below.
 
 title: "binny: Flexible binning algorithms for cosmology"
-version: 0.4.7
+version: 0.4.8
 date-released: 2026-05-17
 
 authors:
