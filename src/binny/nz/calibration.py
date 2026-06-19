@@ -90,46 +90,64 @@ def _smail_logpdf(z: np.ndarray, z0: float, alpha: float, beta: float) -> np.nda
 def fit_smail_params_from_mock(
     z_samples: np.ndarray,
     *,
+    weights: np.ndarray | None = None,
     alpha_bounds: tuple[float, float] = (0.2, 8.0),
     beta_bounds: tuple[float, float] = (0.2, 6.0),
     z0_bounds: tuple[float, float] = (0.01, 5.0),
-    x0: tuple[float, float, float] | None = None,  # (alpha, beta, z0)
+    x0: tuple[float, float, float] | None = None,
     z_max: float | None = None,
     min_n: int = 200,
 ) -> dict[str, Any]:
     """
     Infer Smail distribution parameters from a mock redshift sample.
 
-    This function estimates the parameters of the Smail redshift distribution
-    (alpha, beta, and z0) from a set of galaxy redshifts. The fitted model
-    represents the underlying redshift distribution of the galaxy sample.
-
-    The routine is typically applied to simulated or mock catalogs in order
-    to calibrate the parameters of analytic redshift distributions used in
-    forecasting or survey modeling.
+    This function estimates the Smail parameters ``alpha``, ``beta``, and
+    ``z0`` from galaxy redshifts. Optional weights can be used to represent
+    weighted selections, such as PSF-dependent shear-selection weights.
 
     Args:
-        z_samples:Array of galaxy redshifts drawn from a mock or simulated
-            catalog.
+        z_samples: Galaxy redshifts drawn from a mock or simulated catalog.
+        weights: Optional non-negative weights for the redshift samples.
         alpha_bounds: Allowed range for the alpha parameter.
         beta_bounds: Allowed range for the beta parameter.
         z0_bounds: Allowed range for the z0 parameter.
-        x0: Initial parameter guess for the fit.
+        x0: Initial parameter guess ``(alpha, beta, z0)``.
         z_max: Maximum redshift used when fitting the distribution.
-        min_n: Minimum number of redshift samples required to perform the fit.
+        min_n: Minimum number of valid redshift samples required to perform
+            the fit.
 
     Returns:
-            Dictionary containing the fitted parameters, fit status, and
-            summary information about the calibration sample.
+        Dictionary containing the fitted parameters, fit status, and summary
+        information about the calibration sample.
+
+    Raises:
+        RuntimeError: If SciPy optimization is unavailable.
+        ValueError: If ``weights`` does not have the same shape as
+            ``z_samples``.
     """
     if minimize is None:
         raise RuntimeError("scipy.optimize.minimize is required for Smail MLE fitting.")
 
-    z = np.asarray(z_samples, dtype=float)
-    z = z[np.isfinite(z)]
-    z = z[z >= 0]
+    z_raw = np.asarray(z_samples, dtype=float)
+    valid = np.isfinite(z_raw) & (z_raw >= 0)
+
     if z_max is not None:
-        z = z[z <= float(z_max)]
+        valid &= z_raw <= float(z_max)
+
+    if weights is None:
+        w_raw = np.ones_like(z_raw, dtype=float)
+    else:
+        w_raw = np.asarray(weights, dtype=float)
+        if w_raw.shape != z_raw.shape:
+            raise ValueError("weights must have the same shape as z_samples")
+        valid &= np.isfinite(w_raw) & (w_raw >= 0)
+
+    z = z_raw[valid]
+    w = w_raw[valid]
+
+    positive = w > 0
+    z = z[positive]
+    w = w[positive]
 
     if z.size < min_n:
         return {"ok": False, "reason": "too_few_samples", "params": None, "n": int(z.size)}
@@ -137,18 +155,19 @@ def fit_smail_params_from_mock(
     if x0 is None:
         alpha0 = 2.0
         beta0 = 1.5
-        # crude but good initializer
-        z0_0 = max(z0_bounds[0], np.median(z) / 1.4)
+        z0_0 = max(z0_bounds[0], np.average(z, weights=w) / 1.4)
         x0 = (alpha0, beta0, z0_0)
 
     bounds = [alpha_bounds, beta_bounds, z0_bounds]
 
     def nll(x: np.ndarray) -> float:
-        a, b, z0 = float(x[0]), float(x[1]), float(x[2])
-        lp = _smail_logpdf(z, z0=z0, alpha=a, beta=b)
-        if not np.all(np.isfinite(lp)):
+        alpha, beta, z0 = map(float, x)
+        log_pdf = _smail_logpdf(z, z0=z0, alpha=alpha, beta=beta)
+
+        if not np.all(np.isfinite(log_pdf)):
             return np.inf
-        return float(-np.sum(lp))
+
+        return float(-np.sum(w * log_pdf))
 
     res = minimize(
         nll,
@@ -164,14 +183,21 @@ def fit_smail_params_from_mock(
             "message": str(res.message),
             "params": None,
             "n": int(z.size),
+            "sum_weights": float(np.sum(w)),
         }
 
-    a, b, z0 = map(float, res.x)
+    alpha, beta, z0 = map(float, res.x)
+
     return {
         "ok": True,
-        "method": "mle_l_bfgs_b",
-        "params": {"alpha": a, "beta": b, "z0": z0},
+        "method": "weighted_mle_l_bfgs_b",
+        "params": {
+            "alpha": alpha,
+            "beta": beta,
+            "z0": z0,
+        },
         "n": int(z.size),
+        "sum_weights": float(np.sum(w)),
         "fun": float(res.fun),
     }
 
@@ -183,6 +209,7 @@ def fit_z0_of_maglim_from_mock(
     maglims: np.ndarray,
     alpha: float,
     beta: float,
+    weights: np.ndarray | None = None,
     z0_law: Literal["linear", "poly2"] = "linear",
     z0_bounds: tuple[float, float] = (0.01, 5.0),
     z_max: float | None = None,
@@ -207,6 +234,7 @@ def fit_z0_of_maglim_from_mock(
             evaluated.
         alpha: Fixed alpha parameter of the Smail distribution.
         beta: Fixed beta parameter of the Smail distribution.
+        weights: Optional non-negative weights for the redshift samples.
         z0_law: Functional form used to model the z0–magnitude relation.
         z0_bounds: Allowed range for the fitted z0 values.
         z_max: Maximum redshift considered when fitting the distribution.
@@ -224,15 +252,32 @@ def fit_z0_of_maglim_from_mock(
     mag = np.asarray(mag, dtype=float)
     maglims = np.asarray(maglims, dtype=float)
 
+    if mag.shape != z_true.shape:
+        raise ValueError("mag must have the same shape as z_true")
+
+    if weights is None:
+        weights_arr = np.ones_like(z_true, dtype=float)
+    else:
+        weights_arr = np.asarray(weights, dtype=float)
+        if weights_arr.shape != z_true.shape:
+            raise ValueError("weights must have the same shape as z_true")
+
     z0_pts = np.full_like(maglims, np.nan, dtype=float)
     nsel_pts = np.zeros_like(maglims, dtype=int)
 
     # 1D MLE for z0 with fixed alpha,beta
-    def fit_z0_only(zs: np.ndarray) -> float:
-        z = zs[np.isfinite(zs)]
-        z = z[z >= 0]
+    def fit_z0_only(zs: np.ndarray, ws: np.ndarray) -> float:
+        valid = np.isfinite(zs) & np.isfinite(ws) & (zs >= 0) & (ws >= 0)
         if z_max is not None:
-            z = z[z <= float(z_max)]
+            valid &= zs <= float(z_max)
+
+        z = zs[valid]
+        w = ws[valid]
+
+        positive = w > 0
+        z = z[positive]
+        w = w[positive]
+
         if z.size < min_n_per_cut:
             return np.nan
 
@@ -241,9 +286,9 @@ def fit_z0_of_maglim_from_mock(
             lp = _smail_logpdf(z, z0=z0, alpha=float(alpha), beta=float(beta))
             if not np.all(np.isfinite(lp)):
                 return np.inf
-            return float(-np.sum(lp))
+            return float(-np.sum(w * lp))
 
-        x0 = np.array([max(z0_bounds[0], np.median(z) / 1.4)], dtype=float)
+        x0 = np.array([max(z0_bounds[0], np.average(z, weights=w) / 1.4)], dtype=float)
         res = minimize(nll_z0, x0=x0, method="L-BFGS-B", bounds=[z0_bounds])
         return float(res.x[0]) if res.success else np.nan
 
@@ -251,7 +296,8 @@ def fit_z0_of_maglim_from_mock(
         sel = np.isfinite(z_true) & np.isfinite(mag) & (mag <= mlim) & (z_true >= 0)
         z_sel = z_true[sel]
         nsel_pts[i] = int(z_sel.size)
-        z0_pts[i] = fit_z0_only(z_sel)
+        w_sel = weights_arr[sel]
+        z0_pts[i] = fit_z0_only(z_sel, w_sel)
 
     m = np.isfinite(z0_pts)
     if np.sum(m) < 2:
@@ -389,8 +435,9 @@ def calibrate_depth_smail_from_mock(
     *,
     maglims: np.ndarray,
     area_deg2: float,
+    weights: np.ndarray | None = None,
     infer_alpha_beta_from: Literal["deep_cut", "all_selected_at_maglim"] = "deep_cut",
-    alpha_beta_maglim: float | None = None,  # used if infer_alpha_beta_from="deep_cut"
+    alpha_beta_maglim: float | None = None,
     z_max: float | None = None,
 ) -> dict[str, Any]:
     """
@@ -413,6 +460,8 @@ def calibrate_depth_smail_from_mock(
         mag: Apparent magnitudes of the same galaxies.
         maglims: Limiting magnitudes defining magnitude-limited samples.
         area_deg2: Survey area of the mock catalog in square degrees.
+        weights: Optional non-negative weights for fitting the Smail redshift
+            distribution.
         infer_alpha_beta_from:Strategy used to determine the shape
             parameters of the Smail distribution.
         alpha_beta_maglim: Magnitude limit defining the deep sample used to
@@ -428,6 +477,16 @@ def calibrate_depth_smail_from_mock(
     mag = np.asarray(mag, dtype=float)
     maglims = np.asarray(maglims, dtype=float)
 
+    if mag.shape != z_true.shape:
+        raise ValueError("mag must have the same shape as z_true")
+
+    if weights is None:
+        weights_arr = np.ones_like(z_true, dtype=float)
+    else:
+        weights_arr = np.asarray(weights, dtype=float)
+        if weights_arr.shape != z_true.shape:
+            raise ValueError("weights must have the same shape as z_true")
+
     if infer_alpha_beta_from == "deep_cut":
         if alpha_beta_maglim is None:
             alpha_beta_maglim = float(np.nanmax(maglims))
@@ -438,13 +497,15 @@ def calibrate_depth_smail_from_mock(
             & (z_true >= 0)
         )
         z_for_ab = z_true[sel]
+        w_for_ab = weights_arr[sel]
     else:
         # all galaxies (no mag cut) — only makes sense if mag array already
         # represents my sample selection
         sel = np.isfinite(z_true) & (z_true >= 0)
         z_for_ab = z_true[sel]
+        w_for_ab = weights_arr[sel]
 
-    ab = fit_smail_params_from_mock(z_for_ab, z_max=z_max)
+    ab = fit_smail_params_from_mock(z_for_ab, weights=w_for_ab, z_max=z_max)
     if not ab["ok"]:
         return {"ok": False, "reason": "alpha_beta_fit_failed", "alpha_beta_fit": ab}
 
@@ -457,6 +518,7 @@ def calibrate_depth_smail_from_mock(
         maglims=maglims,
         alpha=alpha,
         beta=beta,
+        weights=weights_arr,
         z_max=z_max,
     )
     ngal_cal = fit_ngal_of_maglim_from_mock(

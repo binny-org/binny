@@ -123,13 +123,14 @@ def weighted_nz_from_mock(
     selection_kind: SelectionKind = "sigmoid",
     width: float = 0.05,
     normalize: bool = True,
-) -> tuple[np.ndarray, np.ndarray]:
+) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
     """
     Build a PSF-selected redshift distribution from a mock catalog.
 
     This function estimates the source redshift distribution after applying
     a magnitude limit and a PSF-dependent shear-selection weight. It returns
-    the redshift-bin centers and the corresponding weighted distribution.
+    the selected redshifts, redshift-bin centers, weighted distribution, and
+    selection weights.
 
     Args:
         z_true: True galaxy redshifts from the mock catalog.
@@ -144,7 +145,8 @@ def weighted_nz_from_mock(
         normalize: Whether to normalize the redshift distribution to unit area.
 
     Returns:
-        Tuple containing redshift-bin centers and the weighted redshift distribution.
+        Tuple containing selected redshifts, redshift-bin centers, the weighted
+        redshift distribution, and selection weights.
 
     Raises:
         ValueError: If input catalog arrays do not have matching shapes.
@@ -185,7 +187,7 @@ def weighted_nz_from_mock(
         if area > 0:
             nz = nz / area
 
-    return z_mid, nz
+    return z_true[selected], z_mid, nz, weights
 
 
 def effective_number_density_from_mock(
@@ -304,7 +306,7 @@ def calibrate_psf_depth_from_mock(
 
     for maglim in maglims:
         for r_psf in r_psf_values:
-            z_mid, nz = weighted_nz_from_mock(
+            z, z_mid, nz, weights = weighted_nz_from_mock(
                 z_true=z_true,
                 mag=mag,
                 r_gal=r_gal,
@@ -332,8 +334,10 @@ def calibrate_psf_depth_from_mock(
                 {
                     "maglim": float(maglim),
                     "r_psf": float(r_psf),
-                    "z": z_mid,
+                    "z": z,
+                    "z_mid": z_mid,
                     "nz": nz,
+                    "weights": weights,
                     "neff_arcmin2": neff,
                 }
             )

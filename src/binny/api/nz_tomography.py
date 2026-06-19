@@ -29,6 +29,9 @@ from binny.correlations.bin_combo_filter import (
 from binny.nz.calibration import (
     calibrate_depth_smail_from_mock as _calibrate_depth_smail_from_mock,
 )
+from binny.nz.calibration import (
+    fit_smail_params_from_mock as _fit_smail_params_from_mock,
+)
 from binny.nz.psf_selection import (
     calibrate_psf_depth_from_mock as _calibrate_psf_depth_from_mock,
 )
@@ -240,17 +243,34 @@ class NZTomography:
         self._state = None
 
     @staticmethod
+    def fit_smail_from_mock(
+        z_true: np.ndarray,
+        *,
+        weights: np.ndarray | None = None,
+        z_max: float | None = None,
+        min_n: int = 200,
+    ) -> dict[str, Any]:
+        """Infer Smail parameters from a mock redshift sample."""
+        return _fit_smail_params_from_mock(
+            z_true,
+            weights=weights,
+            z_max=z_max,
+            min_n=min_n,
+        )
+
+    @staticmethod
     def calibrate_smail_from_mock(
         z_true: np.ndarray,
         mag: np.ndarray,
         *,
         maglims: np.ndarray,
         area_deg2: float,
+        weights: np.ndarray | None = None,
         infer_alpha_beta_from: Literal[
             "deep_cut",
             "all_selected_at_maglim",
         ] = "deep_cut",
-        alpha_beta_maglim: float | None = None,  # used for deep_cut
+        alpha_beta_maglim: float | None = None,
         z_max: float | None = None,
     ) -> dict[str, Any]:
         """
@@ -273,6 +293,8 @@ class NZTomography:
             mag: Apparent magnitudes of the same galaxies.
             maglims: Limiting magnitudes defining magnitude-limited samples.
             area_deg2: Survey area of the mock catalog in square degrees.
+            weights: Optional non-negative weights for fitting the Smail redshift
+                distribution.
             infer_alpha_beta_from: Strategy used to determine the shape
                 parameters of the Smail distribution.
             alpha_beta_maglim: Magnitude limit defining the deep sample used to
@@ -289,6 +311,7 @@ class NZTomography:
             mag=mag,
             maglims=maglims,
             area_deg2=area_deg2,
+            weights=weights,
             infer_alpha_beta_from=infer_alpha_beta_from,
             alpha_beta_maglim=alpha_beta_maglim,
             z_max=z_max,
