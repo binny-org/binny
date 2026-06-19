@@ -173,7 +173,7 @@ which changes the normalized redshift distribution.
 Smail fits to PSF-dependent redshift distributions
 --------------------------------------------------
 
-The calibrated PSF-dependent histograms can also be compressed into smooth
+The calibrated PSF-dependent samples can also be compressed into smooth
 analytic Smail distributions. This is useful when a forecast needs a compact
 parametric representation of the PSF-dependent source sample.
 
@@ -184,7 +184,6 @@ parametric representation of the PSF-dependent source sample.
    import cmasher as cmr
    import matplotlib.pyplot as plt
    import numpy as np
-   from scipy.optimize import curve_fit
 
    from binny import NZTomography
 
@@ -223,16 +222,6 @@ parametric representation of the PSF-dependent source sample.
        normalize_nz=True,
    )
 
-   def smail_model(z, z0, alpha, beta):
-       return NZTomography.nz_model(
-           "smail",
-           z,
-           z0=z0,
-           alpha=alpha,
-           beta=beta,
-           normalize=True,
-       )
-
    colors = cmr.take_cmap_colors(
        "viridis",
        len(r_psf_values),
@@ -245,35 +234,159 @@ parametric representation of the PSF-dependent source sample.
    fig, ax = plt.subplots(figsize=(8.0, 5.2))
 
    for color, row in zip(colors, result["results"], strict=True):
-       if np.isclose(row["maglim"], maglim):
-           popt, _ = curve_fit(
-               smail_model,
-               row["z"],
-               row["nz"],
-               p0=(0.35, 2.0, 1.0),
-               bounds=([0.05, 0.1, 0.1], [2.0, 8.0, 8.0]),
-               maxfev=10000,
-           )
+       if not np.isclose(row["maglim"], maglim):
+           continue
 
-           ax.stairs(
-               row["nz"],
-               z_edges,
-               color="k",
-               linewidth=1.5,
-               alpha=0.45,
-           )
+       smail_result = NZTomography.fit_smail_from_mock(
+           row["z"],
+           weights=row["weights"],
+           z_max=3.0,
+       )
 
-           ax.plot(
-               z_fine,
-               smail_model(z_fine, *popt),
-               color=color,
-               lw=3.0,
-               label=rf"$R_{{\rm PSF}}={row['r_psf']:.2f}$",
-           )
+       if not smail_result["ok"]:
+           continue
+
+       params = smail_result["params"]
+
+       nz_fit = NZTomography.nz_model(
+           "smail",
+           z_fine,
+           z0=params["z0"],
+           alpha=params["alpha"],
+           beta=params["beta"],
+           normalize=True,
+       )
+
+       ax.stairs(
+           row["nz"],
+           z_edges,
+           color=color,
+           linewidth=1.5,
+           alpha=0.35,
+       )
+
+       ax.plot(
+           z_fine,
+           nz_fit,
+           color=color,
+           lw=3.0,
+           label=rf"$R_{{\rm PSF}}={row['r_psf']:.2f}$",
+       )
 
    ax.set_xlabel(r"Redshift $z$")
    ax.set_ylabel(r"Normalized $n(z)$")
    ax.set_title(r"Smail fits to PSF-dependent source distributions")
+   ax.legend(frameon=False)
+
+   plt.tight_layout()
+
+
+Hard-cut versus sigmoid Smail fits
+----------------------------------
+
+The choice of PSF-selection model can also be propagated into the fitted
+Smail representation. A hard cut gives a binary selected sample, while the
+sigmoid model keeps the same galaxies with continuous shear-selection weights.
+This comparison shows how both assumptions change the calibrated
+redshift distribution and its smooth Smail fit.
+
+.. plot::
+   :include-source: True
+   :width: 700
+
+   import cmasher as cmr
+   import matplotlib.pyplot as plt
+   import numpy as np
+
+   from binny import NZTomography
+
+   rng = np.random.default_rng(42)
+
+   n_gal = 50000
+
+   z_true = rng.gamma(shape=2.0, scale=0.45, size=n_gal)
+   z_true = z_true[(z_true >= 0.0) & (z_true <= 3.0)]
+
+   mag = 22.0 + 2.1 * z_true + rng.normal(
+       0.0,
+       0.4,
+       size=z_true.size,
+   )
+
+   r_gal = (
+       0.7 / (1.0 + z_true)
+       + rng.normal(0.0, 0.08, size=z_true.size)
+   )
+   r_gal = np.clip(r_gal, 0.05, None)
+
+   maglim = 25.0
+   r_psf = 0.65
+   z_edges = np.linspace(0.0, 3.0, 41)
+   z_fine = np.linspace(0.0, 3.0, 600)
+
+   colors = cmr.take_cmap_colors(
+       "viridis",
+       2,
+       cmap_range=(0.2, 0.8),
+       return_fmt="hex",
+   )
+
+   fig, ax = plt.subplots(figsize=(8.0, 5.2))
+
+   for color, selection_kind in zip(colors, ["hard", "sigmoid"], strict=True):
+       result = NZTomography.calibrate_psf_depth_from_mock(
+           z_true=z_true,
+           mag=mag,
+           r_gal=r_gal,
+           maglims=np.array([maglim]),
+           r_psf_values=np.array([r_psf]),
+           area_deg2=100.0,
+           z_edges=z_edges,
+           selection_kind=selection_kind,
+           normalize_nz=True,
+       )
+
+       row = result["results"][0]
+
+       smail_result = NZTomography.fit_smail_from_mock(
+           row["z"],
+           weights=row["weights"],
+           z_max=3.0,
+       )
+
+       if not smail_result["ok"]:
+           continue
+
+       params = smail_result["params"]
+
+       nz_fit = NZTomography.nz_model(
+           "smail",
+           z_fine,
+           z0=params["z0"],
+           alpha=params["alpha"],
+           beta=params["beta"],
+           normalize=True,
+       )
+
+       ax.stairs(
+           row["nz"],
+           z_edges,
+           color=color,
+           linewidth=1.5,
+           alpha=0.35,
+       )
+
+       ax.plot(
+           z_fine,
+           nz_fit,
+           color=color,
+           lw=3.0,
+           label=selection_kind,
+       )
+
+   ax.set_xlabel(r"Redshift $z$")
+   ax.set_ylabel(r"Normalized $n(z)$")
+   ax.set_title(r"Hard-cut and sigmoid PSF-selection Smail fits")
    ax.legend(frameon=False)
 
    plt.tight_layout()
@@ -485,6 +598,80 @@ depth jointly affect the usable weak-lensing source sample.
        ax=ax,
        label=r"$n_{\rm eff}$ [arcmin$^{-2}$]",
    )
+
+   plt.tight_layout()
+
+
+Smooth PSF selection weights
+----------------------------
+
+The PSF-dependent selection can be modelled either as a hard resolution cut
+or as a smooth sigmoid transition.
+
+The hard cut keeps or removes galaxies abruptly once their resolution factor
+crosses the selection threshold. The sigmoid model instead assigns continuous
+weights between zero and one, giving a smoother approximation to how shear
+measurement efficiency changes as galaxies become less resolved relative to
+the PSF.
+
+.. plot::
+   :include-source: True
+   :width: 700
+
+   import cmasher as cmr
+   import matplotlib.pyplot as plt
+   import numpy as np
+
+   from binny.nz.psf_selection import shear_selection_weight
+
+   r_gal = np.linspace(0.05, 1.5, 500)
+   r_psf = 0.65
+
+   hard = shear_selection_weight(
+       r_gal,
+       r_psf=r_psf,
+       r_min=0.3,
+       kind="hard",
+   )
+
+   sigmoid = shear_selection_weight(
+       r_gal,
+       r_psf=r_psf,
+       r_min=0.3,
+       kind="sigmoid",
+       width=0.05,
+   )
+
+   colors = cmr.take_cmap_colors(
+       "viridis",
+       2,
+       cmap_range=(0.2, 0.8),
+       return_fmt="hex",
+   )
+
+   fig, ax = plt.subplots(figsize=(7.5, 5.0))
+
+   ax.plot(
+       r_gal,
+       hard,
+       color=colors[0],
+       lw=3,
+       ls="-",
+       label="hard cut",
+   )
+
+   ax.plot(
+       r_gal,
+       sigmoid,
+       color=colors[1],
+       lw=3.0,
+       label="sigmoid selection",
+   )
+
+   ax.set_xlabel(r"Galaxy size $R_{\rm gal}$")
+   ax.set_ylabel("Selection weight")
+   ax.set_title(r"PSF-dependent shear-selection weight")
+   ax.legend(frameon=False)
 
    plt.tight_layout()
 
