@@ -5,7 +5,7 @@
 |logo| PSF-dependent source selection
 =====================================
 
-Weak-lensing source samples are affected not only by survey depth but also
+Weak lensing source samples are affected not only by survey depth but also
 by image quality.
 
 For a fixed limiting magnitude, galaxies become progressively harder to
