@@ -36,6 +36,53 @@ The output is therefore not only a set of redshift distributions, but
 also a calibration describing how the usable source population changes
 as image quality varies.
 
+Selection model
+^^^^^^^^^^^^^^^
+
+The calibration combines two forms of source selection.
+
+First, galaxies are selected according to a limiting magnitude,
+
+.. math::
+
+   m \leq m_{\rm lim},
+
+where :math:`m` is the apparent magnitude of a galaxy and
+:math:`m_{\rm lim}` is the limiting magnitude of the survey.
+
+Second, the contribution of each selected galaxy is weighted according
+to how well it is resolved relative to the PSF.
+
+Binny describes this through a resolution factor,
+
+.. math::
+
+   R =
+   \frac{r_{\rm gal}^2}
+        {r_{\rm gal}^2 + r_{\rm PSF}^2},
+
+where :math:`r_{\rm gal}` is a characteristic galaxy size and
+:math:`r_{\rm PSF}` is the characteristic PSF size in the same units.
+
+Galaxies with large values of :math:`R` are well resolved, while
+galaxies with small values of :math:`R` are poorly resolved.
+
+The resolution factor is converted into a source-selection weight
+:math:`w(R)`, either through a hard threshold or through a smooth
+transition around a minimum resolution threshold.
+
+These weights are then used when estimating source redshift
+distributions and effective source densities from the mock catalog.
+
+As the PSF increases, the resolution factor generally decreases,
+reducing the contribution of small galaxies to the source population.
+Because small galaxies are often preferentially found at higher
+redshift, this process can modify both the effective source density and
+the shape of the resulting redshift distribution.
+
+In this way, the calibration approximates the loss of poorly resolved
+galaxies as image quality changes, allowing PSF-dependent source
+populations to be propagated into forecasting calculations.
 
 Why PSF calibration matters
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -84,8 +131,8 @@ for forecasting and survey studies, but they do not replace the full
 information content of image simulations or end-to-end analyses.
 
 This distinction is important for the theory documentation: Binny
-implements a practical interface for modelling source-population changes
-under varying survey conditions, not a complete weak lensing
+implements a practical interface for modelling changes in source
+populations, not a complete weak lensing
 measurement framework.
 
 
