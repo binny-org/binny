@@ -1252,3 +1252,90 @@ def test_sample_combinations_delegates(monkeypatch):
 
     assert out == [(("lens", 0), ("source", 1))]
     assert called["collections"] == (lenses, sources)
+
+
+def test_calibrate_psf_depth_from_mock_delegates(monkeypatch):
+    """Tests that calibrate_psf_depth_from_mock delegates to PSF calibration helper."""
+    called = {}
+
+    def fake_calibrate_psf_depth_from_mock(**kwargs):
+        called.update(kwargs)
+        return {"ok": True, "source": "fake_psf"}
+
+    monkeypatch.setattr(
+        "binny.api.nz_tomography._calibrate_psf_depth_from_mock",
+        fake_calibrate_psf_depth_from_mock,
+        raising=True,
+    )
+
+    z_true = np.array([0.1, 0.4, 0.8])
+    mag = np.array([23.5, 24.5, 25.2])
+    r_gal = np.array([0.45, 0.55, 0.75])
+    maglims = np.array([24.0, 25.0])
+    r_psf_values = np.array([0.6, 0.8])
+    z_edges = np.array([0.0, 0.5, 1.0])
+
+    out = NZTomography.calibrate_psf_depth_from_mock(
+        z_true=z_true,
+        mag=mag,
+        r_gal=r_gal,
+        maglims=maglims,
+        r_psf_values=r_psf_values,
+        area_deg2=10.0,
+        z_edges=z_edges,
+        r_min=0.4,
+        selection_kind="hard",
+        width=0.1,
+        normalize_nz=False,
+    )
+
+    assert out == {"ok": True, "source": "fake_psf"}
+    assert np.allclose(called["z_true"], z_true)
+    assert np.allclose(called["mag"], mag)
+    assert np.allclose(called["r_gal"], r_gal)
+    assert np.allclose(called["maglims"], maglims)
+    assert np.allclose(called["r_psf_values"], r_psf_values)
+    assert np.allclose(called["z_edges"], z_edges)
+    assert called["area_deg2"] == 10.0
+    assert called["r_min"] == 0.4
+    assert called["selection_kind"] == "hard"
+    assert called["width"] == 0.1
+    assert called["normalize_nz"] is False
+
+
+def test_calibrate_psf_depth_from_mock_uses_defaults(monkeypatch):
+    """Tests that calibrate_psf_depth_from_mock forwards default optional arguments."""
+    called = {}
+
+    def fake_calibrate_psf_depth_from_mock(**kwargs):
+        called.update(kwargs)
+        return {"ok": True}
+
+    monkeypatch.setattr(
+        "binny.api.nz_tomography._calibrate_psf_depth_from_mock",
+        fake_calibrate_psf_depth_from_mock,
+        raising=True,
+    )
+
+    z_true = np.array([0.1, 0.2])
+    mag = np.array([24.0, 24.3])
+    r_gal = np.array([0.5, 0.7])
+    maglims = np.array([24.5, 25.0])
+    r_psf_values = np.array([0.6, 0.8])
+    z_edges = np.array([0.0, 0.5, 1.0])
+
+    out = NZTomography.calibrate_psf_depth_from_mock(
+        z_true=z_true,
+        mag=mag,
+        r_gal=r_gal,
+        maglims=maglims,
+        r_psf_values=r_psf_values,
+        area_deg2=1.5,
+        z_edges=z_edges,
+    )
+
+    assert out == {"ok": True}
+    assert called["r_min"] == 0.3
+    assert called["selection_kind"] == "sigmoid"
+    assert called["width"] == 0.05
+    assert called["normalize_nz"] is True

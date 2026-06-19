@@ -1,4 +1,4 @@
-.. |logo| image:: ../_static/assets/logo.png
+.. |logo| image:: ../../_static/assets/logo.png
    :alt: logo
    :width: 32px
 
@@ -458,5 +458,5 @@ Notes
   tomographic bins from a parent :math:`n(z)`, see the tomography examples
   in :doc:`index`.
 - If you are unsure about the workflow for constructing tomographic bins,
-  see the :doc:`../workflow` page for an overview of the typical steps
+  see the :doc:`../../workflow` page for an overview of the typical steps
   involved.

@@ -29,6 +29,9 @@ from binny.correlations.bin_combo_filter import (
 from binny.nz.calibration import (
     calibrate_depth_smail_from_mock as _calibrate_depth_smail_from_mock,
 )
+from binny.nz.psf_selection import (
+    calibrate_psf_depth_from_mock as _calibrate_psf_depth_from_mock,
+)
 from binny.nz.registry import available_models as _available_nz_models
 from binny.nz.registry import nz_model as _nz_model
 from binny.nz_tomo._tomography_bins import TomographyBins
@@ -289,6 +292,59 @@ class NZTomography:
             infer_alpha_beta_from=infer_alpha_beta_from,
             alpha_beta_maglim=alpha_beta_maglim,
             z_max=z_max,
+        )
+
+    @staticmethod
+    def calibrate_psf_depth_from_mock(
+        z_true: np.ndarray,
+        mag: np.ndarray,
+        r_gal: np.ndarray,
+        *,
+        maglims: np.ndarray,
+        r_psf_values: np.ndarray,
+        area_deg2: float,
+        z_edges: np.ndarray,
+        r_min: float = 0.3,
+        selection_kind: Literal["hard", "sigmoid"] = "sigmoid",
+        width: float = 0.05,
+        normalize_nz: bool = True,
+    ) -> dict[str, Any]:
+        """
+        Run an end-to-end calibration of PSF-dependent source selection.
+
+        This routine estimates redshift distributions and effective source
+        densities from a mock catalog after applying survey depth and
+        PSF-dependent shear-selection cuts.
+
+        Args:
+            z_true: True redshifts of galaxies in the mock catalog.
+            mag: Apparent magnitudes of the same galaxies.
+            r_gal: Galaxy sizes of the same galaxies.
+            maglims: Limiting magnitudes to evaluate.
+            r_psf_values: PSF sizes to evaluate.
+            area_deg2: Survey or mock area in square degrees.
+            z_edges: Redshift-bin edges used to histogram selected samples.
+            r_min: Minimum resolution factor required for shear selection.
+            selection_kind: Selection model used for PSF-dependent weights.
+            width: Width of the sigmoid transition for smooth selection.
+            normalize_nz: Whether to normalize each redshift distribution.
+
+        Returns:
+            Dictionary containing the PSF-depth calibration grid, redshift
+            distributions, and effective source densities.
+        """
+        return _calibrate_psf_depth_from_mock(
+            z_true=z_true,
+            mag=mag,
+            r_gal=r_gal,
+            maglims=maglims,
+            r_psf_values=r_psf_values,
+            area_deg2=area_deg2,
+            z_edges=z_edges,
+            r_min=r_min,
+            selection_kind=selection_kind,
+            width=width,
+            normalize_nz=normalize_nz,
         )
 
     def build_bins(
