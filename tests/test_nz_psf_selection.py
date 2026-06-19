@@ -92,7 +92,7 @@ def test_weighted_nz_from_mock_returns_normalized_distribution() -> None:
     r_gal = np.array([2.0, 2.0, 2.0, 2.0])
     z_edges = np.array([0.0, 0.5, 1.0, 1.5])
 
-    z_mid, nz = weighted_nz_from_mock(
+    z, z_mid, nz, weights = weighted_nz_from_mock(
         z_true,
         mag,
         r_gal,
@@ -103,9 +103,35 @@ def test_weighted_nz_from_mock_returns_normalized_distribution() -> None:
         normalize=True,
     )
 
+    np.testing.assert_allclose(z, np.array([0.2, 0.4, 0.8]))
+    np.testing.assert_allclose(weights, np.ones(3))
     assert z_mid.shape == nz.shape
     np.testing.assert_allclose(z_mid, np.array([0.25, 0.75, 1.25]))
     np.testing.assert_allclose(np.trapezoid(nz, z_mid), 1.0)
+
+
+def test_weighted_nz_from_mock_returns_selected_redshifts_and_weights() -> None:
+    """Tests that weighted redshift distributions return selected redshifts and weights."""
+    z_true = np.array([0.2, 0.4, 0.8, 1.2])
+    mag = np.array([24.0, 26.0, 24.5, 26.5])
+    r_gal = np.array([2.0, 2.0, 2.0, 2.0])
+    z_edges = np.array([0.0, 0.5, 1.0, 1.5])
+
+    z, z_mid, nz, weights = weighted_nz_from_mock(
+        z_true,
+        mag,
+        r_gal,
+        maglim=25.0,
+        r_psf=0.1,
+        z_edges=z_edges,
+        selection_kind="hard",
+        normalize=False,
+    )
+
+    np.testing.assert_allclose(z, np.array([0.2, 0.8]))
+    np.testing.assert_allclose(z_mid, np.array([0.25, 0.75, 1.25]))
+    np.testing.assert_allclose(nz, np.array([1.0, 1.0, 0.0]))
+    np.testing.assert_allclose(weights, np.ones(2))
 
 
 def test_weighted_nz_from_mock_respects_magnitude_limit() -> None:
@@ -115,7 +141,7 @@ def test_weighted_nz_from_mock_respects_magnitude_limit() -> None:
     r_gal = np.array([2.0, 2.0, 2.0, 2.0])
     z_edges = np.array([0.0, 0.5, 1.0, 1.5])
 
-    _, nz = weighted_nz_from_mock(
+    z, _, nz, weights = weighted_nz_from_mock(
         z_true,
         mag,
         r_gal,
@@ -126,6 +152,8 @@ def test_weighted_nz_from_mock_respects_magnitude_limit() -> None:
         normalize=False,
     )
 
+    np.testing.assert_allclose(z, np.array([0.2]))
+    np.testing.assert_allclose(weights, np.ones(1))
     np.testing.assert_allclose(nz, np.array([1.0, 0.0, 0.0]))
 
 
@@ -218,9 +246,44 @@ def test_calibrate_psf_depth_from_mock_returns_full_grid() -> None:
     assert len(cal["results"]) == 4
 
     for result in cal["results"]:
-        assert set(result) == {"maglim", "r_psf", "z", "nz", "neff_arcmin2"}
-        assert result["z"].shape == result["nz"].shape
+        assert set(result) == {
+            "maglim",
+            "r_psf",
+            "z",
+            "z_mid",
+            "nz",
+            "weights",
+            "neff_arcmin2",
+        }
+        assert result["z_mid"].shape == result["nz"].shape
+        assert result["z"].shape == result["weights"].shape
         assert result["neff_arcmin2"] >= 0.0
+
+
+def test_calibrate_psf_depth_from_mock_returns_selected_redshifts() -> None:
+    """Tests that PSF-depth calibration returns selected redshifts."""
+    z_true = np.array([0.2, 0.4, 0.8, 1.2])
+    mag = np.array([24.0, 26.0, 24.5, 26.5])
+    r_gal = np.array([2.0, 2.0, 2.0, 2.0])
+
+    cal = calibrate_psf_depth_from_mock(
+        z_true,
+        mag,
+        r_gal,
+        maglims=np.array([25.0]),
+        r_psf_values=np.array([0.1]),
+        area_deg2=1.0,
+        z_edges=np.array([0.0, 0.5, 1.0, 1.5]),
+        selection_kind="hard",
+        normalize_nz=False,
+    )
+
+    result = cal["results"][0]
+
+    np.testing.assert_allclose(result["z"], np.array([0.2, 0.8]))
+    np.testing.assert_allclose(result["z_mid"], np.array([0.25, 0.75, 1.25]))
+    np.testing.assert_allclose(result["nz"], np.array([1.0, 1.0, 0.0]))
+    np.testing.assert_allclose(result["weights"], np.ones(2))
 
 
 def test_calibrate_psf_depth_from_mock_neff_decreases_with_larger_psf() -> None:
@@ -262,7 +325,7 @@ def test_weighted_nz_from_mock_ignores_invalid_catalog_entries() -> None:
     r_gal = np.array([2.0, 2.0, 2.0, 2.0])
     z_edges = np.array([0.0, 0.5, 1.0])
 
-    _, nz = weighted_nz_from_mock(
+    z, _, nz, weights = weighted_nz_from_mock(
         z_true,
         mag,
         r_gal,
@@ -273,6 +336,8 @@ def test_weighted_nz_from_mock_ignores_invalid_catalog_entries() -> None:
         normalize=False,
     )
 
+    np.testing.assert_allclose(z, np.array([0.2]))
+    np.testing.assert_allclose(weights, np.ones(1))
     np.testing.assert_allclose(nz, np.array([1.0, 0.0]))
 
 
@@ -283,7 +348,7 @@ def test_weighted_nz_from_mock_leaves_empty_distribution_unnormalized() -> None:
     r_gal = np.array([2.0, 2.0])
     z_edges = np.array([0.0, 0.5, 1.0])
 
-    _, nz = weighted_nz_from_mock(
+    z, _, nz, weights = weighted_nz_from_mock(
         z_true,
         mag,
         r_gal,
@@ -294,6 +359,8 @@ def test_weighted_nz_from_mock_leaves_empty_distribution_unnormalized() -> None:
         normalize=True,
     )
 
+    assert z.size == 0
+    assert weights.size == 0
     np.testing.assert_allclose(nz, np.zeros(2))
 
 

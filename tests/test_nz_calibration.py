@@ -141,8 +141,8 @@ def test_fit_smail_params_from_mock_recovers_parameters_reasonably_well():
     out = fit_smail_params_from_mock(z, min_n=200)
 
     assert out["ok"] is True
-    assert out["method"] == "mle_l_bfgs_b"
-    assert out["n"] == 12000
+    assert out["method"] == "weighted_mle_l_bfgs_b"
+    assert out["sum_weights"] == pytest.approx(12000.0)
     assert out["params"]["alpha"] == pytest.approx(alpha_true, rel=0.15)
     assert out["params"]["beta"] == pytest.approx(beta_true, rel=0.15)
     assert out["params"]["z0"] == pytest.approx(z0_true, rel=0.12)
@@ -514,3 +514,120 @@ def test_calibrate_depth_smail_from_mock_can_return_false_if_downstream_fit_fail
     assert out["alpha_beta_fit"]["ok"] is True
     assert out["z0_of_maglim"]["ok"] is False
     assert out["ok"] is False
+
+
+def test_fit_smail_params_from_mock_rejects_wrong_weight_shape():
+    """Tests that fit_smail_params_from_mock rejects weights with the wrong shape."""
+    z = _make_smail_samples(n=500, seed=30)
+    weights = np.ones(499)
+
+    with pytest.raises(ValueError, match="weights must have the same shape as z_samples"):
+        fit_smail_params_from_mock(z, weights=weights, min_n=200)
+
+
+def test_fit_smail_params_from_mock_filters_zero_and_invalid_weights():
+    """Tests that fit_smail_params_from_mock filters zero and invalid weights."""
+    z_good = _make_smail_samples(n=500, seed=31)
+    z = np.concatenate([z_good, [0.2, 0.3, 0.4, 0.5]])
+    weights = np.concatenate([np.ones_like(z_good), [0.0, np.nan, -1.0, np.inf]])
+
+    out = fit_smail_params_from_mock(z, weights=weights, min_n=200)
+
+    assert out["ok"] is True
+    assert out["n"] == 500
+    assert out["sum_weights"] == pytest.approx(500.0)
+
+
+def test_fit_smail_params_from_mock_weighted_fit_shifts_redshift_scale():
+    """Tests that fit_smail_params_from_mock responds to redshift-dependent weights."""
+    z = _make_smail_samples(n=10000, alpha=2.0, beta=1.5, z0=0.35, seed=32)
+    weights = 1.0 + 5.0 * (z > np.median(z))
+
+    unweighted = fit_smail_params_from_mock(z, min_n=200)
+    weighted = fit_smail_params_from_mock(z, weights=weights, min_n=200)
+
+    assert unweighted["ok"] is True
+    assert weighted["ok"] is True
+    assert weighted["params"]["z0"] > unweighted["params"]["z0"]
+
+
+def test_fit_z0_of_maglim_from_mock_rejects_wrong_weight_shape():
+    """Tests that fit_z0_of_maglim_from_mock rejects weights with the wrong shape."""
+    z, mag = _make_mock_catalog(n=1000, seed=33)
+    maglims = np.array([22.5, 23.0, 23.5])
+
+    with pytest.raises(ValueError, match="weights must have the same shape as z_true"):
+        fit_z0_of_maglim_from_mock(
+            z_true=z,
+            mag=mag,
+            maglims=maglims,
+            alpha=2.0,
+            beta=1.5,
+            weights=np.ones(999),
+            min_n_per_cut=50,
+        )
+
+
+def test_fit_z0_of_maglim_from_mock_uses_weights():
+    """Tests that fit_z0_of_maglim_from_mock uses redshift-dependent weights."""
+    z, mag = _make_mock_catalog(n=10000, seed=34)
+    maglims = np.array([22.8, 23.2, 23.6, 24.0, 24.4])
+    weights = 1.0 + 5.0 * (z > np.median(z))
+
+    unweighted = fit_z0_of_maglim_from_mock(
+        z_true=z,
+        mag=mag,
+        maglims=maglims,
+        alpha=2.0,
+        beta=1.5,
+        min_n_per_cut=100,
+    )
+    weighted = fit_z0_of_maglim_from_mock(
+        z_true=z,
+        mag=mag,
+        maglims=maglims,
+        alpha=2.0,
+        beta=1.5,
+        weights=weights,
+        min_n_per_cut=100,
+    )
+
+    assert unweighted["ok"] is True
+    assert weighted["ok"] is True
+    assert np.nanmean(weighted["points"]["z0"]) > np.nanmean(unweighted["points"]["z0"])
+
+
+def test_calibrate_depth_smail_from_mock_rejects_wrong_weight_shape():
+    """Tests that calibrate_depth_smail_from_mock rejects weights with the wrong shape."""
+    z, mag = _make_mock_catalog(n=1000, seed=35)
+    maglims = np.array([22.5, 23.0, 23.5])
+
+    with pytest.raises(ValueError, match="weights must have the same shape as z_true"):
+        calibrate_depth_smail_from_mock(
+            z_true=z,
+            mag=mag,
+            maglims=maglims,
+            area_deg2=1.0,
+            weights=np.ones(999),
+        )
+
+
+def test_calibrate_depth_smail_from_mock_passes_weights_to_alpha_beta_fit():
+    """Tests that calibrate_depth_smail_from_mock passes weights into the Smail fit."""
+    z, mag = _make_mock_catalog(n=10000, seed=36)
+    maglims = np.array([22.8, 23.2, 23.6, 24.0, 24.4])
+    weights = 1.0 + 5.0 * (z > np.median(z))
+
+    out = calibrate_depth_smail_from_mock(
+        z_true=z,
+        mag=mag,
+        maglims=maglims,
+        area_deg2=3.0,
+        weights=weights,
+        infer_alpha_beta_from="all_selected_at_maglim",
+        z_max=3.0,
+    )
+
+    assert out["ok"] is True
+    assert out["alpha_beta_fit"]["method"] == "weighted_mle_l_bfgs_b"
+    assert out["alpha_beta_fit"]["sum_weights"] > out["alpha_beta_fit"]["n"]

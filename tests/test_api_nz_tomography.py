@@ -775,6 +775,7 @@ def test_calibrate_smail_from_mock_delegates(monkeypatch):
         mag,
         maglims,
         area_deg2,
+        weights,
         infer_alpha_beta_from,
         alpha_beta_maglim,
         z_max,
@@ -783,6 +784,7 @@ def test_calibrate_smail_from_mock_delegates(monkeypatch):
         called["mag"] = mag
         called["maglims"] = maglims
         called["area_deg2"] = area_deg2
+        called["weights"] = weights
         called["infer_alpha_beta_from"] = infer_alpha_beta_from
         called["alpha_beta_maglim"] = alpha_beta_maglim
         called["z_max"] = z_max
@@ -813,6 +815,7 @@ def test_calibrate_smail_from_mock_delegates(monkeypatch):
     assert np.allclose(called["mag"], mag)
     assert np.allclose(called["maglims"], maglims)
     assert called["area_deg2"] == 5.0
+    assert called["weights"] is None
     assert called["infer_alpha_beta_from"] == "deep_cut"
     assert called["alpha_beta_maglim"] == 25.5
     assert called["z_max"] == 3.0
