@@ -3,7 +3,7 @@
    :width: 32px
 
 |logo| PSF-dependent source selection
-====================================
+=====================================
 
 Binny also implements a workflow for studying how image quality changes
 the source populations used in weak lensing analyses.
