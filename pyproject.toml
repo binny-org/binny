@@ -187,8 +187,9 @@ commands = [
 [tool.tox.env.docs-releases]
 description = "Build the documentation for binny releases using Sphinx"
 extras = ["docs"]
-allowlist_externals = ["cp"]
+allowlist_externals = ["cp", "bash"]
 commands = [
+  ["bash", "-lc", "test \"$(git branch --show-current)\" = main"],
   ["sphinx-multiversion", "{tox_root}/docs", "{tox_root}/docs/_build/html", "--fail-on-warning"],
   ["cp", "{tox_root}/docs/_templates/pages_redirect.html", "{tox_root}/docs/_build/html/index.html"],
 ]
