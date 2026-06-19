@@ -1,4 +1,4 @@
-|logo| image:: ../../_static/assets/logo.png
+.. |logo| image:: ../../_static/assets/logo.png
    :alt: logo
    :width: 32px
 
