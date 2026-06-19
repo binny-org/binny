@@ -1,4 +1,4 @@
-.. |logo| image:: ../_static/assets/logo.png
+.. |logo| image:: ../../_static/assets/logo.png
    :alt: logo
    :width: 32px
 
@@ -61,7 +61,7 @@ samples for both **year 1** and **year 10**.
    :icon: code
    :animate: fade-in-slide-down
 
-   .. literalinclude:: ../../src/binny/surveys/configs/lsst_survey_specs.yaml
+   .. literalinclude:: ../../../src/binny/surveys/configs/lsst_survey_specs.yaml
       :language: yaml
       :caption: LSST survey configuration
 
@@ -179,7 +179,7 @@ sample over the Euclid clustering redshift range.
    :icon: code
    :animate: fade-in-slide-down
 
-   .. literalinclude:: ../../src/binny/surveys/configs/euclid_survey_specs.yaml
+   .. literalinclude:: ../../../src/binny/surveys/configs/euclid_survey_specs.yaml
       :language: yaml
       :caption: Euclid survey configuration
 
@@ -289,7 +289,7 @@ shallower redshift reach.
    :icon: code
    :animate: fade-in-slide-down
 
-   .. literalinclude:: ../../src/binny/surveys/configs/des_survey_specs.yaml
+   .. literalinclude:: ../../../src/binny/surveys/configs/des_survey_specs.yaml
       :language: yaml
       :caption: DES survey configuration
 
@@ -397,7 +397,7 @@ the optimistic HLS, conservative HLS, and wide Roman scenarios.
    :icon: code
    :animate: fade-in-slide-down
 
-   .. literalinclude:: ../../src/binny/surveys/configs/roman_survey_specs.yaml
+   .. literalinclude:: ../../../src/binny/surveys/configs/roman_survey_specs.yaml
       :language: yaml
       :caption: Roman survey configuration
 
@@ -575,7 +575,7 @@ The default preset uses the redshift windows from arXiv:2511.19194:
    :icon: code
    :animate: fade-in-slide-down
 
-   .. literalinclude:: ../../src/binny/surveys/configs/desi_survey_specs.yaml
+   .. literalinclude:: ../../../src/binny/surveys/configs/desi_survey_specs.yaml
       :language: yaml
       :caption: DESI survey configuration
 

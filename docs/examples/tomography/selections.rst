@@ -1,4 +1,4 @@
-.. |logo| image:: ../_static/assets/logo.png
+.. |logo| image:: ../../_static/assets/logo.png
    :alt: logo
    :width: 32px
 
@@ -31,7 +31,7 @@ By convention, Binny assumes an **upper-triangular ordering**
 :math:`i \le j` when constructing pairs within a single sample.
 This avoids symmetric duplicates such as :math:`(i,j)` and :math:`(j,i)`.
 The reasoning behind this convention is discussed in
-:doc:`../theory/conventions`.
+:doc:`../../theory/conventions`.
 
 The examples below illustrate the most common patterns.
 

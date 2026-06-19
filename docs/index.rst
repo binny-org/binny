@@ -67,7 +67,7 @@ The examples below illustrate common Binny workflows.
    :gutter: 3
 
    .. grid-item-card:: Parent redshift models
-      :link: examples/nz_modelling
+      :link: examples/parent_nz/nz_modelling
       :link-type: doc
 
       .. image:: _static/animations/parent_nz_model_sweep.gif
@@ -78,7 +78,7 @@ The examples below illustrate common Binny workflows.
       :math:`n(z)` and explore their properties.
 
    .. grid-item-card:: Calibrating redshift distributions
-      :link: examples/nz_calibration
+      :link: examples/parent_nz/nz_calibration
       :link-type: doc
 
       .. image:: _static/animations/smail_from_mock_calibration.gif
@@ -89,7 +89,7 @@ The examples below illustrate common Binny workflows.
       or mock galaxy catalogs.
 
    .. grid-item-card:: Photometric tomography
-      :link: examples/photoz_bins
+      :link: examples/tomography/photoz_bins
       :link-type: doc
 
       .. image:: _static/animations/tomo_photoz_example.gif
@@ -100,7 +100,7 @@ The examples below illustrate common Binny workflows.
       redshift estimates.
 
    .. grid-item-card:: Spectroscopic tomography
-      :link: examples/specz_bins
+      :link: examples/tomography/specz_bins
       :link-type: doc
 
       .. image:: _static/animations/tomo_specz_example.gif
@@ -111,7 +111,7 @@ The examples below illustrate common Binny workflows.
       spectroscopic surveys.
 
    .. grid-item-card:: Bin summaries
-      :link: examples/bin_summaries
+      :link: examples/diagnostics/bin_summaries
       :link-type: doc
 
       .. image:: _static/animations/tomo_bin_summaries.gif
@@ -122,7 +122,7 @@ The examples below illustrate common Binny workflows.
       widths, number densities, and related aggregate statistics.
 
    .. grid-item-card:: Bin diagnostics
-      :link: examples/bin_diagnostics
+      :link: examples/diagnostics/bin_diagnostics
       :link-type: doc
 
       .. image:: _static/animations/tomo_bin_diagnostics.gif
@@ -132,7 +132,7 @@ The examples below illustrate common Binny workflows.
       Inspect bin overlap, leakage, and statistical properties.
 
    .. grid-item-card:: Survey presets
-      :link: examples/survey_presets
+      :link: examples/surveys/survey_presets
       :link-type: doc
 
       .. image:: _static/animations/lsst_preset_sweep.gif
@@ -143,7 +143,7 @@ The examples below illustrate common Binny workflows.
       real cosmological surveys.
 
    .. grid-item-card:: Bin-pair selection
-      :link: examples/selections
+      :link: examples/tomography/selections
       :link-type: doc
 
       .. image:: _static/animations/lens_source_pair_exclusions.gif
