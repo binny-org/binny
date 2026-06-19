@@ -76,3 +76,4 @@ Detailed pages
    parent_nz
    nz_from_mocks
    nz_from_lf
+   psf_selection
