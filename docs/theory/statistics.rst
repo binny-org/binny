@@ -27,7 +27,7 @@ explains how they should be interpreted.
 
 For practical examples of these statistics in action, including
 visualizations and comparisons between different binning schemes,
-see the :doc:`Bin summaries examples <../examples/bin_summaries>`.
+see the :doc:`Bin summaries examples <../examples/diagnostics/bin_summaries>`.
 
 
 Why separate shape and population statistics?
@@ -416,7 +416,7 @@ This page introduces the concepts behind Binny's bin-summary statistics.
 
 For worked examples showing how these quantities behave in practice,
 including visualizations of bin centers, widths, and population
-distributions, see the :doc:`Bin summaries examples <../examples/bin_summaries>`.
+distributions, see the :doc:`Bin summaries examples <../examples/diagnostics/bin_summaries>`.
 
 A useful way to think about the split is:
 

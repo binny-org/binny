@@ -26,7 +26,7 @@ Binny and explains how they should be interpreted.
 
 For practical examples of these diagnostics in action, including
 visualizations and comparisons between different tomographic binning
-schemes, see the :doc:`Bin diagnostics examples <../examples/bin_diagnostics>`.
+schemes, see the :doc:`Bin diagnostics examples <../examples/diagnostics/bin_diagnostics>`.
 
 
 Why cross-bin diagnostics are useful
@@ -322,7 +322,7 @@ This page introduces the concepts behind Binny's diagnostic metrics.
 For worked examples showing how these quantities behave in practice,
 including visualizations of overlap matrices, leakage patterns, and
 similarity comparisons between tomographic bins, see the
-:doc:`Bin diagnostics examples <../examples/bin_diagnostics>`.
+:doc:`Bin diagnostics examples <../examples/diagnostics/bin_diagnostics>`.
 
 A useful way to think about the split is:
 

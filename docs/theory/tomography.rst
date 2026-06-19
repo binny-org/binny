@@ -348,19 +348,19 @@ different binning configurations.
 Practical usage examples are provided throughout the documentation:
 
 - Examples of **parent redshift models** and analytic :math:`n(z)` functions are
-  shown in :doc:`../examples/nz_modelling`.
+  shown in :doc:`../examples/parent_nz/nz_modelling`.
 - Methods for **calibrating redshift distributions from simulations or mock
-  catalogs** are demonstrated in :doc:`../examples/nz_calibration`.
+  catalogs** are demonstrated in :doc:`../examples/parent_nz/nz_calibration`.
 - Detailed examples of **photometric tomography**, including overlapping bins
   constructed from photometric redshift estimates, are provided in
-  :doc:`../examples/photoz_bins`.
+  :doc:`../examples/tomography/photoz_bins`.
 - Examples of **spectroscopic binning**, where bins correspond to sharply
-  defined redshift intervals, are shown in :doc:`../examples/specz_bins`.
+  defined redshift intervals, are shown in :doc:`../examples/tomography/specz_bins`.
 - Additional diagnostics for inspecting bin shapes, overlaps, and statistical
-  properties are illustrated in :doc:`../examples/bin_diagnostics` and
-  :doc:`../examples/bin_summaries`.
+  properties are illustrated in :doc:`../examples/diagnostics/bin_diagnostics` and
+  :doc:`../examples/diagnostics/bin_summaries`.
 - Survey-specific binning configurations used in forecasting studies can
-  also be constructed using the utilities described in :doc:`../examples/survey_presets`.
+  also be constructed using the utilities described in :doc:`../examples/surveys/survey_presets`.
 
 
 References
