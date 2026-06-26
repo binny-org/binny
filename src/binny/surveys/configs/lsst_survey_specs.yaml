@@ -52,6 +52,7 @@ tomography:
         z0: 0.26
         alpha: 2.0
         beta: 0.94
+        normalize: true
 
     # Bin specification:
     # - Option A (scheme-based): provide scheme + n_bins (+ optional range)
@@ -90,6 +91,7 @@ tomography:
         z0: 0.28
         alpha: 2.0
         beta: 0.9
+        normalize: true
 
     # Bin specification:
     # - Option A (scheme-based): provide scheme + n_bins (+ optional range)
@@ -126,6 +128,7 @@ tomography:
         z0: 0.13
         alpha: 2.0
         beta: 0.78
+        normalize: true
 
     # Bin specification:
     # - Option A (scheme-based): provide scheme + n_bins (+ optional range)
@@ -162,6 +165,7 @@ tomography:
         z0: 0.11
         alpha: 2.0
         beta: 0.68
+        normalize: true
 
     # Bin specification:
     # - Option A (scheme-based): provide scheme + n_bins (+ optional range)
