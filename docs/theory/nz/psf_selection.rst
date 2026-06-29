@@ -64,9 +64,8 @@ Binny describes this through a resolution factor,
 
 where :math:`r_{\rm gal}` is a characteristic galaxy size and
 :math:`r_{\rm PSF}` is the characteristic PSF size in the same units.
-
-Galaxies with large values of :math:`R` are well resolved, while
-galaxies with small values of :math:`R` are poorly resolved.
+A galaxy is *resolved* if its resolution factor is around 1,
+and is *unresolved* if its resolution factor is around 0.
 
 The resolution factor is converted into a source-selection weight
 :math:`w(R)`, either through a hard threshold or through a smooth
