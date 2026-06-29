@@ -59,7 +59,8 @@ Binny describes this through a resolution factor,
 
    R =
    \frac{r_{\rm gal}^2}
-        {r_{\rm gal}^2 + r_{\rm PSF}^2},
+        {r_{\rm gal}^2 + r_{\rm PSF}^2}
+     = \frac{1}{1+(r_{\rm PSF}/r_{\rm gal})^2},
 
 where :math:`r_{\rm gal}` is a characteristic galaxy size and
 :math:`r_{\rm PSF}` is the characteristic PSF size in the same units.
