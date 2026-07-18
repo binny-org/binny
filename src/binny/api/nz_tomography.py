@@ -40,6 +40,9 @@ from binny.nz.registry import nz_model as _nz_model
 from binny.nz_tomo._tomography_bins import TomographyBins
 from binny.nz_tomo.bin_stats import population_stats as _population_stats
 from binny.nz_tomo.bin_stats import shape_stats as _shape_stats
+from binny.nz_tomo.predefined import (
+    prepare_predefined_bins as _prepare_predefined_bins,
+)
 from binny.nz_tomo.sample_composition import (
     combine_parent_nz as _combine_parent_nz,
 )
@@ -370,6 +373,81 @@ class NZTomography:
             normalize_nz=normalize_nz,
         )
 
+    def build_predefined_bins(
+        self,
+        *,
+        z: Any,
+        bins: Mapping[int, Any],
+        nz: Any | None = None,
+        normalize_bins: bool = False,
+        norm_method: Literal["trapezoid", "simpson"] = "trapezoid",
+        include_tomo_metadata: bool = False,
+    ) -> TomographyBins:
+        """Build tomography directly from externally supplied bin curves.
+
+        The supplied curves are validated and returned directly. They are not
+        passed through a photo-z or spec-z assignment model and are not re-binned.
+
+        Args:
+            z: Shared redshift grid.
+            bins: Mapping from bin index to predefined n_i(z).
+            nz: Optional parent n(z). If omitted, the raw bin curves are summed.
+            normalize_bins: Whether to normalize each returned bin curve.
+            norm_method: Numerical integration method used for normalization.
+            include_tomo_metadata: Whether to include bin population metadata.
+
+        Returns:
+            A ``TomographyBins`` object containing the predefined bin curves.
+
+        Raises:
+            ValueError: If the redshift grid or any bin curve is invalid.
+            TypeError: If bin keys are not integers.
+        """
+        self.clear()
+
+        z_arr, parent_arr, prepared_bins, tomo_meta = _prepare_predefined_bins(
+            z=z,
+            bins=bins,
+            nz=nz,
+            normalize_bins=normalize_bins,
+            norm_method=norm_method,
+            include_metadata=include_tomo_metadata,
+        )
+
+        spec = {
+            "kind": "predefined",
+            "nz": {
+                "model": "arrays",
+            },
+            "bins": {
+                "scheme": "predefined",
+                "normalize_bins": normalize_bins,
+                "norm_method": norm_method,
+            },
+        }
+
+        self._parent = {
+            "z": z_arr,
+            "nz": parent_arr,
+            "survey_meta": None,
+        }
+
+        self._state = {
+            "tomo_spec": spec,
+            "bins": prepared_bins,
+            "tomo_meta": tomo_meta,
+        }
+
+        return TomographyBins(
+            z=z_arr,
+            nz=parent_arr,
+            spec=dict(spec),
+            bins=prepared_bins,
+            tomo_meta=tomo_meta,
+            survey_meta=None,
+            survey=None,
+        )
+
     def build_bins(
         self,
         *,
@@ -472,6 +550,62 @@ class NZTomography:
 
         if "bins" not in spec or not isinstance(spec["bins"], Mapping):
             raise ValueError("tomo_spec must contain a 'bins' mapping.")
+
+        bin_scheme = _norm_str(
+            spec["bins"].get(
+                "scheme",
+                "",
+            )
+        )
+
+        is_predefined = spec["kind"] == "predefined" or bin_scheme == "predefined"
+
+        if is_predefined:
+            z_arr, supplied_bins = cu._load_predefined_bin_source(spec["bins"])
+
+            (
+                z_arr,
+                parent_arr,
+                prepared_bins,
+                tomo_meta,
+            ) = _prepare_predefined_bins(
+                z=z_arr,
+                bins=supplied_bins,
+                nz=None,
+                normalize_bins=bool(
+                    spec["bins"].get(
+                        "normalize_bins",
+                        False,
+                    )
+                ),
+                norm_method=spec["bins"].get(
+                    "norm_method",
+                    "trapezoid",
+                ),
+                include_metadata=include_tomo_metadata,
+            )
+
+            survey_meta = self._parent.get("survey_meta")
+
+            self._parent = {
+                "z": z_arr,
+                "nz": parent_arr,
+                "survey_meta": survey_meta,
+            }
+
+            self._state["bins"] = prepared_bins
+            self._state["tomo_meta"] = tomo_meta
+            self._state["tomo_spec"] = spec
+
+            return TomographyBins(
+                z=z_arr,
+                nz=parent_arr,
+                spec=dict(spec),
+                bins=prepared_bins,
+                tomo_meta=tomo_meta,
+                survey_meta=(survey_meta if include_survey_metadata else None),
+                survey=None,
+            )
 
         # 3) Resolve builder
         builder = self._resolve_builder(spec["kind"])
@@ -1047,27 +1181,50 @@ class NZTomography:
             entry = cu._require_single(matches, what="tomography entry")
 
             spec = cu._parse_entry(entry)
-            spec["kind"] = _norm_str(spec.get("kind", "photoz"))
+            spec["kind"] = _norm_str(
+                spec.get(
+                    "kind",
+                    "photoz",
+                )
+            )
 
-            nz_arr = cu._build_parent_nz(entry, z_arr)
+            survey_meta = (
+                cu._survey_meta(
+                    cfg=cfg,
+                    resolved_key=str(key or "survey"),
+                    role=spec["role"],
+                    year=spec["year"],
+                    scenario=spec["scenario"],
+                    sample=spec["sample"],
+                )
+                if include_survey_metadata
+                else None
+            )
 
-            parent = {
-                "z": z_arr,
-                "nz": nz_arr,
-                "survey_meta": (
-                    cu._survey_meta(
-                        cfg=cfg,
-                        resolved_key=str(key or "survey"),
-                        role=spec["role"],
-                        year=spec["year"],
-                        scenario=spec["scenario"],
-                        sample=spec["sample"],
-                    )
-                    if include_survey_metadata
-                    else None
-                ),
+            if spec["kind"] == "predefined":
+                parent = {
+                    "z": None,
+                    "nz": None,
+                    "survey_meta": survey_meta,
+                }
+            else:
+                nz_arr = cu._build_parent_nz(
+                    entry,
+                    z_arr,
+                )
+
+                parent = {
+                    "z": z_arr,
+                    "nz": nz_arr,
+                    "survey_meta": survey_meta,
+                }
+
+            state = {
+                "tomo_spec": spec,
+                "bins": None,
+                "tomo_meta": None,
             }
-            state = {"tomo_spec": spec, "bins": None, "tomo_meta": None}
+
             return parent, state
 
         raise ValueError(

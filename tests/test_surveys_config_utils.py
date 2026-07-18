@@ -16,6 +16,7 @@ from binny.surveys.config_utils import (
     _extract_survey_meta,
     _extract_z_grid,
     _iter_tomography_entries,
+    _load_predefined_bin_source,
     _load_yaml_mapping,
     _parse_bins,
     _parse_entry,
@@ -404,12 +405,21 @@ def test_parse_bins_rejects_bad_edges_shape() -> None:
 
 def test_parse_entry_rejects_bad_kind() -> None:
     """Tests that _parse_entry rejects unsupported kind values."""
-    with pytest.raises(ValueError, match="kind must be 'photoz' or 'specz'"):
+    with pytest.raises(
+        ValueError,
+        match="photoz.*specz.*predefined",
+    ):
         _parse_entry(
             {
                 "kind": "nope",
-                "nz": {"model": "smail", "params": {}},
-                "bins": {"scheme": "x", "n_bins": 2},
+                "nz": {
+                    "model": "smail",
+                    "params": {},
+                },
+                "bins": {
+                    "scheme": "x",
+                    "n_bins": 2,
+                },
             }
         )
 
@@ -724,3 +734,362 @@ def test_survey_meta_preserves_scenario_and_survey_meta(
     assert meta["scenario"] == "test_scenario"
     assert meta["sample"] == "samplename"
     assert meta["survey_meta"] == {"a": 1}
+
+
+def test_parse_bins_accepts_predefined_configuration() -> None:
+    """Tests that _parse_bins preserves valid predefined-bin settings."""
+    bins = _parse_bins(
+        {
+            "scheme": "predefined",
+            "n_bins": 2,
+            "source": {
+                "path": "mock_bins.txt",
+                "z_col": "redshift",
+                "bin_cols": {
+                    0: "low",
+                    1: "high",
+                },
+            },
+            "normalize_bins": True,
+            "norm_method": "simpson",
+        }
+    )
+
+    assert bins["scheme"] == "predefined"
+    assert bins["n_bins"] == 2
+    assert bins["source"]["path"] == "mock_bins.txt"
+    assert bins["source"]["z_col"] == "redshift"
+    assert bins["source"]["bin_cols"] == {
+        0: "low",
+        1: "high",
+    }
+    assert bins["normalize_bins"] is True
+    assert bins["norm_method"] == "simpson"
+
+
+@pytest.mark.parametrize(
+    ("bins_block", "match"),
+    [
+        (
+            {
+                "scheme": "predefined",
+            },
+            "bins.source must be a mapping",
+        ),
+        (
+            {
+                "scheme": "predefined",
+                "source": {
+                    "path": "mock_bins.txt",
+                },
+                "range": [0.0, 2.0],
+            },
+            "must not provide bins.range",
+        ),
+        (
+            {
+                "scheme": "predefined",
+                "source": {
+                    "path": "mock_bins.txt",
+                },
+                "normalize_bins": "true",
+            },
+            "normalize_bins must be a boolean",
+        ),
+        (
+            {
+                "scheme": "predefined",
+                "source": {
+                    "path": "mock_bins.txt",
+                },
+                "norm_method": "rectangle",
+            },
+            "norm_method must be",
+        ),
+        (
+            {
+                "scheme": "predefined",
+                "source": {
+                    "path": "mock_bins.txt",
+                },
+                "n_bins": True,
+            },
+            "n_bins must be an integer",
+        ),
+        (
+            {
+                "scheme": "predefined",
+                "source": {
+                    "path": "mock_bins.txt",
+                },
+                "n_bins": 0,
+            },
+            "n_bins must be positive",
+        ),
+    ],
+)
+def test_parse_bins_rejects_invalid_predefined_configuration(
+    bins_block: dict[str, Any],
+    match: str,
+) -> None:
+    """Tests that _parse_bins rejects malformed predefined-bin settings."""
+    with pytest.raises(
+        ValueError,
+        match=match,
+    ):
+        _parse_bins(bins_block)
+
+
+def test_parse_entry_accepts_predefined_without_parent_nz() -> None:
+    """Tests that _parse_entry accepts predefined tomography without an nz block."""
+    spec = _parse_entry(
+        {
+            "role": "source",
+            "sample": "external_sample",
+            "kind": "predefined",
+            "bins": {
+                "scheme": "predefined",
+                "source": {
+                    "path": "mock_bins.txt",
+                    "z_col": "z",
+                    "bin_cols": {
+                        0: "bin_0",
+                        1: "bin_1",
+                    },
+                },
+                "normalize_bins": True,
+                "norm_method": "trapezoid",
+            },
+        }
+    )
+
+    assert spec["kind"] == "predefined"
+    assert spec["nz"] is None
+    assert spec["normalize_bins"] is True
+    assert spec["bins"]["scheme"] == "predefined"
+    assert spec["bins"]["normalize_bins"] is True
+
+
+def test_parse_entry_infers_predefined_kind_from_bin_scheme() -> None:
+    """Tests that _parse_entry infers predefined kind from the bin scheme."""
+    spec = _parse_entry(
+        {
+            "role": "source",
+            "bins": {
+                "scheme": "predefined",
+                "source": {
+                    "path": "mock_bins.txt",
+                },
+            },
+        }
+    )
+
+    assert spec["kind"] == "predefined"
+    assert spec["nz"] is None
+    assert spec["normalize_bins"] is False
+
+
+def test_parse_entry_rejects_predefined_kind_with_generated_bins() -> None:
+    """Tests that predefined entries cannot use generated binning schemes."""
+    with pytest.raises(
+        ValueError,
+        match="kind='predefined'.*scheme='predefined'",
+    ):
+        _parse_entry(
+            {
+                "kind": "predefined",
+                "bins": {
+                    "scheme": "equidistant",
+                    "n_bins": 2,
+                },
+            }
+        )
+
+
+@pytest.mark.parametrize(
+    "kind",
+    [
+        "photoz",
+        "specz",
+    ],
+)
+def test_parse_entry_requires_parent_nz_for_generated_tomography(
+    kind: str,
+) -> None:
+    """Tests that generated photo-z and spec-z entries still require nz."""
+    with pytest.raises(
+        ValueError,
+        match="must contain an 'nz' mapping",
+    ):
+        _parse_entry(
+            {
+                "kind": kind,
+                "bins": {
+                    "scheme": "equidistant",
+                    "n_bins": 2,
+                },
+            }
+        )
+
+
+def test_load_predefined_bin_source_reads_absolute_table(
+    tmp_path: Path,
+) -> None:
+    """Tests that _load_predefined_bin_source reads configured named columns."""
+    z = np.linspace(
+        0.0,
+        1.0,
+        11,
+        dtype=np.float64,
+    )
+    low = 1.0 - z
+    high = z
+
+    path = tmp_path / "predefined_bins.txt"
+
+    np.savetxt(
+        path,
+        np.column_stack(
+            [
+                z,
+                low,
+                high,
+            ]
+        ),
+        header="z bin_0 bin_1",
+        comments="",
+        fmt="%.18e",
+    )
+
+    loaded_z, loaded_bins = _load_predefined_bin_source(
+        {
+            "scheme": "predefined",
+            "n_bins": 2,
+            "source": {
+                "path": str(path),
+                "z_col": "z",
+                "bin_cols": {
+                    0: "bin_0",
+                    1: "bin_1",
+                },
+            },
+        }
+    )
+
+    np.testing.assert_allclose(
+        loaded_z,
+        z,
+        rtol=0.0,
+        atol=0.0,
+    )
+    assert list(loaded_bins) == [0, 1]
+
+    np.testing.assert_allclose(
+        loaded_bins[0],
+        low,
+        rtol=0.0,
+        atol=0.0,
+    )
+    np.testing.assert_allclose(
+        loaded_bins[1],
+        high,
+        rtol=0.0,
+        atol=0.0,
+    )
+
+
+def test_load_predefined_bin_source_rejects_missing_path() -> None:
+    """Tests that _load_predefined_bin_source requires a source path."""
+    with pytest.raises(
+        ValueError,
+        match="source must contain a 'path' field",
+    ):
+        _load_predefined_bin_source(
+            {
+                "scheme": "predefined",
+                "source": {
+                    "z_col": "z",
+                },
+            }
+        )
+
+
+def test_load_predefined_bin_source_rejects_non_mapping_bin_columns(
+    tmp_path: Path,
+) -> None:
+    """Tests that _load_predefined_bin_source requires mapped bin columns."""
+    path = tmp_path / "predefined_bins.txt"
+
+    np.savetxt(
+        path,
+        np.asarray(
+            [
+                [0.0, 1.0],
+                [1.0, 0.0],
+            ]
+        ),
+        header="z bin_0",
+        comments="",
+    )
+
+    with pytest.raises(
+        ValueError,
+        match="bin_cols must be a mapping",
+    ):
+        _load_predefined_bin_source(
+            {
+                "scheme": "predefined",
+                "source": {
+                    "path": str(path),
+                    "z_col": "z",
+                    "bin_cols": ["bin_0"],
+                },
+            }
+        )
+
+
+def test_load_predefined_bin_source_validates_n_bins(
+    tmp_path: Path,
+) -> None:
+    """Tests that _load_predefined_bin_source validates configured bin counts."""
+    z = np.linspace(
+        0.0,
+        1.0,
+        11,
+        dtype=np.float64,
+    )
+
+    path = tmp_path / "predefined_bins.txt"
+
+    np.savetxt(
+        path,
+        np.column_stack(
+            [
+                z,
+                1.0 - z,
+                z,
+            ]
+        ),
+        header="z bin_0 bin_1",
+        comments="",
+        fmt="%.18e",
+    )
+
+    with pytest.raises(
+        ValueError,
+        match="Configured n_bins=3 does not match the 2 predefined bins",
+    ):
+        _load_predefined_bin_source(
+            {
+                "scheme": "predefined",
+                "n_bins": 3,
+                "source": {
+                    "path": str(path),
+                    "z_col": "z",
+                    "bin_cols": {
+                        0: "bin_0",
+                        1: "bin_1",
+                    },
+                },
+            }
+        )

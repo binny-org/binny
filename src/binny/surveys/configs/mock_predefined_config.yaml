@@ -1,0 +1,21 @@
+name: mock_predefined_test
+
+tomography:
+  - role: source
+    sample: mock_predefined
+    name: mock predefined source bins
+    kind: predefined
+
+    bins:
+      scheme: predefined
+      source:
+        path: mock_predefined_bins.txt
+        z_col: z
+        bin_cols:
+          0: bin_0
+          1: bin_1
+          2: bin_2
+          3: bin_3
+          4: bin_4
+      normalize_bins: false
+      norm_method: trapezoid

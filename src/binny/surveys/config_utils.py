@@ -79,6 +79,8 @@ import yaml
 
 from binny.axes.grids import linear_grid
 from binny.nz.registry import nz_model
+from binny.nz_tomo.predefined import load_predefined_bins
+from binny.utils.types import FloatArray
 
 __all__ = [
     "config_path",
@@ -365,11 +367,11 @@ def _require_single(
 def _parse_bins(bins_block: Any) -> dict[str, Any]:
     """Parse a bin specification.
 
-    A bin block must define either explicit edges or a named binning scheme with
-    a number of bins. Mixed definitions are rejected.
+    A bin block may define explicit edges, a generated binning scheme, or
+    externally supplied predefined tomographic distributions.
 
     Args:
-        bins_block: Mapping describing bin edges or a binning scheme.
+        bins_block: Mapping describing the bin configuration.
 
     Returns:
         Normalized bin specification.
@@ -377,7 +379,10 @@ def _parse_bins(bins_block: Any) -> dict[str, Any]:
     Raises:
         ValueError: If the bin block is missing, malformed, or ambiguous.
     """
-    bins = _require_mapping(bins_block, what="bins")
+    bins = _require_mapping(
+        bins_block,
+        what="bins",
+    )
 
     edges = bins.get("edges")
     scheme = bins.get("scheme")
@@ -388,27 +393,109 @@ def _parse_bins(bins_block: Any) -> dict[str, Any]:
         if scheme is not None or n_bins is not None or z_range is not None:
             raise ValueError("bins: if 'edges' is provided, do not provide scheme/n_bins/range.")
 
-        edges_arr = np.asarray(edges, dtype=np.float64)
+        edges_arr = np.asarray(
+            edges,
+            dtype=np.float64,
+        )
 
         if edges_arr.ndim != 1 or edges_arr.size < 2:
             raise ValueError("bins.edges must be a 1D sequence with at least 2 values.")
 
-        return {"edges": edges_arr}
+        return {
+            "edges": edges_arr,
+        }
 
     if scheme is None:
-        raise ValueError("bins must provide either 'edges' or 'scheme' + 'n_bins'.")
+        raise ValueError("bins must provide either 'edges' or 'scheme'.")
+
+    scheme_name = str(scheme).strip()
+    scheme_normalized = scheme_name.lower()
+
+    if scheme_normalized == "predefined":
+        source = _require_mapping(
+            bins.get("source"),
+            what="bins.source",
+        )
+
+        if z_range is not None:
+            raise ValueError("Predefined bins must not provide bins.range.")
+
+        normalize_bins = bins.get(
+            "normalize_bins",
+            False,
+        )
+
+        if not isinstance(normalize_bins, bool):
+            raise ValueError("Predefined bins.normalize_bins must be a boolean.")
+
+        norm_method = (
+            str(
+                bins.get(
+                    "norm_method",
+                    "trapezoid",
+                )
+            )
+            .strip()
+            .lower()
+        )
+
+        if norm_method not in {
+            "trapezoid",
+            "simpson",
+        }:
+            raise ValueError("Predefined bins.norm_method must be 'trapezoid' or 'simpson'.")
+
+        out: dict[str, Any] = {
+            "scheme": "predefined",
+            "source": dict(source),
+            "normalize_bins": normalize_bins,
+            "norm_method": norm_method,
+        }
+
+        if n_bins is not None:
+            if isinstance(n_bins, bool):
+                raise ValueError("Predefined bins.n_bins must be an integer.")
+
+            try:
+                resolved_n_bins = int(n_bins)
+            except (TypeError, ValueError) as error:
+                raise ValueError("Predefined bins.n_bins must be an integer.") from error
+
+            if resolved_n_bins < 1:
+                raise ValueError("Predefined bins.n_bins must be positive.")
+
+            out["n_bins"] = resolved_n_bins
+
+        return out
 
     if n_bins is None:
-        raise ValueError("bins.n_bins is required when using bins.scheme.")
+        raise ValueError("bins.n_bins is required when using a generated bins.scheme.")
 
-    out: dict[str, Any] = {
-        "scheme": str(scheme),
-        "n_bins": int(n_bins),
+    if isinstance(n_bins, bool):
+        raise ValueError("bins.n_bins must be an integer.")
+
+    try:
+        resolved_n_bins = int(n_bins)
+    except (TypeError, ValueError) as error:
+        raise ValueError("bins.n_bins must be an integer.") from error
+
+    if resolved_n_bins < 1:
+        raise ValueError("bins.n_bins must be positive.")
+
+    out = {
+        "scheme": scheme_name,
+        "n_bins": resolved_n_bins,
     }
 
     if z_range is not None:
-        zlo, zhi = map(float, z_range)
-        out["range"] = (zlo, zhi)
+        zlo, zhi = map(
+            float,
+            z_range,
+        )
+        out["range"] = (
+            zlo,
+            zhi,
+        )
 
     return out
 
@@ -460,9 +547,11 @@ def _parse_sample_properties(entry: Mapping[Any, Any]) -> dict[str, Any]:
 def _parse_entry(entry: Mapping[Any, Any]) -> dict[str, Any]:
     """Parse one tomography entry.
 
-    This validates the tomography kind, redshift-distribution block, bin
-    definition, optional uncertainty settings, and sample-level observational
-    metadata.
+    This validates the tomography kind, bin definition, optional parent
+    redshift-distribution block, uncertainty settings, and sample metadata.
+
+    Predefined tomography entries do not require an ``nz`` block because
+    their tomographic distributions are loaded directly from a file.
 
     Args:
         entry: Raw tomography entry from the config.
@@ -473,26 +562,86 @@ def _parse_entry(entry: Mapping[Any, Any]) -> dict[str, Any]:
     Raises:
         ValueError: If the tomography entry is malformed.
     """
-    kind = str(entry.get("kind", "photoz")).strip().lower()
+    kind = (
+        str(
+            entry.get(
+                "kind",
+                "photoz",
+            )
+        )
+        .strip()
+        .lower()
+    )
 
-    if kind not in {"photoz", "specz"}:
-        raise ValueError("tomography entry kind must be 'photoz' or 'specz'.")
+    if kind not in {
+        "photoz",
+        "specz",
+        "predefined",
+    }:
+        raise ValueError("tomography entry kind must be 'photoz', 'specz', or 'predefined'.")
 
-    nz_block = entry.get("nz")
+    bins = _parse_bins(entry.get("bins"))
 
-    if nz_block is None:
-        raise ValueError("tomography entry must contain an 'nz' mapping.")
+    bin_scheme = (
+        str(
+            bins.get(
+                "scheme",
+                "",
+            )
+        )
+        .strip()
+        .lower()
+    )
 
-    nz_block = _require_mapping(nz_block, what="tomography entry.nz")
+    if kind == "predefined" and bin_scheme != "predefined":
+        raise ValueError(
+            "A tomography entry with kind='predefined' must use bins.scheme='predefined'."
+        )
+
+    if bin_scheme == "predefined":
+        kind = "predefined"
+
+    if kind == "predefined":
+        nz_block: dict[str, Any] | None = None
+    else:
+        raw_nz_block = entry.get("nz")
+
+        if raw_nz_block is None:
+            raise ValueError("Photo-z and spec-z tomography entries must contain an 'nz' mapping.")
+
+        nz_block = dict(
+            _require_mapping(
+                raw_nz_block,
+                what="tomography entry.nz",
+            )
+        )
 
     uncertainties = entry.get("uncertainties") or {}
-    if not isinstance(uncertainties, Mapping):
+
+    if not isinstance(
+        uncertainties,
+        Mapping,
+    ):
         raise ValueError("uncertainties must be a mapping if provided.")
 
-    normalize_bins = entry.get("normalize_bins", True)
+    if kind == "predefined":
+        normalize_bins = bool(
+            bins.get(
+                "normalize_bins",
+                False,
+            )
+        )
+    else:
+        normalize_bins = entry.get(
+            "normalize_bins",
+            True,
+        )
 
-    if not isinstance(normalize_bins, bool):
-        raise ValueError("normalize_bins must be a boolean if provided.")
+        if not isinstance(
+            normalize_bins,
+            bool,
+        ):
+            raise ValueError("normalize_bins must be a boolean if provided.")
 
     return {
         "role": _normalize_label(entry.get("role")),
@@ -501,8 +650,8 @@ def _parse_entry(entry: Mapping[Any, Any]) -> dict[str, Any]:
         "sample": _normalize_label(entry.get("sample")),
         "name": _normalize_label(entry.get("name")),
         "kind": kind,
-        "nz": dict(nz_block),
-        "bins": _parse_bins(entry.get("bins")),
+        "nz": nz_block,
+        "bins": bins,
         "uncertainties": dict(uncertainties),
         "sample_properties": _parse_sample_properties(entry),
         "normalize_bins": normalize_bins,
@@ -558,6 +707,74 @@ def _load_tabulated_source_table(source: Mapping[Any, Any]) -> np.ndarray:
             real_path,
             skiprows=int(source.get("skiprows", 0)),
         )
+
+
+def _load_predefined_bin_source(
+    bins_spec: Mapping[str, Any],
+) -> tuple[FloatArray, dict[int, FloatArray]]:
+    """Load predefined tomographic bins from a configured source file.
+
+    Relative paths are resolved inside the packaged survey-data directory.
+
+    Args:
+        bins_spec: Parsed ``bins`` configuration mapping.
+
+    Returns:
+        Shared redshift grid and predefined tomographic bin curves.
+
+    Raises:
+        ValueError: If the source configuration is missing or malformed, or
+            if ``n_bins`` disagrees with the number of loaded bins.
+    """
+    bins_spec = _require_mapping(
+        bins_spec,
+        what="predefined bins",
+    )
+
+    source = _require_mapping(
+        bins_spec.get("source"),
+        what="predefined bins.source",
+    )
+
+    try:
+        path = Path(source["path"])
+    except KeyError as error:
+        raise ValueError("Predefined bins.source must contain a 'path' field.") from error
+
+    if not path.is_absolute():
+        path = resources.files(_DATA_PKG) / str(path)
+
+    z_col = source.get("z_col", "z")
+    bin_cols = source.get("bin_cols")
+
+    if bin_cols is not None and not isinstance(bin_cols, Mapping):
+        raise ValueError("Predefined bins.source.bin_cols must be a mapping.")
+
+    with resources.as_file(path) as real_path:
+        z, bins = load_predefined_bins(
+            real_path,
+            z_col=z_col,
+            bin_cols=bin_cols,
+        )
+
+    configured_n_bins = bins_spec.get("n_bins")
+
+    if configured_n_bins is not None:
+        if isinstance(configured_n_bins, bool):
+            raise ValueError("Predefined bins.n_bins must be an integer.")
+
+        try:
+            n_bins = int(configured_n_bins)
+        except (TypeError, ValueError) as error:
+            raise ValueError("Predefined bins.n_bins must be an integer.") from error
+
+        if n_bins != len(bins):
+            raise ValueError(
+                f"Configured n_bins={n_bins} does not match the "
+                f"{len(bins)} predefined bins loaded from {path}."
+            )
+
+    return z, bins
 
 
 def _tabulated_params_from_config(nz_cfg: Mapping[Any, Any]) -> dict[str, Any]:

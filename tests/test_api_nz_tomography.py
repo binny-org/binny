@@ -1342,3 +1342,331 @@ def test_calibrate_psf_depth_from_mock_uses_defaults(monkeypatch):
     assert called["selection_kind"] == "sigmoid"
     assert called["width"] == 0.05
     assert called["normalize_nz"] is True
+
+
+def test_build_predefined_bins_builds_caches_and_supports_stats() -> None:
+    """Tests that build_predefined_bins builds, caches, and analyzes supplied bins."""
+    z = np.linspace(
+        0.0,
+        2.0,
+        201,
+        dtype=np.float64,
+    )
+
+    supplied_bins = {
+        2: 0.7 * np.exp(-0.5 * ((z - 1.45) / 0.22) ** 2),
+        0: 1.3 * np.exp(-0.5 * ((z - 0.45) / 0.18) ** 2),
+    }
+
+    expected_parent = supplied_bins[0] + supplied_bins[2]
+
+    tomography = NZTomography()
+
+    result = tomography.build_predefined_bins(
+        z=z,
+        bins=supplied_bins,
+        include_tomo_metadata=True,
+    )
+
+    assert result.spec["kind"] == "predefined"
+    assert result.spec["bins"]["scheme"] == "predefined"
+    assert result.spec["nz"]["model"] == "arrays"
+    assert result.survey_meta is None
+    assert result.survey is None
+    assert list(result.bins) == [0, 2]
+
+    np.testing.assert_allclose(
+        result.z,
+        z,
+    )
+    np.testing.assert_allclose(
+        result.nz,
+        expected_parent,
+    )
+
+    for key in result.bins:
+        np.testing.assert_allclose(
+            result.bins[key],
+            supplied_bins[key],
+        )
+
+    np.testing.assert_allclose(
+        tomography.z,
+        z,
+    )
+    np.testing.assert_allclose(
+        tomography.nz,
+        expected_parent,
+    )
+    assert tomography.bin_keys == [0, 2]
+
+    shape_statistics = tomography.shape_stats()
+    population_statistics = tomography.population_stats()
+
+    assert set(shape_statistics["per_bin"]) == {
+        0,
+        2,
+    }
+    assert set(population_statistics["fractions"]) == {
+        0,
+        2,
+    }
+    assert sum(population_statistics["fractions"].values()) == pytest.approx(1.0)
+
+
+def test_build_predefined_bins_preserves_parent_when_normalizing() -> None:
+    """Tests that build_predefined_bins normalizes bins without changing the parent."""
+    z = np.linspace(
+        0.0,
+        1.5,
+        151,
+        dtype=np.float64,
+    )
+
+    supplied_bins = {
+        0: 2.0 * np.exp(-0.5 * ((z - 0.40) / 0.16) ** 2),
+        1: 0.8 * np.exp(-0.5 * ((z - 1.05) / 0.20) ** 2),
+    }
+
+    provided_parent = 4.0 * (supplied_bins[0] + supplied_bins[1])
+
+    tomography = NZTomography()
+
+    result = tomography.build_predefined_bins(
+        z=z,
+        bins=supplied_bins,
+        nz=provided_parent,
+        normalize_bins=True,
+        norm_method="trapezoid",
+        include_tomo_metadata=True,
+    )
+
+    np.testing.assert_allclose(
+        result.nz,
+        provided_parent,
+    )
+    np.testing.assert_allclose(
+        tomography.nz,
+        provided_parent,
+    )
+
+    for curve in result.bins.values():
+        assert np.trapezoid(
+            curve,
+            x=z,
+        ) == pytest.approx(1.0)
+
+    assert result.tomo_meta is not None
+    assert result.tomo_meta["inputs"]["parent_source"] == "provided"
+    assert result.tomo_meta["inputs"]["normalize_bins"] is True
+    assert result.spec["bins"]["normalize_bins"] is True
+    assert result.spec["bins"]["norm_method"] == "trapezoid"
+
+
+def test_build_bins_handles_predefined_config_without_standard_builder(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Tests that build_bins loads predefined configs without building a parent model."""
+    z = np.linspace(
+        0.0,
+        1.5,
+        151,
+        dtype=np.float64,
+    )
+
+    first = 1.5 * np.exp(-0.5 * ((z - 0.40) / 0.17) ** 2)
+    second = 0.9 * np.exp(-0.5 * ((z - 1.05) / 0.21) ** 2)
+
+    data_path = tmp_path / "predefined_bins.txt"
+
+    np.savetxt(
+        data_path,
+        np.column_stack(
+            [
+                z,
+                first,
+                second,
+            ]
+        ),
+        header="z bin_0 bin_1",
+        comments="",
+        fmt="%.18e",
+    )
+
+    cfg = {
+        "name": "external_sample",
+        "survey_meta": {
+            "description": "Externally supplied tomography",
+        },
+        "tomography": [
+            {
+                "role": "source",
+                "sample": "external",
+                "bins": {
+                    "scheme": "predefined",
+                    "source": {
+                        "path": str(data_path),
+                        "z_col": "z",
+                        "bin_cols": {
+                            0: "bin_0",
+                            1: "bin_1",
+                        },
+                    },
+                    "normalize_bins": False,
+                    "norm_method": "trapezoid",
+                },
+            }
+        ],
+    }
+
+    def fail_build_parent_nz(*args, **kwargs):
+        """Tests that the standard parent builder is not reached."""
+        _ = args, kwargs
+        pytest.fail("_build_parent_nz should not run for predefined tomography.")
+
+    def fail_resolve_builder(self, kind):
+        """Tests that photo-z and spec-z builders are not resolved."""
+        _ = self, kind
+        pytest.fail("_resolve_builder should not run for predefined tomography.")
+
+    monkeypatch.setattr(
+        cu,
+        "_build_parent_nz",
+        fail_build_parent_nz,
+        raising=True,
+    )
+    monkeypatch.setattr(
+        NZTomography,
+        "_resolve_builder",
+        fail_resolve_builder,
+        raising=True,
+    )
+
+    tomography = NZTomography()
+
+    result = tomography.build_bins(
+        cfg=cfg,
+        role="source",
+        sample="external",
+        include_survey_metadata=True,
+        include_tomo_metadata=True,
+    )
+
+    expected_parent = first + second
+
+    assert result.spec["kind"] == "predefined"
+    assert result.spec["bins"]["scheme"] == "predefined"
+    assert result.spec["nz"] is None
+    assert list(result.bins) == [0, 1]
+
+    np.testing.assert_allclose(
+        result.z,
+        z,
+    )
+    np.testing.assert_allclose(
+        result.nz,
+        expected_parent,
+    )
+    np.testing.assert_allclose(
+        result.bins[0],
+        first,
+    )
+    np.testing.assert_allclose(
+        result.bins[1],
+        second,
+    )
+
+    assert result.tomo_meta is not None
+    assert result.tomo_meta["kind"] == "predefined"
+
+    assert result.survey_meta is not None
+    assert result.survey_meta["survey"] == "external_sample"
+    assert result.survey_meta["role"] == "source"
+    assert result.survey_meta["sample"] == "external"
+    assert result.survey_meta["survey_meta"] == {
+        "description": "Externally supplied tomography",
+    }
+
+
+def test_build_bins_applies_overrides_to_predefined_bins(
+    tmp_path: Path,
+) -> None:
+    """Tests that build_bins applies nested overrides to predefined settings."""
+    z = np.linspace(
+        0.0,
+        1.0,
+        101,
+        dtype=np.float64,
+    )
+
+    first = 2.0 * (1.0 - z)
+    second = 3.0 * z
+
+    data_path = tmp_path / "predefined_bins.txt"
+
+    np.savetxt(
+        data_path,
+        np.column_stack(
+            [
+                z,
+                first,
+                second,
+            ]
+        ),
+        header="z bin_0 bin_1",
+        comments="",
+        fmt="%.18e",
+    )
+
+    cfg = {
+        "name": "override_test",
+        "tomography": [
+            {
+                "role": "source",
+                "kind": "predefined",
+                "bins": {
+                    "scheme": "predefined",
+                    "source": {
+                        "path": str(data_path),
+                        "z_col": "z",
+                        "bin_cols": {
+                            0: "bin_0",
+                            1: "bin_1",
+                        },
+                    },
+                    "normalize_bins": False,
+                    "norm_method": "trapezoid",
+                },
+            }
+        ],
+    }
+
+    raw_parent = first + second
+
+    result = NZTomography().build_bins(
+        cfg=cfg,
+        role="source",
+        overrides={
+            "bins": {
+                "normalize_bins": True,
+            },
+        },
+        include_tomo_metadata=True,
+    )
+
+    assert result.spec["bins"]["normalize_bins"] is True
+
+    np.testing.assert_allclose(
+        result.nz,
+        raw_parent,
+    )
+
+    for curve in result.bins.values():
+        assert np.trapezoid(
+            curve,
+            x=z,
+        ) == pytest.approx(1.0)
+
+    assert result.tomo_meta is not None
+    assert result.tomo_meta["inputs"]["normalize_bins"] is True
