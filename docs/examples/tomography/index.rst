@@ -8,5 +8,6 @@ Examples for building and manipulating tomographic samples.
 
    photoz_bins
    specz_bins
+   predefined_bins
    selections
    sample_composition
