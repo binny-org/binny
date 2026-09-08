@@ -13,14 +13,14 @@ Even after a galaxy is detected, it may not be sufficiently resolved
 relative to the point-spread function (PSF) to provide a reliable shape
 measurement.
 
-This means that changes in the PSF can modify both the effective source
+This means that changes in the PSF can modify both the selected source
 density and the redshift distribution of galaxies available for
 cosmological analyses.
 
 The calibration tools implemented in Binny perform three related tasks:
 
 1. estimate PSF-dependent source selection weights,
-2. calibrate how the effective source density changes with PSF size,
+2. calibrate how the selected source density changes with PSF size,
 3. construct source redshift distributions after depth and PSF selection.
 
 This is exposed through
@@ -33,7 +33,7 @@ are first selected by magnitude and then weighted according to how well
 they are resolved relative to the PSF.
 
 The output is therefore not only a set of redshift distributions, but
-also a calibration describing how the usable source population changes
+also a calibration describing how the selected source population changes
 as image quality varies.
 
 Selection model
@@ -72,12 +72,13 @@ The resolution factor is converted into a source-selection weight
 transition around a minimum resolution threshold.
 
 These weights are then used when estimating source redshift
-distributions and effective source densities from the mock catalog.
+distributions and selection-weighted source densities from the mock
+catalog.
 
 As the PSF increases, the resolution factor generally decreases,
 reducing the contribution of small galaxies to the source population.
 Because small galaxies are often preferentially found at higher
-redshift, this process can modify both the effective source density and
+redshift, this process can modify both the selected source density and
 the shape of the resulting redshift distribution.
 
 In this way, the calibration approximates the loss of poorly resolved
@@ -91,12 +92,12 @@ Weak lensing forecasts depend on the galaxies that can be used for shape
 measurements rather than simply the galaxies that can be detected.
 
 As the PSF becomes larger, small galaxies become increasingly difficult
-to resolve. In practice, this usually changes the source sample in two
-ways:
+to resolve. In the phenomenological selection model used here, this
+usually changes the source sample in two ways:
 
-- the effective source density decreases,
+- the selected source density decreases,
 - the redshift distribution can shift as poorly resolved galaxies are
-  removed.
+  downweighted or removed.
 
 Because high-redshift galaxies often have smaller apparent sizes, PSF
 selection can alter the shape of the parent :math:`n(z)` as well as the
@@ -122,13 +123,19 @@ In particular, the calibration should not be interpreted as a complete
 model of shape measurement, PSF correction, or shear estimation.
 
 Rather, it provides a compact approximation to the dominant selection
-effects that arise because poorly resolved galaxies contribute less
-effectively to weak lensing analyses.
+effects that arise because poorly resolved galaxies are downweighted or
+removed from the selected weak lensing source population.
 
-Similarly, the resulting source density and redshift distribution
+Similarly, the resulting selected source density and redshift distribution
 relations are empirical summaries of the mock catalog. They are useful
 for forecasting and survey studies, but they do not replace the full
 information content of image simulations or end-to-end analyses.
+
+The selected source density should not be confused with the conventional
+noise-equivalent weak-lensing effective number density :math:`n_{\rm eff}`.
+The Binny calibration describes changes in the selected source population;
+it does not model the additional measurement-noise weighting required to
+construct :math:`n_{\rm eff}`.
 
 This distinction is important for the theory documentation: Binny
 implements a practical interface for modelling changes in source
@@ -148,8 +155,7 @@ selection.
 
 It is therefore useful to keep the conceptual separation clear:
 
-- the PSF calibration determines which galaxies remain usable as
-  sources,
+- the PSF calibration determines the selected source population,
 - the tomography step determines how those galaxies are partitioned into
   bins.
 
@@ -162,7 +168,7 @@ Summary
 -------
 
 Binny implements calibration tools for PSF-dependent source selection
-because image quality can alter both the effective source density and
+because image quality can alter both the selected source density and
 the redshift distribution used in weak lensing forecasts.
 
 Using mock catalogs containing galaxy redshifts, magnitudes, and sizes,
