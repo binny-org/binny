@@ -7,8 +7,8 @@ import pytest
 
 from binny.nz.psf_selection import (
     calibrate_psf_depth_from_mock,
-    effective_number_density_from_mock,
     resolution_factor,
+    selected_number_density_from_mock,
     shear_selection_weight,
     weighted_nz_from_mock,
 )
@@ -183,12 +183,12 @@ def test_weighted_nz_from_mock_rejects_invalid_z_edges() -> None:
         )
 
 
-def test_effective_number_density_from_mock_matches_weighted_count() -> None:
+def test_selected_number_density_from_mock_matches_weighted_count() -> None:
     """Tests that effective density equals weighted counts per arcmin squared."""
     mag = np.array([24.0, 25.0, 26.0])
     r_gal = np.array([2.0, 2.0, 2.0])
 
-    neff = effective_number_density_from_mock(
+    neff = selected_number_density_from_mock(
         mag,
         r_gal,
         maglim=25.5,
@@ -200,10 +200,10 @@ def test_effective_number_density_from_mock_matches_weighted_count() -> None:
     np.testing.assert_allclose(neff, 2.0 / 3600.0)
 
 
-def test_effective_number_density_from_mock_rejects_shape_mismatch() -> None:
+def test_selected_number_density_from_mock_rejects_shape_mismatch() -> None:
     """Tests that effective density requires matching catalog shapes."""
     with pytest.raises(ValueError, match="mag and r_gal must have matching shapes"):
-        effective_number_density_from_mock(
+        selected_number_density_from_mock(
             np.array([24.0, 25.0]),
             np.array([1.0]),
             maglim=25.5,
@@ -212,10 +212,10 @@ def test_effective_number_density_from_mock_rejects_shape_mismatch() -> None:
         )
 
 
-def test_effective_number_density_from_mock_rejects_nonpositive_area() -> None:
+def test_selected_number_density_from_mock_rejects_nonpositive_area() -> None:
     """Tests that effective density requires positive survey area."""
     with pytest.raises(ValueError, match="area_deg2 must be > 0"):
-        effective_number_density_from_mock(
+        selected_number_density_from_mock(
             np.array([24.0]),
             np.array([1.0]),
             maglim=25.5,
@@ -253,11 +253,11 @@ def test_calibrate_psf_depth_from_mock_returns_full_grid() -> None:
             "z_mid",
             "nz",
             "weights",
-            "neff_arcmin2",
+            "n_selected_arcmin2",
         }
         assert result["z_mid"].shape == result["nz"].shape
         assert result["z"].shape == result["weights"].shape
-        assert result["neff_arcmin2"] >= 0.0
+        assert result["n_selected_arcmin2"] >= 0.0
 
 
 def test_calibrate_psf_depth_from_mock_returns_selected_redshifts() -> None:
@@ -303,8 +303,8 @@ def test_calibrate_psf_depth_from_mock_neff_decreases_with_larger_psf() -> None:
         selection_kind="sigmoid",
     )
 
-    neff_small_psf = cal["results"][0]["neff_arcmin2"]
-    neff_large_psf = cal["results"][1]["neff_arcmin2"]
+    neff_small_psf = cal["results"][0]["n_selected_arcmin2"]
+    neff_large_psf = cal["results"][1]["n_selected_arcmin2"]
 
     assert neff_large_psf < neff_small_psf
 
@@ -364,12 +364,12 @@ def test_weighted_nz_from_mock_leaves_empty_distribution_unnormalized() -> None:
     np.testing.assert_allclose(nz, np.zeros(2))
 
 
-def test_effective_number_density_increases_with_fainter_depth() -> None:
+def test_selected_number_density_increases_with_fainter_depth() -> None:
     """Tests that effective density increases for a fainter magnitude limit."""
     mag = np.array([24.0, 25.0, 26.0])
     r_gal = np.array([2.0, 2.0, 2.0])
 
-    neff_bright = effective_number_density_from_mock(
+    neff_bright = selected_number_density_from_mock(
         mag,
         r_gal,
         maglim=24.5,
@@ -377,7 +377,7 @@ def test_effective_number_density_increases_with_fainter_depth() -> None:
         area_deg2=1.0,
         selection_kind="hard",
     )
-    neff_faint = effective_number_density_from_mock(
+    neff_faint = selected_number_density_from_mock(
         mag,
         r_gal,
         maglim=26.5,

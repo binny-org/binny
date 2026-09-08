@@ -11,7 +11,7 @@ number densities from mock or simulated catalogs after applying both:
 
 These routines are intended for forecasting studies where changes in the PSF
 or limiting magnitude need to be propagated into source redshift distributions,
-tomographic samples, and effective galaxy densities.
+tomographic samples, and selection-weighted galaxy densities.
 """
 
 from __future__ import annotations
@@ -26,7 +26,7 @@ __all__ = [
     "resolution_factor",
     "shear_selection_weight",
     "weighted_nz_from_mock",
-    "effective_number_density_from_mock",
+    "selected_number_density_from_mock",
     "calibrate_psf_depth_from_mock",
 ]
 
@@ -190,7 +190,7 @@ def weighted_nz_from_mock(
     return z_true[selected], z_mid, nz, weights
 
 
-def effective_number_density_from_mock(
+def selected_number_density_from_mock(
     mag: np.ndarray,
     r_gal: np.ndarray,
     *,
@@ -201,11 +201,12 @@ def effective_number_density_from_mock(
     selection_kind: SelectionKind = "hard",
     width: float = 0.05,
 ) -> float:
-    """
-    Estimate the PSF-selected effective galaxy density from a mock catalog.
+    """Estimates the PSF-selected galaxy density from a mock catalog.
 
-    This function computes the weighted source density after applying a
-    magnitude limit and a PSF-dependent shear-selection weight.
+    This function computes the selection-weighted source density after applying
+    a magnitude limit and a PSF-dependent shear-selection weight. It does not
+    include shape measurement noise and is therefore distinct from the
+    noise-equivalent weak-lensing effective number density.
 
     Args:
         mag: Apparent magnitudes from the mock catalog.
@@ -264,10 +265,10 @@ def calibrate_psf_depth_from_mock(
     """
     Calibrate source redshift distributions versus survey depth and PSF size.
 
-    This routine evaluates how the source redshift distribution and effective
-    galaxy number density change across a grid of limiting magnitudes and PSF
-    sizes. It is intended for forecasting studies that compare baseline and
-    as-built survey scenarios.
+    This routine evaluates how the source redshift distribution and
+    selection-weighted galaxy number density change across a grid of
+    limiting magnitudes and PSF sizes. It is intended for forecasting studies
+    that compare baseline and as-built survey scenarios.
 
     Args:
         z_true: True galaxy redshifts from the mock catalog.
@@ -284,7 +285,7 @@ def calibrate_psf_depth_from_mock(
 
     Returns:
         Dictionary containing the calibration grid, redshift distributions,
-        and effective galaxy densities.
+        and selection-weighted galaxy densities.
 
     Raises:
         ValueError: If input catalog arrays do not have matching shapes.
@@ -319,7 +320,7 @@ def calibrate_psf_depth_from_mock(
                 normalize=normalize_nz,
             )
 
-            neff = effective_number_density_from_mock(
+            selected_density = selected_number_density_from_mock(
                 mag=mag,
                 r_gal=r_gal,
                 maglim=float(maglim),
@@ -338,7 +339,7 @@ def calibrate_psf_depth_from_mock(
                     "z_mid": z_mid,
                     "nz": nz,
                     "weights": weights,
-                    "neff_arcmin2": neff,
+                    "n_selected_arcmin2": selected_density,
                 }
             )
 

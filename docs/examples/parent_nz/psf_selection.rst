@@ -10,7 +10,7 @@ by image quality.
 
 For a fixed limiting magnitude, galaxies become progressively harder to
 measure as the point-spread function (PSF) grows relative to the intrinsic
-galaxy size. As a result, changes in PSF size can alter both the effective
+galaxy size. As a result, changes in PSF size can alter both the selected
 source density and the redshift distribution of galaxies available for
 cosmological analyses.
 
@@ -22,7 +22,7 @@ Given true galaxy redshifts, apparent magnitudes, and galaxy sizes,
 the calibration computes:
 
 - PSF-dependent source-selection weights,
-- effective source densities,
+- selection-weighted source densities,
 - redshift distributions,
 - joint depth–PSF selection grids.
 
@@ -392,13 +392,13 @@ redshift distribution and its smooth Smail fit.
    plt.tight_layout()
 
 
-Effective source density
-------------------------
+Selected source density
+-----------------------
 
-The same calibration also returns the effective source density for each
-combination of limiting magnitude and PSF size.
+The same calibration also returns the selection-weighted source density
+for each combination of limiting magnitude and PSF size.
 
-For a fixed limiting magnitude, the effective source density decreases as
+For a fixed limiting magnitude, the selected source density decreases as
 the PSF becomes larger.
 
 .. plot::
@@ -448,12 +448,12 @@ the PSF becomes larger.
    )
 
    psf = []
-   neff = []
+   n_selected = []
 
    for row in result["results"]:
        if np.isclose(row["maglim"], maglim):
            psf.append(row["r_psf"])
-           neff.append(row["neff_arcmin2"])
+           n_selected.append(row["n_selected_arcmin2"])
 
    color = cmr.take_cmap_colors(
        "viridis",
@@ -466,14 +466,14 @@ the PSF becomes larger.
 
    ax.plot(
        psf,
-       neff,
+       n_selected,
        color="k",
        lw=2.0,
        zorder=1,
    )
    ax.scatter(
        psf,
-       neff,
+       n_selected,
        s=70,
        color=to_rgba(color, 0.65),
        edgecolor="k",
@@ -482,8 +482,8 @@ the PSF becomes larger.
    )
 
    ax.set_xlabel(r"$R_{\rm PSF}$")
-   ax.set_ylabel(r"$n_{\rm eff}$ [arcmin$^{-2}$]")
-   ax.set_title(r"Effective source density versus PSF size")
+   ax.set_ylabel(r"$n_{\rm selected}$ [arcmin$^{-2}$]")
+   ax.set_title(r"Selected source density versus PSF size")
 
    plt.tight_layout()
 
@@ -493,7 +493,7 @@ Joint depth--PSF selection grid
 
 The calibration can also be evaluated across both limiting magnitude and
 PSF size. This gives a compact grid describing how image quality and survey
-depth jointly affect the usable weak-lensing source sample.
+depth jointly affect the selected weak-lensing source sample.
 
 .. plot::
    :include-source: True
@@ -548,7 +548,7 @@ depth jointly affect the usable weak-lensing source sample.
    for row in result["results"]:
        i = np.where(np.isclose(r_psf_values, row["r_psf"]))[0][0]
        j = np.where(np.isclose(maglims, row["maglim"]))[0][0]
-       grid[i, j] = row["neff_arcmin2"]
+       grid[i, j] = row["n_selected_arcmin2"]
 
    base = plt.get_cmap("viridis")
    colors = base(np.linspace(0.05, 0.95, 256))
@@ -591,12 +591,12 @@ depth jointly affect the usable weak-lensing source sample.
 
    ax.set_xlabel(r"Limiting magnitude $m_{\rm lim}$")
    ax.set_ylabel(r"$R_{\rm PSF}$")
-   ax.set_title(r"$n_{\rm eff}$ across depth and PSF size")
+   ax.set_title(r"$n_{\rm selected}$ across depth and PSF size")
 
    plt.colorbar(
        im,
        ax=ax,
-       label=r"$n_{\rm eff}$ [arcmin$^{-2}$]",
+       label=r"$n_{\rm selected}$ [arcmin$^{-2}$]",
    )
 
    plt.tight_layout()
@@ -680,7 +680,10 @@ Notes
 -----
 
 - Increasing PSF size preferentially removes compact galaxies.
-- This can change both :math:`n_{\rm eff}` and the source redshift distribution.
+- This can change both :math:`n_{\rm selected}` and the source redshift distribution.
+- Here, :math:`n_{\rm selected}` denotes the magnitude- and PSF-selection-weighted
+  source density and should not be confused with the noise-equivalent weak-lensing
+  effective number density :math:`n_{\rm eff}`.
 - The effect can depend on survey depth because deeper samples contain fainter
   and often smaller galaxies.
 - The calibration is useful for propagating image-quality assumptions into
