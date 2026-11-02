@@ -704,8 +704,8 @@ def test_bin_combo_filter_delegates_to_bincombofilter_select(monkeypatch):
     assert out == [(0, 1), (1, 0)]
 
 
-def test_make_bin_combo_filter_uses_other_and_checks_shared_z(monkeypatch):
-    """Tests that cross-sample combo filtering requires identical z grids."""
+def test_make_bin_combo_filter_aligns_different_grids(monkeypatch):
+    """Tests that cross-sample filtering aligns different redshift grids."""
     _install_fake_builder_modules(monkeypatch)
     monkeypatch.setattr(
         cu, "_parse_entry", lambda e: {**dict(e), "role": "source", "year": "1"}, raising=True
@@ -716,22 +716,33 @@ def test_make_bin_combo_filter_uses_other_and_checks_shared_z(monkeypatch):
     t1 = NZTomography()
 
     z0 = np.linspace(0, 1, 11)
-    z1 = np.linspace(0, 1, 12)  # different shape -> must fail
+    z1 = np.linspace(0, 1, 12)
     nz0 = np.ones_like(z0)
     nz1 = np.ones_like(z1)
 
     t0.build_bins(z=z0, nz=nz0, tomo_spec={"kind": "photoz", "bins": {"n_bins": 2}})
     t1.build_bins(z=z1, nz=nz1, tomo_spec={"kind": "photoz", "bins": {"n_bins": 2}})
 
-    with pytest.raises(ValueError, match=r"shared z grid"):
-        _ = t0._make_bin_combo_filter(t1)
-
-    # Now build t1 on the same grid and it should succeed.
-    t1.clear()
-    t1.build_bins(z=z0, nz=nz0, tomo_spec={"kind": "photoz", "bins": {"n_bins": 2}})
+    bins0 = {k: v.copy() for k, v in t0._state["bins"].items()}
+    bins1 = {k: v.copy() for k, v in t1._state["bins"].items()}
 
     f = t0._make_bin_combo_filter(t1)
+
     assert isinstance(f, BinComboFilter)
+    np.testing.assert_array_equal(f.z, np.union1d(z0, z1))
+
+    for original, aligned in zip((bins0, bins1), f.curves, strict=True):
+        z_original = z0 if original is bins0 else z1
+        for k, values in original.items():
+            expected = np.interp(f.z, z_original, values, left=0.0, right=0.0)
+            np.testing.assert_allclose(aligned[k], expected)
+
+    np.testing.assert_array_equal(t0._parent["z"], z0)
+    np.testing.assert_array_equal(t1._parent["z"], z1)
+
+    for k in bins0:
+        np.testing.assert_array_equal(t0._state["bins"][k], bins0[k])
+        np.testing.assert_array_equal(t1._state["bins"][k], bins1[k])
 
 
 def test_make_bin_combo_filter_curves_argument_overrides_default(monkeypatch):

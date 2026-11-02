@@ -86,6 +86,27 @@ def interpolate_tomography_bins(
     )
 
 
+def align_bin_grids(
+    z_a: np.ndarray,
+    bins_a: Mapping[int, Any],
+    z_b: np.ndarray,
+    bins_b: Mapping[int, Any],
+) -> tuple[np.ndarray, Mapping[int, Any], Mapping[int, Any]]:
+    """Align two tomographic bin collections onto a common redshift grid."""
+    z_a = np.asarray(z_a, dtype=float)
+    z_b = np.asarray(z_b, dtype=float)
+
+    if np.array_equal(z_a, z_b):
+        return z_a, bins_a, bins_b
+
+    z_common = np.union1d(z_a, z_b)
+
+    aligned_a = {k: np.interp(z_common, z_a, nz, left=0.0, right=0.0) for k, nz in bins_a.items()}
+    aligned_b = {k: np.interp(z_common, z_b, nz, left=0.0, right=0.0) for k, nz in bins_b.items()}
+
+    return z_common, aligned_a, aligned_b
+
+
 def combine_tomography_bins(
     samples: Sequence[TomographyBins],
     *,
