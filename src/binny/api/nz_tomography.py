@@ -983,31 +983,21 @@ class NZTomography:
         *,
         curves: Sequence[Mapping[int, Any]] | None = None,
     ) -> BinComboFilter:
-        """Create a bin-combination filter on the cached redshift grid.
+        """Create a bin-combination filter, aligning redshift grids if necessary.
 
-        This constructs a :class:`~binny.correlations.bin_combo_filter.BinComboFilter`
-        preloaded with a shared redshift grid and one bin-curve mapping per tuple
-        position (slot). The resulting filter can generate index combinations
-        (pairs, triplets, …) and apply curve-based selections (scores, overlaps,
-        custom metrics).
-
-        By default, the filter is wired for within-sample comparisons using this
-        instance’s cached bins in both slots. If ``other`` is provided, the filter
-        is wired for cross-sample comparisons with ``self`` in slot 0 and ``other``
-        in slot 1. Advanced callers may pass ``curves`` to explicitly control the
-        per-slot curve mappings.
+        By default, the filter uses this instance's cached bins for both
+        slots. If another tomography is provided, the two samples are compared
+        on a shared redshift grid constructed from their union when necessary.
 
         Args:
-            other: Optional second tomography instance to compare against.
-            curves: Optional explicit per-slot mapping(s) from bin index to curve.
+            other: Optional second tomography instance.
+            curves: Optional explicit per-slot bin mappings.
 
         Returns:
-            A configured :class:`~binny.correlations.bin_combo_filter.BinComboFilter`
-            ready for topology building and filtering.
+            A configured BinComboFilter.
 
         Raises:
-            ValueError: If bins are not cached, or if cross-sample filtering is
-                requested but the two instances do not share the same redshift grid.
+            ValueError: If the required tomographic bins are not cached.
         """
         self._require_bins()
         z = self._parent["z"]
@@ -1021,11 +1011,17 @@ class NZTomography:
 
         other._require_bins()
         z2 = other._parent["z"]
-        if np.asarray(z).shape != np.asarray(z2).shape or not np.allclose(z, z2):
-            raise ValueError("Combo filter requires a shared z grid; build both on the same z.")
-
         bins_b = other._state["bins"]
-        return BinComboFilter(z=z, curves=[bins_a, bins_b])
+
+        if np.array_equal(z, z2):
+            return BinComboFilter(z=z, curves=[bins_a, bins_b])
+
+        z_common = np.union1d(z, z2)
+
+        bins_a = {k: np.interp(z_common, z, nz, left=0.0, right=0.0) for k, nz in bins_a.items()}
+        bins_b = {k: np.interp(z_common, z2, nz, left=0.0, right=0.0) for k, nz in bins_b.items()}
+
+        return BinComboFilter(z=z_common, curves=[bins_a, bins_b])
 
     def bin_combo_filter(
         self,

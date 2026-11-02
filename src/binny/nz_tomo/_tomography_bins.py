@@ -121,6 +121,7 @@ class TomographyBins:
         *,
         curves: Sequence[Mapping[int, Any]] | None = None,
     ) -> BinComboFilter:
+        """Create a bin-combination filter, aligning redshift grids if necessary."""
         z = self._z
         bins_a = self._bins
 
@@ -130,10 +131,17 @@ class TomographyBins:
         if other is None:
             return BinComboFilter(z=z, curves=[bins_a, bins_a])
 
-        if np.asarray(z).shape != np.asarray(other.z).shape or not np.allclose(z, other.z):
-            raise ValueError("Combo filter requires a shared z grid.")
+        if np.array_equal(z, other.z):
+            return BinComboFilter(z=z, curves=[bins_a, other.bins])
 
-        return BinComboFilter(z=z, curves=[bins_a, other.bins])
+        z_common = np.union1d(z, other.z)
+
+        bins_a = {k: np.interp(z_common, z, nz, left=0.0, right=0.0) for k, nz in bins_a.items()}
+        bins_b = {
+            k: np.interp(z_common, other.z, nz, left=0.0, right=0.0) for k, nz in other.bins.items()
+        }
+
+        return BinComboFilter(z=z_common, curves=[bins_a, bins_b])
 
     def bin_combo_filter(
         self,
