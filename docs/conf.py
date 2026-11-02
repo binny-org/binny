@@ -198,11 +198,11 @@ if html_theme == "furo":
             "color-link--visited": BINNY_YELLOW,
         },
         "dark_css_variables": {
-            "color-brand-primary": BINNY_PURPLE,
-            "color-brand-content": BINNY_BLUE,
-            "color-link": BINNY_GREEN,
-            "color-link--hover": BINNY_BLUE,
-            "color-link--visited": BINNY_YELLOW,
+            "color-brand-primary": "#7ee0b0",
+            "color-brand-content": "#7ee0b0",
+            "color-link": "#7ee0b0",
+            "color-link--hover": "#7ee0b0",
+            "color-link--visited": "#7ee0b0",
         },
     }
 
