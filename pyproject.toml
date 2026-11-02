@@ -1,6 +1,6 @@
 [project]
 name = "pybinny"
-version = "0.5.1"
+version = "0.6.0"
 description = "Flexible tomographic binning algorithms for cosmology."
 readme = "README.md"
 requires-python = ">=3.10"
@@ -100,7 +100,7 @@ where = ["src"]
 ]
 
 [tool.bumpversion]
-current_version = "0.5.1"
+current_version = "0.6.0"
 commit = true
 tag = true
 
