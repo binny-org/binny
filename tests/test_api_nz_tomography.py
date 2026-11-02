@@ -1681,3 +1681,74 @@ def test_build_bins_applies_overrides_to_predefined_bins(
 
     assert result.tomo_meta is not None
     assert result.tomo_meta["inputs"]["normalize_bins"] is True
+
+
+def test_parent_stats_raises_before_build() -> None:
+    """Tests that parent_stats raises before build_bins is called."""
+    t = NZTomography()
+
+    with pytest.raises(ValueError, match=r"Call build_bins"):
+        t.parent_stats()
+
+
+def test_parent_stats_returns_expected_parent_statistics() -> None:
+    """Tests that parent_stats computes statistics from the parent distribution."""
+    z = np.linspace(0.0, 2.0, 2001)
+    nz = np.exp(-0.5 * ((z - 0.8) / 0.15) ** 2)
+
+    t = NZTomography()
+    result = t.build_predefined_bins(z=z, bins={0: nz})
+
+    stats = t.parent_stats(decimal_places=None)
+
+    assert set(stats) == {"moments", "quantiles", "peaks"}
+    assert stats["moments"]["mean"] == pytest.approx(0.8, abs=2e-3)
+    assert stats["moments"]["median"] == pytest.approx(0.8, abs=2e-3)
+    assert stats["moments"]["std"] == pytest.approx(0.15, abs=2e-3)
+    assert stats["peaks"]["num_peaks"] == pytest.approx(1.0)
+    np.testing.assert_allclose(result.nz, nz)
+
+
+def test_parent_stats_matches_returned_tomography_bins() -> None:
+    """Tests that both APIs return identical parent statistics."""
+    z = np.linspace(0.0, 2.0, 2001)
+    bins = {
+        0: np.exp(-0.5 * ((z - 0.5) / 0.1) ** 2),
+        1: np.exp(-0.5 * ((z - 1.3) / 0.2) ** 2),
+    }
+
+    t = NZTomography()
+    result = t.build_predefined_bins(z=z, bins=bins)
+
+    kwargs = {"decimal_places": None, "quantiles": (0.1, 0.5, 0.9)}
+
+    builder_stats = t.parent_stats(**kwargs)
+    result_stats = result.parent_stats(**kwargs)
+
+    assert builder_stats == result_stats
+    assert set(builder_stats["quantiles"]) == {0.1, 0.5, 0.9}
+
+
+def test_parent_stats_uses_supplied_parent_not_sum_of_bins() -> None:
+    """Tests that parent statistics use the supplied parent rather than bin sums."""
+    z = np.linspace(0.0, 2.0, 2001)
+
+    bins = {
+        0: np.exp(-0.5 * ((z - 0.4) / 0.1) ** 2),
+        1: np.exp(-0.5 * ((z - 0.8) / 0.1) ** 2),
+    }
+    parent = np.exp(-0.5 * ((z - 1.5) / 0.15) ** 2)
+
+    t = NZTomography()
+    result = t.build_predefined_bins(z=z, bins=bins, nz=parent)
+
+    builder_stats = t.parent_stats(decimal_places=None)
+    result_stats = result.parent_stats(decimal_places=None)
+
+    assert builder_stats["moments"]["mean"] == pytest.approx(1.5, abs=2e-3)
+    assert result_stats["moments"]["mean"] == pytest.approx(1.5, abs=2e-3)
+
+    assert builder_stats == result_stats
+    assert builder_stats["moments"]["mean"] != pytest.approx(
+        t.shape_stats(decimal_places=None)["per_bin"][0]["moments"]["mean"]
+    )

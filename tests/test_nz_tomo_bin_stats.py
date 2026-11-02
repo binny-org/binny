@@ -15,6 +15,7 @@ from binny.nz_tomo.bin_stats import (
     galaxy_fraction_per_bin,
     in_range_fraction,
     in_range_fraction_per_bin,
+    parent_stats,
     peak_flags,
     peak_flags_per_bin,
     population_stats,
@@ -895,3 +896,147 @@ def test_tabulated_comoving_number_density_metadata_schema() -> None:
     assert number_density["n_gal_comoving_h3_mpc3_col"] == 3
     assert number_density["total_count_col"] == 4
     assert number_density["volume_col"] == 5
+
+
+def test_parent_stats_returns_expected_structure() -> None:
+    """Tests that parent_stats returns moments, quantiles, and peak diagnostics."""
+    z = _toy_grid()
+    nz = _gaussian(z, 0.8, 0.15)
+
+    out = parent_stats(z, nz)
+
+    assert set(out.keys()) == {"moments", "quantiles", "peaks"}
+    assert set(out["moments"].keys()) == {
+        "mean",
+        "median",
+        "mode",
+        "std",
+        "skewness",
+        "kurtosis",
+        "iqr",
+        "width_68",
+    }
+    assert set(out["quantiles"].keys()) == {0.16, 0.5, 0.84}
+    assert set(out["peaks"].keys()) == {
+        "mode",
+        "mode_height",
+        "num_peaks",
+        "second_peak_ratio",
+    }
+
+
+def test_parent_stats_gaussian_known_values() -> None:
+    """Tests that parent_stats recovers the moments of a Gaussian distribution."""
+    z = _toy_grid()
+    mu, sig = 0.8, 0.15
+    nz = _gaussian(z, mu, sig)
+
+    out = parent_stats(z, nz, decimal_places=None)
+    moments = out["moments"]
+
+    assert moments["mean"] == pytest.approx(mu, abs=2e-3)
+    assert moments["median"] == pytest.approx(mu, abs=2e-3)
+    assert moments["mode"] == pytest.approx(mu, abs=2e-3)
+    assert moments["std"] == pytest.approx(sig, abs=2e-3)
+    assert moments["skewness"] == pytest.approx(0.0, abs=2e-3)
+    assert moments["kurtosis"] == pytest.approx(0.0, abs=2e-3)
+    assert moments["iqr"] > 0.0
+    assert moments["width_68"] > 0.0
+
+
+def test_parent_stats_matches_existing_helpers() -> None:
+    """Tests that parent_stats agrees with the underlying statistics helpers."""
+    z = _toy_grid()
+    nz = _gaussian(z, 0.9, 0.2)
+    quantiles = (0.1, 0.5, 0.9)
+
+    out = parent_stats(
+        z,
+        nz,
+        quantiles=quantiles,
+        min_rel_height=0.2,
+        decimal_places=None,
+    )
+
+    assert out["moments"] == pytest.approx(bin_moments(z, nz))
+    assert out["quantiles"] == pytest.approx(bin_quantiles(z, nz, quantiles))
+    assert out["peaks"] == peak_flags(z, nz, min_rel_height=0.2)
+
+
+def test_parent_stats_independent_of_normalization() -> None:
+    """Tests that parent shape statistics are invariant under rescaling."""
+    z = _toy_grid()
+    nz = _gaussian(z, 0.8, 0.15)
+
+    out = parent_stats(z, nz, decimal_places=None)
+    scaled = parent_stats(z, 5.0 * nz, decimal_places=None)
+
+    assert out["moments"] == pytest.approx(scaled["moments"])
+    assert out["quantiles"] == pytest.approx(scaled["quantiles"])
+    assert out["peaks"]["mode"] == pytest.approx(scaled["peaks"]["mode"])
+    assert out["peaks"]["num_peaks"] == pytest.approx(scaled["peaks"]["num_peaks"])
+    assert out["peaks"]["mode_height"] * 5.0 == pytest.approx(scaled["peaks"]["mode_height"])
+
+
+def test_parent_stats_custom_quantiles() -> None:
+    """Tests that parent_stats accepts custom quantiles."""
+    z = _toy_grid()
+    nz = _gaussian(z, 1.0, 0.2)
+
+    out = parent_stats(z, nz, quantiles=(0.1, 0.5, 0.9), decimal_places=None)
+
+    assert set(out["quantiles"].keys()) == {0.1, 0.5, 0.9}
+    assert out["quantiles"][0.1] < out["quantiles"][0.5]
+    assert out["quantiles"][0.5] < out["quantiles"][0.9]
+
+
+def test_parent_stats_detects_multiple_peaks() -> None:
+    """Tests that parent_stats identifies multiple peaks in a bimodal distribution."""
+    z = _toy_grid()
+    nz = _gaussian(z, 0.6, 0.06) + 0.5 * _gaussian(z, 1.4, 0.06)
+
+    out = parent_stats(z, nz, min_rel_height=0.1, decimal_places=None)
+
+    assert out["peaks"]["num_peaks"] == pytest.approx(2.0)
+    assert out["peaks"]["second_peak_ratio"] == pytest.approx(0.5, abs=1e-3)
+    assert out["moments"]["mode"] == pytest.approx(0.6, abs=2e-3)
+
+
+def test_parent_stats_respects_decimal_places() -> None:
+    """Tests that parent_stats applies the requested rounding precision."""
+    z = _toy_grid()
+    nz = _gaussian(z, 0.837, 0.153)
+
+    rounded = parent_stats(z, nz, decimal_places=2)
+    full = parent_stats(z, nz, decimal_places=None)
+
+    assert rounded["moments"]["mean"] == pytest.approx(round(full["moments"]["mean"], 2))
+    assert rounded["moments"]["std"] == pytest.approx(round(full["moments"]["std"], 2))
+    assert rounded["quantiles"][0.5] == pytest.approx(round(full["quantiles"][0.5], 2))
+
+
+def test_parent_stats_rejects_zero_distribution() -> None:
+    """Tests that parent_stats rejects a distribution with zero total weight."""
+    z = _toy_grid()
+    nz = np.zeros_like(z)
+
+    with pytest.raises(ValueError, match="Total weight must be positive"):
+        parent_stats(z, nz)
+
+
+def test_parent_stats_rejects_invalid_quantiles() -> None:
+    """Tests that parent_stats rejects quantiles outside [0, 1]."""
+    z = _toy_grid()
+    nz = _gaussian(z, 0.8, 0.15)
+
+    with pytest.raises(ValueError, match="q must be between 0 and 1"):
+        parent_stats(z, nz, quantiles=(0.5, 1.1))
+
+
+def test_parent_stats_rejects_mismatched_shapes() -> None:
+    """Tests that parent_stats rejects mismatched redshift and distribution arrays."""
+    z = _toy_grid()
+    nz = np.ones(z.size - 1)
+
+    with pytest.raises(ValueError):
+        parent_stats(z, nz)

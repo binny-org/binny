@@ -37,6 +37,7 @@ __all__ = [
     "in_range_fraction_per_bin",
     "peak_flags",
     "peak_flags_per_bin",
+    "parent_stats",
     "population_stats",
     "shape_stats",
 ]
@@ -730,4 +731,53 @@ def population_stats(
             out["survey_area"] = float(survey_area)
             out["count_per_bin"] = galaxy_count_per_bin(density_per_bin, float(survey_area))
 
+    return round_floats(out, decimal_places)
+
+
+def parent_stats(
+    z: Any,
+    nz: Any,
+    *,
+    decimal_places: int | None = 2,
+    quantiles: Sequence[float] = (0.16, 0.50, 0.84),
+    min_rel_height: float = 0.1,
+) -> dict[str, Any]:
+    """Compute shape statistics for the parent redshift distribution.
+
+    This function summarizes the shape of the parent n(z), independently of
+    its tomographic binning. The distribution is treated as a nonnegative
+    weight function and does not need to be normalized.
+
+    The returned statistics include moments, weighted quantiles, and peak
+    diagnostics. All quantities are computed directly from the supplied
+    parent distribution rather than reconstructed from tomographic bins.
+
+    Args:
+        z: One-dimensional redshift grid.
+        nz: Parent redshift distribution evaluated on ``z``.
+        decimal_places: Number of decimal places used to round returned
+            statistics. If None, return full-precision values.
+        quantiles: Quantiles to compute, expressed as fractions in [0, 1].
+        min_rel_height: Minimum relative peak height used to identify
+            significant local maxima.
+
+    Returns:
+        Dictionary containing the following statistics:
+
+        - ``"moments"``: Mean, median, mode, standard deviation, skewness,
+          excess kurtosis, interquartile range, and central 68% interval width.
+        - ``"quantiles"``: Mapping from requested quantiles to redshift values.
+        - ``"peaks"``: Global mode, mode height, number of significant peaks,
+          and second-highest peak ratio.
+
+    Raises:
+        ValueError: If the redshift grid or distribution is invalid, the
+            total weight is not positive, or a requested quantile is
+            outside [0, 1].
+    """
+    out = {
+        "moments": bin_moments(z, nz),
+        "quantiles": bin_quantiles(z, nz, quantiles),
+        "peaks": peak_flags(z, nz, min_rel_height=min_rel_height),
+    }
     return round_floats(out, decimal_places)
