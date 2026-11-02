@@ -15,6 +15,7 @@ import numpy as np
 
 import binny.nz_tomo.bin_similarity as _bin_sim
 from binny.correlations.bin_combo_filter import BinComboFilter
+from binny.nz_tomo.bin_stats import parent_stats as _parent_stats
 from binny.nz_tomo.bin_stats import population_stats as _population_stats
 from binny.nz_tomo.bin_stats import shape_stats as _shape_stats
 
@@ -76,6 +77,22 @@ class TomographyBins:
     @property
     def survey(self) -> str | None:
         return self._survey
+
+    def parent_stats(self, **kwargs: Any) -> dict[str, Any]:
+        """Compute shape statistics for the parent redshift distribution.
+
+        Statistics are computed directly from the parent n(z), independently
+        of the tomographic bins.
+
+        Args:
+            **kwargs: Additional keyword arguments forwarded to
+                :func:`binny.nz_tomo.bin_stats.parent_stats`.
+
+        Returns:
+            Dictionary containing parent distribution moments, quantiles,
+            and peak diagnostics.
+        """
+        return _parent_stats(z=self._z, nz=self._nz, **kwargs)
 
     def shape_stats(self, **kwargs: Any) -> dict[str, Any]:
         return _shape_stats(z=self._z, bins=self._bins, **kwargs)

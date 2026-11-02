@@ -38,6 +38,7 @@ from binny.nz.psf_selection import (
 from binny.nz.registry import available_models as _available_nz_models
 from binny.nz.registry import nz_model as _nz_model
 from binny.nz_tomo._tomography_bins import TomographyBins
+from binny.nz_tomo.bin_stats import parent_stats as _parent_stats
 from binny.nz_tomo.bin_stats import population_stats as _population_stats
 from binny.nz_tomo.bin_stats import shape_stats as _shape_stats
 from binny.nz_tomo.predefined import (
@@ -718,6 +719,26 @@ class NZTomography:
             include_photoz_diagnostics=include_photoz_diagnostics,
         )
         return result.with_survey(_norm_str(survey))
+
+    def parent_stats(self, **kwargs: Any) -> dict[str, Any]:
+        """Compute shape statistics for the cached parent redshift distribution.
+
+        Statistics are computed directly from the parent n(z), independently
+        of the tomographic bins.
+
+        Args:
+            **kwargs: Additional keyword arguments forwarded to
+                :func:`binny.nz_tomo.bin_stats.parent_stats`.
+
+        Returns:
+            Dictionary containing parent distribution moments, quantiles,
+            and peak diagnostics.
+
+        Raises:
+            ValueError: If no tomography has been built.
+        """
+        self._require_state()
+        return _parent_stats(z=self._parent["z"], nz=self._parent["nz"], **kwargs)
 
     def shape_stats(self, **kwargs: Any) -> dict[str, Any]:
         """Computes shape statistics for the cached bins.
