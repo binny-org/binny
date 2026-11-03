@@ -8,7 +8,17 @@ cosmology-aware tomography extensions.
 from __future__ import annotations
 
 import numpy as np
-import pyccl as ccl
+
+try:
+    import pyccl as ccl
+except ImportError:
+    import warnings
+    warnings.warn(
+        "Binny's cosmology wrappers require CCL, but it is not installed.",
+        ImportWarning, stacklevel=2)
+    _has_ccl = False
+else:
+    _has_ccl = True
 
 from binny.utils.types import FloatArray
 
