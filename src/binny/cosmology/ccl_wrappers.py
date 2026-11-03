@@ -7,6 +7,8 @@ cosmology-aware tomography extensions.
 
 from __future__ import annotations
 
+from functools import wraps
+
 import numpy as np
 
 try:
@@ -28,6 +30,17 @@ __all__ = [
     "luminosity_distance_mpc",
     "comoving_volume_weight",
 ]
+
+def requires_ccl(requirer: callable):
+    """Throws an exception if CCL is not found."""
+    @wraps(requirer)
+    def wrapper(*args, **kwargs):
+        if not _has_ccl:
+            raise ImportError(
+                f"Optional dependency CCL not found ({requirer.__name__})."
+            )
+        return requirer(*args, **kwargs)
+    return wrapper
 
 
 def scale_factor_from_redshift(z: FloatArray) -> FloatArray:
