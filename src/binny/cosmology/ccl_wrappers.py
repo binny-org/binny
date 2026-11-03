@@ -15,9 +15,12 @@ try:
     import pyccl as ccl
 except ImportError:
     import warnings
+
     warnings.warn(
         "Binny's cosmology wrappers require CCL, but it is not installed.",
-        ImportWarning, stacklevel=2)
+        ImportWarning,
+        stacklevel=2,
+    )
     _has_ccl = False
 else:
     _has_ccl = True
@@ -31,15 +34,16 @@ __all__ = [
     "comoving_volume_weight",
 ]
 
+
 def requires_ccl(requirer: callable):
     """Throws an exception if CCL is not found."""
+
     @wraps(requirer)
     def wrapper(*args, **kwargs):
         if not _has_ccl:
-            raise ImportError(
-                f"Optional dependency CCL not found ({requirer.__name__})."
-            )
+            raise ImportError(f"Optional dependency CCL not found ({requirer.__name__}).")
         return requirer(*args, **kwargs)
+
     return wrapper
 
 
