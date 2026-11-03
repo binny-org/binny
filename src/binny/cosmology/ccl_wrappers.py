@@ -63,6 +63,7 @@ def scale_factor_from_redshift(z: FloatArray) -> FloatArray:
     return np.asarray(1.0 / (1.0 + z_arr), dtype=np.float64)
 
 
+@requires_ccl
 def comoving_radial_distance_mpc(
     cosmo: ccl.Cosmology,
     z: FloatArray,
@@ -80,6 +81,7 @@ def comoving_radial_distance_mpc(
     return np.asarray(ccl.comoving_radial_distance(cosmo, a), dtype=np.float64)
 
 
+@requires_ccl
 def luminosity_distance_mpc(
     cosmo: ccl.Cosmology,
     z: FloatArray,
@@ -97,6 +99,7 @@ def luminosity_distance_mpc(
     return np.asarray(ccl.luminosity_distance(cosmo, a), dtype=np.float64)
 
 
+@requires_ccl
 def comoving_volume_weight(
     cosmo: ccl.Cosmology,
     z: FloatArray,
