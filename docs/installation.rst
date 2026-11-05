@@ -20,6 +20,14 @@ Then import it in Python as:
 
    import binny
 
+From Conda Forge
+----------------
+
+.. code-block:: bash
+
+   conda install --channel conda-forge pybinny
+
+
 From source
 -----------
 
