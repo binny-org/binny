@@ -30,6 +30,12 @@ for forecasting, inference pipelines, and survey analysis workflows.
 pip install pybinny
 ```
 
+## Install from Conda Forge
+
+```bash
+conda install --channel conda-forge pybinny
+```
+
 ### Install from source
 ```bash
 git clone https://github.com/binny-org/binny.git
