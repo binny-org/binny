@@ -12,6 +12,8 @@
 [![PyPI](https://img.shields.io/pypi/v/pybinny?label=PyPI&color=fde725&style=flat-square&cacheSeconds=300)](https://pypi.org/project/pybinny/)
 [![Documentation](https://img.shields.io/badge/docs-binny-31688e?style=flat-square)](https://binny-org.github.io/binny)
 
+[![Anaconda-Server Badge](https://anaconda.org/conda-forge/pybinny/badges/version.svg)](https://anaconda.org/conda-forge/pybinny)
+
 </p>
 
 **binny** is a Python library for constructing and analyzing  
