@@ -1752,3 +1752,41 @@ def test_parent_stats_uses_supplied_parent_not_sum_of_bins() -> None:
     assert builder_stats["moments"]["mean"] != pytest.approx(
         t.shape_stats(decimal_places=None)["per_bin"][0]["moments"]["mean"]
     )
+
+
+def test_api_fit_photoz_errors():
+    """Test photo-z fitting through the public NZTomography API."""
+    rng = np.random.default_rng(42)
+
+    z_true = rng.uniform(0.1, 2.0, 2000)
+    z_obs = z_true + rng.normal(0.0, 0.03, 2000) * (1.0 + z_true)
+
+    fit = NZTomography.fit_photoz_errors(
+        z_true,
+        z_obs,
+        seed=42,
+    )
+
+    assert set(fit) == {
+        "scatter_scale",
+        "outlier_scatter_scale",
+        "outlier_mean_shift",
+        "outlier_frac",
+    }
+    assert all(np.isfinite(value) for value in fit.values())
+
+
+def test_api_to_binny_photoz_params():
+    """Test photo-z parameter conversion through the public API."""
+    fit = {
+        "scatter_scale": 0.03,
+        "outlier_scatter_scale": 0.08,
+        "outlier_mean_shift": 0.12,
+        "outlier_frac": 0.20,
+    }
+
+    params = NZTomography.to_binny_photoz_params(fit)
+
+    assert isinstance(params, dict)
+    assert params["scatter_scale"] == pytest.approx(0.03)
+    assert params["outlier_frac"] == pytest.approx(0.20)
