@@ -41,6 +41,12 @@ from binny.nz_tomo._tomography_bins import TomographyBins
 from binny.nz_tomo.bin_stats import parent_stats as _parent_stats
 from binny.nz_tomo.bin_stats import population_stats as _population_stats
 from binny.nz_tomo.bin_stats import shape_stats as _shape_stats
+from binny.nz_tomo.photoz_fitting import (
+    fit_photoz_errors as _fit_photoz_errors,
+)
+from binny.nz_tomo.photoz_fitting import (
+    to_binny_photoz_params as _to_binny_photoz_params,
+)
 from binny.nz_tomo.predefined import (
     prepare_predefined_bins as _prepare_predefined_bins,
 )
@@ -245,6 +251,54 @@ class NZTomography:
         """Clears the cached parent distribution, spec, bins, and metadata."""
         self._parent = None
         self._state = None
+
+    @staticmethod
+    def fit_photoz_errors(
+        z_true: np.ndarray,
+        z_obs: np.ndarray,
+        *,
+        hist_range: float = 0.30,
+        hist_bin: float = 1e-4,
+        core_min_weight: float = 0.5,
+        n_init: int = 10,
+        seed: int = 0,
+    ) -> dict[str, float]:
+        """Fit Gaussian core and outlier-tail photo-z errors from a catalogue.
+
+        Args:
+            z_true: True redshifts of the catalogue objects.
+            z_obs: Corresponding observed photometric redshifts.
+            hist_range: Symmetric fitting range in normalized residuals.
+            hist_bin: Histogram bin width.
+            core_min_weight: Minimum allowed fraction in the Gaussian core.
+            n_init: Number of random EM initializations.
+            seed: Random seed for reproducibility.
+
+        Returns:
+            Fitted core scatter, tail scatter, tail displacement, outlier
+            fraction, and fitting diagnostics.
+        """
+        return _fit_photoz_errors(
+            z_true,
+            z_obs,
+            hist_range=hist_range,
+            hist_bin=hist_bin,
+            core_min_weight=core_min_weight,
+            n_init=n_init,
+            seed=seed,
+        )
+
+    @staticmethod
+    def to_binny_photoz_params(fit: dict[str, float]) -> dict[str, float]:
+        """Convert fitted photo-z errors to Binny tomography parameters.
+
+        Args:
+            fit: Output dictionary from ``fit_photoz_errors``.
+
+        Returns:
+            Photo-z parameters compatible with Binny's assignment model.
+        """
+        return _to_binny_photoz_params(fit)
 
     @staticmethod
     def fit_smail_from_mock(

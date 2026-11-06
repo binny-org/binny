@@ -1752,3 +1752,34 @@ def test_parent_stats_uses_supplied_parent_not_sum_of_bins() -> None:
     assert builder_stats["moments"]["mean"] != pytest.approx(
         t.shape_stats(decimal_places=None)["per_bin"][0]["moments"]["mean"]
     )
+
+
+def test_api_photoz_fitting_matches_direct_function():
+    """Tests that the API delegates photo-z fitting correctly."""
+    from binny.nz_tomo.photoz_fitting import fit_photoz_errors
+
+    rng = np.random.default_rng(42)
+    z_true = rng.uniform(0.1, 2.0, 1000)
+    z_obs = z_true + rng.normal(0.0, 0.03, 1000) * (1.0 + z_true)
+
+    expected = fit_photoz_errors(z_true, z_obs)
+    actual = NZTomography.fit_photoz_errors(z_true, z_obs)
+
+    assert actual == expected
+
+
+def test_api_photoz_mapping_matches_direct_function():
+    """Tests that the API delegates photo-z parameter conversion correctly."""
+    from binny.nz_tomo.photoz_fitting import to_binny_photoz_params
+
+    fit = {
+        "sigma_c": 0.03,
+        "sigma_t": 0.08,
+        "m_t": 0.12,
+        "f_t": 0.20,
+    }
+
+    expected = to_binny_photoz_params(fit)
+    actual = NZTomography.to_binny_photoz_params(fit)
+
+    assert actual == expected

@@ -220,3 +220,66 @@ def test_photoz_mapping_works_with_forward_model():
     assert probability.shape == z.shape
     assert np.all(np.isfinite(probability))
     assert np.all((probability >= 0.0) & (probability <= 1.0))
+
+
+def test_photoz_fit_recovers_tomographic_bins(synthetic_catalogue):
+    """Tests that fitted photo-z errors reproduce injected tomography."""
+    z_true, z_obs = synthetic_catalogue
+
+    fit = fit_photoz_errors(z_true, z_obs)
+    fitted_params = to_binny_photoz_params(fit)
+
+    true_params = to_binny_photoz_params(
+        {
+            "sigma_c": 0.03,
+            "sigma_t": 0.08,
+            "m_t": 0.12,
+            "f_t": 0.20,
+        }
+    )
+
+    # Smooth parent redshift distribution.
+    z = np.linspace(0.0, 3.0, 1000)
+    nz = z**2 * np.exp(-((z / 0.8) ** 1.5))
+    nz /= np.trapezoid(nz, z)
+
+    # Observed-redshift bin edges.
+    edges = np.linspace(0.2, 2.2, 6)
+
+    for z_min, z_max in zip(edges[:-1], edges[1:], strict=True):
+        p_true = photoz_assignment_probability(
+            z,
+            bin_min=z_min,
+            bin_max=z_max,
+            **true_params,
+        )
+        p_fit = photoz_assignment_probability(
+            z,
+            bin_min=z_min,
+            bin_max=z_max,
+            **fitted_params,
+        )
+
+        # Construct tomographic true-redshift distributions.
+        nz_true = nz * p_true
+        nz_fit = nz * p_fit
+
+        # Compare bin populations.
+        n_true = np.trapezoid(nz_true, z)
+        n_fit = np.trapezoid(nz_fit, z)
+
+        assert n_fit == pytest.approx(n_true, rel=0.05)
+
+        # Compare mean true redshifts.
+        mean_true = np.trapezoid(z * nz_true, z) / n_true
+        mean_fit = np.trapezoid(z * nz_fit, z) / n_fit
+
+        assert mean_fit == pytest.approx(mean_true, abs=0.02)
+
+        # Compare normalized tomographic distributions.
+        nz_true /= n_true
+        nz_fit /= n_fit
+
+        difference = np.trapezoid(np.abs(nz_fit - nz_true), z)
+
+        assert difference < 0.10
