@@ -29,3 +29,4 @@ check.ipynb
 photoz_binning_demo.py
 /check_bin_filters.ipynb
 .idea/
+/benchmarks/output/
