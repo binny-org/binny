@@ -41,6 +41,7 @@ from binny.nz_tomo._tomography_bins import TomographyBins
 from binny.nz_tomo.bin_stats import parent_stats as _parent_stats
 from binny.nz_tomo.bin_stats import population_stats as _population_stats
 from binny.nz_tomo.bin_stats import shape_stats as _shape_stats
+from binny.nz_tomo.photoz_fitting import fit_photoz_errors
 from binny.nz_tomo.photoz_fitting import (
     to_binny_photoz_params as _to_binny_photoz_params,
 )
@@ -336,7 +337,6 @@ class NZTomography:
             Standard fixed-distribution significance probabilities
             are therefore not directly applicable.
         """
-        from binny.nz_tomo.photoz_fitting import fit_photoz_errors
 
         return fit_photoz_errors(
             z_true,

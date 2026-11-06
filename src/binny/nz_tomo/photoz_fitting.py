@@ -24,6 +24,32 @@ from scipy.special import logsumexp, ndtr
 __all__ = ["fit_photoz_errors", "to_binny_photoz_params"]
 
 
+def _log_component_probability(
+    x: np.ndarray,
+    sigma: np.ndarray,
+    mu: np.ndarray,
+    weights: np.ndarray,
+) -> np.ndarray:
+    """Evaluate weighted log probability densities for Gaussian components.
+
+    Args:
+        x: One-dimensional array of residual values.
+        sigma: Standard deviations of the Gaussian components.
+        mu: Means of the Gaussian components.
+        weights: Mixture weights of the Gaussian components.
+
+    Returns:
+        Array of weighted log probability densities with shape
+        (n_samples, n_components).
+    """
+    return (
+        -0.5 * ((x[:, None] - mu) / sigma) ** 2
+        - np.log(sigma)
+        - 0.5 * np.log(2.0 * np.pi)
+        + np.log(weights)
+    )
+
+
 def _log_probability(
     x: np.ndarray,
     sigma: np.ndarray,
@@ -37,24 +63,18 @@ def _log_probability(
 
     Args:
         x: One-dimensional array of residual values.
-        sigma: Standard deviations of the Gaussian components, corresponding
-            to ``scatter_scale`` and ``outlier_scatter_scale``.
-        mu: Means of the Gaussian components. The core mean is zero, and
-            the tail mean corresponds to ``outlier_mean_shift``.
-        weights: Mixture weights of the Gaussian components, corresponding
-            to the core fraction and ``outlier_frac``.
+        sigma: Standard deviations of the Gaussian components.
+        mu: Means of the Gaussian components.
+        weights: Mixture weights of the Gaussian components.
 
     Returns:
-        Array of mixture log probability densities, with one value
-        per input residual.
+        One-dimensional array of mixture log probability densities,
+        with one value per input residual.
     """
-    logp = (
-        -0.5 * ((x[:, None] - mu) / sigma) ** 2
-        - np.log(sigma)
-        - 0.5 * np.log(2.0 * np.pi)
-        + np.log(weights)
+    return logsumexp(
+        _log_component_probability(x, sigma, mu, weights),
+        axis=1,
     )
-    return logsumexp(logp, axis=1)
 
 
 def _fit_gaussian_mixture(
@@ -134,12 +154,7 @@ def _fit_gaussian_mixture(
         converged = False
 
         for _iteration in range(1, max_iter + 1):
-            logp = (
-                -0.5 * ((x[:, None] - mu) / sigma) ** 2
-                - np.log(sigma)
-                - 0.5 * np.log(2.0 * np.pi)
-                + np.log(weights)
-            )
+            logp = _log_component_probability(x, sigma, mu, weights)
             lognorm = logsumexp(logp, axis=1)
             responsibilities = np.exp(logp - lognorm[:, None])
 
