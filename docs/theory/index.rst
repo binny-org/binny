@@ -32,6 +32,7 @@ Table of contents
 
          nz/index
          tomography
+         photoz_fitting
          uncertainties/index
          statistics
          diagnostics

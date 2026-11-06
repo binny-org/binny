@@ -11,3 +11,4 @@ Examples for building and manipulating tomographic samples.
    predefined_bins
    selections
    sample_composition
+   photoz_fitting
