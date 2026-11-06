@@ -1,5 +1,4 @@
-
-"""Benchmark photo-z error fitting and tomographic reconstruction."""
+"""Benchmark photometric-redshift error fitting and tomographic reconstruction."""
 
 from __future__ import annotations
 
@@ -7,21 +6,28 @@ from pathlib import Path
 
 import matplotlib.pyplot as plt
 import numpy as np
-from scipy.special import logsumexp
 
 from binny.api.nz_tomography import NZTomography
 from binny.nz_tomo.photoz import photoz_assignment_probability
 
 
-OUTPUT_DIR = Path(__file__).resolve().parent / "output"
+OUTPUT_DIR = (
+    Path(__file__).resolve().parent
+    / "output"
+    / "photoz_reconstruction"
+)
 
 SEED = 42
 N_GALAXIES = 100_000
 
-SIGMA_CORE = 0.03
-SIGMA_TAIL = 0.08
-MEAN_TAIL = 0.12
-FRAC_TAIL = 0.20
+SCATTER_SCALE = 0.03
+OUTLIER_SCATTER_SCALE = 0.08
+OUTLIER_MEAN_SHIFT = 0.12
+OUTLIER_FRAC = 0.20
+
+N_INIT = 10
+MAX_ITER = 1000
+TOL = 1e-8
 
 Z_MIN = 0.0
 Z_MAX = 3.0
@@ -42,10 +48,9 @@ def generate_catalogue(
     n_galaxies: int,
     seed: int,
 ) -> tuple[np.ndarray, np.ndarray]:
-    """Sample true redshifts and inject Gaussian core + tail errors."""
+    """Sample true redshifts and inject Gaussian core and tail errors."""
     rng = np.random.default_rng(seed)
 
-    # Sample the parent distribution using a numerical inverse CDF.
     cdf = np.zeros_like(z)
     cdf[1:] = np.cumsum(
         0.5 * (nz[1:] + nz[:-1]) * np.diff(z)
@@ -54,13 +59,12 @@ def generate_catalogue(
 
     z_true = np.interp(rng.random(n_galaxies), cdf, z)
 
-    # Generate normalized photo-z residuals.
-    is_tail = rng.random(n_galaxies) < FRAC_TAIL
+    is_tail = rng.random(n_galaxies) < OUTLIER_FRAC
 
-    eps = rng.normal(0.0, SIGMA_CORE, n_galaxies)
+    eps = rng.normal(0.0, SCATTER_SCALE, n_galaxies)
     eps[is_tail] = rng.normal(
-        MEAN_TAIL,
-        SIGMA_TAIL,
+        OUTLIER_MEAN_SHIFT,
+        OUTLIER_SCATTER_SCALE,
         is_tail.sum(),
     )
 
@@ -72,20 +76,33 @@ def generate_catalogue(
 def mixture_pdf(
     eps: np.ndarray,
     *,
-    sigma_c: float,
-    sigma_t: float,
-    m_t: float,
-    f_t: float,
+    scatter_scale: float,
+    outlier_scatter_scale: float,
+    outlier_mean_shift: float,
+    outlier_frac: float,
 ) -> np.ndarray:
-    """Evaluate the Gaussian core + tail residual density."""
-    core = np.exp(-0.5 * (eps / sigma_c) ** 2) / (
-        np.sqrt(2.0 * np.pi) * sigma_c
+    """Evaluate the Gaussian core and tail residual probability density.
+
+    Args:
+        eps: Normalized photometric-redshift residuals.
+        scatter_scale: Standard deviation of the zero-mean Gaussian core.
+        outlier_scatter_scale: Standard deviation of the Gaussian tail.
+        outlier_mean_shift: Mean displacement of the Gaussian tail.
+        outlier_frac: Fraction of objects assigned to the Gaussian tail.
+
+    Returns:
+        Probability density evaluated at each residual.
+    """
+    core = np.exp(-0.5 * (eps / scatter_scale) ** 2) / (
+        np.sqrt(2.0 * np.pi) * scatter_scale
     )
-    tail = np.exp(-0.5 * ((eps - m_t) / sigma_t) ** 2) / (
-        np.sqrt(2.0 * np.pi) * sigma_t
+    tail = np.exp(
+        -0.5 * ((eps - outlier_mean_shift) / outlier_scatter_scale) ** 2
+    ) / (
+        np.sqrt(2.0 * np.pi) * outlier_scatter_scale
     )
 
-    return (1.0 - f_t) * core + f_t * tail
+    return (1.0 - outlier_frac) * core + outlier_frac * tail
 
 
 def construct_tomography(
@@ -154,23 +171,27 @@ def plot_residual_fit(
     fit: dict[str, float],
     output_dir: Path,
 ) -> None:
-    """Compare the catalogue residuals with injected and fitted mixtures."""
+    """Compare catalogue residuals with injected and fitted mixtures."""
     eps = (z_obs - z_true) / (1.0 + z_true)
-    x = np.linspace(-0.3, 0.3, 1000)
+
+    # The histogram is for visualization only, not for fitting.
+    x_min = min(-0.3, float(eps.min()))
+    x_max = max(0.4, float(eps.max()))
+    x = np.linspace(x_min, x_max, 1500)
 
     injected = mixture_pdf(
         x,
-        sigma_c=SIGMA_CORE,
-        sigma_t=SIGMA_TAIL,
-        m_t=MEAN_TAIL,
-        f_t=FRAC_TAIL,
+        scatter_scale=SCATTER_SCALE,
+        outlier_scatter_scale=OUTLIER_SCATTER_SCALE,
+        outlier_mean_shift=OUTLIER_MEAN_SHIFT,
+        outlier_frac=OUTLIER_FRAC,
     )
     recovered = mixture_pdf(
         x,
-        sigma_c=fit["sigma_c"],
-        sigma_t=fit["sigma_t"],
-        m_t=fit["m_t"],
-        f_t=fit["f_t"],
+        scatter_scale=fit["scatter_scale"],
+        outlier_scatter_scale=fit["outlier_scatter_scale"],
+        outlier_mean_shift=fit["outlier_mean_shift"],
+        outlier_frac=fit["outlier_frac"],
     )
 
     fig, ax = plt.subplots(figsize=(7, 4.5))
@@ -178,7 +199,7 @@ def plot_residual_fit(
     ax.hist(
         eps,
         bins=120,
-        range=(-0.3, 0.3),
+        range=(x_min, x_max),
         density=True,
         alpha=0.35,
         label="Catalogue residuals",
@@ -189,7 +210,7 @@ def plot_residual_fit(
     ax.set(
         xlabel=r"$(z_{\rm obs}-z_{\rm true})/(1+z_{\rm true})$",
         ylabel="Probability density",
-        title="Photo-z error reconstruction",
+        title="Photometric-redshift error reconstruction (unbinned fit)",
     )
     ax.legend()
     fig.tight_layout()
@@ -203,7 +224,7 @@ def plot_tomography(
     fitted_bins: list[np.ndarray],
     output_dir: Path,
 ) -> None:
-    """Compare tomographic redshift distributions."""
+    """Compare injected and reconstructed tomographic distributions."""
     fig, ax = plt.subplots(figsize=(8, 5))
 
     colors = plt.cm.viridis(np.linspace(0.1, 0.9, len(true_bins)))
@@ -233,7 +254,7 @@ def plot_tomography(
         xlabel="True redshift",
         ylabel=r"Normalized $n_i(z)$",
         title="Tomographic reconstruction",
-        xlim=(0.0, 3.0),
+        xlim=(Z_MIN, Z_MAX),
     )
     ax.legend(ncol=2, fontsize=9)
     fig.tight_layout()
@@ -242,7 +263,7 @@ def plot_tomography(
 
 
 def main() -> None:
-    """Run the photo-z fitting and tomography reconstruction benchmark."""
+    """Run the photometric-redshift fitting and tomography benchmark."""
     OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
 
     z = np.linspace(Z_MIN, Z_MAX, N_Z)
@@ -257,15 +278,24 @@ def main() -> None:
 
     tomo = NZTomography()
 
-    fit = tomo.fit_photoz_errors(z_true, z_obs)
+    fit, metadata = tomo.fit_photoz_errors(
+        z_true,
+        z_obs,
+        n_init=N_INIT,
+        max_iter=MAX_ITER,
+        tol=TOL,
+        seed=SEED,
+        return_metadata=True,
+    )
+
     fitted_params = tomo.to_binny_photoz_params(fit)
 
     injected_params = tomo.to_binny_photoz_params(
         {
-            "sigma_c": SIGMA_CORE,
-            "sigma_t": SIGMA_TAIL,
-            "m_t": MEAN_TAIL,
-            "f_t": FRAC_TAIL,
+            "scatter_scale": SCATTER_SCALE,
+            "outlier_scatter_scale": OUTLIER_SCATTER_SCALE,
+            "outlier_mean_shift": OUTLIER_MEAN_SHIFT,
+            "outlier_frac": OUTLIER_FRAC,
         }
     )
 
@@ -276,21 +306,38 @@ def main() -> None:
         z, nz, BIN_EDGES, fitted_params
     )
 
-    print("\nPHOTO-Z PARAMETER RECOVERY")
-    print("-" * 55)
-    print(f"{'Parameter':<16} {'Injected':>12} {'Fitted':>12}")
-    print("-" * 55)
+    print("\nPHOTOMETRIC-REDSHIFT PARAMETER RECOVERY")
+    print("-" * 85)
+    print(
+        f"{'Parameter':<24} "
+        f"{'Injected':>12} "
+        f"{'Fitted':>12} "
+        f"{'Difference':>12}"
+    )
+    print("-" * 85)
 
     for name, true_value in [
-        ("sigma_c", SIGMA_CORE),
-        ("sigma_t", SIGMA_TAIL),
-        ("m_t", MEAN_TAIL),
-        ("f_t", FRAC_TAIL),
+        ("scatter_scale", SCATTER_SCALE),
+        ("outlier_scatter_scale", OUTLIER_SCATTER_SCALE),
+        ("outlier_mean_shift", OUTLIER_MEAN_SHIFT),
+        ("outlier_frac", OUTLIER_FRAC),
     ]:
         print(
-            f"{name:<16} {true_value:>12.5f} "
-            f"{fit[name]:>12.5f}"
+            f"{name:<24} "
+            f"{true_value:>12.5f} "
+            f"{fit[name]:>12.5f} "
+            f"{fit[name] - true_value:>+12.5f}"
         )
+
+    print("\nFIT DIAGNOSTICS")
+    print("-" * 55)
+    print(f"Objects:      {metadata['n']}")
+    print(f"Converged:    {metadata['converged']}")
+    print(f"Iterations:   {metadata['n_iter']}")
+    print(f"Loglike:      {metadata['loglike']:.3f}")
+    print(f"AIC:          {metadata['aic']:.3f}")
+    print(f"BIC:          {metadata['bic']:.3f}")
+    print(f"KS statistic: {metadata['ks_statistic']:.6f}")
 
     print("\nTOMOGRAPHIC RECONSTRUCTION")
     print("-" * 78)
@@ -322,7 +369,6 @@ def main() -> None:
     plot_residual_fit(z_true, z_obs, fit, OUTPUT_DIR)
     plot_tomography(z, true_bins, fitted_bins, OUTPUT_DIR)
 
-    # Save numerical diagnostics.
     np.savetxt(
         OUTPUT_DIR / "tomography_diagnostics.csv",
         np.asarray(rows),
