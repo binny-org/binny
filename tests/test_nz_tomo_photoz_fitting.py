@@ -7,6 +7,8 @@ import pytest
 
 from binny.nz_tomo.photoz import photoz_assignment_probability
 from binny.nz_tomo.photoz_fitting import (
+    _log_component_probability,
+    _log_probability,
     fit_photoz_errors,
     to_binny_photoz_params,
 )
@@ -47,6 +49,22 @@ def fitted_catalogue_with_metadata(
         seed=42,
         return_metadata=True,
     )
+
+
+def test_log_component_probability_matches_mixture():
+    """Test consistency between component and mixture log probabilities."""
+    from scipy.special import logsumexp
+
+    x = np.array([-0.1, 0.0, 0.1])
+    sigma = np.array([0.03, 0.08])
+    mu = np.array([0.0, 0.12])
+    weights = np.array([0.8, 0.2])
+
+    logp = _log_component_probability(x, sigma, mu, weights)
+    mixture = _log_probability(x, sigma, mu, weights)
+
+    assert logp.shape == (3, 2)
+    np.testing.assert_allclose(mixture, logsumexp(logp, axis=1))
 
 
 def test_photoz_fit_recovers_core_scatter(fitted_catalogue):

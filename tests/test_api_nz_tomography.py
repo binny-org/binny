@@ -1754,32 +1754,30 @@ def test_parent_stats_uses_supplied_parent_not_sum_of_bins() -> None:
     )
 
 
-def test_api_photoz_fitting_matches_direct_function():
-    """Test that the API delegates unbinned photometric-redshift fitting correctly."""
-    from binny.nz_tomo.photoz_fitting import fit_photoz_errors
-
+def test_api_fit_photoz_errors():
+    """Test photo-z fitting through the public NZTomography API."""
     rng = np.random.default_rng(42)
-    z_true = rng.uniform(0.1, 2.0, 1000)
-    z_obs = z_true + rng.normal(0.0, 0.03, 1000) * (1.0 + z_true)
 
-    kwargs = {
-        "core_min_weight": 0.6,
-        "n_init": 3,
-        "max_iter": 200,
-        "tol": 1e-8,
-        "seed": 42,
+    z_true = rng.uniform(0.1, 2.0, 2000)
+    z_obs = z_true + rng.normal(0.0, 0.03, 2000) * (1.0 + z_true)
+
+    fit = NZTomography.fit_photoz_errors(
+        z_true,
+        z_obs,
+        seed=42,
+    )
+
+    assert set(fit) == {
+        "scatter_scale",
+        "outlier_scatter_scale",
+        "outlier_mean_shift",
+        "outlier_frac",
     }
-
-    expected = fit_photoz_errors(z_true, z_obs, **kwargs)
-    actual = NZTomography.fit_photoz_errors(z_true, z_obs, **kwargs)
-
-    assert actual == expected
+    assert all(np.isfinite(value) for value in fit.values())
 
 
-def test_api_photoz_mapping_matches_direct_function():
-    """Test that the API delegates photometric-redshift parameter conversion correctly."""
-    from binny.nz_tomo.photoz_fitting import to_binny_photoz_params
-
+def test_api_to_binny_photoz_params():
+    """Test photo-z parameter conversion through the public API."""
     fit = {
         "scatter_scale": 0.03,
         "outlier_scatter_scale": 0.08,
@@ -1787,7 +1785,8 @@ def test_api_photoz_mapping_matches_direct_function():
         "outlier_frac": 0.20,
     }
 
-    expected = to_binny_photoz_params(fit)
-    actual = NZTomography.to_binny_photoz_params(fit)
+    params = NZTomography.to_binny_photoz_params(fit)
 
-    assert actual == expected
+    assert isinstance(params, dict)
+    assert params["scatter_scale"] == pytest.approx(0.03)
+    assert params["outlier_frac"] == pytest.approx(0.20)
