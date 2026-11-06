@@ -1755,28 +1755,36 @@ def test_parent_stats_uses_supplied_parent_not_sum_of_bins() -> None:
 
 
 def test_api_photoz_fitting_matches_direct_function():
-    """Tests that the API delegates photo-z fitting correctly."""
+    """Test that the API delegates unbinned photometric-redshift fitting correctly."""
     from binny.nz_tomo.photoz_fitting import fit_photoz_errors
 
     rng = np.random.default_rng(42)
     z_true = rng.uniform(0.1, 2.0, 1000)
     z_obs = z_true + rng.normal(0.0, 0.03, 1000) * (1.0 + z_true)
 
-    expected = fit_photoz_errors(z_true, z_obs)
-    actual = NZTomography.fit_photoz_errors(z_true, z_obs)
+    kwargs = {
+        "core_min_weight": 0.6,
+        "n_init": 3,
+        "max_iter": 200,
+        "tol": 1e-8,
+        "seed": 42,
+    }
+
+    expected = fit_photoz_errors(z_true, z_obs, **kwargs)
+    actual = NZTomography.fit_photoz_errors(z_true, z_obs, **kwargs)
 
     assert actual == expected
 
 
 def test_api_photoz_mapping_matches_direct_function():
-    """Tests that the API delegates photo-z parameter conversion correctly."""
+    """Test that the API delegates photometric-redshift parameter conversion correctly."""
     from binny.nz_tomo.photoz_fitting import to_binny_photoz_params
 
     fit = {
-        "sigma_c": 0.03,
-        "sigma_t": 0.08,
-        "m_t": 0.12,
-        "f_t": 0.20,
+        "scatter_scale": 0.03,
+        "outlier_scatter_scale": 0.08,
+        "outlier_mean_shift": 0.12,
+        "outlier_frac": 0.20,
     }
 
     expected = to_binny_photoz_params(fit)
