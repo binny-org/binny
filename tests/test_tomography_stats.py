@@ -5,7 +5,7 @@ from __future__ import annotations
 import numpy as np
 import pytest
 
-from binny.nz_tomo.bin_stats import (
+from binny.tomography.stats import (
     bin_centers,
     bin_moments,
     bin_quantiles,
@@ -454,7 +454,7 @@ def test_population_stats_normalize_frac_false_rejects_not_sum_one(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """Tests that population_stats rejects non-unit sums when normalize_frac is False."""
-    import binny.nz_tomo.bin_stats as bsmod
+    import binny.tomography.stats as bsmod
 
     def _fake_frac(_meta):
         return {0: 0.2, 1: 0.2}  # sum = 0.4
@@ -591,7 +591,7 @@ def test_galaxy_fraction_per_bin_reads_nested_bins_block() -> None:
 
 def test__equidistant_score_returns_zero_if_mean_width_nonpositive() -> None:
     """Tests that _equidistant_score returns zero if mean width is nonpositive."""
-    import binny.nz_tomo.bin_stats as bs
+    import binny.tomography.stats as bs
 
     assert bs._equidistant_score([0.0, 0.0]) == pytest.approx(0.0)  # mean = 0
     assert bs._equidistant_score([-1.0, 1.0]) == pytest.approx(0.0)  # mean = 0
@@ -742,7 +742,7 @@ def test_population_stats_density_uses_galaxy_density_helper(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """Tests that population_stats routes density allocation through the helper."""
-    import binny.nz_tomo.bin_stats as bs
+    import binny.tomography.stats as bs
 
     called = {"value": False}
 
