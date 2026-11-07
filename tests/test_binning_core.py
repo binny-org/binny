@@ -14,7 +14,7 @@ from binny.nz_tomo.specz import (
     build_specz_response_matrix,
     specz_gaussian_response_matrix,
 )
-from binny.tomography.result import Tomography
+from binny.tomography.core import Tomography
 
 
 def assert_bins_equal(actual, expected):
