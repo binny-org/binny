@@ -85,6 +85,16 @@ extensions = [
     "matplotlib.sphinxext.plot_directive",
 ]
 
+# Plot output settings.
+plot_formats = [("png", 300)]
+plot_html_show_source_link = False
+plot_html_show_formats = False
+
+plot_pre_code = """
+import matplotlib
+matplotlib.use("Agg")
+"""
+
 # General plot settings
 plot_rcparams = {
     # tick style
