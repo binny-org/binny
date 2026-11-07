@@ -41,6 +41,10 @@ from binny.nz_tomo._tomography_bins import TomographyBins
 from binny.nz_tomo.bin_stats import parent_stats as _parent_stats
 from binny.nz_tomo.bin_stats import population_stats as _population_stats
 from binny.nz_tomo.bin_stats import shape_stats as _shape_stats
+from binny.nz_tomo.photoz_fitting import fit_photoz_errors
+from binny.nz_tomo.photoz_fitting import (
+    to_binny_photoz_params as _to_binny_photoz_params,
+)
 from binny.nz_tomo.predefined import (
     prepare_predefined_bins as _prepare_predefined_bins,
 )
@@ -245,6 +249,117 @@ class NZTomography:
         """Clears the cached parent distribution, spec, bins, and metadata."""
         self._parent = None
         self._state = None
+
+    @staticmethod
+    def fit_photoz_errors(
+        z_true: np.ndarray,
+        z_obs: np.ndarray,
+        *,
+        core_min_weight: float = 0.5,
+        n_init: int = 10,
+        max_iter: int = 1000,
+        tol: float = 1e-8,
+        seed: int = 0,
+        return_metadata: bool = False,
+    ) -> dict[str, float] | tuple[dict[str, float], dict[str, float | int | bool]]:
+        """Fit photometric-redshift errors using an unbinned Gaussian mixture.
+
+        Fits a two-component Gaussian mixture to the normalized residuals
+
+            epsilon = (z_obs - z_true) / (1 + z_true).
+
+        The model consists of a zero-mean Gaussian core and a displaced
+        Gaussian outlier component. The core scatter, outlier scatter,
+        outlier mean displacement, and outlier fraction are estimated
+        using expectation-maximization with multiple random initializations.
+
+        All catalogue residuals are included in the fit without histogram
+        binning or residual-range truncation.
+
+        Args:
+            z_true: One-dimensional array of true galaxy redshifts.
+            z_obs: One-dimensional array of observed photometric redshifts.
+                Must have the same shape as ``z_true``.
+            core_min_weight: Minimum allowed fraction of the Gaussian core.
+                Must lie strictly between zero and one. Defaults to 0.5.
+            n_init: Number of random expectation-maximization initializations.
+                Must be positive. Defaults to 10.
+            max_iter: Maximum number of expectation-maximization iterations
+                per initialization. Must be positive. Defaults to 1000.
+            tol: Relative log-likelihood convergence tolerance.
+                Must be positive and finite. Defaults to 1e-8.
+            seed: Random seed controlling the mixture initializations.
+                Defaults to 0.
+            return_metadata: Whether to return fitting diagnostics alongside
+                the fitted parameters. Defaults to False.
+
+        Returns:
+            Dictionary containing the fitted photometric-redshift parameters:
+
+                - scatter_scale: Standard deviation of the zero-mean core.
+                - outlier_scatter_scale: Standard deviation of the outlier
+                  Gaussian component.
+                - outlier_mean_shift: Mean displacement of the outlier
+                  component in normalized residual space.
+                - outlier_frac: Fitted outlier mixture fraction.
+
+            If ``return_metadata=True``, returns a tuple containing the
+            fitted parameter dictionary and a metadata dictionary with:
+
+                - loglike: Total log-likelihood of the selected fit.
+                - n: Number of catalogue objects used in the fit.
+                - n_outside: Number of excluded residuals, always zero.
+                - converged: Whether the selected optimization converged.
+                - n_iter: Number of iterations in the selected optimization.
+                - aic: Akaike information criterion.
+                - bic: Bayesian information criterion.
+                - ks_statistic: Kolmogorov-Smirnov statistic comparing
+                  the empirical residual distribution with the fitted model.
+
+        Raises:
+            ValueError: If the input arrays have incompatible shapes,
+                contain insufficient or non-finite values, or contain
+                true redshifts less than or equal to -1.
+            ValueError: If the residual distribution is degenerate.
+            ValueError: If the fitting configuration contains invalid values.
+
+        Notes:
+            The fitted parameters can be converted to Binny's
+            photometric-redshift assignment model using
+            ``NZTomography.to_binny_photoz_params``.
+
+            The Akaike and Bayesian information criteria are intended
+            for relative model comparison rather than absolute
+            goodness-of-fit assessment.
+
+            The Kolmogorov-Smirnov statistic is descriptive because
+            the model parameters are estimated from the same catalogue.
+            Standard fixed-distribution significance probabilities
+            are therefore not directly applicable.
+        """
+
+        return fit_photoz_errors(
+            z_true,
+            z_obs,
+            core_min_weight=core_min_weight,
+            n_init=n_init,
+            max_iter=max_iter,
+            tol=tol,
+            seed=seed,
+            return_metadata=return_metadata,
+        )
+
+    @staticmethod
+    def to_binny_photoz_params(fit: dict[str, float]) -> dict[str, float]:
+        """Convert fitted photo-z errors to Binny tomography parameters.
+
+        Args:
+            fit: Output dictionary from ``fit_photoz_errors``.
+
+        Returns:
+            Photo-z parameters compatible with Binny's assignment model.
+        """
+        return _to_binny_photoz_params(fit)
 
     @staticmethod
     def fit_smail_from_mock(
