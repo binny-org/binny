@@ -14,6 +14,7 @@ from binny.nz_tomo.specz import (
     build_specz_response_matrix,
     specz_gaussian_response_matrix,
 )
+from binny.tomography.result import Tomography
 
 
 def assert_bins_equal(actual, expected):
@@ -313,3 +314,69 @@ def test_invalid_selection_raises(selection):
             edges,
             selection,
         )
+
+
+def test_return_integrals_preserves_population():
+    z = np.linspace(0.0, 2.0, 1001)
+    nz = z**2 * np.exp(-z)
+    edges = np.linspace(0.0, 2.0, 5)
+
+    raw_bins = build_bins(
+        z,
+        nz,
+        edges,
+        deterministic_assignment,
+    )
+
+    bins, integrals, parent_integral = build_bins(
+        z,
+        nz,
+        edges,
+        deterministic_assignment,
+        normalize=True,
+        return_integrals=True,
+    )
+
+    np.testing.assert_allclose(
+        parent_integral,
+        np.trapezoid(nz, x=z),
+    )
+
+    for i in bins:
+        np.testing.assert_allclose(
+            integrals[i],
+            np.trapezoid(raw_bins[i], x=z),
+        )
+        np.testing.assert_allclose(
+            np.trapezoid(bins[i], x=z),
+            1.0,
+        )
+
+
+def test_tomography_result():
+    z = np.linspace(0.0, 2.0, 101)
+    nz = np.exp(-z)
+    edges = np.array([0.0, 1.0, 2.0])
+
+    bins, integrals, parent_integral = build_bins(
+        z,
+        nz,
+        edges,
+        deterministic_assignment,
+        return_integrals=True,
+    )
+
+    result = Tomography(
+        z=z,
+        nz=nz,
+        bins=bins,
+        metadata={
+            "bin_integrals": integrals,
+            "parent_integral": parent_integral,
+        },
+    )
+
+    assert result.n_bins == 2
+    assert result.bin_indices == [0, 1]
+    np.testing.assert_array_equal(result[0], bins[0])
+    np.testing.assert_array_equal(result[1], bins[1])
