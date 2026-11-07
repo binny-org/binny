@@ -101,3 +101,43 @@ def test_population_fractions_independent_of_bin_normalization():
             normalized.metadata["bin_integrals"][i],
             np.trapezoid(raw[i], x=z),
         )
+
+
+def test_photoz_population_fractions_match_legacy():
+    """Check photo-z population fractions against the legacy builder."""
+    from binny.nz_tomo.photoz import build_photoz_bins
+
+    z = np.linspace(0.0, 3.0, 1001)
+    nz = 5.0 * z**2 * np.exp(-z)
+    edges = np.linspace(0.2, 2.0, 6)
+
+    params = {
+        "scatter_scale": 0.05,
+        "mean_offset": 0.01,
+        "outlier_frac": 0.2,
+        "outlier_scatter_scale": 0.2,
+    }
+
+    legacy_bins, legacy_meta = build_photoz_bins(
+        z,
+        nz,
+        bin_edges=edges,
+        normalize_input=False,
+        normalize_bins=True,
+        include_metadata=True,
+        **params,
+    )
+
+    functional = build_tomography(
+        z,
+        nz,
+        edges,
+        lambda z, edges: photoz_assignment(z, edges, **params),
+    )
+
+    for i in functional.bin_indices:
+        np.testing.assert_allclose(functional[i], legacy_bins[i])
+        np.testing.assert_allclose(
+            functional.metadata["frac_per_bin"][i],
+            legacy_meta["bins"]["frac_per_bin"][i],
+        )
