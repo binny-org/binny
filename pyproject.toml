@@ -12,6 +12,7 @@ dependencies = [
   "pyyaml",
   "scipy",
   "cmasher",
+  "matplotlib",
 ]
 
 [project.optional-dependencies]

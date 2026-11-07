@@ -68,6 +68,14 @@ from binny.surveys.survey_presets import (
     load_survey_config,
     show_survey_config,
 )
+from binny.utils.colors import (
+    BINNY_CMAP,
+    BINNY_CMAP_DISCRETE,
+    BINNY_COLORS,
+    BINNY_NORM,
+    get_binny_colors,
+    pastelize,
+)
 
 __all__ = [
     "NZTomography",
@@ -76,6 +84,12 @@ __all__ = [
     "list_survey_configs",
     "load_survey_config",
     "show_survey_config",
+    "BINNY_COLORS",
+    "BINNY_CMAP",
+    "BINNY_CMAP_DISCRETE",
+    "BINNY_NORM",
+    "get_binny_colors",
+    "pastelize",
 ]
 
 
