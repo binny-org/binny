@@ -8,12 +8,17 @@ from typing import Any, Literal
 import numpy as np
 
 from binny.axes.bin_edges import equal_number_edges, equidistant_edges
-from binny.nz_tomo.nz_tomo_utils import mixed_edges_from_segments
+from binny.axes.mixed_edges import mixed_edges as mixed_edges_axes
 from binny.utils.normalization import normalize_1d
 from binny.utils.types import BinningScheme, FloatArray
 from binny.utils.validators import validate_axis_and_weights, validate_n_bins
 
-__all__ = ["resolve_bin_edges", "validate_bin_edges"]
+__all__ = [
+    "resolve_bin_edges",
+    "validate_bin_edges",
+    "photoz_segments_to_axes",
+    "mixed_edges_from_segments",
+]
 
 
 def resolve_bin_edges(
@@ -38,7 +43,7 @@ def resolve_bin_edges(
         nz_axis: Default weights used when edges are derived from weights.
         bin_edges: Explicit bin edges. Mutually exclusive with `binning_scheme`
             and `n_bins`.
-        binning_scheme: Binning description. May be a scheme name (e.g.
+        binning_scheme: Binning description. It may be a scheme name (e.g.
             `"equidistant"`, `"equal_number"`) or a mixed-segment specification.
         n_bins: Number of bins for simple scheme names.
         bin_range: Optional `(min, max)` range for equidistant binning.
@@ -168,3 +173,108 @@ def validate_bin_edges(
     n_bins_eff = int(be.size - 1)
     validate_n_bins(n_bins_eff)
     return be.astype(np.float64, copy=False)
+
+
+def photoz_segments_to_axes(
+    segments: Sequence[Mapping[str, Any]],
+) -> list[dict[str, Any]]:
+    """Converts photo-z segment specifications to the mixed-binning format.
+
+    This helper translates a list of segment mappings (each describing a binning
+    scheme and redshift range) into the format expected by
+    :func:`binny.axes.mixed_edges.mixed_edges`.
+
+    Each input segment must provide:
+        - ``"scheme"``: binning method name (aliases resolved downstream).
+        - ``"n_bins"``: number of bins in this segment.
+        - ``"z_min"``: lower redshift bound.
+        - ``"z_max"``: upper redshift bound.
+
+    Args:
+        segments: Sequence of segment specification mappings.
+
+    Returns:
+        List of axes-style segment dictionaries with keys ``"method"``,
+        ``"n_bins"``, and ``"params"`` (containing ``"x_min"`` and ``"x_max"``).
+
+    Raises:
+        ValueError: If any required key is missing from a segment.
+    """
+    out: list[dict[str, Any]] = []
+    for seg in segments:
+        try:
+            scheme = str(seg["scheme"])
+            n_bins = int(seg["n_bins"])
+            z_min = float(seg["z_min"])
+            z_max = float(seg["z_max"])
+        except KeyError as e:
+            raise ValueError(f"Missing key in mixed bin spec: {e.args[0]!r}") from e
+
+        out.append(
+            {
+                "method": scheme,  # axes will resolve aliases
+                "n_bins": n_bins,
+                "params": {"x_min": z_min, "x_max": z_max},
+            }
+        )
+    return out
+
+
+def mixed_edges_from_segments(
+    segments: Sequence[Mapping[str, Any]],
+    *,
+    z_axis: Any,
+    nz_axis: Any,
+    z_ph: Any | None,
+    nz_ph: Any | None,
+) -> np.ndarray:
+    """Returns bin edges for a mixed segment specification.
+
+    This function creates a single 1D array of bin edges by stitching together
+    multiple binning segments. Each segment defines a redshift interval and a
+    binning scheme (e.g. equidistant, log, equal-number).
+
+    For equal-number segments, the function needs an axis and weight curve that
+    represent the population being split. You may provide a photo-z proxy
+    ``(z_ph, nz_ph)``. If not provided, the function uses ``(z_axis, nz_axis)``
+    as a proxy.
+
+    Args:
+        segments: Sequence of segment specification mappings. Each segment must
+            include ``scheme``, ``n_bins``, ``z_min``, and ``z_max``.
+        z_axis: Redshift axis for the parent distribution (proxy for photo-z if
+            ``z_ph`` is not provided).
+        nz_axis: Weights or distribution values evaluated on ``z_axis``.
+        z_ph: Optional photo-z axis used for equal-number binning decisions.
+        nz_ph: Optional photo-z weights evaluated on ``z_ph``.
+
+    Returns:
+        One-dimensional NumPy array of bin edges of length ``(N_total + 1)``,
+        where ``N_total`` is the sum of ``n_bins`` over segments.
+
+    Raises:
+        ValueError: If exactly one of ``z_ph`` or ``nz_ph`` is provided.
+        ValueError: If any segment is missing required keys.
+        ValueError: If the provided axis/weights are invalid (propagated from
+            validation utilities or downstream edge builders).
+    """
+    if (z_ph is None) ^ (nz_ph is None):
+        raise ValueError(
+            "Provide both z_ph and nz_ph, or neither. "
+            "If neither is provided, (z, nz) is used as a proxy for (z_ph, nz_ph)."
+        )
+
+    if z_ph is not None:
+        x_full, w_full = validate_axis_and_weights(z_ph, nz_ph)
+    else:
+        x_full, w_full = validate_axis_and_weights(z_axis, nz_axis)
+
+    segments_axes = photoz_segments_to_axes(segments)
+    total = sum(int(s["n_bins"]) for s in segments_axes)
+
+    return mixed_edges_axes(
+        segments_axes,
+        x=x_full,
+        weights=w_full,
+        total_n_bins=total,
+    )
