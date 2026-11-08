@@ -4,8 +4,8 @@ import numpy as np
 
 from binny.binning.assignments import (
     deterministic_assignment,
-    photoz_assignment,
 )
+from binny.binning.photoz import photoz_assignment
 from binny.tomography.core import Tomography, build_tomography
 
 

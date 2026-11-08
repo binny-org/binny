@@ -5,9 +5,9 @@ import pytest
 
 from binny.binning.assignments import (
     deterministic_assignment,
-    photoz_assignment,
 )
 from binny.binning.core import build_bins
+from binny.binning.photoz import photoz_assignment
 from binny.nz_tomo.photoz import build_photoz_bins
 from binny.nz_tomo.specz import (
     build_specz_bins,

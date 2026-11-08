@@ -57,7 +57,7 @@ from typing import Any, Literal
 
 import numpy as np
 
-from binny.binning.assignments import photoz_assignment_probability
+from binny.binning.photoz import photoz_assignment_probability
 from binny.nz_tomo.binning_core import (
     build_bins_on_edges,
     finalize_tomo_metadata,
