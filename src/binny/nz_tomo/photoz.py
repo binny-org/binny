@@ -39,7 +39,8 @@ the builder records how much of the *parent* distribution falls into each observ
 
 Specifically, it stores:
 
-- ``parent_norm``: the total area under the parent curve ``nz`` on the provided grid
+- ``parent_norm``: the integral of the parent distribution used for binning,
+  after optional input normalization.
 - ``bins_norms[i]``: the area under the raw (pre-normalization) bin curve for bin ``i``
 - ``frac_per_bin[i]``: ``bins_norms[i] / parent_norm`` when ``parent_norm > 0``
 
@@ -233,7 +234,7 @@ def build_photoz_bins(
     # 4) Build bins + norms (agnostic)
     bins, bins_norms, parent_norm = build_bins_on_edges(
         z=z_arr,
-        nz_parent_for_meta=parent_arr0,
+        nz_parent_for_meta=parent_arr,  # Same normalization as raw bins
         bin_edges=bin_edges_arr,
         raw_bin_for_edge=raw_bin_for_edge,
         normalize_bins=normalize_bins,
@@ -246,7 +247,7 @@ def build_photoz_bins(
     meta = finalize_tomo_metadata(
         kind="photoz",
         z=z_arr,
-        parent_nz=parent_arr0,
+        parent_nz=parent_arr,
         bin_edges=bin_edges_arr,
         bins=bins,
         inputs={
@@ -254,6 +255,7 @@ def build_photoz_bins(
             "binning_scheme": binning_scheme,
             "n_bins": n_bins,
             "bin_range": bin_range,
+            "normalize_input": normalize_input,
             "normalize_bins": normalize_bins,
             "norm_method": norm_method,
             "scatter_scale": scatter_scale,

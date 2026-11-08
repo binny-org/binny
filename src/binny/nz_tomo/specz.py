@@ -289,7 +289,7 @@ def build_specz_bins(
     # Build observed bins + norms + optional per-bin normalization
     bins, bins_norms, parent_norm = build_bins_on_edges(
         z=z_arr,
-        nz_parent_for_meta=parent_arr0,  # always record fractions relative to original parent
+        nz_parent_for_meta=parent_arr,  # Same normalization as raw bins
         bin_edges=bin_edges_arr,
         raw_bin_for_edge=raw_true_bin_for_edge,
         normalize_bins=normalize_bins,
@@ -309,7 +309,7 @@ def build_specz_bins(
     meta = finalize_tomo_metadata(
         kind="specz",
         z=z_arr,
-        parent_nz=parent_arr0,
+        parent_nz=parent_arr,
         bin_edges=bin_edges_arr,
         bins=bins,
         inputs={
