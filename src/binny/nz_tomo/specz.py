@@ -60,6 +60,7 @@ from typing import Any, Literal
 import numpy as np
 from scipy.special import erf
 
+from binny.binning.assignments import specz_selection_in_bin
 from binny.nz_tomo.binning_core import (
     build_bins_on_edges,
     finalize_tomo_metadata,
@@ -337,47 +338,6 @@ def build_specz_bins(
     )
 
     return (bins, meta) if include_metadata else bins
-
-
-def specz_selection_in_bin(
-    z: FloatArray1D,
-    bin_min: float,
-    bin_max: float,
-    completeness: float = 1.0,
-    *,
-    inclusive_right: bool = False,
-) -> FloatArray1D:
-    """Evaluates a true-z bin selection window on a redshift grid.
-
-    Returns a top-hat selection function over ``[bin_min, bin_max)`` (or
-    ``[bin_min, bin_max]`` when ``inclusive_right=True``), scaled by a completeness
-    factor. This selection is multiplied by the parent ``n(z)`` to form a
-    true-bin distribution.
-
-    Args:
-        z: True-redshift grid.
-        bin_min: Lower edge of the true-z bin.
-        bin_max: Upper edge of the true-z bin.
-        completeness: Multiplicative completeness factor in [0, 1].
-        inclusive_right: Whether to include ``bin_max`` in the selection.
-
-    Returns:
-        Array of selection values on ``z``.
-
-    Raises:
-        ValueError: If ``completeness`` is outside [0, 1].
-    """
-    z_arr = np.asarray(z, dtype=float)
-
-    if not (0.0 <= completeness <= 1.0):
-        raise ValueError("completeness must be in [0, 1].")
-
-    if inclusive_right:
-        mask = (z_arr >= bin_min) & (z_arr <= bin_max)
-    else:
-        mask = (z_arr >= bin_min) & (z_arr < bin_max)
-
-    return completeness * mask.astype(np.float64)
 
 
 def build_specz_response_matrix(
