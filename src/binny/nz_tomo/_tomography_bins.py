@@ -18,6 +18,8 @@ from binny.correlations.bin_combo_filter import BinComboFilter
 from binny.nz_tomo.bin_stats import parent_stats as _parent_stats
 from binny.nz_tomo.bin_stats import population_stats as _population_stats
 from binny.nz_tomo.bin_stats import shape_stats as _shape_stats
+from binny.tomography.combinations import make_bin_combo_filter
+from binny.tomography.core import Tomography
 
 
 class TomographyBins:
@@ -139,26 +141,20 @@ class TomographyBins:
         curves: Sequence[Mapping[int, Any]] | None = None,
     ) -> BinComboFilter:
         """Create a bin-combination filter, aligning redshift grids if necessary."""
-        z = self._z
-        bins_a = self._bins
-
         if curves is not None:
-            return BinComboFilter(z=z, curves=list(curves))
+            return BinComboFilter(z=self._z, curves=list(curves))
 
-        if other is None:
-            return BinComboFilter(z=z, curves=[bins_a, bins_a])
+        tomo = Tomography(z=self._z, nz=self._nz, bins=self._bins)
 
-        if np.array_equal(z, other.z):
-            return BinComboFilter(z=z, curves=[bins_a, other.bins])
+        other_tomo = None
+        if other is not None:
+            other_tomo = Tomography(
+                z=other.z,
+                nz=other.nz,
+                bins=dict(other.bins),
+            )
 
-        z_common = np.union1d(z, other.z)
-
-        bins_a = {k: np.interp(z_common, z, nz, left=0.0, right=0.0) for k, nz in bins_a.items()}
-        bins_b = {
-            k: np.interp(z_common, other.z, nz, left=0.0, right=0.0) for k, nz in other.bins.items()
-        }
-
-        return BinComboFilter(z=z_common, curves=[bins_a, bins_b])
+        return make_bin_combo_filter(tomo, other_tomo)
 
     def bin_combo_filter(
         self,
