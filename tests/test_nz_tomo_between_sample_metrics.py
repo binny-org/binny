@@ -6,6 +6,16 @@ import numpy as np
 import pytest
 
 from binny.nz_tomo.between_sample_metrics import (
+    between_bin_overlap,
+    between_interval_mass_matrix,
+    between_overlap_pairs,
+    between_pearson_matrix,
+    bin_overlap,
+    leakage_matrix,
+    overlap_pairs,
+    pearson_matrix,
+)
+from binny.tomography.comparison import (
     _curve_norm_mode,
     _pair_cosine_between,
     _pair_hellinger_between,
@@ -16,15 +26,6 @@ from binny.nz_tomo.between_sample_metrics import (
     _prepare_mass_inputs,
     _rectangular_from_pair_value,
     _validate_method,
-    _validate_same_grid,
-    between_bin_overlap,
-    between_interval_mass_matrix,
-    between_overlap_pairs,
-    between_pearson_matrix,
-    bin_overlap,
-    leakage_matrix,
-    overlap_pairs,
-    pearson_matrix,
 )
 
 
@@ -189,31 +190,6 @@ def test_pair_tv_between_returns_zero_for_identical_probabilities():
 
     evaluator = _pair_tv_between(masses_a, masses_b)
     assert np.isclose(evaluator(0, 1), 0.0)
-
-
-def test_validate_same_grid_accepts_identical_arrays():
-    """Tests that _validate_same_grid accepts identical z grids."""
-    z = _example_z()
-    _validate_same_grid(z, z.copy())
-
-
-def test_validate_same_grid_raises_on_mismatched_shape():
-    """Tests that _validate_same_grid raises on mismatched z-grid shape."""
-    z0 = np.linspace(0.0, 1.0, 5)
-    z1 = np.linspace(0.0, 1.0, 6)
-
-    with pytest.raises(ValueError, match=r"same z grid"):
-        _validate_same_grid(z0, z1)
-
-
-def test_validate_same_grid_raises_on_mismatched_values():
-    """Tests that _validate_same_grid raises on mismatched z-grid values."""
-    z0 = np.linspace(0.0, 1.0, 5)
-    z1 = z0.copy()
-    z1[-1] = 1.1
-
-    with pytest.raises(ValueError, match=r"same z grid"):
-        _validate_same_grid(z0, z1)
 
 
 def test_bin_overlap_returns_empty_dict_for_empty_bins():

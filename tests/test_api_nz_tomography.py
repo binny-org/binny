@@ -954,20 +954,22 @@ def test_between_sample_stats_delegates_to_between_sample_metrics(monkeypatch):
         "pearson": {},
     }
 
-    def fake_between_overlap(z, bins_a, bins_b, **kw):
+    def fake_between_overlap(z_a, bins_a, z_b, bins_b, **kw):
         """Fake between-sample overlap matrix that returns a constant matrix."""
         calls["overlap"] = {
-            "z": np.asarray(z),
+            "z": np.asarray(z_a),
+            "z_b": np.asarray(z_b),
             "bins_a": bins_a,
             "bins_b": bins_b,
             "kw": dict(kw),
         }
         return np.eye(len(bins_a))
 
-    def fake_between_pairs(z, bins_a, bins_b, **kw):
+    def fake_between_pairs(z_a, bins_a, z_b, bins_b, **kw):
         """Fake between-sample pair summaries that return a simple list."""
         calls["correlations"] = {
-            "z": np.asarray(z),
+            "z": np.asarray(z_a),
+            "z_b": np.asarray(z_b),
             "bins_a": bins_a,
             "bins_b": bins_b,
             "kw": dict(kw),
@@ -984,10 +986,11 @@ def test_between_sample_stats_delegates_to_between_sample_metrics(monkeypatch):
         }
         return np.ones((len(bins_a), len(target_edges) - 1))
 
-    def fake_between_pearson(z, bins_a, bins_b, **kw):
+    def fake_between_pearson(z_a, bins_a, z_b, bins_b, **kw):
         """Fake between-sample pearson matrix that returns a constant matrix."""
         calls["pearson"] = {
-            "z": np.asarray(z),
+            "z": np.asarray(z_a),
+            "z_b": np.asarray(z_b),
             "bins_a": bins_a,
             "bins_b": bins_b,
             "kw": dict(kw),
@@ -1061,6 +1064,10 @@ def test_between_sample_stats_delegates_to_between_sample_metrics(monkeypatch):
     assert calls["pearson"]["bins_a"] == t0.bins
     assert calls["pearson"]["bins_b"] == t1.bins
     assert calls["pearson"]["kw"] == {"clip": True}
+
+    np.testing.assert_array_equal(calls["overlap"]["z_b"], payload1.z)
+    np.testing.assert_array_equal(calls["correlations"]["z_b"], payload1.z)
+    np.testing.assert_array_equal(calls["pearson"]["z_b"], payload1.z)
 
 
 def test_load_survey_config_delegates(monkeypatch):

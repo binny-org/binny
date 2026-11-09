@@ -18,9 +18,9 @@ from typing import Any, Literal
 
 import numpy as np
 
-import binny.nz_tomo.between_sample_metrics as _between_metrics
 import binny.nz_tomo.bin_similarity as _bin_sim
 import binny.surveys.config_utils as cu
+import binny.tomography.comparison as _between_metrics
 from binny.binning.photoz_fitting import fit_photoz_errors
 from binny.binning.photoz_fitting import (
     to_binny_photoz_params as _to_binny_photoz_params,
@@ -1093,6 +1093,7 @@ class NZTomography:
             out["overlap"] = _between_metrics.between_bin_overlap(
                 z,
                 bins_a,
+                z,
                 bins_b,
                 **dict(overlap),
             )
@@ -1101,6 +1102,7 @@ class NZTomography:
             out["correlations"] = _between_metrics.between_overlap_pairs(
                 z,
                 bins_a,
+                z,
                 bins_b,
                 **dict(pairs),
             )
@@ -1121,6 +1123,7 @@ class NZTomography:
             out["pearson"] = _between_metrics.between_pearson_matrix(
                 z,
                 bins_a,
+                z,
                 bins_b,
                 **dict(pearson),
             )
