@@ -41,7 +41,7 @@ def _write_named_table(
 def test_build_predefined_tomography(
     synthetic_bins: tuple[np.ndarray, dict[int, np.ndarray]],
 ) -> None:
-    """Construct tomography directly from supplied bin curves."""
+    """Tests that tomography is constructed directly from supplied bin curves."""
     z, bins = synthetic_bins
 
     result = build_predefined_tomography(
@@ -52,7 +52,7 @@ def test_build_predefined_tomography(
     assert isinstance(result, Tomography)
     assert result.n_bins == 3
     assert result.bin_indices == [0, 1, 2]
-    assert result.metadata is None
+    assert result.metadata == {}
 
     np.testing.assert_array_equal(result.z, z)
     np.testing.assert_allclose(
@@ -69,7 +69,7 @@ def test_build_predefined_tomography(
 def test_build_predefined_tomography_metadata(
     synthetic_bins: tuple[np.ndarray, dict[int, np.ndarray]],
 ) -> None:
-    """Verify population metadata uses raw bin integrals."""
+    """Tests that population metadata uses raw bin integrals."""
     z, bins = synthetic_bins
 
     result = build_predefined_tomography(
@@ -79,7 +79,7 @@ def test_build_predefined_tomography_metadata(
     )
 
     metadata = result.metadata
-    assert metadata is not None
+    assert metadata
     assert metadata["kind"] == "predefined"
     assert metadata["inputs"]["parent_source"] == "sum_of_bins"
     assert metadata["inputs"]["normalize_bins"] is False
@@ -99,7 +99,7 @@ def test_build_predefined_tomography_normalization(
     synthetic_bins: tuple[np.ndarray, dict[int, np.ndarray]],
     method: str,
 ) -> None:
-    """Normalize output bins without modifying the raw parent."""
+    """Tests that output bins are normalized without modifying the raw parent."""
     z, bins = synthetic_bins
 
     result = build_predefined_tomography(
@@ -122,7 +122,7 @@ def test_build_predefined_tomography_normalization(
             area = simpson(curve, x=z)
         assert area == pytest.approx(1.0)
 
-    assert result.metadata is not None
+    assert result.metadata
     assert result.metadata["inputs"]["normalize_bins"] is True
     assert result.metadata["inputs"]["norm_method"] == method
 
@@ -130,7 +130,7 @@ def test_build_predefined_tomography_normalization(
 def test_build_predefined_tomography_provided_parent(
     synthetic_bins: tuple[np.ndarray, dict[int, np.ndarray]],
 ) -> None:
-    """Preserve an explicitly supplied parent distribution."""
+    """Tests that an explicitly supplied parent distribution is preserved."""
     z, bins = synthetic_bins
     parent = 2.5 * np.sum(np.stack(list(bins.values())), axis=0)
 
@@ -144,7 +144,7 @@ def test_build_predefined_tomography_provided_parent(
     np.testing.assert_array_equal(result.nz, parent)
     assert not np.shares_memory(result.nz, parent)
 
-    assert result.metadata is not None
+    assert result.metadata
     assert result.metadata["inputs"]["parent_source"] == "provided"
 
     parent_norm = np.trapezoid(parent, x=z)
@@ -156,7 +156,7 @@ def test_build_predefined_tomography_provided_parent(
 def test_build_predefined_tomography_nonconsecutive_keys(
     synthetic_bins: tuple[np.ndarray, dict[int, np.ndarray]],
 ) -> None:
-    """Preserve arbitrary integer bin indices in sorted order."""
+    """Tests that arbitrary integer bin indices are preserved in sorted order."""
     z, bins = synthetic_bins
 
     result = build_predefined_tomography(
@@ -173,7 +173,7 @@ def test_build_predefined_tomography_nonconsecutive_keys(
 def test_build_predefined_tomography_does_not_modify_inputs(
     synthetic_bins: tuple[np.ndarray, dict[int, np.ndarray]],
 ) -> None:
-    """Ensure input arrays remain unchanged."""
+    """Tests that input arrays remain unchanged."""
     z, bins = synthetic_bins
     original_z = z.copy()
     original_bins = {key: curve.copy() for key, curve in bins.items()}
@@ -199,14 +199,14 @@ def test_build_predefined_tomography_invalid_z(
     z: np.ndarray,
     message: str,
 ) -> None:
-    """Reject invalid redshift grids."""
+    """Tests that invalid redshift grids are rejected."""
     with pytest.raises(ValueError, match=message):
         build_predefined_tomography(z, {0: np.ones(z.shape)})
 
 
 @pytest.mark.parametrize("bins", [{}, [], None])
 def test_build_predefined_tomography_invalid_bins(bins: object) -> None:
-    """Reject missing or invalid bin mappings."""
+    """Tests that missing or invalid bin mappings are rejected."""
     z = np.linspace(0.0, 1.0, 11)
 
     with pytest.raises(ValueError, match="non-empty mapping"):
@@ -215,7 +215,7 @@ def test_build_predefined_tomography_invalid_bins(bins: object) -> None:
 
 @pytest.mark.parametrize("key", ["0", 0.5, True, None])
 def test_build_predefined_tomography_invalid_keys(key: object) -> None:
-    """Reject noninteger bin indices."""
+    """Tests that noninteger bin indices are rejected."""
     z = np.linspace(0.0, 1.0, 11)
 
     with pytest.raises(TypeError, match="integers"):
@@ -223,7 +223,7 @@ def test_build_predefined_tomography_invalid_keys(key: object) -> None:
 
 
 def test_build_predefined_tomography_zero_integral() -> None:
-    """Reject bins with zero integrated population."""
+    """Tests that bins with zero integrated population are rejected."""
     z = np.linspace(0.0, 1.0, 11)
 
     with pytest.raises(ValueError, match="zero integral"):
@@ -231,7 +231,7 @@ def test_build_predefined_tomography_zero_integral() -> None:
 
 
 def test_build_predefined_tomography_invalid_curve_shape() -> None:
-    """Reject bin curves that do not match the redshift grid."""
+    """Tests that bin curves must match the redshift grid."""
     z = np.linspace(0.0, 1.0, 11)
 
     with pytest.raises(ValueError):
@@ -239,7 +239,7 @@ def test_build_predefined_tomography_invalid_curve_shape() -> None:
 
 
 def test_build_predefined_tomography_invalid_parent() -> None:
-    """Reject an explicitly supplied parent with invalid dimensions."""
+    """Tests that parent distributions with invalid dimensions are rejected."""
     z = np.linspace(0.0, 1.0, 11)
 
     with pytest.raises(ValueError):
@@ -251,7 +251,7 @@ def test_build_predefined_tomography_invalid_parent() -> None:
 
 
 def test_load_predefined_bins_named_columns(tmp_path: Path) -> None:
-    """Load explicitly selected named columns in sorted bin order."""
+    """Tests that named columns are loaded in sorted bin order."""
     z = np.linspace(0.0, 1.0, 11)
     low = z**2
     high = np.sqrt(z)
@@ -278,7 +278,7 @@ def test_load_predefined_bins_named_columns(tmp_path: Path) -> None:
 
 
 def test_load_predefined_bins_auto_detect(tmp_path: Path) -> None:
-    """Automatically detect standard bin column names."""
+    """Tests that standard bin column names are detected automatically."""
     z = np.linspace(0.0, 1.0, 21)
     first = np.exp(-0.5 * ((z - 0.3) / 0.12) ** 2)
     second = np.exp(-0.5 * ((z - 0.7) / 0.15) ** 2)
@@ -301,7 +301,7 @@ def test_load_predefined_bins_auto_detect(tmp_path: Path) -> None:
 
 
 def test_load_predefined_bins_positional(tmp_path: Path) -> None:
-    """Load headerless tables using integer column positions."""
+    """Tests that headerless tables support integer column positions."""
     z = np.linspace(0.0, 1.5, 31)
     first = 1.0 + z
     second = 2.0 - 0.5 * z
@@ -329,7 +329,7 @@ def test_load_and_build_predefined_tomography(
     tmp_path: Path,
     synthetic_bins: tuple[np.ndarray, dict[int, np.ndarray]],
 ) -> None:
-    """Build tomography end-to-end from a text file."""
+    """Tests that tomography can be constructed from a text file."""
     z, bins = synthetic_bins
     path = tmp_path / "predefined.txt"
     _write_named_table(path, z, bins)
@@ -352,12 +352,12 @@ def test_load_and_build_predefined_tomography(
         result.nz,
         np.sum(np.stack(list(bins.values())), axis=0),
     )
-    assert result.metadata is not None
+    assert result.metadata
     assert result.metadata["kind"] == "predefined"
 
 
 def test_load_predefined_bins_missing_file(tmp_path: Path) -> None:
-    """Reject nonexistent files."""
+    """Tests that nonexistent files raise FileNotFoundError."""
     with pytest.raises(FileNotFoundError):
         load_predefined_bins(tmp_path / "missing.txt")
 
@@ -381,7 +381,7 @@ def test_load_predefined_bins_invalid_selectors(
     error: type[Exception],
     message: str,
 ) -> None:
-    """Reject invalid or mixed column selectors."""
+    """Tests that invalid or mixed column selectors are rejected."""
     path = tmp_path / "selectors.txt"
     z = np.linspace(0.0, 1.0, 11)
     np.savetxt(
@@ -396,7 +396,7 @@ def test_load_predefined_bins_invalid_selectors(
 
 
 def test_load_predefined_bins_unsorted_z(tmp_path: Path) -> None:
-    """Reject files containing nonmonotonic redshift grids."""
+    """Tests that nonmonotonic redshift grids are rejected."""
     path = tmp_path / "unsorted.txt"
     z = np.array([0.0, 0.3, 0.2, 0.5])
 
@@ -412,7 +412,7 @@ def test_load_predefined_bins_unsorted_z(tmp_path: Path) -> None:
 
 
 def test_load_predefined_bins_missing_column(tmp_path: Path) -> None:
-    """Reject requested columns absent from the input file."""
+    """Tests that requested columns must exist in the input file."""
     path = tmp_path / "missing_column.txt"
     z = np.linspace(0.0, 1.0, 11)
 
@@ -428,7 +428,7 @@ def test_load_predefined_bins_missing_column(tmp_path: Path) -> None:
 
 
 def test_load_predefined_bins_no_bins(tmp_path: Path) -> None:
-    """Reject named tables without predefined bin columns."""
+    """Tests that named tables without bin columns are rejected."""
     path = tmp_path / "no_bins.txt"
     z = np.linspace(0.0, 1.0, 11)
 
@@ -444,7 +444,7 @@ def test_load_predefined_bins_no_bins(tmp_path: Path) -> None:
 
 
 def test_load_predefined_bins_invalid_standard_name(tmp_path: Path) -> None:
-    """Reject malformed automatic bin column names."""
+    """Tests that malformed automatic bin column names are rejected."""
     path = tmp_path / "bad_name.txt"
     z = np.linspace(0.0, 1.0, 11)
 
@@ -460,7 +460,7 @@ def test_load_predefined_bins_invalid_standard_name(tmp_path: Path) -> None:
 
 
 def test_load_predefined_bins_invalid_positional_index(tmp_path: Path) -> None:
-    """Reject column positions outside the input table."""
+    """Tests that column positions outside the input table are rejected."""
     path = tmp_path / "bad_index.txt"
     z = np.linspace(0.0, 1.0, 11)
 
@@ -476,7 +476,7 @@ def test_load_predefined_bins_invalid_positional_index(tmp_path: Path) -> None:
 def test_predefined_matches_legacy(
     synthetic_bins: tuple[np.ndarray, dict[int, np.ndarray]],
 ) -> None:
-    """Check numerical equivalence with the legacy preparation function."""
+    """Tests that functional predefined tomography matches legacy calculations."""
     from binny.nz_tomo.predefined import prepare_predefined_bins
 
     z, bins = synthetic_bins
@@ -502,4 +502,4 @@ def test_predefined_matches_legacy(
             for key in bins:
                 np.testing.assert_allclose(new.bins[key], old_bins[key])
 
-            assert new.metadata == old_metadata
+            assert new.metadata == (old_metadata if old_metadata is not None else {})

@@ -20,7 +20,7 @@ def sample():
 @pytest.mark.parametrize("kind", ["photoz", "specz"])
 @pytest.mark.parametrize("include_metadata", [False, True])
 def test_matches_numerical_builder(sample, kind, include_metadata):
-    """Verify the high-level builder reproduces the numerical builder."""
+    """Tests that the high-level builder reproduces the numerical builder."""
     z, nz = sample
 
     edges = [0.0, 0.6, 1.2, 1.8, 2.4, 3.0]
@@ -70,7 +70,7 @@ def test_matches_numerical_builder(sample, kind, include_metadata):
 
 @pytest.mark.parametrize("kind", ["photoz", "specz"])
 def test_missing_arrays(kind):
-    """Verify missing parent arrays raise an error."""
+    """Tests that missing parent arrays raise an error."""
     spec = {
         "kind": kind,
         "bins": {"edges": [0.0, 1.0, 2.0]},
@@ -82,7 +82,7 @@ def test_missing_arrays(kind):
 
 @pytest.mark.parametrize("normalize", [False, True])
 def test_predefined_bins(sample, normalize):
-    """Verify predefined bins match the functional predefined builder."""
+    """Tests that predefined bins match the functional predefined builder."""
     z, _ = sample
 
     bins = {
@@ -127,7 +127,7 @@ def test_predefined_bins(sample, normalize):
 
 @pytest.mark.parametrize("kind", ["photoz", "specz"])
 def test_metadata_option(sample, kind):
-    """Verify metadata is returned only when requested."""
+    """Tests that numerical metadata is included only when requested."""
     z, nz = sample
 
     spec = {
@@ -149,5 +149,45 @@ def test_metadata_option(sample, kind):
         include_tomo_metadata=True,
     )
 
-    assert without_metadata.metadata is None
-    assert with_metadata.metadata is not None
+    assert without_metadata.metadata == {}
+    assert with_metadata.metadata
+    assert without_metadata.spec is not None
+    assert without_metadata.spec["kind"] == kind
+
+
+@pytest.mark.parametrize(
+    ("include_metadata", "include_diagnostics"),
+    [
+        (False, False),
+        (True, False),
+        (False, True),
+        (True, True),
+    ],
+)
+def test_photoz_diagnostics_options(sample, include_metadata, include_diagnostics):
+    """Tests that photo-z metadata and diagnostics can be requested independently."""
+    z, nz = sample
+
+    spec = {
+        "kind": "photoz",
+        "bins": {"edges": [0.0, 1.0, 2.0, 3.0]},
+        "uncertainties": {},
+    }
+
+    result = build_tomography_from_spec(
+        z=z,
+        nz=nz,
+        tomo_spec=spec,
+        include_tomo_metadata=include_metadata,
+        include_photoz_diagnostics=include_diagnostics,
+    )
+
+    assert isinstance(result.metadata, dict)
+    assert result.spec is not None
+    assert result.spec["kind"] == "photoz"
+    assert len(result.bins) == 3
+
+    if not include_metadata and not include_diagnostics:
+        assert result.metadata == {}
+    else:
+        assert result.metadata

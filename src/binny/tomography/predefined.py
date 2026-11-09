@@ -172,7 +172,7 @@ def build_predefined_tomography(
         for index, curve in raw_bins.items()
     }
 
-    metadata: dict[str, Any] | None = None
+    metadata: dict[str, Any] = {}
     if include_metadata:
         parent_norm = float(np.trapezoid(parent, x=z))
         fractions = (

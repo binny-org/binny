@@ -13,6 +13,8 @@ from binny.binning.specz import build_specz_bins
 from binny.tomography.core import Tomography
 from binny.tomography.predefined import build_predefined_tomography
 
+__all__ = ["build_tomography_from_spec"]
+
 
 def build_tomography_from_spec(
     z: Any | None = None,
@@ -23,7 +25,28 @@ def build_tomography_from_spec(
     include_tomo_metadata: bool = False,
     include_photoz_diagnostics: bool = False,
 ) -> Tomography:
-    """Build tomography from a survey-style specification."""
+    """Build tomography from a survey-style specification.
+
+    Args:
+        z: True-redshift grid. Required for photo-z and spec-z tomography,
+            and when predefined bins are supplied directly.
+        nz: Parent redshift distribution. Optional for predefined bins.
+        tomo_spec: Tomography specification defining the binning model,
+            bin edges, and uncertainties.
+        predefined_bins: Optional mapping of externally supplied bin
+            distributions for predefined tomography.
+        include_tomo_metadata: Whether to include numerical binning metadata.
+        include_photoz_diagnostics: Whether to include photo-z assignment
+            diagnostics in the metadata.
+
+    Returns:
+        Tomography containing the constructed bins, optional numerical
+        metadata, and the resolved tomography specification.
+
+    Raises:
+        ValueError: If required arrays are missing or the specification
+            is invalid.
+    """
     spec_in = dict(tomo_spec)
     spec_in.setdefault("nz", {"model": "arrays"})
     spec = cu._parse_entry(spec_in)
@@ -50,7 +73,12 @@ def build_tomography_from_spec(
         if z is None or nz is None:
             raise ValueError("z and nz are required for photoz/specz tomography.")
 
-        builder = build_photoz_bins if kind == "photoz" else build_specz_bins
+        if kind == "photoz":
+            builder = build_photoz_bins
+        elif kind == "specz":
+            builder = build_specz_bins
+        else:
+            raise ValueError(f"Unknown tomography kind {kind!r}.")
 
         kwargs = cu._builder_kwargs_from_spec(spec)
 
@@ -64,20 +92,23 @@ def build_tomography_from_spec(
         output = builder(
             z=z,
             nz=nz,
-            include_metadata=include_tomo_metadata,
+            include_metadata=metadata_requested,
             **kwargs,
         )
 
         if metadata_requested:
             bins, metadata = output
         else:
-            bins, metadata = output, None
+            bins, metadata = output, {}
 
         result = Tomography(
             z=np.asarray(z, dtype=float),
             nz=np.asarray(nz, dtype=float),
             bins=bins,
-            metadata=metadata,
+            metadata=metadata if metadata is not None else {},
         )
+
+    result.metadata = result.metadata if result.metadata is not None else {}
+    result.spec = dict(spec)
 
     return result

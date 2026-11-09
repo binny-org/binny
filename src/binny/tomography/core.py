@@ -30,13 +30,20 @@ class Tomography:
         z: True-redshift grid.
         nz: Parent redshift distribution.
         bins: Mapping from bin index to redshift distribution.
-        metadata: Additional information about the binning.
+        metadata: Numerical metadata and diagnostics associated with the
+            tomographic binning. Defaults to an empty dictionary.
+        spec: Optional resolved tomography specification, including any
+            configuration overrides. None when no specification was used.
+        survey_metadata: Optional survey-level metadata, including survey
+            properties and provenance. Defaults to an empty dictionary.
     """
 
     z: FloatArray
     nz: FloatArray
     bins: dict[int, FloatArray]
     metadata: dict[str, Any] = field(default_factory=dict)
+    spec: dict[str, Any] | None = None
+    survey_metadata: dict[str, Any] = field(default_factory=dict)
 
     @property
     def n_bins(self) -> int:
