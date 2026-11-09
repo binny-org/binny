@@ -575,13 +575,6 @@ def build_specz_bins(
         need_meta=need_meta,
     )
 
-    # Optional: avoid normalizing empty bins
-    if normalize_bins:
-        for i in range(n_bins_eff):
-            area = float(np.trapezoid(bins[i], x=z_arr))
-            if np.isclose(area, 0.0, atol=1e-12):
-                continue
-
     # Optionally report metadata
     meta = finalize_tomo_metadata(
         kind="specz",
