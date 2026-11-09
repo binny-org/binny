@@ -3,7 +3,7 @@
 import numpy as np
 import pytest
 
-from binny import NZTomography
+from binny.api.nz_tomography import NZTomography
 from binny.nz_tomo.predefined import prepare_predefined_bins
 from binny.tomography import build_predefined_tomography
 

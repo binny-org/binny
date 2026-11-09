@@ -8,7 +8,7 @@ import numpy as np
 import pytest
 import yaml
 
-from binny import NZTomography
+from binny.api.nz_tomography import NZTomography
 from binny.nz_tomo.predefined import (
     load_predefined_bins,
     prepare_predefined_bins,
