@@ -436,13 +436,13 @@ def build_specz_bins(
     need_meta = include_metadata or (save_metadata_path is not None)
 
     # Resolve and validate true-z bin edges
-    parent_for_edges = parent_arr0
-    if normalize_input:
-        parent_for_edges = normalize_1d(z_arr, parent_for_edges, method=norm_method)
+    parent_arr = (
+        normalize_1d(z_arr, parent_arr0, method=norm_method) if normalize_input else parent_arr0
+    )
 
     bin_edges_arr = resolve_bin_edges(
         z_axis=z_arr,
-        nz_axis=parent_for_edges,
+        nz_axis=parent_arr,
         bin_edges=bin_edges,
         binning_scheme=binning_scheme,
         n_bins=n_bins,
@@ -465,11 +465,6 @@ def build_specz_bins(
     # not both
     if specz_scatter is not None and (sigma0 != 0.0 or sigma1 != 0.0):
         raise ValueError("Provide either specz_scatter OR ``sigma0/sigma1``, not both.")
-
-    # Normalize parent for true-bin construction if requested
-    parent_arr = parent_arr0
-    if normalize_input:
-        parent_arr = normalize_1d(z_arr, parent_arr, method=norm_method)
 
     # Broadcast per-bin params
     completeness_arr = as_per_bin(completeness, n_bins_eff, "completeness")
