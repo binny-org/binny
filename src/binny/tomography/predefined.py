@@ -50,7 +50,10 @@ def load_predefined_bins(
             if isinstance(value, bool) or not isinstance(value, int | np.integer | str):
                 raise TypeError("Column selectors must be names or integers.")
             if isinstance(value, str) != named:
-                raise ValueError("Column selectors must all use the same type.")
+                raise ValueError(
+                    "z_col and all bin_cols must use the same selector type "
+                    "(same type required: either all names or all integer positions)."
+                )
             if int(key) in columns:
                 raise ValueError(f"Duplicate bin index {int(key)}.")
             columns[int(key)] = value
