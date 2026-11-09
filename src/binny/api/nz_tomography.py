@@ -21,6 +21,10 @@ import numpy as np
 import binny.nz_tomo.between_sample_metrics as _between_metrics
 import binny.nz_tomo.bin_similarity as _bin_sim
 import binny.surveys.config_utils as cu
+from binny.binning.photoz_fitting import fit_photoz_errors
+from binny.binning.photoz_fitting import (
+    to_binny_photoz_params as _to_binny_photoz_params,
+)
 from binny.correlations.bin_combo_filter import (
     BinComboFilter,
     _available_metric_kernels,
@@ -41,10 +45,6 @@ from binny.nz_tomo._tomography_bins import TomographyBins
 from binny.nz_tomo.bin_stats import parent_stats as _parent_stats
 from binny.nz_tomo.bin_stats import population_stats as _population_stats
 from binny.nz_tomo.bin_stats import shape_stats as _shape_stats
-from binny.nz_tomo.photoz_fitting import fit_photoz_errors
-from binny.nz_tomo.photoz_fitting import (
-    to_binny_photoz_params as _to_binny_photoz_params,
-)
 from binny.nz_tomo.predefined import (
     prepare_predefined_bins as _prepare_predefined_bins,
 )

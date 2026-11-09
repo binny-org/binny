@@ -5,13 +5,13 @@ from __future__ import annotations
 import numpy as np
 import pytest
 
-from binny.nz_tomo.photoz import photoz_assignment_probability
-from binny.nz_tomo.photoz_fitting import (
+from binny.binning.photoz_fitting import (
     _log_component_probability,
     _log_probability,
     fit_photoz_errors,
     to_binny_photoz_params,
 )
+from binny.nz_tomo.photoz import photoz_assignment_probability
 
 
 @pytest.fixture(scope="module")
