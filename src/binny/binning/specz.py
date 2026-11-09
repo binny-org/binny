@@ -338,26 +338,18 @@ def specz_assignment(
         ]
     )
 
-    matrix_cat = build_specz_response_matrix(
-        n_bins,
+    matrix_total, _ = _build_total_response_matrix(
+        z_arr,
+        edges_arr,
         catastrophic_frac=catastrophic_frac,
         leakage_model=leakage_model,
         leakage_sigma=leakage_sigma,
         response_matrix=response_matrix,
+        specz_scatter=specz_scatter,
+        specz_scatter_model=specz_scatter_model,
+        sigma0=sigma0,
+        sigma1=sigma1,
     )
-
-    matrix_total = matrix_cat
-
-    if specz_scatter is not None or sigma0 > 0.0 or sigma1 > 0.0:
-        matrix_scatter = specz_gaussian_response_matrix(
-            z_arr=z_arr,
-            bin_edges=edges_arr,
-            specz_scatter=specz_scatter,
-            model=specz_scatter_model,
-            sigma0=sigma0,
-            sigma1=sigma1,
-        )
-        matrix_total = matrix_scatter @ matrix_cat
 
     return matrix_total @ true_selection
 
@@ -469,43 +461,19 @@ def build_specz_bins(
     # Broadcast per-bin params
     completeness_arr = as_per_bin(completeness, n_bins_eff, "completeness")
 
-    # Build response matrices (catastrophic + optional scatter)
-    matrix_cat = build_specz_response_matrix(
-        n_bins_eff,
+    # Build combined catastrophic and measurement-scatter response.
+    matrix_total, scatter_enabled = _build_total_response_matrix(
+        z_arr,
+        bin_edges_arr,
         catastrophic_frac=catastrophic_frac,
         leakage_model=leakage_model,
         leakage_sigma=leakage_sigma,
         response_matrix=response_matrix,
+        specz_scatter=specz_scatter,
+        specz_scatter_model=specz_scatter_model,
+        sigma0=sigma0,
+        sigma1=sigma1,
     )
-    matrix_total = matrix_cat
-
-    scatter_enabled = (specz_scatter is not None) or (
-        specz_scatter is None
-        and specz_scatter_model == "sigma0_plus_sigma1_1pz"
-        and (sigma0 > 0.0 or sigma1 > 0.0)
-    )
-
-    if scatter_enabled:
-        # Validate explicit per-bin scatter early
-        if specz_scatter is not None:
-            sig = np.asarray(as_per_bin(specz_scatter, n_bins_eff, "specz_scatter"), dtype=float)
-            if np.any(sig < 0.0):
-                raise ValueError("specz_scatter must be >= 0.")
-            if np.allclose(sig, 0.0):
-                scatter_enabled = False
-
-    if scatter_enabled:
-        matrix_scatter = specz_gaussian_response_matrix(
-            z_arr=z_arr,
-            bin_edges=bin_edges_arr,
-            specz_scatter=specz_scatter,
-            model=specz_scatter_model,
-            sigma0=sigma0,
-            sigma1=sigma1,
-        )
-        matrix_total = matrix_scatter @ matrix_cat
-    else:
-        matrix_total = matrix_cat
 
     # Raw true-bin callback (top-hat * completeness)
     def raw_true_bin_for_edge(j: int, zmin: float, zmax: float) -> FloatArray1D:
@@ -603,3 +571,54 @@ def build_specz_bins(
     )
 
     return (bins, meta) if include_metadata else bins
+
+
+def _build_total_response_matrix(
+    z: FloatArray1D,
+    edges: FloatArray1D,
+    *,
+    catastrophic_frac: Sequence[float] | float = 0.0,
+    leakage_model: Literal["uniform", "neighbor", "gaussian"] = "neighbor",
+    leakage_sigma: Sequence[float] | float = 1.0,
+    response_matrix: FloatArray2D | None = None,
+    specz_scatter: Sequence[float] | float | None = None,
+    specz_scatter_model: Literal["sigma0_plus_sigma1_1pz"] = "sigma0_plus_sigma1_1pz",
+    sigma0: float = 0.0,
+    sigma1: float = 0.0,
+) -> tuple[FloatArray2D, bool]:
+    """Build the combined catastrophic and measurement-scatter response."""
+    n_bins = len(edges) - 1
+
+    matrix_cat = build_specz_response_matrix(
+        n_bins,
+        catastrophic_frac=catastrophic_frac,
+        leakage_model=leakage_model,
+        leakage_sigma=leakage_sigma,
+        response_matrix=response_matrix,
+    )
+
+    if specz_scatter is not None and (sigma0 != 0.0 or sigma1 != 0.0):
+        raise ValueError("Provide either specz_scatter OR ``sigma0/sigma1``, not both.")
+
+    scatter_enabled = specz_scatter is not None or sigma0 > 0.0 or sigma1 > 0.0
+
+    if specz_scatter is not None:
+        sig = as_per_bin(specz_scatter, n_bins, "specz_scatter")
+        if np.any(sig < 0.0):
+            raise ValueError("specz_scatter must be >= 0.")
+        if np.allclose(sig, 0.0):
+            scatter_enabled = False
+
+    if not scatter_enabled:
+        return matrix_cat, False
+
+    matrix_scatter = specz_gaussian_response_matrix(
+        z_arr=z,
+        bin_edges=edges,
+        specz_scatter=specz_scatter,
+        model=specz_scatter_model,
+        sigma0=sigma0,
+        sigma1=sigma1,
+    )
+
+    return matrix_scatter @ matrix_cat, True
