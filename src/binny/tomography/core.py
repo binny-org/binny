@@ -2,17 +2,24 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable
+from collections.abc import Callable, Mapping
 from dataclasses import dataclass, field
 from typing import Any, Literal
 
 import numpy as np
 
+from binny.binning.assignments import deterministic_assignment
 from binny.binning.core import build_bins
+from binny.binning.photoz import photoz_assignment
+from binny.binning.specz import specz_assignment
+from binny.utils.normalization import normalize_1d
 from binny.utils.types import FloatArray
 from binny.utils.validators import validate_axis_and_weights
 
 __all__ = ["Tomography", "build_tomography"]
+
+Assignment = Callable[[FloatArray, FloatArray], FloatArray]
+Method = Literal["deterministic", "specz", "photoz"]
 
 
 @dataclass
@@ -50,29 +57,76 @@ def build_tomography(
     z: FloatArray,
     nz: FloatArray,
     edges: FloatArray,
-    assignment: Callable[[FloatArray, FloatArray], FloatArray],
+    assignment: Assignment | None = None,
     *,
+    method: Method | None = None,
+    params: Mapping[str, Any] | None = None,
     selection_kind: Literal["probability", "weight"] = "probability",
+    normalize_input: bool = False,
     normalize: bool = True,
     norm_method: Literal["trapezoid", "simpson"] = "trapezoid",
 ) -> Tomography:
-    """Build a tomography result from a selection function.
+    """Build tomographic redshift distributions from a bin-assignment model.
 
     Args:
         z: True-redshift grid.
         nz: Parent redshift distribution.
-        edges: Bin edges in the selected coordinate.
-        assignment: Function returning selections of shape
-            ``(n_bins, n_z)``.
-        selection_kind: Whether selections represent probabilities
-            or arbitrary non-negative weights.
+        edges: Tomographic bin edges.
+        assignment: Optional custom assignment function returning an array
+            of shape ``(n_bins, n_z)``.
+        method: Built-in assignment model: ``"deterministic"``, ``"specz"``,
+            or ``"photoz"``. Defaults to ``"deterministic"`` when no
+            custom assignment is provided.
+        params: Model-specific keyword arguments passed to the selected
+            assignment function.
+        selection_kind: Whether selections represent probabilities or
+            arbitrary non-negative weights.
+        normalize_input: Whether to normalize the parent distribution
+            before constructing bins.
         normalize: Whether to normalize individual bin distributions.
         norm_method: Numerical integration method for normalization.
 
     Returns:
         Tomography result containing bin distributions and metadata.
+
+    Raises:
+        ValueError: If method and assignment conflict or the method is unknown.
+        TypeError: If model parameters are invalid.
     """
+    if assignment is not None and method is not None:
+        raise ValueError("Provide either assignment or method, not both.")
+
+    if assignment is not None and params is not None:
+        raise ValueError("params cannot be used with a custom assignment.")
+
+    selected_method = method or ("custom" if assignment is not None else "deterministic")
+    model_params = dict(params) if params is not None else {}
+
+    if assignment is None:
+        if selected_method == "deterministic":
+            if model_params:
+                raise TypeError("Deterministic assignment does not accept model parameters.")
+            assignment = deterministic_assignment
+
+        elif selected_method == "specz":
+
+            def assignment(z_axis: FloatArray, bin_edges: FloatArray) -> FloatArray:
+                """Evaluate the built-in spectroscopic-redshift assignment."""
+                return specz_assignment(z_axis, bin_edges, **model_params)
+
+        elif selected_method == "photoz":
+
+            def assignment(z_axis: FloatArray, bin_edges: FloatArray) -> FloatArray:
+                """Evaluate the built-in photometric-redshift assignment."""
+                return photoz_assignment(z_axis, bin_edges, **model_params)
+
+        else:
+            raise ValueError("method must be 'deterministic', 'specz', or 'photoz'.")
+
     z_arr, nz_arr = validate_axis_and_weights(z, nz)
+
+    if normalize_input:
+        nz_arr = normalize_1d(z_arr, nz_arr, method=norm_method)
 
     bins, integrals, parent_integral = build_bins(
         z_arr,
@@ -91,7 +145,10 @@ def build_tomography(
 
     metadata = {
         "bin_edges": np.asarray(edges, dtype=float).copy(),
+        "method": selected_method,
+        "params": model_params.copy(),
         "selection_kind": selection_kind,
+        "normalize_input": normalize_input,
         "normalize_bins": normalize,
         "norm_method": norm_method,
         "bin_integrals": integrals,

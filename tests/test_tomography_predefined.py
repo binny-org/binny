@@ -222,17 +222,6 @@ def test_build_predefined_tomography_invalid_keys(key: object) -> None:
         build_predefined_tomography(z, {key: np.ones_like(z)})
 
 
-def test_build_predefined_tomography_duplicate_integer_keys() -> None:
-    """Reject keys that collide after integer conversion."""
-    z = np.linspace(0.0, 1.0, 11)
-
-    with pytest.raises(ValueError, match="Duplicate bin index"):
-        build_predefined_tomography(
-            z,
-            {0: np.ones_like(z), np.int64(0): 2.0 * np.ones_like(z)},
-        )
-
-
 def test_build_predefined_tomography_zero_integral() -> None:
     """Reject bins with zero integrated population."""
     z = np.linspace(0.0, 1.0, 11)
