@@ -11,6 +11,7 @@ from binny.binning.assignments import specz_selection_in_bin
 from binny.binning.specz import (
     apply_response_matrix,
     build_specz_response_matrix,
+    specz_assignment,
     specz_gaussian_response_matrix,
 )
 
@@ -382,3 +383,207 @@ def test_response_warns_when_zero_catastrophic_frac_and_per_bin_nondefault_leaka
 
     assert np.allclose(matrix, np.eye(4))
     _assert_col_stochastic(matrix)
+
+
+def test_specz_assignment_deterministic():
+    """Test that spec-z assignment reproduces deterministic bin selection."""
+    z, _ = _toy_z_nz()
+    edges = _edges_4bins()
+
+    actual = specz_assignment(z, edges)
+
+    expected = np.stack(
+        [specz_selection_in_bin(z, edges[i], edges[i + 1]) for i in range(len(edges) - 1)]
+    )
+
+    assert actual.shape == (4, len(z))
+    assert actual.dtype == np.float64
+    np.testing.assert_array_equal(actual, expected)
+
+
+@pytest.mark.parametrize("completeness", [0.8, [1.0, 0.8, 0.6, 0.9]])
+def test_specz_assignment_completeness(completeness):
+    """Test that scalar and per-bin completeness scale selections correctly."""
+    z, _ = _toy_z_nz()
+    edges = _edges_4bins()
+
+    actual = specz_assignment(z, edges, completeness=completeness)
+
+    values = np.broadcast_to(np.asarray(completeness, dtype=float), 4)
+    expected = np.stack(
+        [
+            specz_selection_in_bin(
+                z,
+                edges[i],
+                edges[i + 1],
+                completeness=float(values[i]),
+            )
+            for i in range(4)
+        ]
+    )
+
+    np.testing.assert_allclose(actual, expected)
+
+
+@pytest.mark.parametrize("leakage_model", ["uniform", "neighbor", "gaussian"])
+def test_specz_assignment_catastrophic_response(leakage_model):
+    """Test that spec-z assignment applies catastrophic reassignment correctly."""
+    z, _ = _toy_z_nz()
+    edges = _edges_4bins()
+    fractions = [0.0, 0.1, 0.2, 0.3]
+
+    actual = specz_assignment(
+        z,
+        edges,
+        catastrophic_frac=fractions,
+        leakage_model=leakage_model,
+        leakage_sigma=1.2,
+    )
+
+    true_selection = specz_assignment(z, edges)
+    matrix = build_specz_response_matrix(
+        4,
+        catastrophic_frac=fractions,
+        leakage_model=leakage_model,
+        leakage_sigma=1.2,
+    )
+
+    np.testing.assert_allclose(actual, matrix @ true_selection)
+
+
+@pytest.mark.parametrize(
+    ("scatter_kwargs"),
+    [
+        {"specz_scatter": 0.03},
+        {"specz_scatter": [0.01, 0.02, 0.03, 0.04]},
+        {"sigma0": 0.01, "sigma1": 0.02},
+    ],
+)
+def test_specz_assignment_gaussian_scatter(scatter_kwargs):
+    """Test that spec-z assignment applies Gaussian measurement scatter."""
+    z, _ = _toy_z_nz()
+    edges = _edges_4bins()
+
+    actual = specz_assignment(z, edges, **scatter_kwargs)
+
+    matrix = specz_gaussian_response_matrix(
+        z_arr=z,
+        bin_edges=edges,
+        specz_scatter=scatter_kwargs.get("specz_scatter"),
+        sigma0=scatter_kwargs.get("sigma0", 0.0),
+        sigma1=scatter_kwargs.get("sigma1", 0.0),
+    )
+
+    expected = matrix @ specz_assignment(z, edges)
+    np.testing.assert_allclose(actual, expected)
+
+
+def test_specz_assignment_combined_response_order():
+    """Test that scatter is applied after catastrophic reassignment."""
+    z, _ = _toy_z_nz()
+    edges = _edges_4bins()
+
+    actual = specz_assignment(
+        z,
+        edges,
+        completeness=[1.0, 0.8, 0.6, 0.9],
+        catastrophic_frac=[0.1, 0.2, 0.3, 0.1],
+        specz_scatter=0.04,
+    )
+
+    true_selection = specz_assignment(
+        z,
+        edges,
+        completeness=[1.0, 0.8, 0.6, 0.9],
+    )
+
+    matrix_cat = build_specz_response_matrix(
+        4,
+        catastrophic_frac=[0.1, 0.2, 0.3, 0.1],
+    )
+    matrix_scatter = specz_gaussian_response_matrix(
+        z_arr=z,
+        bin_edges=edges,
+        specz_scatter=0.04,
+    )
+
+    expected = matrix_scatter @ (matrix_cat @ true_selection)
+
+    np.testing.assert_allclose(actual, expected, rtol=1e-12, atol=1e-14)
+
+
+def test_specz_assignment_explicit_response_matrix():
+    """Test that explicit response matrices override catastrophic parameters."""
+    z, _ = _toy_z_nz()
+    edges = _edges_4bins()
+
+    matrix = np.array(
+        [
+            [0.9, 0.1, 0.0, 0.0],
+            [0.1, 0.8, 0.1, 0.0],
+            [0.0, 0.1, 0.8, 0.1],
+            [0.0, 0.0, 0.1, 0.9],
+        ]
+    )
+
+    actual = specz_assignment(
+        z,
+        edges,
+        response_matrix=matrix,
+        catastrophic_frac=0.5,
+    )
+
+    expected = matrix @ specz_assignment(z, edges)
+    np.testing.assert_allclose(actual, expected)
+
+
+def test_specz_assignment_conserves_selection_probability():
+    """Test that response mixing preserves total selection probability."""
+    z, _ = _toy_z_nz()
+    edges = _edges_4bins()
+    completeness = [1.0, 0.8, 0.6, 0.9]
+
+    true_selection = specz_assignment(
+        z,
+        edges,
+        completeness=completeness,
+    )
+    observed_selection = specz_assignment(
+        z,
+        edges,
+        completeness=completeness,
+        catastrophic_frac=0.2,
+        specz_scatter=0.03,
+    )
+
+    np.testing.assert_allclose(
+        observed_selection.sum(axis=0),
+        true_selection.sum(axis=0),
+        rtol=1e-12,
+        atol=1e-14,
+    )
+
+    assert np.all(observed_selection >= 0.0)
+    assert np.all(observed_selection <= 1.0)
+
+
+@pytest.mark.parametrize(
+    ("kwargs", "message"),
+    [
+        ({"completeness": -0.1}, "completeness"),
+        ({"completeness": 1.1}, "completeness"),
+        ({"catastrophic_frac": -0.1}, "catastrophic_frac"),
+        ({"specz_scatter": -0.01}, "specz_scatter"),
+        (
+            {"specz_scatter": 0.03, "sigma0": 0.01},
+            "either specz_scatter",
+        ),
+    ],
+)
+def test_specz_assignment_rejects_invalid_parameters(kwargs, message):
+    """Test that spec-z assignment rejects invalid model parameters."""
+    z, _ = _toy_z_nz()
+    edges = _edges_4bins()
+
+    with pytest.raises(ValueError, match=message):
+        specz_assignment(z, edges, **kwargs)

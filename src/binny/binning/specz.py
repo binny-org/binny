@@ -9,6 +9,7 @@ from typing import Literal
 import numpy as np
 from scipy.special import erf
 
+from binny.binning.assignments import specz_selection_in_bin
 from binny.utils.broadcasting import as_per_bin
 from binny.utils.types import FloatArray1D, FloatArray2D
 from binny.utils.validators import (
@@ -19,6 +20,7 @@ from binny.utils.validators import (
 __all__ = [
     "build_specz_response_matrix",
     "apply_response_matrix",
+    "specz_assignment",
     "specz_gaussian_response_matrix",
 ]
 
@@ -278,3 +280,77 @@ def specz_gaussian_response_matrix(
 
     validate_response_matrix(matrix, n_bins)
     return matrix.astype(np.float64, copy=False)
+
+
+def specz_assignment(
+    z: FloatArray1D,
+    edges: FloatArray1D,
+    *,
+    completeness: Sequence[float] | float = 1.0,
+    catastrophic_frac: Sequence[float] | float = 0.0,
+    leakage_model: Literal["uniform", "neighbor", "gaussian"] = "neighbor",
+    leakage_sigma: Sequence[float] | float = 1.0,
+    response_matrix: FloatArray2D | None = None,
+    specz_scatter: Sequence[float] | float | None = None,
+    specz_scatter_model: Literal["sigma0_plus_sigma1_1pz"] = "sigma0_plus_sigma1_1pz",
+    sigma0: float = 0.0,
+    sigma1: float = 0.0,
+) -> FloatArray2D:
+    """Return spectroscopic-redshift selection probabilities for each observed bin.
+
+    Args:
+        z: True-redshift grid.
+        edges: True-redshift bin edges.
+        completeness: Per-bin selection completeness.
+        catastrophic_frac: Per-bin catastrophic reassignment fraction.
+        leakage_model: Catastrophic reassignment prescription.
+        leakage_sigma: Gaussian leakage width in bin-index space.
+        response_matrix: Optional explicit catastrophic response matrix.
+        specz_scatter: Optional spectroscopic measurement scatter.
+        specz_scatter_model: Scatter parameterization.
+        sigma0: Constant scatter component.
+        sigma1: Redshift-dependent scatter component.
+
+    Returns:
+        Selection probabilities with shape ``(n_bins, n_z)``.
+    """
+    z_arr = np.asarray(z, dtype=np.float64)
+    edges_arr = np.asarray(edges, dtype=np.float64)
+    n_bins = edges_arr.size - 1
+
+    completeness_arr = as_per_bin(completeness, n_bins, "completeness")
+
+    true_selection = np.stack(
+        [
+            specz_selection_in_bin(
+                z_arr,
+                float(edges_arr[i]),
+                float(edges_arr[i + 1]),
+                completeness=float(completeness_arr[i]),
+            )
+            for i in range(n_bins)
+        ]
+    )
+
+    matrix_cat = build_specz_response_matrix(
+        n_bins,
+        catastrophic_frac=catastrophic_frac,
+        leakage_model=leakage_model,
+        leakage_sigma=leakage_sigma,
+        response_matrix=response_matrix,
+    )
+
+    matrix_total = matrix_cat
+
+    if specz_scatter is not None or sigma0 > 0.0 or sigma1 > 0.0:
+        matrix_scatter = specz_gaussian_response_matrix(
+            z_arr=z_arr,
+            bin_edges=edges_arr,
+            specz_scatter=specz_scatter,
+            model=specz_scatter_model,
+            sigma0=sigma0,
+            sigma1=sigma1,
+        )
+        matrix_total = matrix_scatter @ matrix_cat
+
+    return matrix_total @ true_selection
