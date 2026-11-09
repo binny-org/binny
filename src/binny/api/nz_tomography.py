@@ -68,6 +68,8 @@ from binny.surveys.survey_presets import (
     load_survey_config,
     show_survey_config,
 )
+from binny.tomography.combinations import make_bin_combo_filter
+from binny.tomography.core import Tomography
 from binny.utils.colors import (
     BINNY_CMAP,
     BINNY_CMAP_DISCRETE,
@@ -1136,45 +1138,30 @@ class NZTomography:
         *,
         curves: Sequence[Mapping[int, Any]] | None = None,
     ) -> BinComboFilter:
-        """Create a bin-combination filter, aligning redshift grids if necessary.
-
-        By default, the filter uses this instance's cached bins for both
-        slots. If another tomography is provided, the two samples are compared
-        on a shared redshift grid constructed from their union when necessary.
-
-        Args:
-            other: Optional second tomography instance.
-            curves: Optional explicit per-slot bin mappings.
-
-        Returns:
-            A configured BinComboFilter.
-
-        Raises:
-            ValueError: If the required tomographic bins are not cached.
-        """
+        """Create a bin-combination filter using the functional implementation."""
         self._require_bins()
+
         z = self._parent["z"]
-        bins_a = self._state["bins"]
 
         if curves is not None:
             return BinComboFilter(z=z, curves=list(curves))
 
-        if other is None:
-            return BinComboFilter(z=z, curves=[bins_a, bins_a])
+        tomo = Tomography(
+            z=z,
+            nz=self._parent["nz"],
+            bins=self._state["bins"],
+        )
 
-        other._require_bins()
-        z2 = other._parent["z"]
-        bins_b = other._state["bins"]
+        other_tomo = None
+        if other is not None:
+            other._require_bins()
+            other_tomo = Tomography(
+                z=other._parent["z"],
+                nz=other._parent["nz"],
+                bins=other._state["bins"],
+            )
 
-        if np.array_equal(z, z2):
-            return BinComboFilter(z=z, curves=[bins_a, bins_b])
-
-        z_common = np.union1d(z, z2)
-
-        bins_a = {k: np.interp(z_common, z, nz, left=0.0, right=0.0) for k, nz in bins_a.items()}
-        bins_b = {k: np.interp(z_common, z2, nz, left=0.0, right=0.0) for k, nz in bins_b.items()}
-
-        return BinComboFilter(z=z_common, curves=[bins_a, bins_b])
+        return make_bin_combo_filter(tomo, other_tomo)
 
     def bin_combo_filter(
         self,
