@@ -81,7 +81,9 @@ testing, and code style guidelines.
 
 # License
 
+Binny is distributed under the MIT License.
 
-and:
+Copyright © 2026 Nikolina Šarčević, Matthijs van der Wild,
+Rebekah Polen, and contributors.
 
-MIT License © 2026 Nikolina Šarčević, Matthijs van der Wild, Rebekah Polen, and contributors.
+See [LICENSE](LICENSE) for details.
