@@ -191,3 +191,16 @@ def test_photoz_diagnostics_options(sample, include_metadata, include_diagnostic
         assert result.metadata == {}
     else:
         assert result.metadata
+
+
+@pytest.mark.parametrize("kind", ["photoz", "specz"])
+def test_missing_bins_specification(sample, kind):
+    """Tests that tomography requires a valid bins specification."""
+    z, nz = sample
+
+    with pytest.raises((ValueError, KeyError, TypeError)):
+        build_tomography_from_spec(
+            z=z,
+            nz=nz,
+            tomo_spec={"kind": kind},
+        )

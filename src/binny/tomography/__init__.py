@@ -1,5 +1,6 @@
 """Tomographic redshift distributions and scientific operations."""
 
+from binny.tomography.builders import build_tomography_from_spec
 from binny.tomography.combinations import make_bin_combo_filter
 from binny.tomography.comparison import (
     between_bin_overlap,
@@ -45,6 +46,7 @@ from binny.tomography.stats import (
 __all__ = [
     "Tomography",
     "build_tomography",
+    "build_tomography_from_spec",
     "build_predefined_tomography",
     "load_predefined_bins",
     "make_bin_combo_filter",

@@ -12,6 +12,8 @@ from binny import (
     build_predefined_tomography,
     load_predefined_bins,
 )
+from binny.surveys import build_survey_tomography
+from binny.tomography import population_stats, shape_stats
 
 
 @pytest.fixture
@@ -473,33 +475,168 @@ def test_load_predefined_bins_invalid_positional_index(tmp_path: Path) -> None:
         load_predefined_bins(path, z_col=0, bin_cols={0: 5})
 
 
-def test_predefined_matches_legacy(
+@pytest.mark.parametrize("normalize", [False, True])
+@pytest.mark.parametrize("include_metadata", [False, True])
+def test_predefined_numerical_regression(
     synthetic_bins: tuple[np.ndarray, dict[int, np.ndarray]],
+    normalize: bool,
+    include_metadata: bool,
 ) -> None:
-    """Tests that functional predefined tomography matches legacy calculations."""
-    from binny.nz_tomo.predefined import prepare_predefined_bins
-
+    """Tests predefined tomography against independent numerical expectations."""
     z, bins = synthetic_bins
 
-    for normalize in (False, True):
-        for include_metadata in (False, True):
-            old_z, old_parent, old_bins, old_metadata = prepare_predefined_bins(
-                z,
-                bins,
-                normalize_bins=normalize,
-                include_metadata=include_metadata,
-            )
-            new = build_predefined_tomography(
-                z,
-                bins,
-                normalize=normalize,
-                include_metadata=include_metadata,
-            )
+    result = build_predefined_tomography(
+        z,
+        bins,
+        normalize=normalize,
+        include_metadata=include_metadata,
+    )
 
-            np.testing.assert_allclose(new.z, old_z)
-            np.testing.assert_allclose(new.nz, old_parent)
+    expected_parent = np.sum(np.stack(list(bins.values())), axis=0)
+    np.testing.assert_allclose(result.z, z)
+    np.testing.assert_allclose(result.nz, expected_parent)
 
-            for key in bins:
-                np.testing.assert_allclose(new.bins[key], old_bins[key])
+    raw_integrals = {key: float(np.trapezoid(curve, x=z)) for key, curve in bins.items()}
 
-            assert new.metadata == (old_metadata if old_metadata is not None else {})
+    for key, curve in bins.items():
+        expected = curve / raw_integrals[key] if normalize else curve
+        np.testing.assert_allclose(result.bins[key], expected)
+
+    if include_metadata:
+        assert result.metadata["kind"] == "predefined"
+        assert result.metadata["bins_norms"] == pytest.approx(raw_integrals)
+        assert result.metadata["inputs"]["normalize_bins"] is normalize
+    else:
+        assert result.metadata == {}
+
+
+def test_predefined_survey_config_builds_without_parent_model(
+    tmp_path: Path,
+) -> None:
+    """Tests that predefined survey configs use externally supplied bin curves."""
+    z = np.linspace(0.0, 1.5, 151)
+    first = 1.5 * np.exp(-0.5 * ((z - 0.40) / 0.17) ** 2)
+    second = 0.9 * np.exp(-0.5 * ((z - 1.05) / 0.21) ** 2)
+
+    path = tmp_path / "predefined_bins.txt"
+    np.savetxt(
+        path,
+        np.column_stack([z, first, second]),
+        header="z bin_0 bin_1",
+        comments="",
+        fmt="%.18e",
+    )
+
+    cfg = {
+        "name": "external_sample",
+        "survey_meta": {
+            "description": "Externally supplied tomography",
+        },
+        "tomography": [
+            {
+                "role": "source",
+                "sample": "external",
+                "kind": "predefined",
+                "bins": {
+                    "scheme": "predefined",
+                    "source": {
+                        "path": str(path),
+                        "z_col": "z",
+                        "bin_cols": {0: "bin_0", 1: "bin_1"},
+                    },
+                    "normalize_bins": False,
+                    "norm_method": "trapezoid",
+                },
+            }
+        ],
+    }
+
+    result = build_survey_tomography(
+        cfg=cfg,
+        role="source",
+        sample="external",
+        include_survey_metadata=True,
+        include_tomo_metadata=True,
+    )
+
+    assert result.spec is not None
+    assert result.spec["kind"] == "predefined"
+    assert result.spec["bins"]["scheme"] == "predefined"
+    assert list(result.bins) == [0, 1]
+
+    np.testing.assert_allclose(result.z, z)
+    np.testing.assert_allclose(result.nz, first + second)
+    np.testing.assert_allclose(result.bins[0], first)
+    np.testing.assert_allclose(result.bins[1], second)
+
+    assert result.metadata["kind"] == "predefined"
+    assert result.survey_metadata["survey"] == "external_sample"
+    assert result.survey_metadata["role"] == "source"
+    assert result.survey_metadata["sample"] == "external"
+    assert result.survey_metadata["survey_meta"] == {
+        "description": "Externally supplied tomography",
+    }
+
+    shape = shape_stats(result.z, result.bins)
+    population = population_stats(result.bins, result.metadata)
+
+    assert set(shape["per_bin"]) == {0, 1}
+    assert set(population["fractions"]) == {0, 1}
+    assert sum(population["fractions"].values()) == pytest.approx(1.0)
+
+
+def test_predefined_survey_config_applies_nested_overrides(
+    tmp_path: Path,
+) -> None:
+    """Tests that predefined normalization can be overridden through a config."""
+    z = np.linspace(0.0, 1.0, 101)
+    first = 2.0 * (1.0 - z)
+    second = 3.0 * z
+
+    path = tmp_path / "predefined_bins.txt"
+    np.savetxt(
+        path,
+        np.column_stack([z, first, second]),
+        header="z bin_0 bin_1",
+        comments="",
+        fmt="%.18e",
+    )
+
+    cfg = {
+        "name": "override_test",
+        "tomography": [
+            {
+                "role": "source",
+                "kind": "predefined",
+                "bins": {
+                    "scheme": "predefined",
+                    "source": {
+                        "path": str(path),
+                        "z_col": "z",
+                        "bin_cols": {0: "bin_0", 1: "bin_1"},
+                    },
+                    "normalize_bins": False,
+                    "norm_method": "trapezoid",
+                },
+            }
+        ],
+    }
+
+    result = build_survey_tomography(
+        cfg=cfg,
+        role="source",
+        overrides={"bins": {"normalize_bins": True}},
+        include_tomo_metadata=True,
+    )
+
+    assert result.spec is not None
+    assert result.spec["bins"]["normalize_bins"] is True
+    assert result.spec["bins"]["scheme"] == "predefined"
+    assert result.spec["bins"]["source"]["path"] == str(path)
+
+    np.testing.assert_allclose(result.nz, first + second)
+
+    for curve in result.bins.values():
+        assert np.trapezoid(curve, x=z) == pytest.approx(1.0)
+
+    assert result.metadata["inputs"]["normalize_bins"] is True

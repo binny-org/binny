@@ -1,4 +1,4 @@
-"""Unit tests for binny.axes.mixed_edges invariances.
+"""Tests for ``binny.axes.mixed_edges`` invariances.
 
 This test suite focuses on verifying invariance and equivariance properties
 of the `mixed_edges` function under various transformations. These tests are
@@ -15,7 +15,7 @@ import numpy as np
 import pytest
 
 from binny.axes.mixed_edges import mixed_edges
-from binny.nz_tomo.bin_stats import bin_centers
+from binny.tomography.stats import bin_centers
 
 pytestmark = pytest.mark.slow
 
@@ -253,8 +253,7 @@ def test_mixed_edges_equal_number_invariant_under_weight_scaling_and_normalizati
     grid_kind: str,
     seed: int,
 ) -> None:
-    """Tests that equal_number mixed_edges are invariant under weight scaling
-    and normalization."""
+    """Tests that equal_number mixed_edges are invariant under weight scaling and normalization."""
     rng = np.random.default_rng(seed)
 
     x = _grid_linear() if grid_kind == "lin" else _grid_log()
@@ -291,8 +290,7 @@ def test_mixed_edges_equal_info_invariant_under_density_scaling_and_normalizatio
     grid_kind: str,
     seed: int,
 ) -> None:
-    """Tests that equal_information mixed_edges are invariant under density
-    scaling/normalization."""
+    """Tests that information-based edges are invariant under density scaling."""
     rng = np.random.default_rng(seed)
 
     x = _grid_linear() if grid_kind == "lin" else _grid_log()
@@ -508,8 +506,7 @@ def test_bin_centers_from_mixed_edges_weight_invariance_equal_number(
     center_method: str,
     seed: int,
 ) -> None:
-    """Tests that for equal_number edges, weight scaling does not change edges,
-    so centers computed from uniform-per-bin density must be identical."""
+    """Tests that equal-number bin centers are invariant under weight scaling."""
     rng = np.random.default_rng(seed)
 
     n_bins = int(rng.choice([4, 6, 8, 10, 12]))
@@ -551,8 +548,7 @@ def test_bin_centers_from_mixed_edges_density_invariance_equal_information(
     center_method: str,
     seed: int,
 ) -> None:
-    """Tests that for equal_information edges, density scaling does not change edges,
-    so centers computed from uniform-per-bin density must be identical."""
+    """Tests that equal-information bin centers are invariant under density scaling."""
     rng = np.random.default_rng(seed)
 
     n_bins = int(rng.choice([4, 6, 8, 10, 12]))

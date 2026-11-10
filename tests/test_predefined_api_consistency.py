@@ -1,16 +1,17 @@
-"""Consistency tests for functional and legacy predefined tomography."""
+"""Tests for numerical consistency of predefined tomography."""
+
+from __future__ import annotations
 
 import numpy as np
 import pytest
 
-from binny.api.nz_tomography import NZTomography
-from binny.nz_tomo.predefined import prepare_predefined_bins
 from binny.tomography import build_predefined_tomography
 
 
 @pytest.mark.parametrize("normalize", [False, True])
 @pytest.mark.parametrize("provide_parent", [False, True])
-def test_predefined_functional_matches_legacy(normalize, provide_parent):
+def test_predefined_tomography_preserves_expected_curves(normalize, provide_parent):
+    """Tests that predefined tomography preserves the expected input distributions."""
     z = np.linspace(0.0, 3.0, 301)
 
     bins = {
@@ -21,7 +22,7 @@ def test_predefined_functional_matches_legacy(normalize, provide_parent):
 
     parent = 2.0 * sum(bins.values()) if provide_parent else None
 
-    functional = build_predefined_tomography(
+    result = build_predefined_tomography(
         z,
         bins,
         nz=parent,
@@ -29,26 +30,37 @@ def test_predefined_functional_matches_legacy(normalize, provide_parent):
         include_metadata=True,
     )
 
-    z_legacy, nz_legacy, bins_legacy, meta_legacy = prepare_predefined_bins(
-        z,
-        bins,
-        nz=parent,
-        normalize_bins=normalize,
-        include_metadata=True,
+    np.testing.assert_allclose(result.z, z, rtol=0.0, atol=0.0)
+
+    expected_parent = parent if provide_parent else sum(bins.values())
+    np.testing.assert_allclose(
+        result.nz,
+        expected_parent,
+        rtol=1e-12,
+        atol=1e-12,
     )
 
-    np.testing.assert_allclose(functional.z, z_legacy)
-    np.testing.assert_allclose(functional.nz, nz_legacy)
+    assert set(result.bins) == set(bins)
 
-    for i in bins:
-        np.testing.assert_allclose(functional.bins[i], bins_legacy[i])
+    for i, curve in bins.items():
+        expected = curve.copy()
 
-    assert functional.metadata is not None
-    assert meta_legacy is not None
+        if normalize:
+            expected /= np.trapezoid(expected, x=z)
+
+        np.testing.assert_allclose(
+            result.bins[i],
+            expected,
+            rtol=1e-12,
+            atol=1e-12,
+        )
+
+    assert result.metadata is not None
 
 
 @pytest.mark.parametrize("normalize", [False, True])
-def test_predefined_functional_matches_nztomography(normalize):
+def test_predefined_tomography_preserves_bin_integrals(normalize):
+    """Tests that predefined tomography preserves or normalizes bin integrals."""
     z = np.linspace(0.0, 3.0, 301)
 
     bins = {
@@ -56,19 +68,20 @@ def test_predefined_functional_matches_nztomography(normalize):
         1: np.exp(-0.5 * ((z - 1.2) / 0.3) ** 2),
     }
 
-    functional = build_predefined_tomography(
+    result = build_predefined_tomography(
         z,
         bins,
         normalize=normalize,
     )
 
-    legacy = NZTomography().build_predefined_bins(
-        z=z,
-        bins=bins,
-        normalize_bins=normalize,
-    )
+    for i, curve in bins.items():
+        expected_integral = 1.0 if normalize else np.trapezoid(curve, x=z)
 
-    np.testing.assert_allclose(functional.nz, legacy.nz)
+        actual_integral = np.trapezoid(result.bins[i], x=result.z)
 
-    for i in bins:
-        np.testing.assert_allclose(functional.bins[i], legacy.bins[i])
+        np.testing.assert_allclose(
+            actual_integral,
+            expected_integral,
+            rtol=1e-12,
+            atol=1e-12,
+        )

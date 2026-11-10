@@ -7,7 +7,6 @@ import pytest
 from numpy.testing import assert_allclose, assert_array_equal
 
 from binny.correlations.bin_combo_filter import BinComboFilter
-from binny.nz_tomo._tomography_bins import TomographyBins
 from binny.tomography.combinations import make_bin_combo_filter
 from binny.tomography.core import Tomography, build_tomography
 
@@ -61,31 +60,22 @@ def other_tomo() -> Tomography:
     )
 
 
-def _legacy_tomo(tomo: Tomography) -> TomographyBins:
-    """Construct the legacy container from a functional tomography."""
-    return TomographyBins(
-        z=tomo.z,
-        nz=tomo.nz,
-        spec={},
-        bins=tomo.bins,
-        tomo_meta=None,
-        survey_meta=None,
-    )
-
-
 def test_single_tomography_returns_filter(tomo: Tomography) -> None:
+    """Tests that a single tomography produces a bin-combination filter."""
     result = make_bin_combo_filter(tomo)
 
     assert isinstance(result, BinComboFilter)
 
 
 def test_single_tomography_uses_same_grid(tomo: Tomography) -> None:
+    """Tests that a single tomography preserves its redshift grid."""
     result = make_bin_combo_filter(tomo)
 
     assert_array_equal(result.z, tomo.z)
 
 
 def test_single_tomography_uses_two_slots(tomo: Tomography) -> None:
+    """Tests that a single tomography populates both filter slots."""
     result = make_bin_combo_filter(tomo)
 
     assert len(result.curves) == 2
@@ -94,6 +84,7 @@ def test_single_tomography_uses_two_slots(tomo: Tomography) -> None:
 
 
 def test_single_tomography_preserves_bin_keys(tomo: Tomography) -> None:
+    """Tests that single-sample filtering preserves bin keys."""
     result = make_bin_combo_filter(tomo)
 
     assert list(result.curves[0]) == list(tomo.bins)
@@ -101,6 +92,7 @@ def test_single_tomography_preserves_bin_keys(tomo: Tomography) -> None:
 
 
 def test_single_tomography_preserves_curves(tomo: Tomography) -> None:
+    """Tests that single-sample filtering preserves bin curves."""
     result = make_bin_combo_filter(tomo)
 
     for key, curve in tomo.bins.items():
@@ -113,6 +105,7 @@ def test_same_grid_two_tomographies(
     z: np.ndarray,
     edges: np.ndarray,
 ) -> None:
+    """Tests that same-grid samples retain their original bin mappings."""
     other = build_tomography(
         z,
         np.exp(-z),
@@ -133,6 +126,7 @@ def test_same_grid_preserves_distinct_samples(
     z: np.ndarray,
     edges: np.ndarray,
 ) -> None:
+    """Tests that same-grid samples retain their distinct curves."""
     other = build_tomography(
         z,
         np.exp(-z),
@@ -152,6 +146,7 @@ def test_different_grids_use_union(
     tomo: Tomography,
     other_tomo: Tomography,
 ) -> None:
+    """Tests that different grids are combined into their union."""
     result = make_bin_combo_filter(tomo, other_tomo)
 
     expected = np.union1d(tomo.z, other_tomo.z)
@@ -163,6 +158,7 @@ def test_different_grids_preserve_bin_keys(
     tomo: Tomography,
     other_tomo: Tomography,
 ) -> None:
+    """Tests that union-grid interpolation preserves bin keys."""
     result = make_bin_combo_filter(tomo, other_tomo)
 
     assert list(result.curves[0]) == list(tomo.bins)
@@ -173,6 +169,7 @@ def test_different_grids_interpolate_first_sample(
     tomo: Tomography,
     other_tomo: Tomography,
 ) -> None:
+    """Tests that the first sample is interpolated onto the union grid."""
     result = make_bin_combo_filter(tomo, other_tomo)
 
     for key, curve in tomo.bins.items():
@@ -191,6 +188,7 @@ def test_different_grids_interpolate_second_sample(
     tomo: Tomography,
     other_tomo: Tomography,
 ) -> None:
+    """Tests that the second sample is interpolated onto the union grid."""
     result = make_bin_combo_filter(tomo, other_tomo)
 
     for key, curve in other_tomo.bins.items():
@@ -206,6 +204,7 @@ def test_different_grids_interpolate_second_sample(
 
 
 def test_interpolation_outside_support_is_zero() -> None:
+    """Tests that interpolation is zero outside each sample's support."""
     z_a = np.linspace(0.0, 2.0, 101)
     z_b = np.linspace(1.0, 3.0, 101)
 
@@ -241,6 +240,7 @@ def test_identical_grid_values_do_not_require_same_object(
     z: np.ndarray,
     edges: np.ndarray,
 ) -> None:
+    """Tests that equal-valued grids need not share object identity."""
     other = build_tomography(
         z.copy(),
         np.exp(-z),
@@ -291,6 +291,7 @@ def test_single_sample_topologies(
     topology: str,
     expected: list[tuple[int, int]],
 ) -> None:
+    """Tests that single-sample topologies return the expected bin pairs."""
     result = make_bin_combo_filter(tomo)
     result.set_topology(topology)
 
@@ -301,6 +302,7 @@ def test_cross_sample_cartesian_topology(
     tomo: Tomography,
     other_tomo: Tomography,
 ) -> None:
+    """Tests that cross-sample Cartesian topology includes every bin pair."""
     result = make_bin_combo_filter(tomo, other_tomo)
     result.set_topology("pairs_cartesian")
 
@@ -310,6 +312,7 @@ def test_cross_sample_cartesian_topology(
 
 
 def test_select_topology_from_spec(tomo: Tomography) -> None:
+    """Tests that topology selection works through a specification."""
     spec = {
         "topology": {
             "name": "pairs_upper_triangle",
@@ -329,6 +332,7 @@ def test_select_topology_from_spec(tomo: Tomography) -> None:
 
 
 def test_select_with_score_relation(tomo: Tomography) -> None:
+    """Tests that score-relation filtering selects the expected bin pairs."""
     spec = {
         "topology": {
             "name": "pairs_all",
@@ -352,6 +356,7 @@ def test_select_with_score_relation(tomo: Tomography) -> None:
 
 
 def test_select_with_overlap_filter(tomo: Tomography) -> None:
+    """Tests that overlap filtering selects the expected bin pairs."""
     spec = {
         "topology": {
             "name": "pairs_all",
@@ -375,6 +380,7 @@ def test_select_with_overlap_filter(tomo: Tomography) -> None:
 
 
 def test_select_returns_same_filter(tomo: Tomography) -> None:
+    """Tests that selection returns the original filter object."""
     result = make_bin_combo_filter(tomo)
 
     selected = result.select(
@@ -388,129 +394,11 @@ def test_select_returns_same_filter(tomo: Tomography) -> None:
     assert selected is result
 
 
-def test_matches_legacy_single_tomography(tomo: Tomography) -> None:
-    legacy = _legacy_tomo(tomo)
-
-    new = make_bin_combo_filter(tomo)
-    old = legacy.make_bin_combo_filter()
-
-    assert_array_equal(new.z, old.z)
-
-    for new_slot, old_slot in zip(new.curves, old.curves, strict=True):
-        assert list(new_slot) == list(old_slot)
-
-        for key in new_slot:
-            assert_allclose(new_slot[key], old_slot[key])
-
-
-def test_matches_legacy_two_tomographies_same_grid(
-    tomo: Tomography,
-    z: np.ndarray,
-    edges: np.ndarray,
-) -> None:
-    other = build_tomography(
-        z,
-        np.exp(-z),
-        edges,
-        method="deterministic",
-        normalize=False,
-    )
-
-    new = make_bin_combo_filter(tomo, other)
-    old = _legacy_tomo(tomo).make_bin_combo_filter(_legacy_tomo(other))
-
-    assert_array_equal(new.z, old.z)
-
-    for new_slot, old_slot in zip(new.curves, old.curves, strict=True):
-        for key in new_slot:
-            assert_allclose(new_slot[key], old_slot[key])
-
-
-def test_matches_legacy_two_tomographies_different_grids(
-    tomo: Tomography,
-    other_tomo: Tomography,
-) -> None:
-    new = make_bin_combo_filter(tomo, other_tomo)
-    old = _legacy_tomo(tomo).make_bin_combo_filter(_legacy_tomo(other_tomo))
-
-    assert_array_equal(new.z, old.z)
-
-    for new_slot, old_slot in zip(new.curves, old.curves, strict=True):
-        assert list(new_slot) == list(old_slot)
-
-        for key in new_slot:
-            assert_allclose(new_slot[key], old_slot[key])
-
-
-@pytest.mark.parametrize(
-    "spec",
-    [
-        {"topology": {"name": "pairs_all"}},
-        {"topology": {"name": "pairs_upper_triangle"}},
-        {"topology": {"name": "pairs_diagonal"}},
-        {
-            "topology": {"name": "pairs_all"},
-            "filters": [
-                {
-                    "name": "score_relation",
-                    "score": "mean",
-                    "relation": "lt",
-                },
-            ],
-        },
-        {
-            "topology": {"name": "pairs_all"},
-            "filters": [
-                {
-                    "name": "overlap_fraction",
-                    "threshold": 0.0,
-                    "compare": "gt",
-                },
-            ],
-        },
-    ],
-)
-def test_selection_matches_legacy(
-    tomo: Tomography,
-    spec: dict,
-) -> None:
-    new = make_bin_combo_filter(tomo).select(spec).values()
-    old = _legacy_tomo(tomo).bin_combo_filter(spec)
-
-    assert new == old
-
-
-def test_cross_sample_selection_matches_legacy(
-    tomo: Tomography,
-    other_tomo: Tomography,
-) -> None:
-    spec = {
-        "topology": {
-            "name": "pairs_cartesian",
-        },
-        "filters": [
-            {
-                "name": "score_relation",
-                "score": "mean",
-                "relation": "lt",
-            },
-        ],
-    }
-
-    new = make_bin_combo_filter(tomo, other_tomo).select(spec).values()
-
-    old = _legacy_tomo(tomo).bin_combo_filter(
-        spec,
-        _legacy_tomo(other_tomo),
-    )
-
-    assert new == old
-
-
 def test_filter_does_not_modify_input_bins(
     tomo: Tomography,
     other_tomo: Tomography,
 ) -> None:
+    """Tests that filter operations leave input bin curves unchanged."""
     original_a = {k: v.copy() for k, v in tomo.bins.items()}
     original_b = {k: v.copy() for k, v in other_tomo.bins.items()}
 

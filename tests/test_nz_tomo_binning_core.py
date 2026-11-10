@@ -1,4 +1,4 @@
-"""Unit tests for ``binny.nz_tomo.binning_core`` module."""
+"""Tests for binning core functionality."""
 
 from __future__ import annotations
 

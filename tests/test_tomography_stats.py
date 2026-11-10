@@ -1,10 +1,11 @@
-"""Unit tests for ``binny.nz_tomo.bin_stats`` module."""
+"""Tests for functional tomography statistics."""
 
 from __future__ import annotations
 
 import numpy as np
 import pytest
 
+from binny.tomography.predefined import build_predefined_tomography
 from binny.tomography.stats import (
     bin_centers,
     bin_moments,
@@ -1040,3 +1041,34 @@ def test_parent_stats_rejects_mismatched_shapes() -> None:
 
     with pytest.raises(ValueError):
         parent_stats(z, nz)
+
+
+def test_parent_stats_uses_supplied_parent_not_bin_sum() -> None:
+    """Tests that parent statistics use the supplied parent distribution."""
+    z = np.linspace(0.0, 2.0, 2001)
+
+    bins = {
+        0: np.exp(-0.5 * ((z - 0.4) / 0.1) ** 2),
+        1: np.exp(-0.5 * ((z - 0.8) / 0.1) ** 2),
+    }
+
+    parent = np.exp(-0.5 * ((z - 1.5) / 0.15) ** 2)
+
+    result = build_predefined_tomography(
+        z,
+        bins,
+        nz=parent,
+    )
+
+    np.testing.assert_allclose(result.nz, parent)
+
+    stats = parent_stats(result.z, result.nz, decimal_places=None)
+    bin_stats = shape_stats(result.z, result.bins, decimal_places=None)
+
+    assert stats["moments"]["mean"] == pytest.approx(1.5, abs=2e-3)
+    assert stats["moments"]["std"] == pytest.approx(0.15, abs=2e-3)
+
+    assert bin_stats["per_bin"][0]["moments"]["mean"] == pytest.approx(0.4, abs=2e-3)
+    assert bin_stats["per_bin"][1]["moments"]["mean"] == pytest.approx(0.8, abs=2e-3)
+
+    assert stats["moments"]["mean"] != pytest.approx(bin_stats["per_bin"][0]["moments"]["mean"])

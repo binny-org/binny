@@ -1,11 +1,11 @@
-"""Unit tests for ``binny.nz_tomo.specz`` module."""
+"""Integration and validation tests for the functional spec-z builder."""
 
 from __future__ import annotations
 
 import numpy as np
 import pytest
 
-from binny.nz_tomo.specz import build_specz_bins
+from binny.binning.specz import build_specz_bins
 
 
 def _toy_z_nz(nz_kind: str = "smooth"):

@@ -1,9 +1,10 @@
 """Unit tests for ``binny.axes.mixed_edges`` module."""
 
+from importlib import import_module
+
 import numpy as np
 import pytest
 
-import binny.axes.mixed_edges as memod
 from binny.axes.mixed_edges import (
     _call_with,
     _get,
@@ -12,6 +13,8 @@ from binny.axes.mixed_edges import (
     _validate_segment_edges,
     mixed_edges,
 )
+
+memod = import_module("binny.axes.mixed_edges")
 
 
 def test_get_uses_params_over_fallback():

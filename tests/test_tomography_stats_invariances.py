@@ -1,4 +1,4 @@
-"""Unit tests for ``binny.nz_tomo.bin_stats`` invariances and API behavior."""
+"""Tests for ``binny.tomography.stats`` invariances and API behavior."""
 
 from __future__ import annotations
 
@@ -7,7 +7,7 @@ from typing import Any
 import numpy as np
 import pytest
 
-from binny.nz_tomo.bin_stats import (
+from binny.tomography.stats import (
     bin_centers,
     bin_moments,
     bin_quantiles,
@@ -228,8 +228,7 @@ def test_population_stats_normalizes_frac_when_requested() -> None:
 
 
 def test_population_stats_normalize_false_still_returns_normalized() -> None:
-    """Tests that population_stats returns normalized fractions even if
-    normalize_frac=False."""
+    """Tests that population_stats returns normalized fractions even if normalize_frac=False."""
     z = _toy_grid()
     bins = {0: _gaussian(z, 0.6, 0.1), 1: _gaussian(z, 1.2, 0.2)}
 
@@ -279,8 +278,7 @@ def test_population_stats_raises_on_missing_bin_index_in_metadata() -> None:
 
 
 def test_population_stats_raises_if_survey_area_without_density_total() -> None:
-    """Tests that population_stats raises if survey_area is set without
-    density_total."""
+    """Tests that population_stats raises if survey_area is set without density_total."""
     z = _toy_grid()
     bins = {0: _gaussian(z, 0.6, 0.1)}
     meta: dict[str, Any] = {"frac_per_bin": {0: 1.0}}

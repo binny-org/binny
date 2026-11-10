@@ -1,4 +1,4 @@
-"""Unit tests for nz_tomo.bin_stats.bin_centers invariance with fixed edges."""
+"""Tests for ``binny.tomography.stats.bin_centers`` invariance with fixed edges."""
 
 from __future__ import annotations
 
@@ -26,7 +26,7 @@ from binny.nz.models import (
     student_t_distribution,
     tophat_distribution,
 )
-from binny.nz_tomo.bin_stats import bin_centers
+from binny.tomography.stats import bin_centers
 
 
 def _make_z_grid(kind: str, zmin: float, zmax: float, n: int) -> np.ndarray:

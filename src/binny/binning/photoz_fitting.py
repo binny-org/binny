@@ -1,4 +1,4 @@
-"""Fit Gaussian core and tail photometric-redshift errors from catalogues.
+r"""Fit Gaussian core and tail photometric-redshift errors from catalogues.
 
 This module fits an unbinned two-component Gaussian mixture to photometric
 redshift residuals using the expectation-maximization algorithm.
@@ -254,20 +254,26 @@ def fit_photoz_errors(
     seed: int = 0,
     return_metadata: bool = False,
 ) -> dict[str, float] | tuple[dict[str, float], dict[str, float | int | bool]]:
-    """Fit a Gaussian core and displaced tail to photometric-redshift residuals.
+    r"""Fit a Gaussian core and displaced tail to photometric-redshift residuals.
 
     Fits an unbinned two-component Gaussian mixture to the normalized
-    photometric-redshift residual
+    photometric-redshift residual:
 
-        epsilon = (z_obs - z_true) / (1 + z_true).
+    .. math::
+
+        \epsilon = \frac{z_{\mathrm{obs}} - z_{\mathrm{true}}}
+        {1 + z_{\mathrm{true}}}.
 
     The probability density is
 
-        p(epsilon) = (1 - outlier_frac)
-                     * N(epsilon; 0, scatter_scale**2)
-                   + outlier_frac
-                     * N(epsilon; outlier_mean_shift,
-                         outlier_scatter_scale**2),
+    .. math::
+
+        p(\epsilon) =
+        (1 - f_{\mathrm{out}})
+        \mathcal{N}(\epsilon; 0, \sigma_{\mathrm{core}}^2)
+        + f_{\mathrm{out}}
+        \mathcal{N}(\epsilon; \mu_{\mathrm{out}},
+        \sigma_{\mathrm{out}}^2),
 
     where ``scatter_scale`` is the core scatter,
     ``outlier_scatter_scale`` is the tail scatter,
@@ -296,26 +302,28 @@ def fit_photoz_errors(
             Must be positive and finite. Defaults to 1e-8.
         seed: Random seed controlling the expectation-maximization
             initializations. Defaults to 0.
+        return_metadata: Whether to return fitting diagnostics alongside
+            the fitted parameters. Defaults to False.
 
     Returns:
         Dictionary containing the fitted photometric-redshift parameters:
 
-            - scatter_scale: Standard deviation of the zero-mean core.
-            - outlier_scatter_scale: Standard deviation of the Gaussian tail.
-            - outlier_mean_shift: Mean displacement of the Gaussian tail.
-            - outlier_frac: Fitted tail mixture fraction.
+        - ``scatter_scale``: Standard deviation of the zero-mean core.
+        - ``outlier_scatter_scale``: Standard deviation of the Gaussian tail.
+        - ``outlier_mean_shift``: Mean displacement of the Gaussian tail.
+        - ``outlier_frac``: Fitted tail mixture fraction.
 
         If ``return_metadata=True``, returns a tuple containing the
         fitted parameter dictionary and a metadata dictionary with:
 
-            - loglike: Total log-likelihood of the selected fit.
-            - n: Number of catalogue objects used in the fit.
-            - n_outside: Number of excluded residuals, always zero.
-            - converged: Whether the selected optimization converged.
-            - n_iter: Number of iterations in the selected optimization.
-            - aic: Akaike information criterion.
-            - bic: Bayesian information criterion.
-            - ks_statistic: Kolmogorov-Smirnov statistic.
+        - ``loglike``: Total log-likelihood of the selected fit.
+        - ``n``: Number of catalogue objects used in the fit.
+        - ``n_outside``: Number of excluded residuals, always zero.
+        - ``converged``: Whether the selected optimization converged.
+        - ``n_iter``: Number of iterations in the selected optimization.
+        - ``aic``: Akaike information criterion.
+        - ``bic``: Bayesian information criterion.
+        - ``ks_statistic``: Kolmogorov-Smirnov statistic.
 
     Raises:
         ValueError: If the catalogue arrays have incompatible shapes,

@@ -1,17 +1,17 @@
-"""Unit tests for ``binny.nz_tomo.photoz_fitting``."""
+"""Unit tests for ``binny.binning.photoz_fitting``."""
 
 from __future__ import annotations
 
 import numpy as np
 import pytest
 
+from binny.binning.photoz import photoz_assignment_probability
 from binny.binning.photoz_fitting import (
     _log_component_probability,
     _log_probability,
     fit_photoz_errors,
     to_binny_photoz_params,
 )
-from binny.nz_tomo.photoz import photoz_assignment_probability
 
 
 @pytest.fixture(scope="module")
@@ -52,7 +52,7 @@ def fitted_catalogue_with_metadata(
 
 
 def test_log_component_probability_matches_mixture():
-    """Test consistency between component and mixture log probabilities."""
+    """Tests that component and mixture log probabilities agree."""
     from scipy.special import logsumexp
 
     x = np.array([-0.1, 0.0, 0.1])
@@ -68,19 +68,19 @@ def test_log_component_probability_matches_mixture():
 
 
 def test_photoz_fit_recovers_core_scatter(fitted_catalogue):
-    """Test recovery of the injected core scatter."""
+    """Tests that fitting recovers the injected core scatter."""
     assert fitted_catalogue["scatter_scale"] == pytest.approx(0.03, abs=0.005)
 
 
 def test_photoz_fit_recovers_tail_parameters(fitted_catalogue):
-    """Test recovery of the injected tail parameters."""
+    """Tests that fitting recovers the injected tail parameters."""
     assert fitted_catalogue["outlier_scatter_scale"] == pytest.approx(0.08, abs=0.015)
     assert fitted_catalogue["outlier_mean_shift"] == pytest.approx(0.12, abs=0.015)
     assert fitted_catalogue["outlier_frac"] == pytest.approx(0.20, abs=0.02)
 
 
 def test_photoz_fit_returns_expected_keys(fitted_catalogue):
-    """Test that the default result contains only fitted parameters."""
+    """Tests that fitting returns the expected parameter keys."""
     assert set(fitted_catalogue) == {
         "scatter_scale",
         "outlier_scatter_scale",
@@ -90,7 +90,7 @@ def test_photoz_fit_returns_expected_keys(fitted_catalogue):
 
 
 def test_photoz_fit_returns_metadata(fitted_catalogue_with_metadata):
-    """Test that optional metadata contains all fitting diagnostics."""
+    """Tests that fitting returns the expected metadata."""
     params, metadata = fitted_catalogue_with_metadata
 
     assert set(params) == {
@@ -116,7 +116,7 @@ def test_photoz_fit_metadata_preserves_parameters(
     fitted_catalogue,
     fitted_catalogue_with_metadata,
 ):
-    """Test that requesting metadata does not change fitted parameters."""
+    """Tests that requesting metadata preserves fitted parameters."""
     params, _ = fitted_catalogue_with_metadata
 
     assert params == fitted_catalogue
@@ -126,7 +126,7 @@ def test_photoz_fit_returns_finite_parameters(
     fitted_catalogue,
     fitted_catalogue_with_metadata,
 ):
-    """Test that fitted parameters and diagnostics are finite."""
+    """Tests that fitted parameters and diagnostics are finite."""
     _, metadata = fitted_catalogue_with_metadata
 
     assert all(np.isfinite(value) for value in fitted_catalogue.values())
@@ -146,7 +146,7 @@ def test_photoz_fit_counts_catalogue_objects(
     synthetic_catalogue,
     fitted_catalogue_with_metadata,
 ):
-    """Test that the full catalogue is used in the fit."""
+    """Tests that fitting uses the complete catalogue."""
     z_true, _ = synthetic_catalogue
     _, metadata = fitted_catalogue_with_metadata
 
@@ -155,7 +155,7 @@ def test_photoz_fit_counts_catalogue_objects(
 
 
 def test_photoz_fit_uses_all_residuals():
-    """Test that large residuals are retained in the unbinned fit."""
+    """Tests that fitting retains large residuals."""
     rng = np.random.default_rng(123)
     n = 1000
 
@@ -179,7 +179,7 @@ def test_photoz_fit_uses_all_residuals():
 
 
 def test_photoz_fit_converges(fitted_catalogue_with_metadata):
-    """Test that expectation-maximization converges for synthetic data."""
+    """Tests that expectation-maximization converges for synthetic data."""
     _, metadata = fitted_catalogue_with_metadata
 
     assert metadata["converged"]
@@ -187,7 +187,7 @@ def test_photoz_fit_converges(fitted_catalogue_with_metadata):
 
 
 def test_photoz_fit_information_criteria(fitted_catalogue_with_metadata):
-    """Test the Akaike and Bayesian information criteria."""
+    """Tests that information criteria match their definitions."""
     _, metadata = fitted_catalogue_with_metadata
     k = 4
 
@@ -196,14 +196,14 @@ def test_photoz_fit_information_criteria(fitted_catalogue_with_metadata):
 
 
 def test_photoz_fit_goodness_of_fit(fitted_catalogue_with_metadata):
-    """Test that the fitted model describes the synthetic residuals."""
+    """Tests that the fitted model describes synthetic residuals."""
     _, metadata = fitted_catalogue_with_metadata
 
     assert metadata["ks_statistic"] < 0.02
 
 
 def test_photoz_fit_is_reproducible(synthetic_catalogue):
-    """Test that identical random seeds produce identical results."""
+    """Tests that identical random seeds reproduce fitted parameters."""
     z_true, z_obs = synthetic_catalogue
 
     fit1 = fit_photoz_errors(
@@ -223,7 +223,7 @@ def test_photoz_fit_is_reproducible(synthetic_catalogue):
 
 
 def test_photoz_fit_metadata_is_reproducible(synthetic_catalogue):
-    """Test reproducibility when fitting diagnostics are requested."""
+    """Tests that identical random seeds reproduce fitting metadata."""
     z_true, z_obs = synthetic_catalogue
 
     result1 = fit_photoz_errors(
@@ -245,7 +245,7 @@ def test_photoz_fit_metadata_is_reproducible(synthetic_catalogue):
 
 
 def test_photoz_fit_respects_core_min_weight(synthetic_catalogue):
-    """Test the lower bound imposed on the core mixture weight."""
+    """Tests that fitting respects the minimum core weight."""
     z_true, z_obs = synthetic_catalogue
 
     fit = fit_photoz_errors(
@@ -260,7 +260,7 @@ def test_photoz_fit_respects_core_min_weight(synthetic_catalogue):
 
 
 def test_photoz_fit_respects_max_iter(synthetic_catalogue):
-    """Test that the optimizer respects the iteration limit."""
+    """Tests that fitting respects the maximum iteration count."""
     z_true, z_obs = synthetic_catalogue
 
     _, metadata = fit_photoz_errors(
@@ -288,7 +288,7 @@ def test_photoz_fit_respects_max_iter(synthetic_catalogue):
     ],
 )
 def test_photoz_fit_rejects_invalid_catalogues(z_true, z_obs):
-    """Test that invalid catalogue arrays raise ValueError."""
+    """Tests that invalid catalogue arrays raise ValueError."""
     with pytest.raises(ValueError):
         fit_photoz_errors(z_true, z_obs)
 
@@ -305,7 +305,7 @@ def test_photoz_fit_rejects_invalid_catalogues(z_true, z_obs):
     ],
 )
 def test_photoz_fit_rejects_invalid_settings(kwargs, message):
-    """Test validation of unbinned expectation-maximization settings."""
+    """Tests that invalid fitting settings raise ValueError."""
     rng = np.random.default_rng(42)
     z_true = np.linspace(0.1, 1.0, 100)
     z_obs = z_true + rng.normal(0.0, 0.03, 100) * (1.0 + z_true)
@@ -315,7 +315,7 @@ def test_photoz_fit_rejects_invalid_settings(kwargs, message):
 
 
 def test_photoz_fit_rejects_degenerate_residuals():
-    """Test that constant residuals cannot define a mixture fit."""
+    """Tests that degenerate residuals are rejected."""
     z_true = np.ones(100)
     z_obs = z_true + 0.02 * (1.0 + z_true)
 
@@ -324,7 +324,7 @@ def test_photoz_fit_rejects_degenerate_residuals():
 
 
 def test_photoz_fit_rejects_obsolete_histogram_settings():
-    """Test that histogram controls are no longer part of the public interface."""
+    """Tests that obsolete histogram settings are rejected."""
     rng = np.random.default_rng(42)
     z_true = np.ones(100)
     z_obs = z_true + rng.normal(0.0, 0.03, 100) * (1.0 + z_true)
@@ -337,7 +337,7 @@ def test_photoz_fit_rejects_obsolete_histogram_settings():
 
 
 def test_photoz_mapping_returns_expected_parameters():
-    """Test conversion to Binny's photometric-redshift parameters."""
+    """Tests that fitted parameters map to the Binny photo-z model."""
     fit = {
         "scatter_scale": 0.03,
         "outlier_scatter_scale": 0.08,
@@ -359,7 +359,7 @@ def test_photoz_mapping_returns_expected_parameters():
 
 
 def test_photoz_mapping_rejects_invalid_tail_mean():
-    """Test rejection of incompatible tail displacements."""
+    """Tests that invalid tail displacements are rejected."""
     fit = {
         "scatter_scale": 0.03,
         "outlier_scatter_scale": 0.08,
@@ -372,7 +372,7 @@ def test_photoz_mapping_rejects_invalid_tail_mean():
 
 
 def test_photoz_mapping_works_with_forward_model():
-    """Test that fitted parameters work with the photometric-redshift model."""
+    """Tests that mapped parameters work with the forward model."""
     fit = {
         "scatter_scale": 0.03,
         "outlier_scatter_scale": 0.08,
@@ -396,7 +396,7 @@ def test_photoz_mapping_works_with_forward_model():
 
 
 def test_photoz_fit_recovers_tomographic_bins(fitted_catalogue):
-    """Test that fitted photometric-redshift errors reproduce tomography."""
+    """Tests that fitted parameters reproduce tomographic distributions."""
     fitted_params = to_binny_photoz_params(fitted_catalogue)
 
     true_params = to_binny_photoz_params(

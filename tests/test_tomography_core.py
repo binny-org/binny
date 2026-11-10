@@ -12,12 +12,11 @@ from binny.binning.specz import (
     build_specz_response_matrix,
     specz_gaussian_response_matrix,
 )
-from binny.nz_tomo.photoz import build_photoz_bins
 from binny.tomography.core import Tomography, build_tomography
 
 
 def test_build_deterministic_tomography():
-    """Test that deterministic tomography constructs normalized bins."""
+    """Tests that deterministic tomography constructs normalized bins."""
     z = np.linspace(0.0, 2.0, 1001)
     nz = z**2 * np.exp(-z)
     edges = np.linspace(0.0, 2.0, 5)
@@ -53,7 +52,7 @@ def test_build_deterministic_tomography():
 
 
 def test_build_photoz_tomography():
-    """Test that photo-z tomography constructs normalized bins."""
+    """Tests that photo-z tomography constructs normalized bins."""
     z = np.linspace(0.0, 3.0, 1001)
     nz = z**2 * np.exp(-z)
     edges = np.linspace(0.2, 2.0, 6)
@@ -84,7 +83,7 @@ def test_build_photoz_tomography():
 
 
 def test_population_fractions_independent_of_bin_normalization():
-    """Test that bin normalization does not change population fractions."""
+    """Tests that bin normalization does not change population fractions."""
     z = np.linspace(0.0, 2.0, 1001)
     nz = np.exp(-z)
     edges = np.linspace(0.0, 2.0, 5)
@@ -114,8 +113,8 @@ def test_population_fractions_independent_of_bin_normalization():
         )
 
 
-def test_photoz_population_fractions_match_legacy():
-    """Test that photo-z population fractions match the legacy builder."""
+def test_photoz_population_fractions_match_independent_integrals():
+    """Tests that photo-z population fractions match independent integrals."""
     z = np.linspace(0.0, 3.0, 1001)
     nz = 5.0 * z**2 * np.exp(-z)
     edges = np.linspace(0.2, 2.0, 6)
@@ -127,16 +126,6 @@ def test_photoz_population_fractions_match_legacy():
         "outlier_scatter_scale": 0.2,
     }
 
-    legacy_bins, legacy_meta = build_photoz_bins(
-        z,
-        nz,
-        bin_edges=edges,
-        normalize_input=False,
-        normalize_bins=True,
-        include_metadata=True,
-        **params,
-    )
-
     functional = build_tomography(
         z,
         nz,
@@ -145,16 +134,50 @@ def test_photoz_population_fractions_match_legacy():
         params=params,
     )
 
+    from scipy.special import ndtr
+
+    mu_core = z - params["mean_offset"]
+    sigma_core = params["scatter_scale"] * (1.0 + z)
+    sigma_tail = params["outlier_scatter_scale"] * (1.0 + z)
+    outlier_frac = params["outlier_frac"]
+
+    parent_integral = np.trapezoid(nz, x=z)
+
     for i in functional.bin_indices:
-        np.testing.assert_allclose(functional[i], legacy_bins[i])
+        lo, hi = edges[i], edges[i + 1]
+
+        core_probability = ndtr((hi - mu_core) / sigma_core) - ndtr((lo - mu_core) / sigma_core)
+        tail_probability = ndtr((hi - z) / sigma_tail) - ndtr((lo - z) / sigma_tail)
+
+        probability = (1.0 - outlier_frac) * core_probability + outlier_frac * tail_probability
+
+        raw_bin = nz * probability
+        expected_integral = np.trapezoid(raw_bin, x=z)
+        expected_fraction = expected_integral / parent_integral
+        expected_normalized_bin = raw_bin / expected_integral
+
+        np.testing.assert_allclose(
+            functional[i],
+            expected_normalized_bin,
+            rtol=1e-12,
+            atol=1e-12,
+        )
+        np.testing.assert_allclose(
+            functional.metadata["bin_integrals"][i],
+            expected_integral,
+            rtol=1e-12,
+            atol=1e-12,
+        )
         np.testing.assert_allclose(
             functional.metadata["frac_per_bin"][i],
-            legacy_meta["bins"]["frac_per_bin"][i],
+            expected_fraction,
+            rtol=1e-12,
+            atol=1e-12,
         )
 
 
 def test_specz_generic_construction_with_response():
-    """Test that spec-z tomography applies response matrices correctly."""
+    """Tests that spec-z tomography applies response matrices correctly."""
     z = np.linspace(0.0, 2.0, 1001)
     nz = 5.0 * z**2 * np.exp(-z)
     edges = np.linspace(0.0, 2.0, 5)
@@ -220,7 +243,7 @@ def test_specz_generic_construction_with_response():
 
 
 def test_specz_population_fractions_with_completeness_and_response():
-    """Test that spec-z response mixing preserves selected population."""
+    """Tests that spec-z response mixing preserves selected population."""
     z = np.linspace(0.0, 2.0, 1001)
     nz = 5.0 * np.exp(-z)
     edges = np.linspace(0.0, 2.0, 5)
@@ -286,7 +309,7 @@ def test_specz_population_fractions_with_completeness_and_response():
 
 
 def test_build_tomography_default_deterministic():
-    """Test that deterministic assignment is the default method."""
+    """Tests that deterministic assignment is the default method."""
     z = np.linspace(0.0, 2.0, 501)
     nz = np.ones_like(z)
     edges = np.array([0.0, 1.0, 2.0])
@@ -312,7 +335,7 @@ def test_build_tomography_default_deterministic():
 
 
 def test_build_tomography_specz_method():
-    """Test that built-in spec-z construction matches explicit response mixing."""
+    """Tests that built-in spec-z construction matches explicit response mixing."""
     z = np.linspace(0.0, 2.0, 1001)
     nz = z**2 * np.exp(-z)
     edges = np.linspace(0.0, 2.0, 5)
@@ -377,7 +400,7 @@ def test_build_tomography_specz_method():
 
 
 def test_build_tomography_photoz_method():
-    """Test that built-in photo-z construction matches direct assignment."""
+    """Tests that built-in photo-z construction matches direct assignment."""
     z = np.linspace(0.0, 3.0, 1001)
     nz = z**2 * np.exp(-z)
     edges = np.linspace(0.2, 2.0, 6)
@@ -411,7 +434,7 @@ def test_build_tomography_photoz_method():
 
 
 def test_build_tomography_specz_population_conservation():
-    """Test that spec-z response mixing preserves total selected population."""
+    """Tests that spec-z response mixing preserves total selected population."""
     z = np.linspace(0.0, 2.0, 1001)
     nz = np.exp(-z)
     edges = np.linspace(0.0, 2.0, 5)
@@ -447,7 +470,7 @@ def test_build_tomography_specz_population_conservation():
 
 
 def test_build_tomography_custom_assignment():
-    """Test that custom assignment functions remain supported."""
+    """Tests that custom assignment functions remain supported."""
     z = np.linspace(0.0, 2.0, 501)
     nz = np.exp(-z)
     edges = np.array([0.0, 1.0, 2.0])
@@ -475,7 +498,7 @@ def test_build_tomography_custom_assignment():
 
 
 def test_build_tomography_rejects_unknown_method():
-    """Test that unknown assignment methods raise a ValueError."""
+    """Tests that unknown assignment methods raise a ValueError."""
     z = np.linspace(0.0, 2.0, 101)
     nz = np.ones_like(z)
     edges = np.array([0.0, 1.0, 2.0])
@@ -491,7 +514,7 @@ def test_build_tomography_rejects_unknown_method():
 
 @pytest.mark.parametrize("method", ["photoz", "specz"])
 def test_build_tomography_rejects_unknown_params(method):
-    """Test that built-in models reject unknown parameter names."""
+    """Tests that built-in models reject unknown parameter names."""
     z = np.linspace(0.0, 2.0, 101)
     nz = np.ones_like(z)
     edges = np.array([0.0, 1.0, 2.0])
@@ -507,7 +530,7 @@ def test_build_tomography_rejects_unknown_params(method):
 
 
 def test_build_tomography_rejects_conflicting_assignment():
-    """Test that custom assignment and built-in method cannot be combined."""
+    """Tests that custom assignment and built-in method cannot be combined."""
     z = np.linspace(0.0, 2.0, 101)
     nz = np.ones_like(z)
     edges = np.array([0.0, 1.0, 2.0])
@@ -523,7 +546,7 @@ def test_build_tomography_rejects_conflicting_assignment():
 
 
 def test_build_tomography_rejects_custom_assignment_params():
-    """Test that custom assignments reject model parameters."""
+    """Tests that custom assignments reject model parameters."""
     z = np.linspace(0.0, 2.0, 101)
     nz = np.ones_like(z)
     edges = np.array([0.0, 1.0, 2.0])
@@ -539,7 +562,7 @@ def test_build_tomography_rejects_custom_assignment_params():
 
 
 def test_build_tomography_rejects_deterministic_params():
-    """Test that deterministic assignment rejects unused parameters."""
+    """Tests that deterministic assignment rejects unused parameters."""
     z = np.linspace(0.0, 2.0, 101)
     nz = np.ones_like(z)
     edges = np.array([0.0, 1.0, 2.0])

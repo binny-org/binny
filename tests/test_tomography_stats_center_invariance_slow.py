@@ -1,6 +1,6 @@
-"""Unit tests for nz_tomo.bin_stats.bin_centers invariance when edges are fixed.
+"""Tests for ``binny.tomography.stats.bin_centers`` invariance with fixed edges.
 
-This runs in slow mode due to the large number of test cases.
+This module runs in slow mode due to its large parameter sweeps.
 """
 
 from __future__ import annotations
@@ -30,7 +30,7 @@ from binny.nz.models import (
     student_t_distribution,
     tophat_distribution,
 )
-from binny.nz_tomo.bin_stats import bin_centers
+from binny.tomography.stats import bin_centers
 
 pytestmark = pytest.mark.slow
 

@@ -1,12 +1,12 @@
-"""Unit tests for tomographic population-fraction metadata."""
+"""Tests for tomographic population-fraction metadata."""
 
 from __future__ import annotations
 
 import numpy as np
 import pytest
 
-from binny.nz_tomo.photoz import build_photoz_bins
-from binny.nz_tomo.specz import build_specz_bins
+from binny.binning.photoz import build_photoz_bins
+from binny.binning.specz import build_specz_bins
 
 
 @pytest.mark.parametrize(

@@ -1,11 +1,11 @@
-"""Unit tests for ``binny.nz_tomo.photoz`` module."""
+"""Tests for ``binny.binning.photoz`` builder."""
 
 from __future__ import annotations
 
 import numpy as np
 import pytest
 
-from binny.nz_tomo.photoz import build_photoz_bins, true_redshift_distribution
+from binny.binning.photoz import build_photoz_bins, photoz_assignment_probability
 
 
 @pytest.fixture
@@ -16,14 +16,13 @@ def z_nz():
     return z, nz
 
 
-def test_true_redshift_distribution_full_range_returns_parent(z_nz):
+def test_photoz_assignment_probability_full_range_returns_parent(z_nz):
     """Tests that huge bin bounds yield P(bin|z)≈1 and returns the parent."""
     z, nz = z_nz
-    nb = true_redshift_distribution(
+    nb = nz * photoz_assignment_probability(
         z,
-        nz,
-        bin_min=-1e6,
-        bin_max=+1e6,
+        bin_min=-1000000.0,
+        bin_max=+1000000.0,
         scatter_scale=0.05,
         mean_offset=0.0,
         mean_scale=1.0,
@@ -34,13 +33,12 @@ def test_true_redshift_distribution_full_range_returns_parent(z_nz):
     assert rel < 1e-10
 
 
-def test_true_redshift_distribution_outlier_disabled_matches_core(z_nz):
+def test_photoz_assignment_probability_outlier_disabled_matches_core(z_nz):
     """Tests that outliers require outlier_scatter_scale when outlier_frac > 0."""
     z, nz = z_nz
 
-    core_only = true_redshift_distribution(
+    core_only = nz * photoz_assignment_probability(
         z,
-        nz,
         bin_min=0.5,
         bin_max=1.0,
         scatter_scale=0.05,
@@ -51,30 +49,31 @@ def test_true_redshift_distribution_outlier_disabled_matches_core(z_nz):
     )
 
     with pytest.raises(ValueError, match=r"outlier_scatter_scale must be set"):
-        true_redshift_distribution(
-            z,
-            nz,
-            bin_min=0.5,
-            bin_max=1.0,
-            scatter_scale=0.05,
-            mean_offset=0.01,
-            mean_scale=1.0,
-            outlier_frac=0.5,
-            outlier_scatter_scale=None,
-            outlier_mean_offset=0.2,
-            outlier_mean_scale=0.9,
+        (
+            nz
+            * photoz_assignment_probability(
+                z,
+                bin_min=0.5,
+                bin_max=1.0,
+                scatter_scale=0.05,
+                mean_offset=0.01,
+                mean_scale=1.0,
+                outlier_frac=0.5,
+                outlier_scatter_scale=None,
+                outlier_mean_offset=0.2,
+                outlier_mean_scale=0.9,
+            )
         )
 
     assert np.all(np.isfinite(core_only))
 
 
-def test_true_redshift_distribution_outliers_enabled_changes_output(z_nz):
+def test_photoz_assignment_probability_outliers_enabled_changes_output(z_nz):
     """Tests that enabling outliers changes the selected distribution."""
     z, nz = z_nz
 
-    core_only = true_redshift_distribution(
+    core_only = nz * photoz_assignment_probability(
         z,
-        nz,
         bin_min=0.5,
         bin_max=1.0,
         scatter_scale=0.05,
@@ -84,9 +83,8 @@ def test_true_redshift_distribution_outliers_enabled_changes_output(z_nz):
         outlier_scatter_scale=None,
     )
 
-    with_outliers = true_redshift_distribution(
+    with_outliers = nz * photoz_assignment_probability(
         z,
-        nz,
         bin_min=0.5,
         bin_max=1.0,
         scatter_scale=0.05,
@@ -101,47 +99,37 @@ def test_true_redshift_distribution_outliers_enabled_changes_output(z_nz):
     assert not np.allclose(with_outliers, core_only)
 
 
-def test_true_redshift_distribution_validates_parameters(z_nz):
+def test_photoz_assignment_probability_validates_parameters(z_nz):
     """Tests that invalid model parameters raise ValueError."""
     z, nz = z_nz
 
     with pytest.raises(ValueError, match=r"outlier_frac must lie"):
-        true_redshift_distribution(
-            z,
-            nz,
-            0.0,
-            1.0,
-            scatter_scale=0.1,
-            mean_offset=0.0,
-            outlier_frac=1.1,
+        (
+            nz
+            * photoz_assignment_probability(
+                z, 0.0, 1.0, scatter_scale=0.1, mean_offset=0.0, outlier_frac=1.1
+            )
         )
 
     with pytest.raises(ValueError, match=r"mean_scale must be > 0"):
-        true_redshift_distribution(
-            z,
-            nz,
-            0.0,
-            1.0,
-            scatter_scale=0.1,
-            mean_offset=0.0,
-            mean_scale=0.0,
+        (
+            nz
+            * photoz_assignment_probability(
+                z, 0.0, 1.0, scatter_scale=0.1, mean_offset=0.0, mean_scale=0.0
+            )
         )
 
     with pytest.raises(ValueError, match=r"scatter_scale must be >="):
-        true_redshift_distribution(
-            z,
-            nz,
-            0.0,
-            1.0,
-            scatter_scale=-1.0,
-            mean_offset=0.0,
-            mean_scale=1.0,
+        (
+            nz
+            * photoz_assignment_probability(
+                z, 0.0, 1.0, scatter_scale=-1.0, mean_offset=0.0, mean_scale=1.0
+            )
         )
 
     # scatter_scale == 0.0 is allowed (deterministic assignment limit)
-    out0 = true_redshift_distribution(
+    out0 = nz * photoz_assignment_probability(
         z,
-        nz,
         0.0,
         1.0,
         scatter_scale=0.0,
@@ -154,23 +142,24 @@ def test_true_redshift_distribution_validates_parameters(z_nz):
     assert np.all(np.isfinite(out0))
 
     with pytest.raises(ValueError, match=r"outlier_mean_scale must be > 0"):
-        true_redshift_distribution(
-            z,
-            nz,
-            0.0,
-            1.0,
-            scatter_scale=0.1,
-            mean_offset=0.0,
-            mean_scale=1.0,
-            outlier_frac=0.2,
-            outlier_scatter_scale=0.2,
-            outlier_mean_scale=0.0,
+        (
+            nz
+            * photoz_assignment_probability(
+                z,
+                0.0,
+                1.0,
+                scatter_scale=0.1,
+                mean_offset=0.0,
+                mean_scale=1.0,
+                outlier_frac=0.2,
+                outlier_scatter_scale=0.2,
+                outlier_mean_scale=0.0,
+            )
         )
 
     # outlier_scatter_scale == 0.0 is allowed when outliers are enabled
-    out1 = true_redshift_distribution(
+    out1 = nz * photoz_assignment_probability(
         z,
-        nz,
         0.0,
         1.0,
         scatter_scale=0.1,
@@ -185,28 +174,22 @@ def test_true_redshift_distribution_validates_parameters(z_nz):
     assert np.all(np.isfinite(out1))
 
 
-def test_true_redshift_distribution_accepts_lists():
+def test_photoz_assignment_probability_accepts_lists():
     """Tests that list inputs are accepted and return finite outputs."""
     z = [0.0, 0.5, 1.0]
     nz = [1.0, 2.0, 1.0]
-    out = true_redshift_distribution(
-        z,
-        nz,
-        bin_min=0.0,
-        bin_max=1.0,
-        scatter_scale=0.05,
-        mean_offset=0.0,
+    out = nz * photoz_assignment_probability(
+        z, bin_min=0.0, bin_max=1.0, scatter_scale=0.05, mean_offset=0.0
     )
     assert out.shape == (3,)
     assert np.all(np.isfinite(out))
 
 
-def test_true_redshift_distribution_outlier_frac_zero_ignores_scatter(z_nz):
+def test_photoz_assignment_probability_outlier_frac_zero_ignores_scatter(z_nz):
     """Tests that outlier scatter is ignored when outlier_frac is zero."""
     z, nz = z_nz
-    a = true_redshift_distribution(
+    a = nz * photoz_assignment_probability(
         z,
-        nz,
         bin_min=0.5,
         bin_max=1.0,
         scatter_scale=0.05,
@@ -216,15 +199,14 @@ def test_true_redshift_distribution_outlier_frac_zero_ignores_scatter(z_nz):
         outlier_mean_offset=0.2,
         outlier_mean_scale=0.9,
     )
-    b = true_redshift_distribution(
+    b = nz * photoz_assignment_probability(
         z,
-        nz,
         bin_min=0.5,
         bin_max=1.0,
         scatter_scale=0.05,
         mean_offset=0.01,
         outlier_frac=0.0,
-        outlier_scatter_scale=0.2,  # should be ignored
+        outlier_scatter_scale=0.2,
         outlier_mean_offset=0.2,
         outlier_mean_scale=0.9,
     )

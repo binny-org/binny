@@ -1,4 +1,4 @@
-"""Unit tests for ``binny.nz_tomo.bin_similarity`` module."""
+"""Tests for bin similarity metrics."""
 
 import numpy as np
 import pytest
