@@ -1,6 +1,11 @@
 binny.utils package
 ===================
 
+.. automodule:: binny.utils
+   :members:
+   :show-inheritance:
+   :undoc-members:
+
 Submodules
 ----------
 
@@ -8,6 +13,7 @@ Submodules
    :maxdepth: 4
 
    binny.utils.broadcasting
+   binny.utils.colors
    binny.utils.io
    binny.utils.metadata
    binny.utils.normalization
@@ -15,11 +21,3 @@ Submodules
    binny.utils.relations
    binny.utils.types
    binny.utils.validators
-
-Module contents
----------------
-
-.. automodule:: binny.utils
-   :members:
-   :show-inheritance:
-   :undoc-members:

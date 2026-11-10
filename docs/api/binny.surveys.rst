@@ -1,6 +1,11 @@
 binny.surveys package
 =====================
 
+.. automodule:: binny.surveys
+   :members:
+   :show-inheritance:
+   :undoc-members:
+
 Subpackages
 -----------
 
@@ -8,6 +13,7 @@ Subpackages
    :maxdepth: 4
 
    binny.surveys.configs
+   binny.surveys.data
 
 Submodules
 ----------
@@ -17,11 +23,4 @@ Submodules
 
    binny.surveys.config_utils
    binny.surveys.sky
-
-Module contents
----------------
-
-.. automodule:: binny.surveys
-   :members:
-   :show-inheritance:
-   :undoc-members:
+   binny.surveys.survey_presets

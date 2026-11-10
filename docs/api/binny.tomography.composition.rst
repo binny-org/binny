@@ -1,7 +1,7 @@
-binny.nz\_tomo.binning\_core module
+binny.tomography.composition module
 ===================================
 
-.. automodule:: binny.nz_tomo.binning_core
+.. automodule:: binny.tomography.composition
    :members:
    :show-inheritance:
    :undoc-members:

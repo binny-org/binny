@@ -1,7 +1,7 @@
-binny.nz\_tomo.specz module
+binny.binning.photoz module
 ===========================
 
-.. automodule:: binny.nz_tomo.specz
+.. automodule:: binny.binning.photoz
    :members:
    :show-inheritance:
    :undoc-members:

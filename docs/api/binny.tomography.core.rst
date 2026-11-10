@@ -1,7 +1,7 @@
-binny.nz\_tomo.photoz module
+binny.tomography.core module
 ============================
 
-.. automodule:: binny.nz_tomo.photoz
+.. automodule:: binny.tomography.core
    :members:
    :show-inheritance:
    :undoc-members:

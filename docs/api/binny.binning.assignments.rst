@@ -1,7 +1,7 @@
-binny.nz\_tomo.bin\_stats module
+binny.binning.assignments module
 ================================
 
-.. automodule:: binny.nz_tomo.bin_stats
+.. automodule:: binny.binning.assignments
    :members:
    :show-inheritance:
    :undoc-members:

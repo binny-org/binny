@@ -54,7 +54,7 @@ helpers into LFKit.
    import pyccl as ccl
 
    from lfkit import LuminosityFunction
-   from binny import NZTomography
+   from binny.nz import nz_model
 
    z = np.linspace(0.0, 3.0, 500)
 
@@ -77,7 +77,7 @@ helpers into LFKit.
        },
    )
 
-   nz = NZTomography.nz_model(
+   nz = nz_model(
        "luminosity_function",
        z,
        lf=lf,
@@ -141,7 +141,7 @@ LF contribution, survey volume contribution, and final redshift distribution.
        comoving_volume_weight,
        luminosity_distance_mpc,
    )
-   from binny import NZTomography
+   from binny.nz import nz_model
 
    z = np.linspace(0.0, 3.5, 600)
 
@@ -164,7 +164,7 @@ LF contribution, survey volume contribution, and final redshift distribution.
        },
    )
 
-   lf_integral = NZTomography.nz_model(
+   lf_integral = nz_model(
        "luminosity_function",
        z,
        lf=lf,
@@ -179,7 +179,7 @@ LF contribution, survey volume contribution, and final redshift distribution.
    volume = comoving_volume_weight(cosmo, z)
    volume_scaled = volume / np.trapezoid(volume, z)
 
-   nz = NZTomography.nz_model(
+   nz = nz_model(
        "luminosity_function",
        z,
        lf=lf,
@@ -278,7 +278,7 @@ magnitude-limited redshift distribution.
    import pyccl as ccl
 
    from lfkit import LuminosityFunction
-   from binny import NZTomography
+   from binny.nz import nz_model
 
    z = np.linspace(0.0, 3.0, 500)
 
@@ -331,7 +331,7 @@ magnitude-limited redshift distribution.
    fig, ax = plt.subplots(figsize=(7.0, 5.0))
 
    for (label, cosmo), color in zip(cosmologies.items(), colors, strict=True):
-       nz = NZTomography.nz_model(
+       nz = nz_model(
            "luminosity_function",
            z,
            lf=lf,
@@ -375,7 +375,7 @@ parent redshift distribution.
    import pyccl as ccl
 
    from lfkit import LuminosityFunction
-   from binny import NZTomography
+   from binny.nz import nz_model
 
    z = np.linspace(0.0, 3.0, 500)
 
@@ -426,7 +426,7 @@ parent redshift distribution.
    fig, ax = plt.subplots(figsize=(7.0, 5.0))
 
    for (label, lf), color in zip(luminosity_functions.items(), colors, strict=True):
-       nz = NZTomography.nz_model(
+       nz = nz_model(
            "luminosity_function",
            z,
            lf=lf,
@@ -470,7 +470,7 @@ galaxies and usually push the redshift distribution toward larger redshift.
    import pyccl as ccl
 
    from lfkit import LuminosityFunction
-   from binny import NZTomography
+   from binny.nz import nz_model
 
    z = np.linspace(0.0, 3.5, 600)
 
@@ -505,7 +505,7 @@ galaxies and usually push the redshift distribution toward larger redshift.
    fig, ax = plt.subplots(figsize=(7.0, 5.0))
 
    for m_lim, color in zip(magnitude_limits, colors, strict=True):
-       nz = NZTomography.nz_model(
+       nz = nz_model(
            "luminosity_function",
            z,
            lf=lf,
@@ -551,7 +551,7 @@ the Schechter parameters with the GAMA :math:`Q` and :math:`P` evolution model.
    import pyccl as ccl
 
    from lfkit import LuminosityFunction
-   from binny import NZTomography
+   from binny.nz import nz_model
 
    def gama_lfkit_evolving_schechter(
        absolute_mag,
@@ -590,7 +590,7 @@ the Schechter parameters with the GAMA :math:`Q` and :math:`P` evolution model.
        matter_power_spectrum="linear",
    )
 
-   nz_blue = NZTomography.nz_model(
+   nz_blue = nz_model(
        "luminosity_function",
        z,
        lf=gama_lfkit_evolving_schechter,
@@ -606,7 +606,7 @@ the Schechter parameters with the GAMA :math:`Q` and :math:`P` evolution model.
        p=2.9,
    )
 
-   nz_red = NZTomography.nz_model(
+   nz_red = nz_model(
        "luminosity_function",
        z,
        lf=gama_lfkit_evolving_schechter,
@@ -622,7 +622,7 @@ the Schechter parameters with the GAMA :math:`Q` and :math:`P` evolution model.
        p=-1.2,
    )
 
-   nz_all = NZTomography.nz_model(
+   nz_all = nz_model(
        "luminosity_function",
        z,
        lf=gama_lfkit_evolving_schechter,
@@ -682,7 +682,7 @@ limit.
    import pyccl as ccl
 
    from lfkit import LuminosityFunction
-   from binny import NZTomography
+   from binny.nz import nz_model
 
    z = np.linspace(0.0, 3.0, 500)
 
@@ -705,7 +705,7 @@ limit.
        },
    )
 
-   nz_unnormalized = NZTomography.nz_model(
+   nz_unnormalized = nz_model(
        "luminosity_function",
        z,
        lf=lf,
@@ -716,7 +716,7 @@ limit.
        normalize=False,
    )
 
-   nz_normalized = NZTomography.nz_model(
+   nz_normalized = nz_model(
        "luminosity_function",
        z,
        lf=lf,
@@ -774,7 +774,7 @@ This makes it easy to pass into later tomography steps.
    import pyccl as ccl
 
    from lfkit import LuminosityFunction
-   from binny import NZTomography
+   from binny.nz import nz_model
 
    z = np.linspace(0.0, 3.0, 500)
 
@@ -797,7 +797,7 @@ This makes it easy to pass into later tomography steps.
        },
    )
 
-   nz = NZTomography.nz_model(
+   nz = nz_model(
        "luminosity_function",
        z,
        lf=lf,

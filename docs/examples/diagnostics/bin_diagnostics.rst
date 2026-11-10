@@ -8,7 +8,7 @@
 Once tomographic bins have been built, it is often useful to inspect
 their statistical properties before using them in a forecast or analysis.
 
-Binny provides several diagnostics through :class:`binny.NZTomography`
+Binny provides several diagnostics through :mod:`binny.tomography`
 that quantify several complementary aspects of a tomographic binning
 scheme: the **shape of the bin curves**, the **distribution of galaxies
 across bins**, and the **degree of coupling within or between bin
@@ -61,7 +61,18 @@ rather than to changes in the underlying uncertainty assumptions.
    import matplotlib.pyplot as plt
    import numpy as np
 
-   from binny import NZTomography
+   from binny.nz import nz_model
+   from binny.tomography import (
+       build_tomography_from_spec,
+       between_bin_overlap,
+       between_interval_mass_matrix,
+       between_overlap_pairs,
+       between_pearson_matrix,
+       bin_overlap,
+       leakage_matrix,
+       overlap_pairs,
+       pearson_matrix,
+   )
 
    def plot_bins(ax, z, bin_dict, title, cmap="viridis", cmap_range=(0.0, 1.0)):
        keys = sorted(bin_dict.keys())
@@ -97,7 +108,7 @@ rather than to changes in the underlying uncertainty assumptions.
 
    z = np.linspace(0.0, 2.0, 500)
 
-   nz = NZTomography.nz_model(
+   nz = nz_model(
        "smail",
        z,
        z0=0.2,
@@ -135,14 +146,14 @@ rather than to changes in the underlying uncertainty assumptions.
        "normalize_bins": True,
    }
 
-   equipopulated_result = NZTomography().build_bins(
+   equipopulated_result = build_tomography_from_spec(
        z=z,
        nz=nz,
        tomo_spec=equipopulated_spec,
        include_tomo_metadata=True,
    )
 
-   equidistant_result = NZTomography().build_bins(
+   equidistant_result = build_tomography_from_spec(
        z=z,
        nz=nz,
        tomo_spec=equidistant_spec,
@@ -238,7 +249,18 @@ more visible off-diagonal patterns.
    import matplotlib.pyplot as plt
    import numpy as np
 
-   from binny import NZTomography
+   from binny.nz import nz_model
+   from binny.tomography import (
+       build_tomography_from_spec,
+       between_bin_overlap,
+       between_interval_mass_matrix,
+       between_overlap_pairs,
+       between_pearson_matrix,
+       bin_overlap,
+       leakage_matrix,
+       overlap_pairs,
+       pearson_matrix,
+   )
 
    def nested_dict_to_matrix(nested_dict):
        keys = sorted(nested_dict.keys())
@@ -250,7 +272,7 @@ more visible off-diagonal patterns.
 
    z = np.linspace(0.0, 2.0, 500)
 
-   nz = NZTomography.nz_model(
+   nz = nz_model(
        "smail",
        z,
        z0=0.2,
@@ -276,20 +298,19 @@ more visible off-diagonal patterns.
        "normalize_bins": True,
    }
 
-   tomo = NZTomography()
-   result = tomo.build_bins(
+   tomo = build_tomography_from_spec(
        z=z,
        nz=nz,
        tomo_spec=photoz_spec,
        include_tomo_metadata=True,
    )
 
-   bin_edges = result.tomo_meta["bins"]["bin_edges"]
+   bin_edges = tomo.metadata["bins"]["bin_edges"]
 
-   stats = tomo.cross_bin_stats(
-       overlap={"method": "min", "unit": "percent", "normalize": True, "decimal_places": 3},
-       leakage={"bin_edges": bin_edges, "unit": "percent", "decimal_places": 3},
-       pearson={"normalize": True, "decimal_places": 3},
+   stats = dict(
+       overlap=bin_overlap(tomo.z, tomo.bins, **{"method": "min", "unit": "percent", "normalize": True, "decimal_places": 3}),
+       leakage=leakage_matrix(tomo.z, tomo.bins, **{"bin_edges": bin_edges, "unit": "percent", "decimal_places": 3}),
+       pearson=pearson_matrix(tomo.z, tomo.bins, **{"normalize": True, "decimal_places": 3}),
    )
 
    overlap_keys, overlap_matrix = nested_dict_to_matrix(stats["overlap"])
@@ -433,7 +454,18 @@ being defined.
    import matplotlib.pyplot as plt
    import numpy as np
 
-   from binny import NZTomography
+   from binny.nz import nz_model
+   from binny.tomography import (
+       build_tomography_from_spec,
+       between_bin_overlap,
+       between_interval_mass_matrix,
+       between_overlap_pairs,
+       between_pearson_matrix,
+       bin_overlap,
+       leakage_matrix,
+       overlap_pairs,
+       pearson_matrix,
+   )
 
    def nested_dict_to_matrix(nested_dict):
        keys = sorted(nested_dict.keys())
@@ -445,7 +477,7 @@ being defined.
 
    z = np.linspace(0.0, 2.0, 500)
 
-   nz = NZTomography.nz_model(
+   nz = nz_model(
        "smail",
        z,
        z0=0.2,
@@ -471,33 +503,22 @@ being defined.
        "normalize_bins": True,
    }
 
-   tomo = NZTomography()
-   tomo.build_bins(
+   tomo = build_tomography_from_spec(
        z=z,
        nz=nz,
        tomo_spec=photoz_spec,
        include_tomo_metadata=True,
    )
 
-   overlap_min = tomo.cross_bin_stats(
-       overlap={"method": "min", "unit": "percent", "normalize": True, "decimal_places": 3},
-   )["overlap"]
+   overlap_min = bin_overlap(tomo.z, tomo.bins, **{"method": "min", "unit": "percent", "normalize": True, "decimal_places": 3})
 
-   overlap_cosine = tomo.cross_bin_stats(
-       overlap={"method": "cosine", "unit": "percent", "normalize": False, "decimal_places": 3},
-   )["overlap"]
+   overlap_cosine = bin_overlap(tomo.z, tomo.bins, **{"method": "cosine", "unit": "percent", "normalize": False, "decimal_places": 3})
 
-   overlap_js = tomo.cross_bin_stats(
-       overlap={"method": "js", "unit": "fraction", "normalize": True, "decimal_places": 3},
-   )["overlap"]
+   overlap_js = bin_overlap(tomo.z, tomo.bins, **{"method": "js", "unit": "fraction", "normalize": True, "decimal_places": 3})
 
-   overlap_hellinger = tomo.cross_bin_stats(
-       overlap={"method": "hellinger", "unit": "fraction", "normalize": True, "decimal_places": 3},
-   )["overlap"]
+   overlap_hellinger = bin_overlap(tomo.z, tomo.bins, **{"method": "hellinger", "unit": "fraction", "normalize": True, "decimal_places": 3})
 
-   overlap_tv = tomo.cross_bin_stats(
-       overlap={"method": "tv", "unit": "fraction", "normalize": True, "decimal_places": 3},
-   )["overlap"]
+   overlap_tv = bin_overlap(tomo.z, tomo.bins, **{"method": "tv", "unit": "fraction", "normalize": True, "decimal_places": 3})
 
    metric_specs = [
        ("Min overlap [%]", overlap_min, "{:.1f}"),
@@ -587,11 +608,22 @@ four-bin photo-z example.
    import numpy as np
    from matplotlib.colors import to_rgba
 
-   from binny import NZTomography
+   from binny.nz import nz_model
+   from binny.tomography import (
+       build_tomography_from_spec,
+       between_bin_overlap,
+       between_interval_mass_matrix,
+       between_overlap_pairs,
+       between_pearson_matrix,
+       bin_overlap,
+       leakage_matrix,
+       overlap_pairs,
+       pearson_matrix,
+   )
 
    z = np.linspace(0.0, 2.0, 500)
 
-   nz = NZTomography.nz_model(
+   nz = nz_model(
        "smail",
        z,
        z0=0.2,
@@ -617,24 +649,21 @@ four-bin photo-z example.
        "normalize_bins": True,
    }
 
-   tomo = NZTomography()
-   tomo.build_bins(
+   tomo = build_tomography_from_spec(
        z=z,
        nz=nz,
        tomo_spec=photoz_spec,
        include_tomo_metadata=True,
    )
 
-   pair_list = tomo.cross_bin_stats(
-       pairs={
+   pair_list = overlap_pairs(tomo.z, tomo.bins, **{
            "method": "min",
            "unit": "percent",
            "threshold": 0.0,
            "direction": "high",
            "normalize": True,
            "decimal_places": 3,
-       }
-   )["correlations"]
+       })
 
    labels = [f"({i+1} – {j+1})" for i, j, _ in pair_list]
    values = np.array([value for _, _, value in pair_list])
@@ -695,11 +724,22 @@ mixing with neighboring bins.
    import cmasher as cmr
    from matplotlib.colors import to_rgba
 
-   from binny import NZTomography
+   from binny.nz import nz_model
+   from binny.tomography import (
+       build_tomography_from_spec,
+       between_bin_overlap,
+       between_interval_mass_matrix,
+       between_overlap_pairs,
+       between_pearson_matrix,
+       bin_overlap,
+       leakage_matrix,
+       overlap_pairs,
+       pearson_matrix,
+   )
 
    z = np.linspace(0.0, 2.0, 500)
 
-   nz = NZTomography.nz_model(
+   nz = nz_model(
        "smail",
        z,
        z0=0.2,
@@ -725,19 +765,16 @@ mixing with neighboring bins.
        "normalize_bins": True,
    }
 
-   tomo = NZTomography()
-   result = tomo.build_bins(
+   tomo = build_tomography_from_spec(
        z=z,
        nz=nz,
        tomo_spec=photoz_spec,
        include_tomo_metadata=True,
    )
 
-   bin_edges = result.tomo_meta["bins"]["bin_edges"]
+   bin_edges = tomo.metadata["bins"]["bin_edges"]
 
-   leakage = tomo.cross_bin_stats(
-       leakage={"bin_edges": bin_edges, "unit": "percent", "decimal_places": 3},
-   )["leakage"]
+   leakage = leakage_matrix(tomo.z, tomo.bins, **{"bin_edges": bin_edges, "unit": "percent", "decimal_places": 3})
 
    keys = sorted(leakage.keys())
 
@@ -818,11 +855,22 @@ longer-range tails and outlier-driven transfers across more distant bins.
    import numpy as np
    from matplotlib.colors import to_rgba
 
-   from binny import NZTomography
+   from binny.nz import nz_model
+   from binny.tomography import (
+       build_tomography_from_spec,
+       between_bin_overlap,
+       between_interval_mass_matrix,
+       between_overlap_pairs,
+       between_pearson_matrix,
+       bin_overlap,
+       leakage_matrix,
+       overlap_pairs,
+       pearson_matrix,
+   )
 
    z = np.linspace(0.0, 2.0, 500)
 
-   nz = NZTomography.nz_model(
+   nz = nz_model(
        "smail",
        z,
        z0=0.2,
@@ -848,19 +896,16 @@ longer-range tails and outlier-driven transfers across more distant bins.
        "normalize_bins": True,
    }
 
-   tomo = NZTomography()
-   result = tomo.build_bins(
+   tomo = build_tomography_from_spec(
        z=z,
        nz=nz,
        tomo_spec=photoz_spec,
        include_tomo_metadata=True,
    )
 
-   bin_edges = result.tomo_meta["bins"]["bin_edges"]
+   bin_edges = tomo.metadata["bins"]["bin_edges"]
 
-   leakage = tomo.cross_bin_stats(
-       leakage={"bin_edges": bin_edges, "unit": "percent", "decimal_places": 3},
-   )["leakage"]
+   leakage = leakage_matrix(tomo.z, tomo.bins, **{"bin_edges": bin_edges, "unit": "percent", "decimal_places": 3})
 
    keys = sorted(leakage.keys())
    x = np.arange(len(keys))
@@ -937,11 +982,22 @@ tomographic bin curves.
    import cmasher as cmr
    from matplotlib.colors import to_rgba
 
-   from binny import NZTomography
+   from binny.nz import nz_model
+   from binny.tomography import (
+       build_tomography_from_spec,
+       between_bin_overlap,
+       between_interval_mass_matrix,
+       between_overlap_pairs,
+       between_pearson_matrix,
+       bin_overlap,
+       leakage_matrix,
+       overlap_pairs,
+       pearson_matrix,
+   )
 
    z = np.linspace(0.0, 2.0, 500)
 
-   nz = NZTomography.nz_model(
+   nz = nz_model(
        "smail",
        z,
        z0=0.2,
@@ -967,17 +1023,16 @@ tomographic bin curves.
        "normalize_bins": True,
    }
 
-   tomo = NZTomography()
-   tomo.build_bins(
+   tomo = build_tomography_from_spec(
        z=z,
        nz=nz,
        tomo_spec=photoz_spec,
        include_tomo_metadata=True,
    )
 
-   stats = tomo.cross_bin_stats(
-       overlap={"method": "min", "unit": "fraction", "normalize": True, "decimal_places": 6},
-       pearson={"normalize": True, "decimal_places": 6},
+   stats = dict(
+       overlap=bin_overlap(tomo.z, tomo.bins, **{"method": "min", "unit": "fraction", "normalize": True, "decimal_places": 6}),
+       pearson=pearson_matrix(tomo.z, tomo.bins, **{"normalize": True, "decimal_places": 6}),
    )
 
    overlap = stats["overlap"]
@@ -1068,7 +1123,7 @@ two different samples rather than only within a single sample. A common
 example is comparing **lens bins** and **source bins** in a
 galaxy-galaxy lensing setup.
 
-Binny provides :meth:`binny.NZTomography.between_sample_stats` for this
+Binny provides :func:`binny.tomography.between_bin_overlap` for this
 purpose. These diagnostics can be used to quantify how strongly bins
 from one sample overlap or correlate with bins from another sample, and
 how much of one sample falls inside the nominal redshift intervals of
@@ -1087,7 +1142,18 @@ between-sample overlap, interval-mass, and Pearson correlation.
    import numpy as np
    from matplotlib.colors import ListedColormap
 
-   from binny import NZTomography
+   from binny.nz import nz_model
+   from binny.tomography import (
+       build_tomography_from_spec,
+       between_bin_overlap,
+       between_interval_mass_matrix,
+       between_overlap_pairs,
+       between_pearson_matrix,
+       bin_overlap,
+       leakage_matrix,
+       overlap_pairs,
+       pearson_matrix,
+   )
 
    def nested_rect_dict_to_matrix(nested_dict):
        row_keys = sorted(nested_dict.keys())
@@ -1100,7 +1166,7 @@ between-sample overlap, interval-mass, and Pearson correlation.
 
    z = np.linspace(0.0, 2.5, 600)
 
-   lens_nz = NZTomography.nz_model(
+   lens_nz = nz_model(
        "smail",
        z,
        z0=0.18,
@@ -1109,7 +1175,7 @@ between-sample overlap, interval-mass, and Pearson correlation.
        normalize=True,
    )
 
-   source_nz = NZTomography.nz_model(
+   source_nz = nz_model(
        "smail",
        z,
        z0=0.32,
@@ -1151,29 +1217,26 @@ between-sample overlap, interval-mass, and Pearson correlation.
        "normalize_bins": True,
    }
 
-   lens = NZTomography()
-   lens_result = lens.build_bins(
+   lens = build_tomography_from_spec(
        z=z,
        nz=lens_nz,
        tomo_spec=lens_spec,
        include_tomo_metadata=True,
    )
 
-   source = NZTomography()
-   source.build_bins(
+   source = build_tomography_from_spec(
        z=z,
        nz=source_nz,
        tomo_spec=source_spec,
        include_tomo_metadata=True,
    )
 
-   target_edges = lens_result.tomo_meta["bins"]["bin_edges"]
+   target_edges = lens.metadata["bins"]["bin_edges"]
 
-   stats = lens.between_sample_stats(
-       source,
-       overlap={"method": "min", "unit": "percent", "normalize": True, "decimal_places": 3},
-       interval_mass={"target_edges": target_edges, "unit": "percent", "decimal_places": 3},
-       pearson={"normalize": True, "decimal_places": 3},
+   stats = dict(
+       overlap=between_bin_overlap(lens.z, lens.bins, source.z, source.bins, **{"method": "min", "unit": "percent", "normalize": True, "decimal_places": 3}),
+       interval_mass=between_interval_mass_matrix(source.z, source.bins, **{"target_edges": target_edges, "unit": "percent", "decimal_places": 3}),
+       pearson=between_pearson_matrix(lens.z, lens.bins, source.z, source.bins, **{"normalize": True, "decimal_places": 3}),
    )
 
    overlap_rows, overlap_cols, overlap_matrix = nested_rect_dict_to_matrix(stats["overlap"])
@@ -1303,11 +1366,22 @@ indicate broader smearing or stronger outlier-driven transfer.
    import numpy as np
    from matplotlib.colors import to_rgba
 
-   from binny import NZTomography
+   from binny.nz import nz_model
+   from binny.tomography import (
+       build_tomography_from_spec,
+       between_bin_overlap,
+       between_interval_mass_matrix,
+       between_overlap_pairs,
+       between_pearson_matrix,
+       bin_overlap,
+       leakage_matrix,
+       overlap_pairs,
+       pearson_matrix,
+   )
 
    z = np.linspace(0.0, 2.5, 600)
 
-   lens_nz = NZTomography.nz_model(
+   lens_nz = nz_model(
        "smail",
        z,
        z0=0.18,
@@ -1316,7 +1390,7 @@ indicate broader smearing or stronger outlier-driven transfer.
        normalize=True,
    )
 
-   source_nz = NZTomography.nz_model(
+   source_nz = nz_model(
        "smail",
        z,
        z0=0.32,
@@ -1358,32 +1432,27 @@ indicate broader smearing or stronger outlier-driven transfer.
        "normalize_bins": True,
    }
 
-   lens = NZTomography()
-   lens_result = lens.build_bins(
+   lens = build_tomography_from_spec(
        z=z,
        nz=lens_nz,
        tomo_spec=lens_spec,
        include_tomo_metadata=True,
    )
 
-   source = NZTomography()
-   source.build_bins(
+   source = build_tomography_from_spec(
        z=z,
        nz=source_nz,
        tomo_spec=source_spec,
        include_tomo_metadata=True,
    )
 
-   target_edges = lens_result.tomo_meta["bins"]["bin_edges"]
+   target_edges = lens.metadata["bins"]["bin_edges"]
 
-   interval_mass = lens.between_sample_stats(
-       source,
-       interval_mass={
+   interval_mass = between_interval_mass_matrix(source.z, source.bins, **{
            "target_edges": target_edges,
            "unit": "percent",
            "decimal_places": 3,
-       },
-   )["interval_mass"]
+       })
 
    source_keys = sorted(interval_mass.keys())
    lens_keys = sorted(interval_mass[source_keys[0]].keys())
@@ -1465,11 +1534,22 @@ min-overlap score.
    import numpy as np
    from matplotlib.colors import to_rgba
 
-   from binny import NZTomography
+   from binny.nz import nz_model
+   from binny.tomography import (
+       build_tomography_from_spec,
+       between_bin_overlap,
+       between_interval_mass_matrix,
+       between_overlap_pairs,
+       between_pearson_matrix,
+       bin_overlap,
+       leakage_matrix,
+       overlap_pairs,
+       pearson_matrix,
+   )
 
    z = np.linspace(0.0, 2.5, 600)
 
-   lens_nz = NZTomography.nz_model(
+   lens_nz = nz_model(
        "smail",
        z,
        z0=0.18,
@@ -1478,7 +1558,7 @@ min-overlap score.
        normalize=True,
    )
 
-   source_nz = NZTomography.nz_model(
+   source_nz = nz_model(
        "smail",
        z,
        z0=0.32,
@@ -1520,33 +1600,28 @@ min-overlap score.
        "normalize_bins": True,
    }
 
-   lens = NZTomography()
-   lens.build_bins(
+   lens = build_tomography_from_spec(
        z=z,
        nz=lens_nz,
        tomo_spec=lens_spec,
        include_tomo_metadata=True,
    )
 
-   source = NZTomography()
-   source.build_bins(
+   source = build_tomography_from_spec(
        z=z,
        nz=source_nz,
        tomo_spec=source_spec,
        include_tomo_metadata=True,
    )
 
-   pair_list = lens.between_sample_stats(
-       source,
-       pairs={
+   pair_list = between_overlap_pairs(lens.z, lens.bins, source.z, source.bins, **{
            "method": "min",
            "unit": "percent",
            "threshold": 0.0,
            "direction": "high",
            "normalize": True,
            "decimal_places": 3,
-       },
-   )["correlations"]
+       })
 
    labels = [f"L{i+1} - S{j+1}" for i, j, _ in pair_list]
    values = np.array([value for _, _, value in pair_list])
@@ -1598,6 +1673,6 @@ Notes
   population balances and coupling patterns, even when they are
   constructed from the same parent distribution and photo-z uncertainty
   model.
-- The diagnostics returned by :class:`binny.NZTomography` are ordinary
+- The diagnostics returned by :mod:`binny.tomography` are ordinary
   Python dictionaries, so the quantities shown here can be inspected,
   saved, or reused directly in downstream analysis workflows.

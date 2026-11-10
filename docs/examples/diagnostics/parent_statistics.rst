@@ -14,7 +14,7 @@ Its statistical properties determine the characteristic redshift range,
 width, asymmetry, and possible multimodality of the sample.
 
 Binny provides parent distribution statistics through
-:class:`binny.NZTomography`, including:
+:func:`binny.tomography.parent_stats`, including:
 
 - **moments**, such as the mean, median, mode, standard deviation,
   skewness, and kurtosis,
@@ -43,22 +43,19 @@ parameterization.
 This model provides a simple representation of the redshift dependence
 of a galaxy sample and is commonly used in cosmological forecasts.
 
-For this example, we construct the parent distribution and pass it
-to Binny using predefined tomography.
-
-The predefined bins are used only to initialize the tomography object.
-The parent statistics are evaluated directly from the supplied
-distribution rather than reconstructed from those bins.
+For this example, we construct a Smail parent distribution and
+evaluate its statistics directly, without constructing tomographic bins.
 
 .. code-block:: python
 
    import numpy as np
 
-   from binny import NZTomography
+   from binny.nz import nz_model
+   from binny.tomography import parent_stats, shape_stats
 
    z = np.linspace(0.0, 2.0, 1000)
 
-   nz = NZTomography.nz_model(
+   nz = nz_model(
        "smail",
        z,
        z0=0.2,
@@ -67,15 +64,8 @@ distribution rather than reconstructed from those bins.
        normalize=True,
    )
 
-   tomography = NZTomography()
 
-   result = tomography.build_predefined_bins(
-       z=z,
-       nz=nz,
-       bins={0: nz},
-   )
-
-   stats = tomography.parent_stats(decimal_places=4)
+   stats = parent_stats(z, nz, decimal_places=4)
 
    print(stats)
 
@@ -83,7 +73,7 @@ distribution rather than reconstructed from those bins.
 Accessing parent statistics
 ---------------------------
 
-The :meth:`binny.NZTomography.parent_stats` method returns a dictionary
+The :func:`binny.tomography.parent_stats` method returns a dictionary
 containing three groups of statistics:
 
 - ``moments``: central tendency, dispersion, and higher-order moments,
@@ -96,7 +86,7 @@ accessed directly from the returned dictionary.
 
 .. code-block:: python
 
-   stats = tomography.parent_stats(decimal_places=4)
+   stats = parent_stats(z, nz, decimal_places=4)
 
    moments = stats["moments"]
 
@@ -110,16 +100,8 @@ accessed directly from the returned dictionary.
    print("Quantiles:", stats["quantiles"])
    print("Peaks:", stats["peaks"])
 
-The same statistics are also available through the returned
-:class:`binny.nz_tomo._tomography_bins.TomographyBins` object.
-
-.. code-block:: python
-
-   stats = result.parent_stats(decimal_places=4)
-
-Both interfaces operate on the same stored parent distribution and
-therefore return identical statistics when called with the same
-arguments.
+The function operates directly on the supplied parent distribution,
+independently of how tomographic bins are constructed.
 
 
 Visualizing the mean, median, and mode
@@ -150,11 +132,12 @@ of the underlying galaxy population.
    import matplotlib.pyplot as plt
    import numpy as np
 
-   from binny import NZTomography
+   from binny.nz import nz_model
+   from binny.tomography import parent_stats, shape_stats
 
    z = np.linspace(0.0, 2.0, 1000)
 
-   nz = NZTomography.nz_model(
+   nz = nz_model(
        "smail",
        z,
        z0=0.2,
@@ -163,13 +146,8 @@ of the underlying galaxy population.
        normalize=True,
    )
 
-   result = NZTomography().build_predefined_bins(
-       z=z,
-       nz=nz,
-       bins={0: nz},
-   )
 
-   moments = result.parent_stats(decimal_places=None)["moments"]
+   moments = parent_stats(z, nz, decimal_places=None)["moments"]
 
    colors = cmr.take_cmap_colors(
        "viridis",
@@ -229,7 +207,8 @@ Binny allows arbitrary quantiles to be requested using the
 
 .. code-block:: python
 
-   stats = tomography.parent_stats(
+   stats = parent_stats(
+       z, nz,
        quantiles=(0.05, 0.16, 0.50, 0.84, 0.95),
        decimal_places=4,
    )
@@ -249,11 +228,12 @@ parent distribution.
    import numpy as np
    from matplotlib.colors import to_rgba
 
-   from binny import NZTomography
+   from binny.nz import nz_model
+   from binny.tomography import parent_stats, shape_stats
 
    z = np.linspace(0.0, 2.0, 1000)
 
-   nz = NZTomography.nz_model(
+   nz = nz_model(
        "smail",
        z,
        z0=0.2,
@@ -262,13 +242,8 @@ parent distribution.
        normalize=True,
    )
 
-   result = NZTomography().build_predefined_bins(
-       z=z,
-       nz=nz,
-       bins={0: nz},
-   )
 
-   stats = result.parent_stats(decimal_places=None)
+   stats = parent_stats(z, nz, decimal_places=None)
 
    q16 = stats["quantiles"][0.16]
    q50 = stats["quantiles"][0.50]
@@ -378,7 +353,8 @@ The following example uses a synthetic bimodal parent distribution.
    import numpy as np
    from matplotlib.colors import to_rgba
 
-   from binny import NZTomography
+   from binny.nz import nz_model
+   from binny.tomography import parent_stats, shape_stats
 
    z = np.linspace(0.0, 2.0, 1500)
 
@@ -389,13 +365,9 @@ The following example uses a synthetic bimodal parent distribution.
 
    nz /= np.trapezoid(nz, x=z)
 
-   result = NZTomography().build_predefined_bins(
-       z=z,
-       nz=nz,
-       bins={0: nz},
-   )
 
-   peaks = result.parent_stats(
+   peaks = parent_stats(
+       z, nz,
        min_rel_height=0.1,
        decimal_places=None,
    )["peaks"]
@@ -471,7 +443,7 @@ In particular, externally supplied bins may be normalized separately,
 so summing their curves does not necessarily reconstruct the original
 parent distribution.
 
-For this reason, ``parent_stats()`` always evaluates the stored
+For this reason, ``parent_stats(z, nz)`` evaluates the supplied
 parent :math:`n(z)` directly.
 
 The following example illustrates this distinction.
@@ -480,7 +452,8 @@ The following example illustrates this distinction.
 
    import numpy as np
 
-   from binny import NZTomography
+   from binny.nz import nz_model
+   from binny.tomography import parent_stats, shape_stats
 
    z = np.linspace(0.0, 2.0, 1000)
 
@@ -491,17 +464,9 @@ The following example illustrates this distinction.
        1: np.exp(-0.5 * ((z - 1.0) / 0.1) ** 2),
    }
 
-   tomography = NZTomography()
 
-   result = tomography.build_predefined_bins(
-       z=z,
-       nz=parent,
-       bins=bins,
-       normalize_bins=True,
-   )
-
-   parent_statistics = result.parent_stats(decimal_places=4)
-   bin_statistics = result.shape_stats(decimal_places=4)
+   parent_statistics = parent_stats(z, parent, decimal_places=4)
+   bin_statistics = shape_stats(z, bins, decimal_places=4)
 
    print("Parent mean:", parent_statistics["moments"]["mean"])
 
@@ -532,5 +497,5 @@ Notes
 - Quantile-based intervals remain useful for non-Gaussian distributions.
 - Peak diagnostics depend on the relative-height threshold and
   redshift-grid resolution.
-- Both :meth:`binny.NZTomography.parent_stats` and
-  ``TomographyBins.parent_stats()`` expose the same statistics.
+- Use :func:`binny.tomography.parent_stats` for parent distributions
+  and :func:`binny.tomography.shape_stats` for individual bin curves.

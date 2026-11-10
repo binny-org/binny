@@ -24,7 +24,7 @@ The calibration tools implemented in Binny perform three related tasks:
    :math:`n_{\rm gal}` changes with limiting magnitude.
 
 This is exposed through
-:meth:`binny.NZTomography.calibrate_smail_from_mock`.
+:func:`binny.nz.calibrate_depth_smail_from_mock`.
 
 The idea is straightforward. Given a mock catalog with true galaxy
 redshifts and magnitudes, one considers a sequence of magnitude cuts

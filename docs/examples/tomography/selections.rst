@@ -19,7 +19,7 @@ For example, one may
 In Binny, such rules are expressed through a **selection specification**
 applied to tomographic bins using
 
-:meth:`binny.NZTomography.bin_combo_filter`.
+:func:`binny.tomography.make_bin_combo_filter`.
 
 Selections combine two ideas:
 
@@ -51,7 +51,7 @@ filters to apply.
        ],
    }
 
-   selected_pairs = tomo.bin_combo_filter(spec)
+   selected_pairs = make_bin_combo_filter(tomo).select(spec).values()
 
 This returns a list of tuples such as
 
@@ -70,14 +70,21 @@ The examples below assume that a tomography object has already been built.
 .. code-block:: python
 
    import numpy as np
-   from binny import NZTomography
+   from binny.nz import nz_model
+   from binny.surveys import build_survey_tomography
+   from binny.tomography import (
+       between_bin_overlap,
+       build_tomography_from_spec,
+       leakage_matrix,
+       make_bin_combo_filter,
+       population_stats,
+   )
 
    z = np.linspace(0.0, 3.0, 500)
-   nz = NZTomography.nz_model("smail", z, alpha=2.0, beta=1.5, z0=0.5)
+   nz = nz_model("smail", z, alpha=2.0, beta=1.5, z0=0.5)
 
-   tomo = NZTomography()
 
-   tomo.build_bins(
+   tomo = build_tomography_from_spec(
        z=z,
        nz=nz,
        tomo_spec={
@@ -117,7 +124,7 @@ For example, to construct all ordered bin pairs:
        "topology": {"name": "pairs_all"},
    }
 
-   pairs = tomo.bin_combo_filter(spec)
+   pairs = make_bin_combo_filter(tomo).select(spec).values()
 
 For four bins this would produce
 
@@ -139,7 +146,7 @@ A common alternative is to keep only the **upper triangle**
        "topology": {"name": "pairs_upper_triangle"},
    }
 
-   pairs = tomo.bin_combo_filter(spec)
+   pairs = make_bin_combo_filter(tomo).select(spec).values()
 
 For four bins this would produce
 
@@ -173,7 +180,7 @@ higher redshift than the first.
        ],
    }
 
-   ordered_pairs = tomo.bin_combo_filter(spec)
+   ordered_pairs = make_bin_combo_filter(tomo).select(spec).values()
 
 This keeps only pairs satisfying
 
@@ -208,7 +215,7 @@ peak or mean redshift.
        ],
    }
 
-   separated_pairs = tomo.bin_combo_filter(spec)
+   separated_pairs = make_bin_combo_filter(tomo).select(spec).values()
 
 This keeps only pairs whose peak locations differ by at least ``0.2``.
 
@@ -233,7 +240,7 @@ prefer to compare bins of similar width.
        ],
    }
 
-   compatible_pairs = tomo.bin_combo_filter(spec)
+   compatible_pairs = make_bin_combo_filter(tomo).select(spec).values()
 
 This keeps only pairs whose credible-width ratio does not exceed ``1.5``.
 
@@ -256,13 +263,19 @@ For LSST Year 1, using a 10 per cent maximum overlap:
 
 .. code-block:: python
 
-   from binny import NZTomography
+   from binny.nz import nz_model
+   from binny.surveys import build_survey_tomography
+   from binny.tomography import (
+       between_bin_overlap,
+       build_tomography_from_spec,
+       leakage_matrix,
+       make_bin_combo_filter,
+       population_stats,
+   )
 
-   lens = NZTomography()
-   lens.build_survey_bins("lsst", role="lens", year="1")
+   lens = build_survey_tomography(survey="lsst", role="lens", year="1")
 
-   source = NZTomography()
-   source.build_survey_bins("lsst", role="source", year="1")
+   source = build_survey_tomography(survey="lsst", role="source", year="1")
 
    spec = {
        "topology": {"name": "pairs_cartesian"},
@@ -282,7 +295,7 @@ For LSST Year 1, using a 10 per cent maximum overlap:
        ],
    }
 
-   pairs_y1 = lens.bin_combo_filter(spec, other=source)
+   pairs_y1 = make_bin_combo_filter(lens, other=source).select(spec).values()
 
    len(pairs_y1), pairs_y1
 
@@ -290,13 +303,19 @@ For LSST Year 10, using 25 per cent maximum overlap:
 
 .. code-block:: python
 
-   from binny import NZTomography
+   from binny.nz import nz_model
+   from binny.surveys import build_survey_tomography
+   from binny.tomography import (
+       between_bin_overlap,
+       build_tomography_from_spec,
+       leakage_matrix,
+       make_bin_combo_filter,
+       population_stats,
+   )
 
-   lens = NZTomography()
-   lens.build_survey_bins("lsst", role="lens", year="10")
+   lens = build_survey_tomography(survey="lsst", role="lens", year="10")
 
-   source = NZTomography()
-   source.build_survey_bins("lsst", role="source", year="10")
+   source = build_survey_tomography(survey="lsst", role="source", year="10")
 
    spec = {
        "topology": {"name": "pairs_cartesian"},
@@ -316,7 +335,7 @@ For LSST Year 10, using 25 per cent maximum overlap:
        ],
    }
 
-   pairs_y10 = lens.bin_combo_filter(spec, other=source)
+   pairs_y10 = make_bin_combo_filter(lens, other=source).select(spec).values()
 
    len(pairs_y10), pairs_y10
 
@@ -403,7 +422,7 @@ can therefore be excluded.
        ],
    }
 
-   pairs = tomo.bin_combo_filter(spec)
+   pairs = make_bin_combo_filter(tomo).select(spec).values()
 
 This keeps only pairs whose overlap fraction does not exceed ``0.25``.
 
@@ -427,7 +446,7 @@ how strongly one curve is contained within another.
        ],
    }
 
-   pairs = tomo.bin_combo_filter(spec)
+   pairs = make_bin_combo_filter(tomo).select(spec).values()
 
 
 Filtering using custom metrics
@@ -457,7 +476,7 @@ Users may define their own diagnostic metric.
        ],
    }
 
-   pairs = tomo.bin_combo_filter(spec)
+   pairs = make_bin_combo_filter(tomo).select(spec).values()
 
 This allows arbitrary similarity or distance measures to be used when
 selecting bin combinations.
@@ -546,7 +565,15 @@ leaving only the combinations that satisfy the diagnostic criterion.
    import numpy as np
    from matplotlib.patches import Polygon, Rectangle
 
-   from binny import NZTomography
+   from binny.nz import nz_model
+   from binny.surveys import build_survey_tomography
+   from binny.tomography import (
+       between_bin_overlap,
+       build_tomography_from_spec,
+       leakage_matrix,
+       make_bin_combo_filter,
+       population_stats,
+   )
 
 
    def plot_two_samples(
@@ -781,7 +808,7 @@ leaving only the combinations that satisfy the diagnostic criterion.
 
    z = np.linspace(0.0, 2.5, 600)
 
-   lens_nz = NZTomography.nz_model(
+   lens_nz = nz_model(
        "smail",
        z,
        z0=0.18,
@@ -790,7 +817,7 @@ leaving only the combinations that satisfy the diagnostic criterion.
        normalize=True,
    )
 
-   source_nz = NZTomography.nz_model(
+   source_nz = nz_model(
        "smail",
        z,
        z0=0.32,
@@ -832,26 +859,30 @@ leaving only the combinations that satisfy the diagnostic criterion.
        "normalize_bins": True,
    }
 
-   lens = NZTomography()
-   lens_result = lens.build_bins(
+   lens_result = build_tomography_from_spec(
        z=z,
        nz=lens_nz,
        tomo_spec=lens_spec,
        include_tomo_metadata=True,
    )
 
-   source = NZTomography()
-   source_result = source.build_bins(
+   source_result = build_tomography_from_spec(
        z=z,
        nz=source_nz,
        tomo_spec=source_spec,
        include_tomo_metadata=True,
    )
 
-   between_overlap = lens.between_sample_stats(
-       source,
-       overlap={"method": "min", "unit": "fraction", "normalize": True, "decimal_places": 6},
-   )["overlap"]
+   between_overlap = between_bin_overlap(
+       lens_result.z,
+       lens_result.bins,
+       source_result.z,
+       source_result.bins,
+       method="min",
+       unit="fraction",
+       normalize=True,
+       decimal_places=6,
+   )
 
    lens_keys, source_keys, overlap_matrix = nested_rect_dict_to_matrix(between_overlap)
 
@@ -871,7 +902,7 @@ leaving only the combinations that satisfy the diagnostic criterion.
        ],
    }
 
-   selected_pairs_raw = lens.bin_combo_filter(spec, other=source)
+   selected_pairs_raw = make_bin_combo_filter(lens_result, other=source_result).select(spec).values()
    selected_pairs = set(tuple(pair) for pair in selected_pairs_raw)
 
    candidate_pairs = [
@@ -1033,7 +1064,15 @@ excluded, while auto-correlations are always kept.
    import numpy as np
    from matplotlib.patches import Polygon, Rectangle
 
-   from binny import NZTomography
+   from binny.nz import nz_model
+   from binny.surveys import build_survey_tomography
+   from binny.tomography import (
+       between_bin_overlap,
+       build_tomography_from_spec,
+       leakage_matrix,
+       make_bin_combo_filter,
+       population_stats,
+   )
 
 
    def plot_one_sample(
@@ -1213,7 +1252,7 @@ excluded, while auto-correlations are always kept.
 
    z = np.linspace(0.0, 2.0, 500)
 
-   nz = NZTomography.nz_model(
+   nz = nz_model(
        "smail",
        z,
        z0=0.2,
@@ -1239,19 +1278,26 @@ excluded, while auto-correlations are always kept.
        "normalize_bins": True,
    }
 
-   lens = NZTomography()
-   lens_result = lens.build_bins(
+   lens_result = build_tomography_from_spec(
        z=z,
        nz=nz,
        tomo_spec=lens_spec,
        include_tomo_metadata=True,
    )
 
-   bin_edges = lens_result.tomo_meta["bins"]["bin_edges"]
+   bin_config = lens_spec["bins"]
+   bin_edges = np.linspace(
+       *bin_config["range"],
+       bin_config["n_bins"] + 1,
+   )
 
-   leakage = lens.cross_bin_stats(
-       leakage={"bin_edges": bin_edges, "unit": "fraction", "decimal_places": 6},
-   )["leakage"]
+   leakage = leakage_matrix(
+       lens_result.z,
+       lens_result.bins,
+       bin_edges,
+       unit="fraction",
+       decimal_places=6,
+   )
 
    lens_keys, leakage_matrix = nested_dict_to_matrix(leakage)
    n_lens = len(lens_keys)
@@ -1458,7 +1504,15 @@ populated bins.
    import numpy as np
    from matplotlib.patches import Polygon, Rectangle
 
-   from binny import NZTomography
+   from binny.nz import nz_model
+   from binny.surveys import build_survey_tomography
+   from binny.tomography import (
+       between_bin_overlap,
+       build_tomography_from_spec,
+       leakage_matrix,
+       make_bin_combo_filter,
+       population_stats,
+   )
 
 
    def plot_one_sample(
@@ -1629,7 +1683,7 @@ populated bins.
 
    z = np.linspace(0.0, 2.4, 700)
 
-   nz = NZTomography.nz_model(
+   nz = nz_model(
        "smail",
        z,
        z0=0.25,
@@ -1655,8 +1709,7 @@ populated bins.
        "normalize_bins": True,
    }
 
-   lens = NZTomography()
-   lens_result = lens.build_bins(
+   lens_result = build_tomography_from_spec(
        z=z,
        nz=nz,
        tomo_spec=lens_spec,
@@ -1666,7 +1719,7 @@ populated bins.
    lens_keys = sorted(lens_result.bins.keys())
    n_lens = len(lens_keys)
 
-   population = lens.population_stats(decimal_places=6)
+   population = population_stats(lens_result.bins, lens_result.metadata, decimal_places=6)
    bin_fractions = population["fractions"]
 
    min_fraction_matrix = np.array(

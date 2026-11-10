@@ -9,7 +9,7 @@ Once tomographic bins have been built, a good practice is to inspect
 their statistical properties before using them in a forecast or analysis.
 
 Binny provides several summary statistics through
-:class:`binny.NZTomography` that describe both the **shape of the bin
+:func:`binny.tomography.build_tomography_from_spec` that describe both the **shape of the bin
 curves** and the **distribution of galaxies across bins**. These
 summaries help diagnose whether a tomographic binning scheme produces
 well-separated, well-populated bins before the bins are used in a
@@ -52,7 +52,12 @@ isolates the effect of the binning strategy itself.
    import matplotlib.pyplot as plt
    import numpy as np
 
-   from binny import NZTomography
+   from binny.nz import nz_model
+   from binny.tomography import (
+       build_tomography_from_spec,
+       population_stats,
+       shape_stats,
+   )
 
    def plot_bins(ax, z, bin_dict, title, cmap="viridis", cmap_range=(0.0, 1.0)):
        keys = sorted(bin_dict.keys())
@@ -88,7 +93,7 @@ isolates the effect of the binning strategy itself.
 
    z = np.linspace(0.0, 2.0, 500)
 
-   nz = NZTomography.nz_model(
+   nz = nz_model(
        "smail",
        z,
        z0=0.2,
@@ -126,14 +131,14 @@ isolates the effect of the binning strategy itself.
        "normalize_bins": True,
    }
 
-   equipopulated_result = NZTomography().build_bins(
+   equipopulated_result = build_tomography_from_spec(
        z=z,
        nz=nz,
        tomo_spec=equipopulated_spec,
        include_tomo_metadata=True,
    )
 
-   equidistant_result = NZTomography().build_bins(
+   equidistant_result = build_tomography_from_spec(
        z=z,
        nz=nz,
        tomo_spec=equidistant_spec,
@@ -173,11 +178,16 @@ bins.
 
    import numpy as np
 
-   from binny import NZTomography
+   from binny.nz import nz_model
+   from binny.tomography import (
+       build_tomography_from_spec,
+       population_stats,
+       shape_stats,
+   )
 
    z = np.linspace(0.0, 2.0, 500)
 
-   nz = NZTomography.nz_model(
+   nz = nz_model(
        "smail",
        z,
        z0=0.2,
@@ -208,36 +218,34 @@ bins.
        "normalize_bins": True,
    }
 
-   tomo_equipopulated = NZTomography()
-   tomo_equipopulated.build_bins(
+   tomo_equipopulated = build_tomography_from_spec(
        z=z,
        nz=nz,
        tomo_spec=equipopulated_spec,
        include_tomo_metadata=True,
    )
 
-   tomo_equidistant = NZTomography()
-   tomo_equidistant.build_bins(
+   tomo_equidistant = build_tomography_from_spec(
        z=z,
        nz=nz,
        tomo_spec=equidistant_spec,
        include_tomo_metadata=True,
    )
 
-   shape_equipopulated = tomo_equipopulated.shape_stats(
+   shape_equipopulated = shape_stats(tomo_equipopulated.z, tomo_equipopulated.bins,
        center_method="median",
        decimal_places=3,
    )
-   population_equipopulated = tomo_equipopulated.population_stats(
+   population_equipopulated = population_stats(tomo_equipopulated.bins, tomo_equipopulated.metadata,
        density_total=30.0,
        decimal_places=3,
    )
 
-   shape_equidistant = tomo_equidistant.shape_stats(
+   shape_equidistant = shape_stats(tomo_equidistant.z, tomo_equidistant.bins,
        center_method="median",
        decimal_places=3,
    )
-   population_equidistant = tomo_equidistant.population_stats(
+   population_equidistant = population_stats(tomo_equidistant.bins, tomo_equidistant.metadata,
        density_total=30.0,
        decimal_places=3,
    )
@@ -293,11 +301,16 @@ downstream modeling assumptions.
    import numpy as np
    from matplotlib.colors import to_rgba
 
-   from binny import NZTomography
+   from binny.nz import nz_model
+   from binny.tomography import (
+       build_tomography_from_spec,
+       population_stats,
+       shape_stats,
+   )
 
    z = np.linspace(0.0, 2.0, 500)
 
-   nz = NZTomography.nz_model(
+   nz = nz_model(
        "smail",
        z,
        z0=0.2,
@@ -328,16 +341,14 @@ downstream modeling assumptions.
        "normalize_bins": True,
    }
 
-   tomo_equipopulated = NZTomography()
-   tomo_equipopulated.build_bins(
+   tomo_equipopulated = build_tomography_from_spec(
        z=z,
        nz=nz,
        tomo_spec=equipopulated_spec,
        include_tomo_metadata=True,
    )
 
-   tomo_equidistant = NZTomography()
-   tomo_equidistant.build_bins(
+   tomo_equidistant = build_tomography_from_spec(
        z=z,
        nz=nz,
        tomo_spec=equidistant_spec,
@@ -347,7 +358,7 @@ downstream modeling assumptions.
    center_methods = ["mean", "median", "mode"]
 
    centers_equipopulated = {
-       method: tomo_equipopulated.shape_stats(
+       method: shape_stats(tomo_equipopulated.z, tomo_equipopulated.bins,
            center_method=method,
            decimal_places=3,
        )["centers"]
@@ -355,7 +366,7 @@ downstream modeling assumptions.
    }
 
    centers_equidistant = {
-       method: tomo_equidistant.shape_stats(
+       method: shape_stats(tomo_equidistant.z, tomo_equidistant.bins,
            center_method=method,
            decimal_places=3,
        )["centers"]
@@ -460,11 +471,16 @@ The bar chart below compares the resulting per-bin fractions.
    import numpy as np
    from matplotlib.colors import to_rgba
 
-   from binny import NZTomography
+   from binny.nz import nz_model
+   from binny.tomography import (
+       build_tomography_from_spec,
+       population_stats,
+       shape_stats,
+   )
 
    z = np.linspace(0.0, 2.0, 500)
 
-   nz = NZTomography.nz_model(
+   nz = nz_model(
        "smail",
        z,
        z0=0.2,
@@ -495,24 +511,22 @@ The bar chart below compares the resulting per-bin fractions.
        "normalize_bins": True,
    }
 
-   tomo_equipopulated = NZTomography()
-   tomo_equipopulated.build_bins(
+   tomo_equipopulated = build_tomography_from_spec(
        z=z,
        nz=nz,
        tomo_spec=equipopulated_spec,
        include_tomo_metadata=True,
    )
 
-   tomo_equidistant = NZTomography()
-   tomo_equidistant.build_bins(
+   tomo_equidistant = build_tomography_from_spec(
        z=z,
        nz=nz,
        tomo_spec=equidistant_spec,
        include_tomo_metadata=True,
    )
 
-   fractions_equipopulated = tomo_equipopulated.population_stats(decimal_places=4)["fractions"]
-   fractions_equidistant = tomo_equidistant.population_stats(decimal_places=4)["fractions"]
+   fractions_equipopulated = population_stats(tomo_equipopulated.bins, tomo_equipopulated.metadata, decimal_places=4)["fractions"]
+   fractions_equidistant = population_stats(tomo_equidistant.bins, tomo_equidistant.metadata, decimal_places=4)["fractions"]
 
    keys = sorted(fractions_equipopulated.keys())
    x = np.arange(len(keys))
@@ -608,11 +622,16 @@ bin.
    from matplotlib.colors import to_rgba
    from matplotlib.lines import Line2D
 
-   from binny import NZTomography
+   from binny.nz import nz_model
+   from binny.tomography import (
+       build_tomography_from_spec,
+       population_stats,
+       shape_stats,
+   )
 
    z = np.linspace(0.0, 2.0, 500)
 
-   nz = NZTomography.nz_model(
+   nz = nz_model(
        "smail",
        z,
        z0=0.2,
@@ -643,14 +662,12 @@ bin.
        "normalize_bins": True,
    }
 
-   tomo_eqpop = NZTomography()
-   tomo_eqpop.build_bins(z=z, nz=nz, tomo_spec=equipopulated_spec)
+   tomo_eqpop = build_tomography_from_spec(z=z, nz=nz, tomo_spec=equipopulated_spec)
 
-   tomo_eqdist = NZTomography()
-   tomo_eqdist.build_bins(z=z, nz=nz, tomo_spec=equidistant_spec)
+   tomo_eqdist = build_tomography_from_spec(z=z, nz=nz, tomo_spec=equidistant_spec)
 
-   shape_eqpop = tomo_eqpop.shape_stats(center_method="median")
-   shape_eqdist = tomo_eqdist.shape_stats(center_method="median")
+   shape_eqpop = shape_stats(tomo_eqpop.z, tomo_eqpop.bins, center_method="median")
+   shape_eqdist = shape_stats(tomo_eqdist.z, tomo_eqdist.bins, center_method="median")
 
    keys = sorted(shape_eqpop["per_bin"].keys())
    x = np.arange(len(keys))
@@ -666,11 +683,11 @@ bin.
    center_methods = ["mean", "median", "mode"]
 
    centers_eqpop = {
-       m: tomo_eqpop.shape_stats(center_method=m)["centers"] for m in center_methods
+       m: shape_stats(tomo_eqpop.z, tomo_eqpop.bins, center_method=m)["centers"] for m in center_methods
    }
 
    centers_eqdist = {
-       m: tomo_eqdist.shape_stats(center_method=m)["centers"] for m in center_methods
+       m: shape_stats(tomo_eqdist.z, tomo_eqdist.bins, center_method=m)["centers"] for m in center_methods
    }
 
    colors = cmr.take_cmap_colors(
@@ -852,11 +869,16 @@ shape distortions introduced by the photo-z model.
    import numpy as np
    from matplotlib.colors import to_rgba
 
-   from binny import NZTomography
+   from binny.nz import nz_model
+   from binny.tomography import (
+       build_tomography_from_spec,
+       population_stats,
+       shape_stats,
+   )
 
    z = np.linspace(0.0, 2.0, 500)
 
-   nz = NZTomography.nz_model(
+   nz = nz_model(
        "smail",
        z,
        z0=0.2,
@@ -887,27 +909,25 @@ shape distortions introduced by the photo-z model.
        "normalize_bins": True,
    }
 
-   tomo_equipopulated = NZTomography()
-   tomo_equipopulated.build_bins(
+   tomo_equipopulated = build_tomography_from_spec(
        z=z,
        nz=nz,
        tomo_spec=equipopulated_spec,
        include_tomo_metadata=True,
    )
 
-   tomo_equidistant = NZTomography()
-   tomo_equidistant.build_bins(
+   tomo_equidistant = build_tomography_from_spec(
        z=z,
        nz=nz,
        tomo_spec=equidistant_spec,
        include_tomo_metadata=True,
    )
 
-   shape_equipopulated = tomo_equipopulated.shape_stats(
+   shape_equipopulated = shape_stats(tomo_equipopulated.z, tomo_equipopulated.bins,
        center_method="median",
        decimal_places=4,
    )
-   shape_equidistant = tomo_equidistant.shape_stats(
+   shape_equidistant = shape_stats(tomo_equidistant.z, tomo_equidistant.bins,
        center_method="median",
        decimal_places=4,
    )
@@ -999,11 +1019,16 @@ affected by outliers or cross-bin leakage.
    import numpy as np
    from matplotlib.colors import to_rgba
 
-   from binny import NZTomography
+   from binny.nz import nz_model
+   from binny.tomography import (
+       build_tomography_from_spec,
+       population_stats,
+       shape_stats,
+   )
 
    z = np.linspace(0.0, 2.0, 1500)
 
-   nz = NZTomography.nz_model(
+   nz = nz_model(
        "smail",
        z,
        z0=0.2,
@@ -1034,27 +1059,25 @@ affected by outliers or cross-bin leakage.
        "normalize_bins": True,
    }
 
-   tomo_equipopulated = NZTomography()
-   tomo_equipopulated.build_bins(
+   tomo_equipopulated = build_tomography_from_spec(
        z=z,
        nz=nz,
        tomo_spec=equipopulated_spec,
        include_tomo_metadata=True,
    )
 
-   tomo_equidistant = NZTomography()
-   tomo_equidistant.build_bins(
+   tomo_equidistant = build_tomography_from_spec(
        z=z,
        nz=nz,
        tomo_spec=equidistant_spec,
        include_tomo_metadata=True,
    )
 
-   shape_equipopulated = tomo_equipopulated.shape_stats(
+   shape_equipopulated = shape_stats(tomo_equipopulated.z, tomo_equipopulated.bins,
        center_method="median",
        decimal_places=4,
    )
-   shape_equidistant = tomo_equidistant.shape_stats(
+   shape_equidistant = shape_stats(tomo_equidistant.z, tomo_equidistant.bins,
        center_method="median",
        decimal_places=4,
    )
@@ -1141,11 +1164,16 @@ overlap between neighboring bins becomes more important.
    import numpy as np
    from matplotlib.colors import to_rgba
 
-   from binny import NZTomography
+   from binny.nz import nz_model
+   from binny.tomography import (
+       build_tomography_from_spec,
+       population_stats,
+       shape_stats,
+   )
 
    z = np.linspace(0.0, 2.0, 500)
 
-   nz = NZTomography.nz_model(
+   nz = nz_model(
        "smail",
        z,
        z0=0.2,
@@ -1179,29 +1207,27 @@ overlap between neighboring bins becomes more important.
    equipopulated_edges = [0.20, 0.33, 0.49, 0.72, 1.20]
    equidistant_edges = [0.20, 0.45, 0.70, 0.95, 1.20]
 
-   tomo_equipopulated = NZTomography()
-   tomo_equipopulated.build_bins(
+   tomo_equipopulated = build_tomography_from_spec(
        z=z,
        nz=nz,
        tomo_spec=equipopulated_spec,
        include_tomo_metadata=True,
    )
 
-   tomo_equidistant = NZTomography()
-   tomo_equidistant.build_bins(
+   tomo_equidistant = build_tomography_from_spec(
        z=z,
        nz=nz,
        tomo_spec=equidistant_spec,
        include_tomo_metadata=True,
    )
 
-   shape_equipopulated = tomo_equipopulated.shape_stats(
+   shape_equipopulated = shape_stats(tomo_equipopulated.z, tomo_equipopulated.bins,
        center_method="median",
        decimal_places=4,
        bin_edges=equipopulated_edges,
    )
 
-   shape_equidistant = tomo_equidistant.shape_stats(
+   shape_equidistant = shape_stats(tomo_equidistant.z, tomo_equidistant.bins,
        center_method="median",
        decimal_places=4,
        bin_edges=equidistant_edges,
@@ -1349,6 +1375,6 @@ Notes
 - Equipopulated and equidistant binning can produce noticeably different
   bin centers, widths, and population fractions, even when they are
   built from the same parent distribution and uncertainty model.
-- The summaries returned by :class:`binny.NZTomography` are ordinary
+- The summaries returned by :func:`binny.tomography.build_tomography_from_spec` are ordinary
   Python dictionaries, so the quantities shown here can also be saved
   or reused directly in later analysis steps.

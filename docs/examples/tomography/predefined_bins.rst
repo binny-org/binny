@@ -59,18 +59,16 @@ The bins can then be loaded through the standard tomography API:
 
 .. code-block:: python
 
-   from binny import NZTomography
+   from binny.surveys import build_survey_tomography
 
-   tomography = NZTomography()
-
-   result = tomography.build_bins(
+   result = build_survey_tomography(
        config_file="predefined_example.yaml",
        role="source",
        sample="external_source_sample",
        include_tomo_metadata=True,
    )
 
-   print(result.bin_keys)
+   print(sorted(result.bins))
    print(result.z.shape)
 
    for bin_index, curve in result.bins.items():
@@ -79,13 +77,16 @@ The bins can then be loaded through the standard tomography API:
 Inspecting the result
 ---------------------
 
-The returned object provides the same convenience methods as photo-z and
-spec-z tomography results:
+The returned tomography object stores its redshift grid, bin curves,
+and metadata as attributes. Diagnostic statistics are computed using
+standalone functions:
 
 .. code-block:: python
 
-   shape_statistics = result.shape_stats()
-   population_statistics = result.population_stats()
+   from binny.tomography import shape_stats, population_stats
+
+   shape_statistics = shape_stats(result.z, result.bins)
+   population_statistics = population_stats(result.bins, result.metadata)
 
    print(shape_statistics["per_bin"])
    print(population_statistics["fractions"])
@@ -130,7 +131,7 @@ configuration file:
 
    import numpy as np
 
-   from binny import NZTomography
+   from binny.tomography import build_predefined_tomography
 
    z = np.linspace(0.0, 2.0, 201)
 
@@ -140,16 +141,14 @@ configuration file:
        2: 0.6 * np.exp(-0.5 * ((z - 1.60) / 0.20) ** 2),
    }
 
-   tomography = NZTomography()
-
-   result = tomography.build_predefined_bins(
+   result = build_predefined_tomography(
        z=z,
        bins=bins,
-       normalize_bins=False,
-       include_tomo_metadata=True,
+       normalize=False,
+       include_metadata=True,
    )
 
-   print(result.bin_keys)
+   print(sorted(result.bins))
 
    for bin_index, curve in result.bins.items():
        print(bin_index, curve.shape)

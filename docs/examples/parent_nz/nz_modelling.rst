@@ -6,7 +6,7 @@
 =========================
 
 This page provides simple, executable examples showing how to use
-:class:`binny.NZTomography` to inspect and evaluate theoretical parent
+:mod:`binny.nz.registry` to inspect and evaluate theoretical parent
 redshift distributions :math:`n(z)` available through the Binny registry.
 
 These examples focus on **parent distributions**, not tomographic bins.
@@ -22,16 +22,16 @@ Listing available n(z) models
 Before evaluating a specific model, it can be helpful to inspect which
 parent redshift distributions are currently registered in Binny. This
 gives a quick overview of the built-in options available through
-:meth:`binny.NZTomography.list_nz_models`.
+:func:`binny.nz.registry.available_models`.
 
 
 .. plot::
    :include-source: True
    :width: 520
 
-   from binny import NZTomography
+   from binny.nz import available_models, nz_model
 
-   models = NZTomography.list_nz_models()
+   models = available_models()
 
    print(f"Found {len(models)} registered n(z) models:")
    for name in models:
@@ -55,7 +55,7 @@ forecasting studies.
    import matplotlib.pyplot as plt
    import numpy as np
 
-   from binny import NZTomography
+   from binny.nz import available_models, nz_model
 
    z = np.linspace(0.0, 2.0, 500)
 
@@ -63,7 +63,7 @@ forecasting studies.
    alpha = 2.0
    beta = 1.5
 
-   nz_smail = NZTomography.nz_model(
+   nz_smail = nz_model(
        "smail",
        z,
        z0=z0,
@@ -152,11 +152,11 @@ peak and support move to larger redshift.
    import matplotlib.pyplot as plt
    import numpy as np
 
-   from binny import NZTomography
+   from binny.nz import available_models, nz_model
 
    z = np.linspace(0.0, 2.0, 500)
 
-   nz_standard = NZTomography.nz_model(
+   nz_standard = nz_model(
        "smail",
        z,
        z0=0.28,
@@ -165,7 +165,7 @@ peak and support move to larger redshift.
        normalize=True,
    )
 
-   nz_shifted = NZTomography.nz_model(
+   nz_shifted = nz_model(
        "shifted_smail",
        z,
        z0=0.28,
@@ -235,11 +235,11 @@ for testing and visual comparisons.
    import matplotlib.pyplot as plt
    import numpy as np
 
-   from binny import NZTomography
+   from binny.nz import available_models, nz_model
 
    z = np.linspace(0.0, 2.0, 500)
 
-   nz_tophat = NZTomography.nz_model(
+   nz_tophat = nz_model(
        "tophat",
        z,
        zmin=0.6,
@@ -293,7 +293,7 @@ showing simpler toy or mixture-based examples.
    import matplotlib.pyplot as plt
    import numpy as np
 
-   from binny import NZTomography
+   from binny.nz import available_models, nz_model
 
    def plot_parent_models(ax, z, model_curves, title):
        colors = cmr.take_cmap_colors(
@@ -336,7 +336,7 @@ showing simpler toy or mixture-based examples.
    panel1_models = [
        (
            "Smail",
-           NZTomography.nz_model(
+           nz_model(
                "smail",
                z,
                z0=0.28,
@@ -347,7 +347,7 @@ showing simpler toy or mixture-based examples.
        ),
        (
            "Gamma",
-           NZTomography.nz_model(
+           nz_model(
                "gamma",
                z,
                k=1.5,
@@ -357,7 +357,7 @@ showing simpler toy or mixture-based examples.
        ),
        (
            "Schechter",
-           NZTomography.nz_model(
+           nz_model(
                "schechter",
                z,
                z0=0.2,
@@ -371,7 +371,7 @@ showing simpler toy or mixture-based examples.
    panel2_models = [
        (
            "Gaussian",
-           NZTomography.nz_model(
+           nz_model(
                "gaussian",
                z,
                mu=0.9,
@@ -381,7 +381,7 @@ showing simpler toy or mixture-based examples.
        ),
        (
            "Gaussian mixture",
-           NZTomography.nz_model(
+           nz_model(
                "gaussian_mixture",
                z,
                mus=np.array([0.55, 1.25]),
@@ -392,7 +392,7 @@ showing simpler toy or mixture-based examples.
        ),
        (
            "Top-hat",
-           NZTomography.nz_model(
+           nz_model(
                "tophat",
                z,
                zmin=0.6,
@@ -425,11 +425,11 @@ later part of a tomography workflow.
 
    import numpy as np
 
-   from binny import NZTomography
+   from binny.nz import available_models, nz_model
 
    z = np.linspace(0.0, 2.0, 500)
 
-   nz = NZTomography.nz_model(
+   nz = nz_model(
        "gaussian",
        z,
        mu=1.0,
@@ -450,7 +450,7 @@ later part of a tomography workflow.
 Notes
 -----
 
-- These examples use :meth:`binny.NZTomography.nz_model`, which evaluates
+- These examples use :func:`binny.nz.registry.nz_model`, which evaluates
   a registered parent redshift distribution on a supplied redshift grid.
 - Setting ``normalize=True`` makes the model integrate to unity over the
   provided grid.
