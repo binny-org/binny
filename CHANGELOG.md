@@ -1,4 +1,44 @@
-# Changelog
+    # Changelog
+
+## 1.0.0 - 2026-11-10
+
+### Breaking changes
+
+- Replaced the legacy stateful tomography API with a functional API.
+- Removed the `NZTomography` and `TomographyBins` classes.
+- Removed backward compatibility with the previous tomography interfaces.
+- Updated tomography construction, binning, composition, diagnostics, and survey workflows to use the new API.
+
+### Added
+
+- Introduced the `Tomography` data container and `build_tomography()` function.
+- Added `build_survey_tomography()` for constructing tomography from survey presets.
+- Added `build_predefined_tomography()` and `load_predefined_bins()` for externally supplied tomographic distributions.
+- Added support for custom assignment functions in the generic binning engine.
+- Added reusable bin construction with shared normalization, validation, and metadata handling.
+- Added functional utilities for combining, comparing, and analyzing tomographic distributions.
+- Added photo-z core-and-tail error fitting utilities.
+- Added support for combining parent redshift distributions defined on different grids through interpolation.
+
+### Changed
+
+- Reorganized the package into dedicated modules for axes, binning, tomography, redshift-distribution modelling, surveys, and correlations.
+- Consolidated common binning, normalization, and validation functionality.
+- Simplified tomography construction and reduced reliance on mutable internal state.
+- Updated tests, examples, and documentation to reflect the functional API.
+
+### Migration
+
+The previous `NZTomography` and `TomographyBins` interfaces are no longer supported.
+
+Use the following entry points instead:
+
+- `build_tomography()` for general tomography construction.
+- `build_survey_tomography()` for survey-based tomography.
+- `build_predefined_tomography()` for externally supplied bins.
+- `Tomography` for accessing the resulting distributions and metadata.
+
+This release is not backward-compatible with previous `0.x` releases.
 
 ## 0.6.1
 
