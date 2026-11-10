@@ -5,107 +5,172 @@
 |logo| Workflow
 ===============
 
-Binny constructs tomographic redshift bins from an underlying parent
-galaxy redshift distribution :math:`n(z)`.
+Binny provides a functional framework for constructing, combining,
+and analyzing tomographic redshift distributions used in cosmology.
 
-The goal is to define reproducible binning schemes that can be used in
-forecasting pipelines, cosmological analyses, or survey simulations.
+Tomographic bins can be generated from an underlying parent galaxy
+redshift distribution :math:`n(z)`, supplied externally, or
+constructed by combining existing samples.
+
+The goal is to provide reproducible, flexible binning workflows
+for cosmological forecasting, survey simulations, and data analysis.
 
 Typical workflow
 ----------------
 
-Constructing tomographic bins with Binny usually involves four steps:
+A typical workflow consists of five steps:
 
-1. Define a parent redshift distribution.
-2. Choose a tomographic binning scheme.
-3. Specify redshift uncertainty models.
-4. Build the tomographic bins and inspect the results.
+1. Define or load a parent redshift distribution.
+2. Construct tomographic bin edges.
+3. Select a redshift assignment model.
+4. Build the tomographic distributions.
+5. Inspect, compare, or combine the resulting bins.
 
-Each of these ingredients is described below.
+These operations are exposed through independent functions rather
+than requiring a persistent tomography object.
 
 Parent redshift distribution
 ----------------------------
 
-All tomographic bins are derived from a **parent redshift distribution**
-:math:`n(z)` defined on a redshift grid.
+For model-generated tomography, the starting point is a parent
+redshift distribution :math:`n(z)` defined on a redshift grid.
 
-This distribution represents the underlying galaxy population before
-any binning is applied.
+This distribution describes the underlying galaxy population before
+tomographic selection is applied.
 
-Binny provides several ways to obtain a parent distribution:
+Binny supports several approaches:
 
-- analytic models (for example the **Smail distribution**),
-- empirical fits inferred from mock catalogs,
-- or user-supplied redshift distributions.
+- analytic distributions, such as the **Smail distribution**,
+- distributions derived from luminosity functions,
+- distributions inferred from mock catalogs,
+- distributions incorporating observational selection effects,
+- user-supplied redshift distributions.
 
-The parent distribution is always evaluated on a shared redshift grid,
-which ensures that all bins remain comparable and consistent.
+The parent distribution can be evaluated and inspected independently
+of the tomographic binning procedure.
 
 Tomographic binning schemes
 ---------------------------
 
-The next step is to divide the parent distribution into tomographic bins.
+The next step is to define the tomographic bin boundaries.
 
-Binny supports several binning strategies commonly used in cosmology,
-including:
+Binny supports several binning strategies, including:
 
-- **Equidistant binning**
-  bins are spaced evenly in redshift.
+- **Equidistant binning:** bins with equal redshift widths.
+- **Equipopulated binning:** bins containing approximately equal
+  galaxy populations.
+- **Custom bin edges:** boundaries supplied directly by the user.
 
-- **Equipopulated binning**
-  each bin contains approximately the same number of galaxies.
+Bin-edge construction is separate from the assignment model,
+allowing different observational assumptions to be applied to
+the same underlying binning scheme.
 
-These schemes define the **ideal bin boundaries** before any observational
-uncertainties are applied.
+Redshift assignment models
+--------------------------
 
-Redshift uncertainty models
----------------------------
+A redshift assignment model determines how galaxies are assigned
+to tomographic bins.
 
-In real surveys the measured redshifts are not exact.
+For spectroscopic samples, assignments can be based on measured
+redshifts with optional observational uncertainties.
 
-Photometric surveys typically include several sources of uncertainty,
-such as:
+For photometric samples, the assignment model can incorporate:
 
 - redshift scatter,
-- systematic bias,
-- catastrophic outliers.
+- systematic redshift offsets,
+- redshift-dependent transformations,
+- catastrophic outlier populations.
 
-Spectroscopic samples usually have much smaller uncertainties but may
-still include small measurement errors or incomplete sampling.
+These effects modify the relationship between true redshift and
+observed bin membership.
 
-Binny allows these effects to be modeled explicitly so that the resulting
-bins reflect realistic observational conditions.
+Separating bin-edge construction from redshift assignment makes
+it possible to compare different uncertainty prescriptions while
+retaining the same parent distribution and bin boundaries.
 
-Building tomographic bins
--------------------------
+Building tomographic distributions
+----------------------------------
 
-Once the parent distribution, binning scheme, and uncertainty model are
-defined, Binny constructs the tomographic bins.
-
-The result is a set of bin distributions
+Given a parent distribution, bin edges, and an assignment model,
+Binny constructs the tomographic redshift distributions
 
 .. math::
 
-    n_i(z)
+   n_i(z) = n(z) S_i(z),
 
-representing the redshift distribution of galaxies in each tomographic
-bin.
+where :math:`S_i(z)` represents the selection probability for
+tomographic bin :math:`i`.
 
-These distributions can then be used directly in cosmological calculations
-such as weak lensing forecasts, galaxy clustering analyses, or survey
-design studies.
+The resulting distributions describe the true-redshift populations
+associated with each tomographic bin.
+
+Depending on the chosen workflow, Binny can also return
+normalization information, bin populations, and metadata.
+
+The resulting arrays can be passed directly to cosmological
+modelling and forecasting pipelines.
+
+Predefined tomography
+---------------------
+
+Not every analysis requires constructing bins from a parent
+distribution and an assignment model.
+
+Binny also supports externally supplied tomographic distributions,
+including those obtained from measurements, simulations, or
+other analysis pipelines.
+
+These distributions can be validated and prepared without
+reapplying a redshift assignment model.
+
+This is particularly useful when working with survey data
+products or externally calibrated redshift distributions.
+
+Sample composition
+------------------
+
+Tomographic distributions can also be combined to construct
+new samples.
+
+This allows workflows involving multiple galaxy populations,
+survey selections, or independently generated tomographic bins.
+
+When distributions are defined on different redshift grids,
+they can be interpolated onto a common grid for combination.
+
+Diagnostics and comparisons
+---------------------------
+
+After constructing tomography, Binny provides functions for
+inspecting and comparing the resulting distributions.
+
+Available diagnostics include:
+
+- bin populations and normalization,
+- mean redshifts and distribution widths,
+- overlaps between tomographic bins,
+- leakage between redshift intervals,
+- comparisons between different tomographic samples.
+
+These diagnostics are independent of the bin-construction
+procedure and can also be applied to externally supplied bins.
 
 Configuration vs Python usage
 -----------------------------
 
-Binny can be used either through direct Python calls or through
-configuration-driven workflows.
+Binny supports both direct Python workflows and
+configuration-driven survey setups.
 
-Users may:
+Users can:
 
-- construct distributions and bins directly in Python,
-- load survey parameters from configuration files (such as YAML),
-- or use predefined survey presets.
+- call individual functions to construct and analyze distributions,
+- build tomography from structured specifications,
+- load survey parameters from configuration files,
+- use predefined survey presets.
 
-The examples in :doc:`examples/index` demonstrate several typical
-binning setups and provide executable scripts illustrating the workflow.
+The functional API allows individual operations to be reused
+without requiring a particular workflow or object lifecycle.
+
+The examples in :doc:`examples/index` demonstrate the available
+approaches and provide executable illustrations of tomography
+construction, diagnostics, and sample composition.
