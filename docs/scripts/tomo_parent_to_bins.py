@@ -5,7 +5,8 @@ import matplotlib.pyplot as plt
 import numpy as np
 from matplotlib.animation import FuncAnimation, PillowWriter
 
-from binny import NZTomography
+from binny.nz import nz_model
+from binny.tomography import build_tomography_from_spec
 
 
 def replace_fill(ax, old_fill, x, y, color, alpha=0.6):
@@ -28,11 +29,10 @@ OUTDIR.mkdir(parents=True, exist_ok=True)
 OUTFILE = OUTDIR / "tomo_parent_to_bins.gif"
 
 # Parent distribution
-tomo = NZTomography()
 
 z = np.linspace(0.0, 2.0, 500)
 
-nz = NZTomography.nz_model(
+nz = nz_model(
     "smail",
     z,
     z0=0.2,
@@ -53,7 +53,7 @@ spec = {
     "normalize_bins": True,
 }
 
-result = tomo.build_bins(z=z, nz=nz, tomo_spec=spec)
+result = build_tomography_from_spec(z=z, nz=nz, tomo_spec=spec)
 
 keys = sorted(result.bins.keys())
 bin_curves = [np.asarray(result.bins[k], dtype=float) for k in keys]

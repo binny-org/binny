@@ -6,7 +6,8 @@ import numpy as np
 from matplotlib.animation import FuncAnimation, PillowWriter
 from matplotlib.patches import Polygon
 
-from binny import NZTomography
+from binny.nz import nz_model
+from binny.tomography import build_tomography_from_spec
 
 DEFAULT_FONTSIZE = 19
 plt.rcParams.update(
@@ -51,11 +52,10 @@ OUTDIR = HERE.parent / "_static" / "animations"
 OUTDIR.mkdir(parents=True, exist_ok=True)
 OUTFILE = OUTDIR / "specz_uncertainty_scatter.gif"
 
-tomo = NZTomography()
 
 z = np.linspace(0.0, 2, 500)
 
-nz = NZTomography.nz_model(
+nz = nz_model(
     "smail",
     z,
     z0=0.2,
@@ -90,7 +90,7 @@ spec_base = {
     "normalize_bins": False,
 }
 
-result_fixed = tomo.build_bins(z=z, nz=nz, tomo_spec=spec_base)
+result_fixed = build_tomography_from_spec(z=z, nz=nz, tomo_spec=spec_base)
 fixed_curves = ordered_curves(result_fixed.bins)
 
 all_curves = []
@@ -109,7 +109,7 @@ for s3 in scatter_vals:
         "normalize_bins": False,
     }
 
-    result = tomo.build_bins(z=z, nz=nz, tomo_spec=spec_scatter)
+    result = build_tomography_from_spec(z=z, nz=nz, tomo_spec=spec_scatter)
     frame_curves = ordered_curves(result.bins)
     all_curves.append(frame_curves)
 
@@ -195,7 +195,7 @@ def draw_frame(frame_idx):
         artists.append(lines_bins[b])
 
     s3 = scatter_vals[frame_idx]
-    text_main.set_text(r"$\sigma_{\rm spec,3} = %.3f$" % s3)
+    text_main.set_text(rf"$\sigma_{{\rm spec,3}} = {s3:.3f}$")
 
     artists.append(text_main)
     return artists

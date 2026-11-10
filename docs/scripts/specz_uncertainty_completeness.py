@@ -6,7 +6,8 @@ import numpy as np
 from matplotlib.animation import FuncAnimation, PillowWriter
 from matplotlib.patches import Polygon
 
-from binny import NZTomography
+from binny.nz import nz_model
+from binny.tomography import build_tomography_from_spec
 
 DEFAULT_FONTSIZE = 19
 plt.rcParams.update(
@@ -51,11 +52,10 @@ OUTDIR = HERE.parent / "_static" / "animations"
 OUTDIR.mkdir(parents=True, exist_ok=True)
 OUTFILE = OUTDIR / "specz_uncertainty_completeness.gif"
 
-tomo = NZTomography()
 
 z = np.linspace(0.0, 2.0, 180)
 
-nz = NZTomography.nz_model(
+nz = nz_model(
     "smail",
     z,
     z0=0.2,
@@ -90,7 +90,7 @@ spec_fixed = {
     "normalize_bins": False,
 }
 
-result_fixed = tomo.build_bins(z=z, nz=nz, tomo_spec=spec_fixed)
+result_fixed = build_tomography_from_spec(z=z, nz=nz, tomo_spec=spec_fixed)
 fixed_curves = ordered_curves(result_fixed.bins)
 
 # Make the completeness effect visually explicit:

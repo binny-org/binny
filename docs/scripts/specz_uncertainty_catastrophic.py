@@ -6,8 +6,9 @@ import numpy as np
 from matplotlib.animation import FuncAnimation, PillowWriter
 from matplotlib.patches import Polygon
 
-from binny import NZTomography
-from binny.nz_tomo.specz import build_specz_response_matrix
+from binny.binning import build_specz_response_matrix
+from binny.nz import nz_model
+from binny.tomography import build_tomography_from_spec
 
 DEFAULT_FONTSIZE = 19
 plt.rcParams.update(
@@ -76,11 +77,10 @@ OUTDIR = HERE.parent / "_static" / "animations"
 OUTDIR.mkdir(parents=True, exist_ok=True)
 OUTFILE = OUTDIR / "specz_uncertainty_catastrophic.gif"
 
-tomo = NZTomography()
 
 z = np.linspace(0.0, 2.0, 220)
 
-nz = NZTomography.nz_model(
+nz = nz_model(
     "smail",
     z,
     z0=0.2,
@@ -120,7 +120,7 @@ for f2 in catastrophic_vals:
         leakage_sigma=leakage_sigma,
     )
 
-    result = tomo.build_bins(z=z, nz=nz, tomo_spec=spec_cfg)
+    result = build_tomography_from_spec(z=z, nz=nz, tomo_spec=spec_cfg)
     curves = ordered_curves(result.bins)
     all_curves.append(curves)
 

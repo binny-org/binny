@@ -6,7 +6,8 @@ import numpy as np
 from matplotlib.animation import FuncAnimation, PillowWriter
 from matplotlib.patches import Polygon
 
-from binny import NZTomography
+from binny.nz import nz_model
+from binny.tomography import build_tomography_from_spec
 
 DEFAULT_FONTSIZE = 19
 plt.rcParams.update(
@@ -51,12 +52,11 @@ OUTDIR = HERE.parent / "_static" / "animations"
 OUTDIR.mkdir(parents=True, exist_ok=True)
 OUTFILE = OUTDIR / "pz_uncertainty_scatter.gif"
 
-tomo = NZTomography()
 
 # Slightly fewer samples for faster drawing and smaller GIF
 z = np.linspace(0.0, 2.0, 180)
 
-nz = NZTomography.nz_model(
+nz = nz_model(
     "smail",
     z,
     z0=0.2,
@@ -96,7 +96,7 @@ spec_fixed = {
     "normalize_bins": True,
 }
 
-result_fixed = tomo.build_bins(z=z, nz=nz, tomo_spec=spec_fixed)
+result_fixed = build_tomography_from_spec(z=z, nz=nz, tomo_spec=spec_fixed)
 fixed_curves = ordered_curves(result_fixed.bins)
 
 all_curves = []
@@ -117,7 +117,7 @@ for scatter in scatter_vals:
         "normalize_bins": True,
     }
 
-    result = tomo.build_bins(z=z, nz=nz, tomo_spec=spec)
+    result = build_tomography_from_spec(z=z, nz=nz, tomo_spec=spec)
     curves = ordered_curves(result.bins)
 
     frame_curves = [
