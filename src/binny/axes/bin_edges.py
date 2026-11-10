@@ -15,6 +15,7 @@ from binny.utils.validators import (
 __all__ = [
     "equidistant_edges",
     "equal_number_edges",
+    "generalized_tomographic_edges",
     "log_edges",
     "equidistant_chi_edges",
     "equal_information_edges",
@@ -180,6 +181,72 @@ def geometric_edges(x_min: float, x_max: float, n_bins: int) -> np.ndarray:
     """
     validate_interval(x_min, x_max, n_bins, log=True)
     return np.geomspace(x_min, x_max, n_bins + 1, dtype=float)
+
+
+def generalized_tomographic_edges(
+    z: Any,
+    nz: Any,
+    n_bins: int,
+    *,
+    alpha: float = 0.0,
+    beta: float = 0.0,
+    dchi_dz: Any | None = None,
+) -> np.ndarray:
+    """Compute generalized tomographic bin edges.
+
+    Edges divide the cumulative integral of
+    ``nz(z)**alpha * (dchi/dz)**beta`` into equal intervals.
+
+    Special cases:
+        alpha=0, beta=0: Equal redshift width.
+        alpha=1, beta=0: Equal number.
+        alpha=0, beta=1: Equal comoving distance.
+
+    Args:
+        z: Strictly increasing redshift grid.
+        nz: Non-negative redshift distribution evaluated on ``z``.
+        n_bins: Number of tomographic bins.
+        alpha: Exponent of the redshift distribution.
+        beta: Exponent of the comoving-distance derivative.
+        dchi_dz: Positive comoving-distance derivative on ``z``.
+            Required when ``beta != 0``.
+
+    Returns:
+        Strictly increasing redshift edges of shape ``(n_bins + 1,)``.
+
+    Raises:
+        ValueError: If inputs are invalid or the generalized weights
+            cannot produce strictly increasing edges.
+    """
+    validate_n_bins(n_bins)
+    z_arr, nz_arr = validate_axis_and_weights(z, nz)
+
+    if not np.isfinite(alpha) or not np.isfinite(beta):
+        raise ValueError("alpha and beta must be finite.")
+
+    if np.any(nz_arr < 0):
+        raise ValueError("nz must be non-negative.")
+
+    if alpha < 0 and np.any(nz_arr == 0):
+        raise ValueError("nz must be strictly positive when alpha < 0.")
+
+    if beta == 0:
+        weights = np.power(nz_arr, alpha)
+    else:
+        if dchi_dz is None:
+            raise ValueError("dchi_dz is required when beta != 0.")
+
+        _, chi_derivative = validate_axis_and_weights(z_arr, dchi_dz)
+
+        if np.any(chi_derivative <= 0):
+            raise ValueError("dchi_dz must be strictly positive.")
+
+        weights = np.power(nz_arr, alpha) * np.power(chi_derivative, beta)
+
+    if not np.all(np.isfinite(weights)):
+        raise ValueError("Generalized weights must be finite.")
+
+    return _equal_weight_edges(z_arr, weights, n_bins)
 
 
 def _cumulative_trapz(x: np.ndarray, weights: np.ndarray) -> np.ndarray:

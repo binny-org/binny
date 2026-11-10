@@ -5,6 +5,7 @@ from binny.axes.bin_edges import (
     equal_number_edges,
     equidistant_chi_edges,
     equidistant_edges,
+    generalized_tomographic_edges,
     geometric_edges,
     log_edges,
 )
@@ -16,6 +17,7 @@ __all__ = [
     "equal_number_edges",
     "equidistant_chi_edges",
     "equidistant_edges",
+    "generalized_tomographic_edges",
     "geometric_edges",
     "log_edges",
     "grid",
