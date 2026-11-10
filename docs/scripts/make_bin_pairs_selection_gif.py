@@ -6,7 +6,12 @@ import numpy as np
 from matplotlib.animation import FuncAnimation, PillowWriter
 from matplotlib.patches import Polygon, Rectangle
 
-from binny import NZTomography
+from binny.nz import nz_model
+from binny.tomography import (
+    between_bin_overlap,
+    build_tomography_from_spec,
+    make_bin_combo_filter,
+)
 
 DEFAULT_FONTSIZE = 19
 plt.rcParams.update(
@@ -265,7 +270,7 @@ def nested_rect_dict_to_matrix(nested_dict):
     return row_keys, col_keys, matrix
 
 
-def get_selected_pairs(lens, source, threshold):
+def get_selected_pairs(lens_result, source_result, threshold):
     spec = {
         "topology": {"name": "pairs_cartesian"},
         "filters": [
@@ -276,7 +281,7 @@ def get_selected_pairs(lens, source, threshold):
             }
         ],
     }
-    selected_pairs_raw = lens.bin_combo_filter(spec, other=source)
+    selected_pairs_raw = make_bin_combo_filter(lens_result, source_result).select(spec).values()
     return set(tuple(pair) for pair in selected_pairs_raw)
 
 
@@ -289,7 +294,7 @@ OUTFILE = OUTDIR / "lens_source_pair_exclusions.gif"
 # Build lens and source samples
 z = np.linspace(0.0, 2.5, 600)
 
-lens_nz = NZTomography.nz_model(
+lens_nz = nz_model(
     "smail",
     z,
     z0=0.18,
@@ -298,7 +303,7 @@ lens_nz = NZTomography.nz_model(
     normalize=True,
 )
 
-source_nz = NZTomography.nz_model(
+source_nz = nz_model(
     "smail",
     z,
     z0=0.32,
@@ -340,26 +345,30 @@ source_spec = {
     "normalize_bins": True,
 }
 
-lens = NZTomography()
-lens_result = lens.build_bins(
+lens_result = build_tomography_from_spec(
     z=z,
     nz=lens_nz,
     tomo_spec=lens_spec,
     include_tomo_metadata=True,
 )
 
-source = NZTomography()
-source_result = source.build_bins(
+source_result = build_tomography_from_spec(
     z=z,
     nz=source_nz,
     tomo_spec=source_spec,
     include_tomo_metadata=True,
 )
 
-between_overlap = lens.between_sample_stats(
-    source,
-    overlap={"method": "min", "unit": "fraction", "normalize": True, "decimal_places": 6},
-)["overlap"]
+between_overlap = between_bin_overlap(
+    lens_result.z,
+    lens_result.bins,
+    source_result.z,
+    source_result.bins,
+    method="min",
+    unit="fraction",
+    normalize=True,
+    decimal_places=6,
+)
 
 lens_keys, source_keys, overlap_matrix = nested_rect_dict_to_matrix(between_overlap)
 
@@ -388,7 +397,7 @@ source_colors = cmr.take_cmap_colors(
 # Precompute exclusions for each threshold
 states = []
 for threshold in THRESHOLDS:
-    selected_pairs = get_selected_pairs(lens, source, threshold)
+    selected_pairs = get_selected_pairs(lens_result, source_result, threshold)
     excluded_pairs = [pair for pair in candidate_pairs if pair not in selected_pairs]
     states.append(
         {
@@ -452,9 +461,7 @@ def draw_static_panels(current_threshold):
         vmax=np.max(overlap_matrix),
     )
 
-    ax1.set_title(
-        rf"Overlap matrix ($\tau = {100 * current_threshold:.0f}\%$)"
-    )
+    ax1.set_title(rf"Overlap matrix ($\tau = {100 * current_threshold:.0f}\%$)")
     ax1.set_xticks(np.arange(n_source))
     ax1.set_yticks(np.arange(n_lens))
     ax1.set_xticklabels([f"{k + 1}" for k in source_keys])
@@ -506,10 +513,7 @@ def update(frame):
 
     # Panel 3: excluded pairs for current threshold
     setup_rect_pair_axes(
-        ax2,
-        n_lens,
-        n_source,
-        rf"Excluded pairs ($>{100 * threshold:.0f}\%$, $\tau$)"
+        ax2, n_lens, n_source, rf"Excluded pairs ($>{100 * threshold:.0f}\%$, $\tau$)"
     )
 
     for i_key, j_key in candidate_pairs:

@@ -1,3 +1,4 @@
+
 .. |logo| image:: ../../_static/assets/logo.png
    :alt: logo
    :width: 32px
@@ -7,7 +8,7 @@
 
 This page shows how to estimate **photometric-redshift uncertainty
 parameters** from a catalogue containing true and observed redshifts
-using :class:`binny.NZTomography`.
+using :func:`binny.binning.photoz_fitting.fit_photoz_errors`.
 
 Binny fits an unbinned two-component Gaussian mixture to the normalized
 photo-z residuals. The fitted parameters can then be converted into
@@ -54,10 +55,9 @@ a histogram. The histogram below is used only for visualization.
    import matplotlib.pyplot as plt
    import numpy as np
 
-   from binny import NZTomography
+   from binny.binning.photoz_fitting import fit_photoz_errors
 
    rng = np.random.default_rng(42)
-   tomo = NZTomography()
 
    n_galaxies = 100000
 
@@ -86,7 +86,7 @@ a histogram. The histogram below is used only for visualization.
 
    z_obs = z_true + (1.0 + z_true) * residual
 
-   fit = tomo.fit_photoz_errors(
+   fit = fit_photoz_errors(
        z_true,
        z_obs,
        n_init=10,
@@ -133,7 +133,7 @@ a histogram. The histogram below is used only for visualization.
    ax.plot(x, outlier, color=colors[-1], lw=2.0, ls="--", label="Outliers")
 
    ax.set_xlabel(r"Normalized photo-z residual $\epsilon$")
-   ax.set_ylabel(r"Probability density")
+   ax.set_ylabel("Probability density")
    ax.set_xlim(-0.25, 0.45)
    ax.legend(frameon=False)
 
@@ -160,10 +160,9 @@ used to generate the synthetic catalogue.
    import matplotlib.pyplot as plt
    import numpy as np
 
-   from binny import NZTomography
+   from binny.binning.photoz_fitting import fit_photoz_errors
 
    rng = np.random.default_rng(42)
-   tomo = NZTomography()
 
    injected = {
        "scatter_scale": 0.03,
@@ -187,7 +186,7 @@ used to generate the synthetic catalogue.
 
    z_obs = z_true + (1.0 + z_true) * residual
 
-   fit = tomo.fit_photoz_errors(z_true, z_obs, seed=42)
+   fit = fit_photoz_errors(z_true, z_obs, seed=42)
 
    names = list(injected)
    x = np.arange(len(names))
@@ -234,8 +233,8 @@ used to generate the synthetic catalogue.
 Optional fitting diagnostics
 ----------------------------
 
-By default, :meth:`binny.NZTomography.fit_photoz_errors` returns only
-the four fitted parameters.
+By default, :func:`binny.binning.photoz_fitting.fit_photoz_errors`
+returns only the four fitted parameters.
 
 Setting ``return_metadata=True`` additionally returns a dictionary
 containing numerical and statistical diagnostics.
@@ -246,11 +245,10 @@ criterion (BIC), and Kolmogorov--Smirnov statistic.
 
 .. code-block:: python
 
-   from binny import NZTomography
+   from binny.binning.photoz_fitting import fit_photoz_errors
 
-   tomo = NZTomography()
-
-   fit, metadata = tomo.fit_photoz_errors(
+   # z_true and z_obs are arrays from the synthetic catalogue above.
+   fit, metadata = fit_photoz_errors(
        z_true,
        z_obs,
        n_init=10,
@@ -289,17 +287,19 @@ The fitted residual parameters are not identical to the parameters
 used internally by Binny's forward photo-z assignment model.
 
 The conversion is handled by
-:meth:`binny.NZTomography.to_binny_photoz_params`.
+:func:`binny.binning.photoz_fitting.to_binny_photoz_params`.
 
 .. code-block:: python
 
-   from binny import NZTomography
+   from binny.binning.photoz_fitting import (
+       fit_photoz_errors,
+       to_binny_photoz_params,
+   )
 
-   tomo = NZTomography()
+   # Reuse z_true and z_obs from the synthetic catalogue.
+   fit = fit_photoz_errors(z_true, z_obs)
 
-   fit = tomo.fit_photoz_errors(z_true, z_obs)
-
-   photoz_params = tomo.to_binny_photoz_params(fit)
+   photoz_params = to_binny_photoz_params(fit)
 
    print(photoz_params)
 
@@ -331,18 +331,21 @@ quantify the effect of parameter recovery on tomography.
    :width: 760
 
    import cmasher as cmr
-   import cmasher as cmr
    import matplotlib.pyplot as plt
    import numpy as np
 
-   from binny import NZTomography
+   from binny.nz import nz_model
+   from binny.binning.photoz_fitting import (
+       fit_photoz_errors,
+       to_binny_photoz_params,
+   )
+   from binny.tomography import build_tomography_from_spec
 
    rng = np.random.default_rng(42)
-   tomo = NZTomography()
 
    z = np.linspace(0.0, 3.0, 1000)
 
-   nz = NZTomography.nz_model(
+   nz = nz_model(
        "smail",
        z,
        z0=0.5,
@@ -386,15 +389,15 @@ quantify the effect of parameter recovery on tomography.
    z_obs = z_true + (1.0 + z_true) * residual
 
    # Recover the photo-z uncertainty parameters.
-   fit = tomo.fit_photoz_errors(
+   fit = fit_photoz_errors(
        z_true,
        z_obs,
        n_init=10,
        seed=42,
    )
 
-   injected_uncertainties = tomo.to_binny_photoz_params(injected)
-   fitted_uncertainties = tomo.to_binny_photoz_params(fit)
+   injected_uncertainties = to_binny_photoz_params(injected)
+   fitted_uncertainties = to_binny_photoz_params(fit)
 
    bin_edges = np.linspace(0.2, 2.2, 6)
 
@@ -408,13 +411,13 @@ quantify the effect of parameter recovery on tomography.
            "normalize_bins": True,
        }
 
-   injected_result = tomo.build_bins(
+   injected_result = build_tomography_from_spec(
        z=z,
        nz=nz,
        tomo_spec=make_spec(injected_uncertainties),
    )
 
-   fitted_result = tomo.build_bins(
+   fitted_result = build_tomography_from_spec(
        z=z,
        nz=nz,
        tomo_spec=make_spec(fitted_uncertainties),
@@ -435,13 +438,28 @@ quantify the effect of parameter recovery on tomography.
        fitted_curve = np.asarray(fitted_result.bins[key], dtype=float)
 
        ax.fill_between(
-           z, 0.0, injected_curve,
-           color=color, alpha=0.65, linewidth=0.0, zorder=10 + i,
+           z,
+           0.0,
+           injected_curve,
+           color=color,
+           alpha=0.65,
+           linewidth=0.0,
+           zorder=10 + i,
        )
-       ax.plot(z, injected_curve, color="k", lw=1.8, zorder=20 + i)
        ax.plot(
-           z, fitted_curve,
-           color=color, lw=2.2, ls="--", zorder=30 + i,
+           z,
+           injected_curve,
+           color="k",
+           lw=1.8,
+           zorder=20 + i,
+       )
+       ax.plot(
+           z,
+           fitted_curve,
+           color=color,
+           lw=2.2,
+           ls="--",
+           zorder=30 + i,
        )
 
    ax.plot(z, np.zeros_like(z), color="k", lw=2.2, zorder=1000)
@@ -502,6 +520,7 @@ bins from the previous section.
 
    import numpy as np
 
+   # Reuse injected_result, fitted_result, and z from above.
    for key in sorted(injected_result.bins):
        true_bin = np.asarray(injected_result.bins[key])
        fitted_bin = np.asarray(fitted_result.bins[key])

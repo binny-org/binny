@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 from matplotlib.animation import FuncAnimation, PillowWriter
 
-from binny import NZTomography
+from binny.nz import nz_model
 
 
 def replace_fill(ax, old_fill, x, y, color, alpha=0.6):
@@ -32,7 +32,7 @@ OUTFILE = OUTDIR / "tomo_specz_example.gif"
 
 z = np.linspace(0.0, 2.0, 500)
 
-nz = NZTomography.nz_model(
+nz = nz_model(
     "smail",
     z,
     z0=0.2,

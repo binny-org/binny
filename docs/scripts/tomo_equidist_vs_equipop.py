@@ -5,7 +5,8 @@ import matplotlib.pyplot as plt
 import numpy as np
 from matplotlib.animation import FuncAnimation, PillowWriter
 
-from binny import NZTomography
+from binny.nz import nz_model
+from binny.tomography import build_tomography_from_spec
 
 
 def replace_fill(ax, old_fill, x, y, color, alpha=0.6):
@@ -33,11 +34,10 @@ OUTDIR.mkdir(parents=True, exist_ok=True)
 OUTFILE = OUTDIR / "tomo_equidist_vs_equipop.gif"
 
 # Parent distribution and photo-z specs
-tomo = NZTomography()
 
 z = np.linspace(0.0, 2.0, 500)
 
-nz = NZTomography.nz_model(
+nz = nz_model(
     "smail",
     z,
     z0=0.2,
@@ -69,8 +69,8 @@ equipopulated_spec = {
     "normalize_bins": True,
 }
 
-equidistant_result = tomo.build_bins(z=z, nz=nz, tomo_spec=equidistant_spec)
-equipopulated_result = tomo.build_bins(z=z, nz=nz, tomo_spec=equipopulated_spec)
+equidistant_result = build_tomography_from_spec(z=z, nz=nz, tomo_spec=equidistant_spec)
+equipopulated_result = build_tomography_from_spec(z=z, nz=nz, tomo_spec=equipopulated_spec)
 
 curves_eqd = ordered_curves(equidistant_result.bins)
 curves_eqp = ordered_curves(equipopulated_result.bins)

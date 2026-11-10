@@ -24,7 +24,7 @@ The calibration tools implemented in Binny perform three related tasks:
 3. construct source redshift distributions after depth and PSF selection.
 
 This is exposed through
-:meth:`binny.NZTomography.calibrate_psf_depth_from_mock`.
+:func:`binny.nz.calibrate_psf_depth_from_mock`.
 
 The idea is straightforward. Given a mock catalog containing true
 redshifts, apparent magnitudes, and galaxy sizes, one considers a

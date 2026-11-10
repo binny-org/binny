@@ -1,0 +1,1074 @@
+"""Tests for functional tomography statistics."""
+
+from __future__ import annotations
+
+import numpy as np
+import pytest
+
+from binny.tomography.predefined import build_predefined_tomography
+from binny.tomography.stats import (
+    bin_centers,
+    bin_moments,
+    bin_quantiles,
+    comoving_density_per_bin,
+    galaxy_count_per_bin,
+    galaxy_density_per_bin,
+    galaxy_fraction_per_bin,
+    in_range_fraction,
+    in_range_fraction_per_bin,
+    parent_stats,
+    peak_flags,
+    peak_flags_per_bin,
+    population_stats,
+    shape_stats,
+)
+
+
+def _toy_grid() -> np.ndarray:
+    """Creates a toy redshift grid for testing."""
+    return np.linspace(0.0, 2.0, 2001)
+
+
+def _gaussian(z: np.ndarray, mu: float, sig: float) -> np.ndarray:
+    """Creates a Gaussian curve on grid z with mean mu and std sig."""
+    return np.exp(-0.5 * ((z - mu) / sig) ** 2)
+
+
+def _normalize_pdf(z: np.ndarray, nz: np.ndarray) -> np.ndarray:
+    """Normalizes a nonnegative curve nz(z) into a PDF on z."""
+    norm = np.trapezoid(nz, x=z)
+    if norm <= 0.0:
+        raise ValueError("Cannot normalize: non-positive integral.")
+    return nz / norm
+
+
+def test_bin_moments_gaussian_mean_std_close() -> None:
+    """Tests that bin_moments recovers mean and std for a Gaussian curve."""
+    z = _toy_grid()
+    mu, sig = 0.8, 0.15
+    nz = _gaussian(z, mu, sig)
+
+    stats = bin_moments(z, nz)
+
+    assert {
+        "mean",
+        "median",
+        "mode",
+        "std",
+        "skewness",
+        "kurtosis",
+        "iqr",
+        "width_68",
+    } <= set(stats.keys())
+
+    assert np.isclose(stats["mean"], mu, rtol=0.0, atol=2e-3)
+    assert np.isclose(stats["std"], sig, rtol=0.0, atol=2e-3)
+    assert np.isclose(stats["median"], mu, rtol=0.0, atol=2e-3)
+    assert np.isclose(stats["mode"], mu, rtol=0.0, atol=2e-3)
+
+    assert stats["width_68"] > 0.0
+    assert stats["iqr"] > 0.0
+
+
+def test_bin_moments_raises_on_nonpositive_total_weight() -> None:
+    """Tests that bin_moments raises ValueError for non-positive total weight."""
+    z = _toy_grid()
+    nz = np.zeros_like(z)
+
+    with pytest.raises(ValueError, match="Total weight must be positive"):
+        bin_moments(z, nz)
+
+
+def test_bin_centers_methods_and_rounding() -> None:
+    """Tests that bin_centers supports methods and rounding controls."""
+    z = _toy_grid()
+    bins = {0: _gaussian(z, 0.5, 0.1), 1: _gaussian(z, 1.2, 0.2)}
+
+    centers = bin_centers(z, bins, method="median", decimal_places=2)
+    assert set(centers.keys()) == {0, 1}
+    assert isinstance(centers[0], float)
+
+    centers_full = bin_centers(z, bins, method="median", decimal_places=None)
+    assert centers[0] == pytest.approx(round(centers_full[0], 2))
+    assert centers[1] == pytest.approx(round(centers_full[1], 2))
+
+
+def test_bin_centers_percentile_method_p50_matches_median() -> None:
+    """Tests that bin_centers(method='p50') matches method='median'."""
+    z = _toy_grid()
+    bins = {0: _gaussian(z, 0.5, 0.1), 1: _gaussian(z, 1.2, 0.2)}
+
+    c_med = bin_centers(z, bins, method="median", decimal_places=None)
+    c_p50 = bin_centers(z, bins, method="p50", decimal_places=None)
+
+    assert c_p50[0] == pytest.approx(c_med[0])
+    assert c_p50[1] == pytest.approx(c_med[1])
+
+
+def test_bin_centers_percentile_invalid_raises() -> None:
+    """Tests that bin_centers raises ValueError for invalid percentile methods."""
+    z = _toy_grid()
+    bins = {0: _gaussian(z, 0.5, 0.1)}
+
+    with pytest.raises(ValueError, match="percentile methods must look like"):
+        bin_centers(z, bins, method="pXX")
+
+    msg = "percentile in method='pXX' must be between 0 and 100"
+    with pytest.raises(ValueError, match=msg):
+        bin_centers(z, bins, method="p120")
+
+
+def test_shape_stats_returns_expected_top_level_keys() -> None:
+    """Tests that shape_stats returns the expected top-level structure."""
+    z = _toy_grid()
+    p0 = _normalize_pdf(z, _gaussian(z, 0.6, 0.1))
+    p1 = _normalize_pdf(z, _gaussian(z, 1.2, 0.2))
+    bins = {0: p0, 1: p1}
+
+    out = shape_stats(z, bins)
+
+    assert set(out.keys()) == {"centers", "peaks", "per_bin"}
+    assert set(out["per_bin"].keys()) == {0, 1}
+    assert set(out["centers"].keys()) == {0, 1}
+    assert set(out["peaks"].keys()) == {0, 1}
+
+
+def test_shape_stats_per_bin_entries_have_expected_fields() -> None:
+    """Tests that shape_stats(per_bin) entries contain expected fields."""
+    z = _toy_grid()
+    b0 = _gaussian(z, 0.6, 0.1)
+    b1 = 2.0 * _gaussian(z, 1.3, 0.15)
+    bins = {0: b0, 1: b1}
+
+    out = shape_stats(
+        z,
+        bins,
+        center_method="median",
+        decimal_places=None,
+        quantiles=(0.16, 0.5, 0.84),
+        min_rel_height=0.1,
+    )
+
+    for i in (0, 1):
+        entry = out["per_bin"][i]
+        assert set(entry.keys()) == {"moments", "center", "quantiles", "peaks", "tail_asymmetry"}
+        assert (entry["tail_asymmetry"] is None) or isinstance(entry["tail_asymmetry"], float)
+        assert set(entry["moments"].keys()) >= {"mean", "median", "mode", "std"}
+        assert isinstance(entry["center"], float)
+        assert set(entry["quantiles"].keys()) == {0.16, 0.5, 0.84}
+        assert set(entry["peaks"].keys()) == {
+            "mode",
+            "mode_height",
+            "num_peaks",
+            "second_peak_ratio",
+        }
+
+
+def test_shape_stats_includes_in_range_fraction_when_edges_given() -> None:
+    """Tests that shape_stats includes in_range_fraction when bin_edges is passed."""
+    z = _toy_grid()
+    bins = {0: _gaussian(z, 0.6, 0.1), 1: _gaussian(z, 1.2, 0.2)}
+    edges = {0: (0.3, 0.9), 1: (0.9, 1.6)}
+
+    out = shape_stats(z, bins, bin_edges=edges)
+
+    assert "in_range_fraction" in out
+    assert set(out["in_range_fraction"].keys()) == {0, 1}
+    assert 0.0 <= out["in_range_fraction"][0] <= 1.0
+    assert 0.0 <= out["in_range_fraction"][1] <= 1.0
+
+
+def test_galaxy_fraction_per_bin_normalizes_and_casts_keys() -> None:
+    """Tests that galaxy_fraction_per_bin normalizes and casts keys to int."""
+    meta = {"frac_per_bin": {"0": 2.0, 1: 6.0}}
+
+    fracs = galaxy_fraction_per_bin(meta)
+
+    assert set(fracs.keys()) == {0, 1}
+    assert np.isclose(sum(fracs.values()), 1.0, atol=1e-12)
+    assert fracs[1] > fracs[0]
+
+
+def test_galaxy_fraction_per_bin_raises_if_missing_or_bad() -> None:
+    """Tests that galaxy_fraction_per_bin raises on missing/invalid metadata."""
+    with pytest.raises(ValueError, match="must contain a mapping 'frac_per_bin'"):
+        galaxy_fraction_per_bin({})
+
+    with pytest.raises(ValueError, match="must contain a mapping 'frac_per_bin'"):
+        galaxy_fraction_per_bin({"frac_per_bin": 123})
+
+    msg = "Sum of metadata frac_per_bin must be positive"
+    with pytest.raises(ValueError, match=msg):
+        galaxy_fraction_per_bin({"frac_per_bin": {0: 0.0, 1: 0.0}})
+
+
+def test_population_stats_uses_metadata_fractions_and_normalizes_default() -> None:
+    """Tests that population_stats uses metadata fractions and normalizes by default."""
+    z = _toy_grid()
+    bins = {
+        0: _normalize_pdf(z, _gaussian(z, 0.6, 0.1)),
+        1: _normalize_pdf(z, _gaussian(z, 1.2, 0.2)),
+    }
+    meta = {"frac_per_bin": {0: 0.25, 1: 0.75}}
+
+    out = population_stats(bins, meta)
+
+    assert set(out.keys()) == {"fractions"}
+    assert np.isclose(sum(out["fractions"].values()), 1.0, atol=1e-12)
+    assert out["fractions"][1] > out["fractions"][0]
+
+
+def test_population_stats_density_and_counts_allocation() -> None:
+    """Tests that population_stats allocates densities and counts from fractions."""
+    z = _toy_grid()
+    bins = {0: _gaussian(z, 0.6, 0.1), 1: _gaussian(z, 1.2, 0.2)}
+    meta = {"frac_per_bin": {0: 1.0, 1: 3.0}}
+
+    out = population_stats(bins, meta, density_total=40.0, survey_area=100.0)
+
+    assert np.isclose(sum(out["fractions"].values()), 1.0, atol=1e-12)
+    assert np.isclose(sum(out["density_per_bin"].values()), 40.0, atol=1e-12)
+    total_counts = sum(out["count_per_bin"].values())
+    assert np.isclose(total_counts, 40.0 * 100.0, atol=1e-12)
+    assert out["density_per_bin"][1] > out["density_per_bin"][0]
+    assert out["count_per_bin"][1] > out["count_per_bin"][0]
+
+
+def test_population_stats_survey_area_requires_density_total() -> None:
+    """Tests that population_stats rejects survey_area without density_total."""
+    z = _toy_grid()
+    bins = {0: _gaussian(z, 0.6, 0.1)}
+    meta = {"frac_per_bin": {0: 1.0}}
+
+    with pytest.raises(ValueError, match="survey_area requires density_total"):
+        population_stats(bins, meta, survey_area=100.0)
+
+
+def test_population_stats_missing_bin_index_raises() -> None:
+    """Tests that population_stats raises if metadata is missing a bin index."""
+    z = _toy_grid()
+    bins = {0: _gaussian(z, 0.6, 0.1), 1: _gaussian(z, 1.2, 0.2)}
+    meta = {"frac_per_bin": {0: 1.0}}
+
+    with pytest.raises(ValueError, match="missing bin index 1"):
+        population_stats(bins, meta)
+
+
+def test_galaxy_count_per_bin_converts_with_area() -> None:
+    """Tests that galaxy_count_per_bin converts density * area to counts."""
+    dens = {0: 2.5, 1: 10.0}
+    area = 100.0
+
+    counts = galaxy_count_per_bin(dens, area)
+
+    assert counts[0] == pytest.approx(250.0)
+    assert counts[1] == pytest.approx(1000.0)
+
+
+def test_galaxy_count_per_bin_raises_on_nonpositive_area() -> None:
+    """Tests that galaxy_count_per_bin raises ValueError for non-positive area."""
+    dens = {0: 2.5}
+
+    with pytest.raises(ValueError, match="survey_area must be positive"):
+        galaxy_count_per_bin(dens, 0.0)
+
+
+def test_bin_quantiles_returns_expected_keys_and_ordering() -> None:
+    """Tests that bin_quantiles returns requested quantiles in correct order."""
+    z = _toy_grid()
+    mu, sig = 1.0, 0.2
+    nz = _gaussian(z, mu, sig)
+
+    qs = bin_quantiles(z, nz, [0.16, 0.5, 0.84])
+
+    assert set(qs.keys()) == {0.16, 0.5, 0.84}
+    assert qs[0.16] < qs[0.5] < qs[0.84]
+    assert np.isclose(qs[0.5], mu, atol=2e-3)
+
+
+def test_in_range_fraction_basic_behaviour() -> None:
+    """Tests that in_range_fraction is in [0, 1] and increases with width."""
+    z = _toy_grid()
+    nz = _gaussian(z, 1.0, 0.2)
+
+    f_narrow = in_range_fraction(z, nz, 0.9, 1.1)
+    f_wide = in_range_fraction(z, nz, 0.6, 1.4)
+
+    assert 0.0 <= f_narrow <= 1.0
+    assert 0.0 <= f_wide <= 1.0
+    assert f_wide > f_narrow
+
+
+def test_in_range_fraction_raises_on_invalid_bounds() -> None:
+    """Tests that in_range_fraction raises ValueError for invalid bounds."""
+    z = _toy_grid()
+    nz = _gaussian(z, 1.0, 0.2)
+
+    with pytest.raises(ValueError, match="z_max must be greater than z_min"):
+        in_range_fraction(z, nz, 1.0, 1.0)
+
+
+def test_in_range_fraction_per_bin_accepts_mapping_edges() -> None:
+    """Tests that in_range_fraction_per_bin accepts mapping bin_edges."""
+    z = _toy_grid()
+    bins = {0: _gaussian(z, 0.6, 0.1), 1: _gaussian(z, 1.2, 0.2)}
+    edges = {0: (0.3, 0.9), 1: (0.9, 1.6)}
+
+    out = in_range_fraction_per_bin(z, bins, edges)
+
+    assert set(out.keys()) == {0, 1}
+    assert 0.0 <= out[0] <= 1.0
+    assert 0.0 <= out[1] <= 1.0
+
+
+def test_in_range_fraction_per_bin_accepts_sequence_edges() -> None:
+    """Tests that in_range_fraction_per_bin accepts sequence bin_edges."""
+    z = _toy_grid()
+    bins = {0: _gaussian(z, 0.6, 0.1), 1: _gaussian(z, 1.2, 0.2)}
+    edges = [0.0, 1.0, 2.0]
+
+    out = in_range_fraction_per_bin(z, bins, edges)
+
+    assert set(out.keys()) == {0, 1}
+    assert 0.0 <= out[0] <= 1.0
+    assert 0.0 <= out[1] <= 1.0
+
+
+def test_peak_flags_single_peak_has_one_peak_and_second_ratio_zero() -> None:
+    """Tests that peak_flags reports a Gaussian as single-peaked."""
+    z = _toy_grid()
+    nz = _gaussian(z, 1.0, 0.2)
+
+    out = peak_flags(z, nz, min_rel_height=0.1)
+
+    assert out["num_peaks"] == pytest.approx(1.0)
+    assert out["second_peak_ratio"] is None
+    assert np.isclose(out["mode"], 1.0, atol=2e-3)
+
+
+def test_peak_flags_detects_two_peaks_and_second_ratio_positive() -> None:
+    """Tests that peak_flags detects two separated peaks."""
+    z = _toy_grid()
+    nz = _gaussian(z, 0.7, 0.06) + 0.5 * _gaussian(z, 1.3, 0.06)
+
+    out = peak_flags(z, nz, min_rel_height=0.1)
+
+    assert out["num_peaks"] >= 2.0
+    assert 0.0 < out["second_peak_ratio"] < 1.0
+
+
+def test_peak_flags_per_bin_returns_mapping() -> None:
+    """Tests that peak_flags_per_bin returns per-bin peak dictionaries."""
+    z = _toy_grid()
+    bins = {0: _gaussian(z, 0.6, 0.1), 1: _gaussian(z, 1.2, 0.2)}
+
+    out = peak_flags_per_bin(z, bins)
+
+    assert set(out.keys()) == {0, 1}
+    assert "mode" in out[0]
+    assert "num_peaks" in out[1]
+
+
+def test_peak_flags_per_bin_respects_sorted_bin_indices() -> None:
+    """Tests that peak_flags_per_bin uses sorted bin keys in its output."""
+    z = _toy_grid()
+    bins = {2: _gaussian(z, 1.4, 0.1), 0: _gaussian(z, 0.6, 0.1)}
+
+    out = peak_flags_per_bin(z, bins)
+
+    assert list(out.keys()) == [0, 2]
+
+
+def test_shape_stats_raises_on_empty_bins() -> None:
+    """Tests that shape_stats raises ValueError for empty bins mapping."""
+    z = _toy_grid()
+    with pytest.raises(ValueError, match=r"bins must not be empty"):
+        shape_stats(z, {})
+
+
+def test_shape_stats_propagates_invalid_center_method() -> None:
+    """Tests that shape_stats propagates errors for invalid center_method."""
+    z = _toy_grid()
+    bins = {0: _gaussian(z, 0.6, 0.1)}
+    with pytest.raises(ValueError, match=r'method must be "mean", "median", "mode", or "pXX"'):
+        shape_stats(z, bins, center_method="nope")
+
+
+def test_shape_stats_rejects_invalid_quantiles() -> None:
+    """Tests that shape_stats rejects quantiles outside [0, 1]."""
+    z = _toy_grid()
+    bins = {0: _gaussian(z, 0.6, 0.1)}
+    with pytest.raises(ValueError, match=r"q must be between 0 and 1"):
+        shape_stats(z, bins, quantiles=(0.5, 1.1))
+
+
+def test_in_range_fraction_per_bin_missing_index_in_mapping_raises() -> None:
+    """Tests that in_range_fraction_per_bin raises when mapping edges miss a bin."""
+    z = _toy_grid()
+    bins = {0: _gaussian(z, 0.6, 0.1), 1: _gaussian(z, 1.2, 0.2)}
+    edges = {0: (0.3, 0.9)}  # missing bin 1
+    with pytest.raises(ValueError, match=r"bin_edges is missing bin index 1"):
+        in_range_fraction_per_bin(z, bins, edges)
+
+
+def test_in_range_fraction_per_bin_sequence_too_short_raises() -> None:
+    """Tests that in_range_fraction_per_bin raises when edge sequence is too short."""
+    z = _toy_grid()
+    bins = {0: _gaussian(z, 0.6, 0.1), 1: _gaussian(z, 1.2, 0.2)}
+    edges = [0.0, 1.0]  # cannot cover bin 1
+    with pytest.raises(ValueError, match=r"bin_edges sequence is too short"):
+        in_range_fraction_per_bin(z, bins, edges)
+
+
+def test_peak_flags_short_curve_branch_returns_one_peak() -> None:
+    """Tests that peak_flags handles curves with fewer than 3 points."""
+    z = np.array([0.0, 1.0], dtype=float)
+    nz = np.array([0.0, 2.0], dtype=float)
+    out = peak_flags(z, nz, min_rel_height=0.1)
+    assert out["num_peaks"] == pytest.approx(1.0)
+    assert out["second_peak_ratio"] is None
+    assert out["mode"] == pytest.approx(1.0)
+
+
+def test_peak_flags_nonpositive_max_returns_zero_peaks() -> None:
+    """Tests that peak_flags returns zero peaks when global max is non-positive."""
+    z = _toy_grid()
+    nz = np.zeros_like(z)
+    out = peak_flags(z, nz, min_rel_height=0.1)
+    assert out["num_peaks"] == pytest.approx(0.0)
+    assert out["second_peak_ratio"] is None
+
+
+def test_peak_flags_height_filter_can_remove_all_peaks() -> None:
+    """Tests that peak_flags returns zero peaks if all detected peaks fail height cut."""
+    z = np.array([0.0, 1.0, 2.0, 3.0, 4.0], dtype=float)
+    # Big global max at endpoint (not counted as a peak), tiny interior bump at z=2.
+    nz = np.array([10.0, 0.0, 0.1, 0.0, 0.0], dtype=float)
+
+    out = peak_flags(z, nz, min_rel_height=0.5)  # threshold = 5.0
+
+    assert out["num_peaks"] == pytest.approx(0.0)
+    assert out["second_peak_ratio"] is None
+
+
+def test_population_stats_normalize_frac_false_rejects_not_sum_one(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Tests that population_stats rejects non-unit sums when normalize_frac is False."""
+    import binny.tomography.stats as bsmod
+
+    def _fake_frac(_meta):
+        return {0: 0.2, 1: 0.2}  # sum = 0.4
+
+    monkeypatch.setattr(bsmod, "galaxy_fraction_per_bin", _fake_frac)
+
+    z = _toy_grid()
+    bins = {0: _gaussian(z, 0.6, 0.1), 1: _gaussian(z, 1.2, 0.2)}
+    meta = {"frac_per_bin": {0: 1.0, 1: 1.0}}  # doesn't matter now
+
+    with pytest.raises(
+        ValueError, match=r"normalize_frac=False requires" r" fractions to sum to 1"
+    ):
+        population_stats(bins, meta, normalize_frac=False, rtol=0.0, atol=0.0)
+
+
+def test_shape_stats_edges_info_for_mapping_edges() -> None:
+    """Tests that shape_stats returns edges info for mapping bin_edges."""
+    z = _toy_grid()
+    bins = {0: _gaussian(z, 0.6, 0.1), 1: _gaussian(z, 1.2, 0.2)}
+    edges = {0: (0.3, 0.9), 1: (0.9, 1.6)}  # widths: 0.6, 0.7
+
+    out = shape_stats(z, bins, bin_edges=edges, decimal_places=None)
+
+    assert "edges" in out
+    assert set(out["edges"].keys()) >= {"widths_per_bin", "width_summary", "equidistant_score"}
+    assert out["edges"]["widths_per_bin"] == {0: pytest.approx(0.6), 1: pytest.approx(0.7)}
+
+    ws = out["edges"]["width_summary"]
+    assert ws["min"] == pytest.approx(0.6)
+    assert ws["max"] == pytest.approx(0.7)
+    assert out["edges"]["equidistant_score"] > 0.0
+
+
+def test_shape_stats_edges_info_for_sequence_edges() -> None:
+    """Tests that shape_stats returns edges info for sequence bin_edges."""
+    z = _toy_grid()
+    bins = {0: _gaussian(z, 0.6, 0.1), 1: _gaussian(z, 1.2, 0.2)}
+    edges = [0.0, 1.0, 2.0]  # widths: 1.0, 1.0
+
+    out = shape_stats(z, bins, bin_edges=edges, decimal_places=None)
+
+    assert "edges" in out
+    assert set(out["edges"].keys()) >= {"widths", "width_summary", "equidistant_score"}
+    assert out["edges"]["widths"] == [pytest.approx(1.0), pytest.approx(1.0)]
+
+    ws = out["edges"]["width_summary"]
+    assert ws["min"] == pytest.approx(1.0)
+    assert ws["max"] == pytest.approx(1.0)
+    assert out["edges"]["equidistant_score"] == pytest.approx(0.0)
+
+
+def test_shape_stats_edges_sequence_includes_edges_info() -> None:
+    """Tests that shape_stats includes edges info in returned sequence."""
+    z = _toy_grid()
+    bins = {0: _gaussian(z, 0.6, 0.1), 1: _gaussian(z, 1.2, 0.2)}
+    edges = [0.0, 0.8, 2.0]  # widths: 0.8, 1.2 (mean 1.0)
+
+    out = shape_stats(z, bins, bin_edges=edges, decimal_places=None)
+
+    assert "edges" in out
+    assert set(out["edges"].keys()) >= {"widths", "width_summary", "equidistant_score"}
+    assert out["edges"]["widths"] == pytest.approx([0.8, 1.2])
+    assert out["edges"]["width_summary"]["mean"] == pytest.approx(1.0)
+    assert out["edges"]["equidistant_score"] == pytest.approx(0.2)
+
+
+def test_shape_stats_edges_info_mapping() -> None:
+    """Tests that shape_stats returns edges info for mapping bin_edges."""
+    z = _toy_grid()
+    bins = {0: _gaussian(z, 0.6, 0.1), 1: _gaussian(z, 1.2, 0.2)}
+    edges = {0: (0.0, 1.0), 1: (1.0, 2.0)}
+    out = shape_stats(z, bins, bin_edges=edges, decimal_places=None)
+
+    assert "edges" in out
+    assert set(out["edges"].keys()) >= {"widths_per_bin", "width_summary", "equidistant_score"}
+    assert out["edges"]["widths_per_bin"][0] == pytest.approx(1.0)
+    assert out["edges"]["widths_per_bin"][1] == pytest.approx(1.0)
+    assert out["edges"]["equidistant_score"] == pytest.approx(0.0)
+
+
+def test_shape_stats_edges_info_sequence() -> None:
+    """Tests that shape_stats returns edges info for sequence bin_edges."""
+    z = _toy_grid()
+    bins = {0: _gaussian(z, 0.6, 0.1), 1: _gaussian(z, 1.2, 0.2)}
+    edges = [0.0, 0.8, 2.0]  # widths 0.8 and 1.2
+    out = shape_stats(z, bins, bin_edges=edges, decimal_places=None)
+
+    assert "edges" in out
+    assert set(out["edges"].keys()) >= {"widths", "width_summary", "equidistant_score"}
+    assert out["edges"]["widths"] == pytest.approx([0.8, 1.2])
+    assert out["edges"]["equidistant_score"] > 0.0
+
+
+def test_population_stats_normalize_frac_false_accepts_sum_one() -> None:
+    """Tests that population_stats accepts fractions that sum to 1 when normalize_frac is False."""
+    z = _toy_grid()
+    bins = {0: _gaussian(z, 0.6, 0.1), 1: _gaussian(z, 1.2, 0.2)}
+    meta = {"frac_per_bin": {0: 0.4, 1: 0.6}}  # already sums to 1
+
+    out = population_stats(bins, meta, normalize_frac=False, rtol=0.0, atol=0.0)
+
+    assert out["fractions"][0] == pytest.approx(0.4)
+    assert out["fractions"][1] == pytest.approx(0.6)
+
+
+def test_population_stats_density_only_no_counts() -> None:
+    """Tests that population_stats returns only density when no counts are provided."""
+    z = _toy_grid()
+    bins = {0: _gaussian(z, 0.6, 0.1), 1: _gaussian(z, 1.2, 0.2)}
+    meta = {"frac_per_bin": {0: 1.0, 1: 3.0}}
+
+    out = population_stats(bins, meta, density_total=40.0)
+
+    assert "density_per_bin" in out
+    assert "count_per_bin" not in out
+
+
+def test_in_range_fraction_returns_zero_if_range_has_too_few_grid_points() -> None:
+    """Tests that in_range_fraction returns zero if range has too few grid points."""
+    z = np.array([0.0, 1.0, 2.0])
+    nz = np.array([0.0, 1.0, 0.0])
+    # range picks only one point
+    assert in_range_fraction(z, nz, 1.0, 1.0 + 1e-12) == pytest.approx(0.0)
+
+
+def test_galaxy_fraction_per_bin_reads_nested_bins_block() -> None:
+    """Tests that galaxy_fraction_per_bin reads nested bins block."""
+    meta = {"bins": {"frac_per_bin": {0: 1.0, 1: 1.0}}}
+    fracs = galaxy_fraction_per_bin(meta)
+    assert set(fracs) == {0, 1}
+    assert sum(fracs.values()) == pytest.approx(1.0)
+
+
+def test__equidistant_score_returns_zero_if_mean_width_nonpositive() -> None:
+    """Tests that _equidistant_score returns zero if mean width is nonpositive."""
+    import binny.tomography.stats as bs
+
+    assert bs._equidistant_score([0.0, 0.0]) == pytest.approx(0.0)  # mean = 0
+    assert bs._equidistant_score([-1.0, 1.0]) == pytest.approx(0.0)  # mean = 0
+
+
+def test_in_range_fraction_returns_zero_if_mask_too_small() -> None:
+    """Tests that in_range_fraction returns zero if mask is too small."""
+    z = np.array([0.0, 1.0, 2.0], dtype=float)
+    nz = np.array([0.0, 1.0, 0.0], dtype=float)  # positive total weight
+
+    f = in_range_fraction(z, nz, 1.0, 1.0 + 1e-12)  # only z==1.0 in mask
+    assert f == pytest.approx(0.0)
+
+
+def test_in_range_fraction_per_bin_rejects_bad_edges_array_shape() -> None:
+    """Tests that in_range_fraction_per_bin rejects bad edges array shape."""
+    z = _toy_grid()
+    bins = {0: _gaussian(z, 0.6, 0.1)}
+    with pytest.raises(ValueError, match="bin_edges must be a 1D sequence"):
+        in_range_fraction_per_bin(z, bins, np.zeros((2, 2)))
+
+
+def test_peak_flags_no_interior_peaks_branch() -> None:
+    """Tests that peak_flags returns zero peaks when no interior peaks are detected."""
+    z = np.array([0.0, 1.0, 2.0, 3.0], dtype=float)
+    nz = np.array([1.0, 2.0, 3.0, 4.0], dtype=float)  # monotone increasing
+
+    out = peak_flags(z, nz, min_rel_height=0.1)
+    assert out["num_peaks"] == pytest.approx(0.0)
+    assert out["mode"] == pytest.approx(3.0)
+
+
+def test_peak_flags_height_filter_removes_detected_peaks_branch() -> None:
+    """Tests that peak_flags height filter can remove all detected peaks."""
+    z = np.array([0.0, 1.0, 2.0, 3.0, 4.0], dtype=float)
+    # interior peak at z=2 (bigger than neighbors) but tiny compared to global max at endpoint
+    nz = np.array([10.0, 0.0, 0.2, 0.0, 0.0], dtype=float)
+
+    out = peak_flags(z, nz, min_rel_height=0.05)  # threshold = 0.5, peak=0.2 filtered out
+    assert out["num_peaks"] == pytest.approx(0.0)
+    assert out["second_peak_ratio"] is None
+
+
+def test_shape_stats_edges_mapping_includes_edges_info() -> None:
+    """Tests that shape_stats includes edges info in returned mapping."""
+    z = _toy_grid()
+    bins = {0: _gaussian(z, 0.6, 0.1), 1: _gaussian(z, 1.2, 0.2)}
+    edges = {0: (0.0, 1.0), 1: (1.0, 2.0)}  # widths: 1.0, 1.0
+
+    out = shape_stats(z, bins, bin_edges=edges, decimal_places=None)
+
+    assert "edges" in out
+    assert out["edges"]["widths_per_bin"][0] == pytest.approx(1.0)
+    assert out["edges"]["widths_per_bin"][1] == pytest.approx(1.0)
+    assert out["edges"]["equidistant_score"] == pytest.approx(0.0)
+
+
+def _dummy_bins(n_bins: int = 5) -> dict[int, np.ndarray]:
+    """Mock bins for testing."""
+    z = np.linspace(0.0, 2.0, 10)
+    return {i: np.ones_like(z) for i in range(n_bins)}
+
+
+def test_galaxy_fraction_per_bin_equipopulated_known() -> None:
+    """Test that galaxy_fraction_per_bin returns known values for equipopulated bins."""
+    meta = {"frac_per_bin": {0: 1.0, 1: 1.0, 2: 1.0, 3: 1.0, 4: 1.0}}
+    fr = galaxy_fraction_per_bin(meta)
+
+    assert set(fr) == {0, 1, 2, 3, 4}
+    assert sum(fr.values()) == pytest.approx(1.0)
+    for i in range(5):
+        assert fr[i] == pytest.approx(0.2)
+
+
+def test_population_stats_counts_known_500_over_5_bins() -> None:
+    """Test that population_stats returns known values for known counts."""
+    bins = _dummy_bins(5)
+    meta = {"frac_per_bin": {i: 1.0 for i in range(5)}}
+
+    N_total = 500.0
+    survey_area = 1.0
+    density_total = N_total / survey_area  # so counts sum to 500
+
+    out = population_stats(bins, meta, density_total=density_total, survey_area=survey_area)
+
+    assert out["density_total"] == pytest.approx(density_total)
+    assert out["survey_area"] == pytest.approx(survey_area)
+    assert sum(out["fractions"].values()) == pytest.approx(1.0)
+    assert sum(out["count_per_bin"].values()) == pytest.approx(N_total)
+
+    for i in range(5):
+        assert out["fractions"][i] == pytest.approx(0.2)
+        assert out["count_per_bin"][i] == pytest.approx(100.0)
+
+
+def test_population_stats_weighted_known_split() -> None:
+    """Tests that population_stats returns known values for known counts and weights."""
+    bins = _dummy_bins(2)
+    meta = {"frac_per_bin": {0: 1.0, 1: 3.0}}
+
+    N_total = 400.0
+    survey_area = 2.0
+    density_total = N_total / survey_area  # 200 per arcmin^2 if area=2 arcmin^2
+
+    out = population_stats(bins, meta, density_total=density_total, survey_area=survey_area)
+
+    assert out["fractions"][0] == pytest.approx(0.25)
+    assert out["fractions"][1] == pytest.approx(0.75)
+    assert out["count_per_bin"][0] == pytest.approx(100.0)
+    assert out["count_per_bin"][1] == pytest.approx(300.0)
+
+
+def test_galaxy_density_and_count_helpers_known_numbers() -> None:
+    """Tests that galaxy_density_per_bin and galaxy_count_per_bin return known values."""
+    meta = {"frac_per_bin": {0: 1.0, 1: 3.0}}  # normalized -> 0.25, 0.75
+
+    dens = galaxy_density_per_bin(meta, density_total=40.0)
+    assert dens[0] == pytest.approx(10.0)
+    assert dens[1] == pytest.approx(30.0)
+
+    counts = galaxy_count_per_bin(dens, survey_area=100.0)
+    assert counts[0] == pytest.approx(1000.0)
+    assert counts[1] == pytest.approx(3000.0)
+
+
+def test_galaxy_fraction_per_bin_reads_nested_bins_block_known() -> None:
+    """Tests that galaxy_fraction_per_bin reads nested bins block."""
+    meta = {"bins": {"frac_per_bin": {"0": 2.0, 1: 2.0}}}
+    fr = galaxy_fraction_per_bin(meta)
+
+    assert set(fr) == {0, 1}
+    assert fr[0] == pytest.approx(0.5)
+    assert fr[1] == pytest.approx(0.5)
+
+
+def test_population_stats_density_matches_galaxy_density_helper() -> None:
+    """Tests that population_stats uses the same density allocation as the helper."""
+    bins = _dummy_bins(2)
+    meta = {"frac_per_bin": {0: 1.0, 1: 3.0}}
+
+    out = population_stats(bins, meta, density_total=40.0)
+    expected = galaxy_density_per_bin(meta, density_total=40.0)
+
+    assert out["density_per_bin"] == pytest.approx(expected)
+
+
+def test_population_stats_density_uses_galaxy_density_helper(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Tests that population_stats routes density allocation through the helper."""
+    import binny.tomography.stats as bs
+
+    called = {"value": False}
+
+    def fake_galaxy_density_per_bin(metadata, density_total):
+        called["value"] = True
+        assert metadata == {"frac_per_bin": {0: 1.0, 1: 3.0}}
+        assert density_total == pytest.approx(40.0)
+        return {0: 10.0, 1: 30.0}
+
+    monkeypatch.setattr(
+        bs,
+        "galaxy_density_per_bin",
+        fake_galaxy_density_per_bin,
+    )
+
+    bins = _dummy_bins(2)
+    meta = {"frac_per_bin": {0: 1.0, 1: 3.0}}
+
+    out = bs.population_stats(bins, meta, density_total=40.0)
+
+    assert called["value"] is True
+    assert out["density_per_bin"] == {0: 10.0, 1: 30.0}
+
+
+def test_population_stats_density_helper_output_is_restricted_to_bins() -> None:
+    """Tests that population_stats only returns densities for requested bins."""
+    bins = _dummy_bins(2)
+    meta = {"frac_per_bin": {0: 1.0, 1: 3.0, 2: 6.0}}
+
+    out = population_stats(bins, meta, density_total=100.0)
+
+    assert set(out["density_per_bin"]) == {0, 1}
+
+
+def test_comoving_density_per_bin_returns_count_over_volume() -> None:
+    """Tests that comoving density is computed as count divided by volume."""
+    counts = {0: 50.0, 1: 120.0}
+    volumes = {0: 1000.0, 1: 2000.0}
+
+    out = comoving_density_per_bin(counts, volumes)
+
+    assert out[0] == pytest.approx(0.05)
+    assert out[1] == pytest.approx(0.06)
+
+
+def test_comoving_density_per_bin_rejects_nonpositive_volume() -> None:
+    """Tests that comoving density requires positive volumes."""
+    counts = {0: 50.0}
+    volumes = {0: 0.0}
+
+    with pytest.raises(ValueError, match=r"volume_per_bin\[0\] must be positive"):
+        comoving_density_per_bin(counts, volumes)
+
+
+def test_population_stats_accepts_count_and_volume_per_bin() -> None:
+    """Tests population stats with externally supplied counts and volumes."""
+    bins = _dummy_bins(2)
+    meta = {"frac_per_bin": {0: 1.0, 1: 3.0}}
+
+    out = population_stats(
+        bins,
+        meta,
+        total_count_per_bin={0: 50.0, 1: 120.0},
+        volume_per_bin={0: 1000.0, 1: 2000.0},
+        decimal_places=None,
+    )
+
+    assert out["fractions"][0] == pytest.approx(0.25)
+    assert out["fractions"][1] == pytest.approx(0.75)
+
+    assert out["total_count_per_bin"][0] == pytest.approx(50.0)
+    assert out["total_count_per_bin"][1] == pytest.approx(120.0)
+
+    assert out["volume_per_bin"][0] == pytest.approx(1000.0)
+    assert out["volume_per_bin"][1] == pytest.approx(2000.0)
+
+    assert out["density_per_bin"][0] == pytest.approx(0.05)
+    assert out["density_per_bin"][1] == pytest.approx(0.06)
+    assert out["density_unit"] == "h^3 Mpc^-3"
+
+
+def test_population_stats_count_and_volume_inputs_must_be_paired() -> None:
+    """Tests that count and volume inputs must be supplied together."""
+    bins = _dummy_bins(2)
+    meta = {"frac_per_bin": {0: 1.0, 1: 1.0}}
+
+    with pytest.raises(
+        ValueError,
+        match="total_count_per_bin and volume_per_bin must be provided together",
+    ):
+        population_stats(
+            bins,
+            meta,
+            total_count_per_bin={0: 50.0, 1: 120.0},
+        )
+
+    with pytest.raises(
+        ValueError,
+        match="total_count_per_bin and volume_per_bin must be provided together",
+    ):
+        population_stats(
+            bins,
+            meta,
+            volume_per_bin={0: 1000.0, 1: 2000.0},
+        )
+
+
+def test_population_stats_count_volume_output_restricted_to_requested_bins() -> None:
+    """Tests that count, volume, and density outputs follow the requested bins."""
+    bins = _dummy_bins(2)
+    meta = {"frac_per_bin": {0: 1.0, 1: 1.0, 2: 1.0}}
+
+    out = population_stats(
+        bins,
+        meta,
+        total_count_per_bin={0: 50.0, 1: 120.0, 2: 999.0},
+        volume_per_bin={0: 1000.0, 1: 2000.0, 2: 9999.0},
+        decimal_places=None,
+    )
+
+    assert set(out["total_count_per_bin"]) == {0, 1}
+    assert set(out["volume_per_bin"]) == {0, 1}
+    assert set(out["density_per_bin"]) == {0, 1}
+
+
+def test_population_stats_count_volume_branch_rejects_bad_volume() -> None:
+    """Tests that population_stats propagates invalid volume checks."""
+    bins = _dummy_bins(1)
+    meta = {"frac_per_bin": {0: 1.0}}
+
+    with pytest.raises(ValueError, match=r"volume_per_bin\[0\] must be positive"):
+        population_stats(
+            bins,
+            meta,
+            total_count_per_bin={0: 50.0},
+            volume_per_bin={0: -1.0},
+            decimal_places=None,
+        )
+
+
+def test_tabulated_comoving_number_density_metadata_schema() -> None:
+    """Tests the generic tabulated-comoving number-density metadata schema."""
+    number_density = {
+        "model": "tabulated_comoving",
+        "n_gal_comoving_h3_mpc3_col": 3,
+        "total_count_col": 4,
+        "volume_col": 5,
+    }
+
+    assert number_density["model"] == "tabulated_comoving"
+    assert number_density["n_gal_comoving_h3_mpc3_col"] == 3
+    assert number_density["total_count_col"] == 4
+    assert number_density["volume_col"] == 5
+
+
+def test_parent_stats_returns_expected_structure() -> None:
+    """Tests that parent_stats returns moments, quantiles, and peak diagnostics."""
+    z = _toy_grid()
+    nz = _gaussian(z, 0.8, 0.15)
+
+    out = parent_stats(z, nz)
+
+    assert set(out.keys()) == {"moments", "quantiles", "peaks"}
+    assert set(out["moments"].keys()) == {
+        "mean",
+        "median",
+        "mode",
+        "std",
+        "skewness",
+        "kurtosis",
+        "iqr",
+        "width_68",
+    }
+    assert set(out["quantiles"].keys()) == {0.16, 0.5, 0.84}
+    assert set(out["peaks"].keys()) == {
+        "mode",
+        "mode_height",
+        "num_peaks",
+        "second_peak_ratio",
+    }
+
+
+def test_parent_stats_gaussian_known_values() -> None:
+    """Tests that parent_stats recovers the moments of a Gaussian distribution."""
+    z = _toy_grid()
+    mu, sig = 0.8, 0.15
+    nz = _gaussian(z, mu, sig)
+
+    out = parent_stats(z, nz, decimal_places=None)
+    moments = out["moments"]
+
+    assert moments["mean"] == pytest.approx(mu, abs=2e-3)
+    assert moments["median"] == pytest.approx(mu, abs=2e-3)
+    assert moments["mode"] == pytest.approx(mu, abs=2e-3)
+    assert moments["std"] == pytest.approx(sig, abs=2e-3)
+    assert moments["skewness"] == pytest.approx(0.0, abs=2e-3)
+    assert moments["kurtosis"] == pytest.approx(0.0, abs=2e-3)
+    assert moments["iqr"] > 0.0
+    assert moments["width_68"] > 0.0
+
+
+def test_parent_stats_matches_existing_helpers() -> None:
+    """Tests that parent_stats agrees with the underlying statistics helpers."""
+    z = _toy_grid()
+    nz = _gaussian(z, 0.9, 0.2)
+    quantiles = (0.1, 0.5, 0.9)
+
+    out = parent_stats(
+        z,
+        nz,
+        quantiles=quantiles,
+        min_rel_height=0.2,
+        decimal_places=None,
+    )
+
+    assert out["moments"] == pytest.approx(bin_moments(z, nz))
+    assert out["quantiles"] == pytest.approx(bin_quantiles(z, nz, quantiles))
+    assert out["peaks"] == peak_flags(z, nz, min_rel_height=0.2)
+
+
+def test_parent_stats_independent_of_normalization() -> None:
+    """Tests that parent shape statistics are invariant under rescaling."""
+    z = _toy_grid()
+    nz = _gaussian(z, 0.8, 0.15)
+
+    out = parent_stats(z, nz, decimal_places=None)
+    scaled = parent_stats(z, 5.0 * nz, decimal_places=None)
+
+    assert out["moments"] == pytest.approx(scaled["moments"])
+    assert out["quantiles"] == pytest.approx(scaled["quantiles"])
+    assert out["peaks"]["mode"] == pytest.approx(scaled["peaks"]["mode"])
+    assert out["peaks"]["num_peaks"] == pytest.approx(scaled["peaks"]["num_peaks"])
+    assert out["peaks"]["mode_height"] * 5.0 == pytest.approx(scaled["peaks"]["mode_height"])
+
+
+def test_parent_stats_custom_quantiles() -> None:
+    """Tests that parent_stats accepts custom quantiles."""
+    z = _toy_grid()
+    nz = _gaussian(z, 1.0, 0.2)
+
+    out = parent_stats(z, nz, quantiles=(0.1, 0.5, 0.9), decimal_places=None)
+
+    assert set(out["quantiles"].keys()) == {0.1, 0.5, 0.9}
+    assert out["quantiles"][0.1] < out["quantiles"][0.5]
+    assert out["quantiles"][0.5] < out["quantiles"][0.9]
+
+
+def test_parent_stats_detects_multiple_peaks() -> None:
+    """Tests that parent_stats identifies multiple peaks in a bimodal distribution."""
+    z = _toy_grid()
+    nz = _gaussian(z, 0.6, 0.06) + 0.5 * _gaussian(z, 1.4, 0.06)
+
+    out = parent_stats(z, nz, min_rel_height=0.1, decimal_places=None)
+
+    assert out["peaks"]["num_peaks"] == pytest.approx(2.0)
+    assert out["peaks"]["second_peak_ratio"] == pytest.approx(0.5, abs=1e-3)
+    assert out["moments"]["mode"] == pytest.approx(0.6, abs=2e-3)
+
+
+def test_parent_stats_respects_decimal_places() -> None:
+    """Tests that parent_stats applies the requested rounding precision."""
+    z = _toy_grid()
+    nz = _gaussian(z, 0.837, 0.153)
+
+    rounded = parent_stats(z, nz, decimal_places=2)
+    full = parent_stats(z, nz, decimal_places=None)
+
+    assert rounded["moments"]["mean"] == pytest.approx(round(full["moments"]["mean"], 2))
+    assert rounded["moments"]["std"] == pytest.approx(round(full["moments"]["std"], 2))
+    assert rounded["quantiles"][0.5] == pytest.approx(round(full["quantiles"][0.5], 2))
+
+
+def test_parent_stats_rejects_zero_distribution() -> None:
+    """Tests that parent_stats rejects a distribution with zero total weight."""
+    z = _toy_grid()
+    nz = np.zeros_like(z)
+
+    with pytest.raises(ValueError, match="Total weight must be positive"):
+        parent_stats(z, nz)
+
+
+def test_parent_stats_rejects_invalid_quantiles() -> None:
+    """Tests that parent_stats rejects quantiles outside [0, 1]."""
+    z = _toy_grid()
+    nz = _gaussian(z, 0.8, 0.15)
+
+    with pytest.raises(ValueError, match="q must be between 0 and 1"):
+        parent_stats(z, nz, quantiles=(0.5, 1.1))
+
+
+def test_parent_stats_rejects_mismatched_shapes() -> None:
+    """Tests that parent_stats rejects mismatched redshift and distribution arrays."""
+    z = _toy_grid()
+    nz = np.ones(z.size - 1)
+
+    with pytest.raises(ValueError):
+        parent_stats(z, nz)
+
+
+def test_parent_stats_uses_supplied_parent_not_bin_sum() -> None:
+    """Tests that parent statistics use the supplied parent distribution."""
+    z = np.linspace(0.0, 2.0, 2001)
+
+    bins = {
+        0: np.exp(-0.5 * ((z - 0.4) / 0.1) ** 2),
+        1: np.exp(-0.5 * ((z - 0.8) / 0.1) ** 2),
+    }
+
+    parent = np.exp(-0.5 * ((z - 1.5) / 0.15) ** 2)
+
+    result = build_predefined_tomography(
+        z,
+        bins,
+        nz=parent,
+    )
+
+    np.testing.assert_allclose(result.nz, parent)
+
+    stats = parent_stats(result.z, result.nz, decimal_places=None)
+    bin_stats = shape_stats(result.z, result.bins, decimal_places=None)
+
+    assert stats["moments"]["mean"] == pytest.approx(1.5, abs=2e-3)
+    assert stats["moments"]["std"] == pytest.approx(0.15, abs=2e-3)
+
+    assert bin_stats["per_bin"][0]["moments"]["mean"] == pytest.approx(0.4, abs=2e-3)
+    assert bin_stats["per_bin"][1]["moments"]["mean"] == pytest.approx(0.8, abs=2e-3)
+
+    assert stats["moments"]["mean"] != pytest.approx(bin_stats["per_bin"][0]["moments"]["mean"])

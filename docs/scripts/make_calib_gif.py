@@ -6,7 +6,7 @@ import numpy as np
 from matplotlib.animation import FuncAnimation, PillowWriter
 from matplotlib.colors import to_rgba
 
-from binny import NZTomography
+from binny.nz import calibrate_depth_smail_from_mock, nz_model
 
 DEFAULT_FONTSIZE = 19
 plt.rcParams.update(
@@ -274,7 +274,7 @@ mag = 22.0 + 2.2 * z_true + rng.normal(0.0, 0.45, size=z_true.size)
 
 maglims = np.array([22.5, 23.0, 23.5, 24.0, 24.5, 25])
 
-result = NZTomography.calibrate_smail_from_mock(
+result = calibrate_depth_smail_from_mock(
     z_true=z_true,
     mag=mag,
     maglims=maglims,
@@ -308,7 +308,7 @@ for maglim in maglims:
     z0 = eval_z0_fit(z0_fit, maglim)
     ngal = eval_ngal_fit(ngal_fit, maglim)
 
-    nz_fit = NZTomography.nz_model(
+    nz_fit = nz_model(
         "smail",
         z_grid,
         z0=z0,

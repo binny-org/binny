@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 from matplotlib.animation import FuncAnimation, PillowWriter
 
-from binny import NZTomography
+from binny.nz import nz_model
 
 DEFAULT_FONTSIZE = 19
 plt.rcParams.update(
@@ -22,7 +22,7 @@ plt.rcParams.update(
 
 
 def smail(z, z0, alpha, beta):
-    return NZTomography.nz_model(
+    return nz_model(
         "smail",
         z,
         z0=z0,
@@ -33,7 +33,7 @@ def smail(z, z0, alpha, beta):
 
 
 def shifted_smail(z, z0, alpha, beta, z_shift):
-    return NZTomography.nz_model(
+    return nz_model(
         "shifted_smail",
         z,
         z0=z0,
@@ -45,7 +45,7 @@ def shifted_smail(z, z0, alpha, beta, z_shift):
 
 
 def gaussian_mixture(z, mus, sigmas, weights):
-    return NZTomography.nz_model(
+    return nz_model(
         "gaussian_mixture",
         z,
         mus=np.asarray(mus, dtype=float),
@@ -56,7 +56,7 @@ def gaussian_mixture(z, mus, sigmas, weights):
 
 
 def tophat(z, zmin, zmax):
-    return NZTomography.nz_model(
+    return nz_model(
         "tophat",
         z,
         zmin=zmin,

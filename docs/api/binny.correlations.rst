@@ -1,6 +1,11 @@
 binny.correlations package
 ==========================
 
+.. automodule:: binny.correlations
+   :members:
+   :show-inheritance:
+   :undoc-members:
+
 Submodules
 ----------
 
@@ -12,11 +17,3 @@ Submodules
    binny.correlations.metrics
    binny.correlations.scores
    binny.correlations.topology
-
-Module contents
----------------
-
-.. automodule:: binny.correlations
-   :members:
-   :show-inheritance:
-   :undoc-members:

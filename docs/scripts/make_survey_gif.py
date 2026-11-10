@@ -6,7 +6,8 @@ import numpy as np
 import yaml
 from matplotlib.animation import FuncAnimation, PillowWriter
 
-from binny import NZTomography
+from binny.nz import nz_model
+from binny.tomography import build_tomography_from_spec
 
 DEFAULT_FONTSIZE = 19
 plt.rcParams.update(
@@ -163,22 +164,27 @@ selected = {
 }
 
 for entry in entries:
-    key = (entry["role"], entry["year"])
+    if "year" not in entry:
+        continue
+
+    key = (entry["role"], str(entry["year"]))
     if key in selected:
         selected[key] = entry
+
+missing = [key for key, entry in selected.items() if entry is None]
+if missing:
+    raise ValueError(f"Missing LSST survey presets: {missing}")
 
 results = {}
 
 for key, entry in selected.items():
-    nz = NZTomography.nz_model(
+    nz = nz_model(
         entry["nz"]["model"],
         z,
-        normalize=True,
         **entry["nz"]["params"],
     )
 
-    tomo = NZTomography()
-    result = tomo.build_bins(
+    result = build_tomography_from_spec(
         z=z,
         nz=nz,
         tomo_spec=build_tomo_spec(entry),

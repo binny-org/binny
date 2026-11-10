@@ -17,34 +17,33 @@ consistent across forecasts, examples, and analyses.
 Discovering and loading presets
 -------------------------------
 
-Built-in survey presets can be discovered and loaded directly through
-``NZTomography``. The YAML files remain the single source of truth, while users
-can access them by survey name.
+Built-in survey presets can be discovered and loaded through the
+functional API in :mod:`binny.surveys`. The YAML files remain the
+single source of truth, while users can access them by survey name.
 
 .. code-block:: python
 
-   from binny import NZTomography
+   from binny.surveys import (
+       list_survey_configs,
+       load_survey_config,
+       show_survey_config,
+   )
+
+   print(list_survey_configs())
+
+   cfg = load_survey_config("lsst")
+   show_survey_config("lsst")
 
 
-   print(NZTomography.list_surveys())
-
-   cfg = NZTomography.load_survey_config("lsst")
-   NZTomography.show_survey_config("lsst")
-
-
-The returned ``cfg`` can be passed directly to ``build_bins``.
+The configuration can be passed to ``build_survey_tomography``,
+or a built-in preset can be selected directly by survey name.
 
 .. code-block:: python
 
-   from binny import NZTomography
+   from binny.surveys import build_survey_tomography
 
-
-   cfg = NZTomography.load_survey_config("lsst")
-
-   tomo = NZTomography()
-
-   source = tomo.build_bins(
-       cfg=cfg,
+   source = build_survey_tomography(
+       survey="lsst",
        role="source",
        year="1",
    )
@@ -81,7 +80,7 @@ distributions for lens and source samples in years 1 and 10.
    import matplotlib.pyplot as plt
    import numpy as np
 
-   from binny import NZTomography
+   from binny.surveys import build_survey_tomography
 
 
    def plot_bins(ax, result, title):
@@ -127,8 +126,7 @@ distributions for lens and source samples in years 1 and 10.
 
    for role in ["lens", "source"]:
        for year in ["1", "10"]:
-           tomo = NZTomography()
-           results[(role, year)] = tomo.build_survey_bins(
+           results[(role, year)] = build_survey_tomography(
                "lsst",
                role=role,
                year=year,
@@ -199,7 +197,7 @@ bins.
    import matplotlib.pyplot as plt
    import numpy as np
 
-   from binny import NZTomography
+   from binny.surveys import build_survey_tomography
 
 
    def plot_bins(ax, result, title):
@@ -244,8 +242,7 @@ bins.
    results = {}
 
    for role in ["lens", "source"]:
-       tomo = NZTomography()
-       results[role] = tomo.build_survey_bins(
+       results[role] = build_survey_tomography(
            "euclid",
            role=role,
            year="nominal",
@@ -308,7 +305,7 @@ visualizes the resulting lens and source tomographic bins.
    import matplotlib.pyplot as plt
    import numpy as np
 
-   from binny import NZTomography
+   from binny.surveys import build_survey_tomography
 
 
    def plot_bins(ax, result, title):
@@ -353,8 +350,7 @@ visualizes the resulting lens and source tomographic bins.
    results = {}
 
    for role in ["lens", "source"]:
-       tomo = NZTomography()
-       results[role] = tomo.build_survey_bins(
+       results[role] = build_survey_tomography(
            "des",
            role=role,
            year="y1",
@@ -419,7 +415,7 @@ bottom row shows the wide survey configuration.
    import matplotlib.pyplot as plt
    import numpy as np
 
-   from binny import NZTomography
+   from binny.surveys import build_survey_tomography
 
 
    def get_bin_colors(bin_dict):
@@ -489,8 +485,7 @@ bottom row shows the wide survey configuration.
 
    for scenario in ["hls_optimistic", "hls_conservative", "wide"]:
        for role in ["lens", "source"]:
-           tomo = NZTomography()
-           results[(role, scenario)] = tomo.build_survey_bins(
+           results[(role, scenario)] = build_survey_tomography(
                "roman",
                role=role,
                scenario=scenario,
@@ -593,10 +588,11 @@ equal-width tomographic bins.
    :width: 900
 
    import cmasher as cmr
+   import cmasher as cmr
    import matplotlib.pyplot as plt
    import numpy as np
 
-   from binny import NZTomography
+   from binny.surveys import build_survey_tomography
 
 
    def plot_bins(ax, result, title):
@@ -653,8 +649,7 @@ equal-width tomographic bins.
    for key, bin_edges in edges.items():
        sample, _ = key
 
-       tomo = NZTomography()
-       results[key] = tomo.build_survey_bins(
+       results[key] = build_survey_tomography(
            "desi",
            role="lens",
            sample=sample,

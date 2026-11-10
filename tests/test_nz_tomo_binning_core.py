@@ -1,16 +1,13 @@
-"""Unit tests for ``binny.nz_tomo.binning_core`` module."""
+"""Tests for binning core functionality."""
 
 from __future__ import annotations
 
 import numpy as np
 import pytest
 
-from binny.nz_tomo.binning_core import (
-    build_bins_on_edges,
-    finalize_tomo_metadata,
-    resolve_bin_edges,
-    validate_bin_edges,
-)
+from binny.binning.core import build_bins_on_edges
+from binny.binning.edges import resolve_bin_edges, validate_bin_edges
+from binny.tomography.metadata import finalize_tomo_metadata
 
 
 def _toy_z_nz(*, n: int = 501):

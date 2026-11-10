@@ -17,7 +17,7 @@ There are two common use cases:
 - keeping samples separate but using sample-aware labels, for example when a
   data vector must distinguish ``("LRG", 0)`` from ``("ELG", 0)``.
 
-The first case uses ``combine_parent_nz`` or ``combine_tomography_bins``. The
+The first case uses ``combine_parent_nz`` or ``combine_tomographies``. The
 second case uses ``sample_bin_labels``, ``sample_bins``, and
 ``sample_combinations``.
 
@@ -34,27 +34,32 @@ grid unless ``z_target`` is provided explicitly.
 
 .. code-block:: python
 
-   from binny import NZTomography
+   from binny.surveys import build_survey_tomography
+   from binny.tomography import (
+       combine_parent_nz,
+       combine_tomographies,
+       sample_bin_labels,
+       sample_bins,
+       sample_combinations,
+   )
 
 
-   lrg_tomo = NZTomography()
-   elg_tomo = NZTomography()
 
-   lrg = lrg_tomo.build_survey_bins(
-       "desi",
+   lrg = build_survey_tomography(
+       survey="desi",
        role="lens",
        sample="lrg",
        overrides={"bins": {"edges": [0.4, 0.6, 0.8, 1.0]}},
    )
 
-   elg = elg_tomo.build_survey_bins(
-       "desi",
+   elg = build_survey_tomography(
+       survey="desi",
        role="lens",
        sample="elg",
        overrides={"bins": {"edges": [0.6, 0.9, 1.2, 1.5]}},
    )
 
-   z_combined, nz_combined = NZTomography.combine_parent_nz(
+   z_combined, nz_combined = combine_parent_nz(
        [
            {"z": lrg.z, "nz": lrg.nz},
            {"z": elg.z, "nz": elg.nz},
@@ -80,27 +85,32 @@ with their combined parent distribution.
    import matplotlib.pyplot as plt
    import numpy as np
 
-   from binny import NZTomography
+   from binny.surveys import build_survey_tomography
+   from binny.tomography import (
+       combine_parent_nz,
+       combine_tomographies,
+       sample_bin_labels,
+       sample_bins,
+       sample_combinations,
+   )
 
 
-   lrg_tomo = NZTomography()
-   elg_tomo = NZTomography()
 
-   lrg = lrg_tomo.build_survey_bins(
-       "desi",
+   lrg = build_survey_tomography(
+       survey="desi",
        role="lens",
        sample="lrg",
        overrides={"bins": {"edges": [0.4, 0.6, 0.8, 1.0]}},
    )
 
-   elg = elg_tomo.build_survey_bins(
-       "desi",
+   elg = build_survey_tomography(
+       survey="desi",
        role="lens",
        sample="elg",
        overrides={"bins": {"edges": [0.6, 0.9, 1.2, 1.5]}},
    )
 
-   z_combined, nz_combined = NZTomography.combine_parent_nz(
+   z_combined, nz_combined = combine_parent_nz(
        [
            {"z": lrg.z, "nz": lrg.nz},
            {"z": elg.z, "nz": elg.nz},
@@ -171,7 +181,7 @@ bin indices can also be added together.
 
 .. code-block:: python
 
-   combined = NZTomography.combine_tomography_bins(
+   combined = combine_tomographies(
        [lrg, elg],
        interpolate=True,
    )
@@ -191,7 +201,14 @@ tomographic sample obtained by summing matching bin indices.
    import matplotlib.pyplot as plt
    import numpy as np
 
-   from binny import NZTomography
+   from binny.surveys import build_survey_tomography
+   from binny.tomography import (
+       combine_parent_nz,
+       combine_tomographies,
+       sample_bin_labels,
+       sample_bins,
+       sample_combinations,
+   )
 
 
    def plot_bins(ax, result, title):
@@ -233,24 +250,22 @@ tomographic sample obtained by summing matching bin indices.
        ax.set_xlabel("Redshift $z$")
 
 
-   lrg_tomo = NZTomography()
-   elg_tomo = NZTomography()
 
-   lrg = lrg_tomo.build_survey_bins(
-       "desi",
+   lrg = build_survey_tomography(
+       survey="desi",
        role="lens",
        sample="lrg",
        overrides={"bins": {"edges": [0.4, 0.6, 0.8, 1.0]}},
    )
 
-   elg = elg_tomo.build_survey_bins(
-       "desi",
+   elg = build_survey_tomography(
+       survey="desi",
        role="lens",
        sample="elg",
        overrides={"bins": {"edges": [0.6, 0.9, 1.2, 1.5]}},
    )
 
-   combined = NZTomography.combine_tomography_bins(
+   combined = combine_tomographies(
        [lrg, elg],
        interpolate=True,
    )
@@ -288,8 +303,8 @@ remain identifiable. This is useful for building sample-aware data vectors.
        "ELG": elg,
    }
 
-   labels = NZTomography.sample_bin_labels(lenses)
-   bins = NZTomography.sample_bins(lenses)
+   labels = sample_bin_labels(lenses)
+   bins = sample_bins(lenses)
 
    print(labels)
 
@@ -301,11 +316,16 @@ Sample-aware combinations preserve both the sample name and the bin index.
 
 .. code-block:: python
 
+   lsst_source = build_survey_tomography(
+       survey="lsst",
+       role="source",
+   )
+
    sources = {
        "LSST": lsst_source,
    }
 
-   lens_source_pairs = NZTomography.sample_combinations(
+   lens_source_pairs = sample_combinations(
        lenses,
        sources,
    )
@@ -334,7 +354,7 @@ Binny supports two complementary approaches for working with multiple
 tomographic samples:
 
 - ``combine_parent_nz`` combines parent redshift distributions;
-- ``combine_tomography_bins`` combines matching tomographic bins;
+- ``combine_tomographies`` combines matching tomographic bins;
 - ``sample_bin_labels`` and ``sample_bins`` flatten multiple samples while
   preserving sample identities;
 - ``sample_combinations`` constructs sample-aware combinations across one or

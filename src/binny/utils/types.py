@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Callable, Mapping, Sequence
-from typing import Any, TypeAlias
+from typing import Any, Literal, TypeAlias
 
 import numpy as np
 from numpy.typing import NDArray
@@ -57,3 +57,5 @@ Pairs = list[Pair]
 
 IndexTuple = tuple[int, ...]
 IndexTuples = list[IndexTuple]
+
+MetricUnit = Literal["fraction", "percent"]

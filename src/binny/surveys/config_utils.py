@@ -79,7 +79,7 @@ import yaml
 
 from binny.axes.grids import linear_grid
 from binny.nz.registry import nz_model
-from binny.nz_tomo.predefined import load_predefined_bins
+from binny.tomography.predefined import load_predefined_bins
 from binny.utils.types import FloatArray
 
 __all__ = [

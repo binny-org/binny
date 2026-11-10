@@ -48,7 +48,7 @@ At present, the following models are implemented:
 - ``luminosity_function``
 
 These models are exposed through the parent-distribution registry and
-can be evaluated through :meth:`binny.NZTomography.nz_model`.
+can be evaluated through :func:`binny.nz.nz_model`.
 
 The purpose of the registry is not to claim that all of these models are
 equally realistic for survey forecasting. Rather, Binny supports a small

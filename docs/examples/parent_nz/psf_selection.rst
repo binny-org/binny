@@ -15,7 +15,7 @@ source density and the redshift distribution of galaxies available for
 cosmological analyses.
 
 Binny provides
-:meth:`binny.NZTomography.calibrate_psf_depth_from_mock`
+:func:`binny.nz.calibrate_psf_depth_from_mock`
 to estimate these effects directly from mock catalogs.
 
 Given true galaxy redshifts, apparent magnitudes, and galaxy sizes,
@@ -106,7 +106,11 @@ which changes the normalized redshift distribution.
    import matplotlib.pyplot as plt
    import numpy as np
 
-   from binny import NZTomography
+   from binny.nz import (
+      calibrate_psf_depth_from_mock,
+      fit_smail_params_from_mock,
+      nz_model,
+   )
 
    rng = np.random.default_rng(42)
 
@@ -131,7 +135,7 @@ which changes the normalized redshift distribution.
    r_psf_values = np.array([0.35, 0.50, 0.65, 0.80])
    z_edges = np.linspace(0.0, 3.0, 41)
 
-   result = NZTomography.calibrate_psf_depth_from_mock(
+   result = calibrate_psf_depth_from_mock(
        z_true=z_true,
        mag=mag,
        r_gal=r_gal,
@@ -185,7 +189,11 @@ parametric representation of the PSF-dependent source sample.
    import matplotlib.pyplot as plt
    import numpy as np
 
-   from binny import NZTomography
+   from binny.nz import (
+      calibrate_psf_depth_from_mock,
+      fit_smail_params_from_mock,
+      nz_model,
+   )
 
    rng = np.random.default_rng(42)
 
@@ -210,7 +218,7 @@ parametric representation of the PSF-dependent source sample.
    r_psf_values = np.array([0.35, 0.50, 0.65, 0.80])
    z_edges = np.linspace(0.0, 3.0, 41)
 
-   result = NZTomography.calibrate_psf_depth_from_mock(
+   result = calibrate_psf_depth_from_mock(
        z_true=z_true,
        mag=mag,
        r_gal=r_gal,
@@ -237,7 +245,7 @@ parametric representation of the PSF-dependent source sample.
        if not np.isclose(row["maglim"], maglim):
            continue
 
-       smail_result = NZTomography.fit_smail_from_mock(
+       smail_result = fit_smail_params_from_mock(
            row["z"],
            weights=row["weights"],
            z_max=3.0,
@@ -248,7 +256,7 @@ parametric representation of the PSF-dependent source sample.
 
        params = smail_result["params"]
 
-       nz_fit = NZTomography.nz_model(
+       nz_fit = nz_model(
            "smail",
            z_fine,
            z0=params["z0"],
@@ -298,7 +306,11 @@ redshift distribution and its smooth Smail fit.
    import matplotlib.pyplot as plt
    import numpy as np
 
-   from binny import NZTomography
+   from binny.nz import (
+      calibrate_psf_depth_from_mock,
+      fit_smail_params_from_mock,
+      nz_model,
+   )
 
    rng = np.random.default_rng(42)
 
@@ -334,7 +346,7 @@ redshift distribution and its smooth Smail fit.
    fig, ax = plt.subplots(figsize=(8.0, 5.2))
 
    for color, selection_kind in zip(colors, ["hard", "sigmoid"], strict=True):
-       result = NZTomography.calibrate_psf_depth_from_mock(
+       result = calibrate_psf_depth_from_mock(
            z_true=z_true,
            mag=mag,
            r_gal=r_gal,
@@ -348,7 +360,7 @@ redshift distribution and its smooth Smail fit.
 
        row = result["results"][0]
 
-       smail_result = NZTomography.fit_smail_from_mock(
+       smail_result = fit_smail_params_from_mock(
            row["z"],
            weights=row["weights"],
            z_max=3.0,
@@ -359,7 +371,7 @@ redshift distribution and its smooth Smail fit.
 
        params = smail_result["params"]
 
-       nz_fit = NZTomography.nz_model(
+       nz_fit = nz_model(
            "smail",
            z_fine,
            z0=params["z0"],
@@ -410,7 +422,11 @@ the PSF becomes larger.
    import numpy as np
    from matplotlib.colors import to_rgba
 
-   from binny import NZTomography
+   from binny.nz import (
+      calibrate_psf_depth_from_mock,
+      fit_smail_params_from_mock,
+      nz_model,
+   )
 
    rng = np.random.default_rng(42)
 
@@ -435,7 +451,7 @@ the PSF becomes larger.
    r_psf_values = np.linspace(0.3, 1.0, 12)
    z_edges = np.linspace(0.0, 3.0, 41)
 
-   result = NZTomography.calibrate_psf_depth_from_mock(
+   result = calibrate_psf_depth_from_mock(
        z_true=z_true,
        mag=mag,
        r_gal=r_gal,
@@ -503,7 +519,11 @@ depth jointly affect the selected weak-lensing source sample.
    import numpy as np
    from matplotlib.colors import ListedColormap
 
-   from binny import NZTomography
+   from binny.nz import (
+      calibrate_psf_depth_from_mock,
+      fit_smail_params_from_mock,
+      nz_model,
+   )
 
    rng = np.random.default_rng(42)
 
@@ -528,7 +548,7 @@ depth jointly affect the selected weak-lensing source sample.
    r_psf_values = np.array([0.35, 0.50, 0.65, 0.80, 0.95])
    z_edges = np.linspace(0.0, 3.0, 41)
 
-   result = NZTomography.calibrate_psf_depth_from_mock(
+   result = calibrate_psf_depth_from_mock(
        z_true=z_true,
        mag=mag,
        r_gal=r_gal,
@@ -622,7 +642,7 @@ the PSF.
    import matplotlib.pyplot as plt
    import numpy as np
 
-   from binny.nz.psf_selection import shear_selection_weight
+   from binny.nz import shear_selection_weight
 
    r_gal = np.linspace(0.05, 1.5, 500)
    r_psf = 0.65

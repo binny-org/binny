@@ -8,7 +8,8 @@ import cmasher as cmr
 import matplotlib.pyplot as plt
 import numpy as np
 
-from binny.api.nz_tomography import NZTomography
+from binny.nz import nz_model
+from binny.tomography import build_tomography_from_spec
 
 OUTDIR = Path(__file__).resolve().parent
 SWEEP_OUTDIR = OUTDIR / "cmap_sweep"
@@ -25,7 +26,7 @@ def _build_binny_curves(
     """Build the z grid, scaled tomographic curves, and colors."""
     z = np.linspace(0.0, 1.0, 1000)
 
-    nz = NZTomography.nz_model(
+    nz = nz_model(
         "smail",
         z,
         z0=0.22,
@@ -47,7 +48,7 @@ def _build_binny_curves(
         },
     }
 
-    result = NZTomography().build_bins(
+    result = build_tomography_from_spec(
         z=z,
         nz=nz,
         tomo_spec=tomo_spec,

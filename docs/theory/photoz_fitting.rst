@@ -373,7 +373,7 @@ which can be rewritten as
    (1+\mu_{\mathrm{out}})z+\mu_{\mathrm{out}}.
 
 Binny provides
-:meth:`binny.NZTomography.to_binny_photoz_params`
+:func:`binny.binning.photoz_fitting.to_binny_photoz_params`
 to translate the fitted residual parameters into the uncertainty
 parameters accepted by the forward photo-z assignment model.
 

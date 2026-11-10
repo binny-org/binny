@@ -16,7 +16,7 @@ characteristics such as limiting magnitude, redshift completeness,
 and selection effects. The resulting analytic distribution then serves
 as a convenient summary of the underlying mock population.
 
-Binny provides :meth:`binny.NZTomography.calibrate_smail_from_mock`
+Binny provides :func:`binny.nz.calibration.calibrate_depth_smail_from_mock`
 to perform this type of calibration directly from simulated galaxy
 samples. Given true galaxy redshifts and apparent magnitudes from a mock
 catalog, the calibration estimates:
@@ -53,7 +53,7 @@ Smail redshift distribution.
 
    import numpy as np
 
-   from binny import NZTomography
+   from binny.nz import calibrate_depth_smail_from_mock
 
    rng = np.random.default_rng(42)
    n_gal = 30000
@@ -67,7 +67,7 @@ Smail redshift distribution.
    # Define magnitude limits for calibration
    maglims = np.array([22.5, 23.0, 23.5, 24.0, 24.5])
 
-   result = NZTomography.calibrate_smail_from_mock(
+   result = calibrate_depth_smail_from_mock(
        z_true=z_true,
        mag=mag,
        maglims=maglims,
@@ -132,7 +132,8 @@ the mock distribution.
    from matplotlib.colors import to_rgba
    import cmasher as cmr
 
-   from binny import NZTomography
+   from binny.nz import calibrate_depth_smail_from_mock
+   from binny.nz import nz_model
 
    rng = np.random.default_rng(42)
 
@@ -146,7 +147,7 @@ the mock distribution.
    maglim = 24.5
    sel = mag <= maglim
 
-   result = NZTomography.calibrate_smail_from_mock(
+   result = calibrate_depth_smail_from_mock(
        z_true=z_true,
        mag=mag,
        maglims=np.array([22.5, 23.0, 23.5, 24.0, 24.5]),
@@ -168,7 +169,7 @@ the mock distribution.
        raise ValueError(f"Unknown z0 law: {z0_fit['law']}")
 
    z = np.linspace(0.0, 3.0, 600)
-   nz_fit = NZTomography.nz_model(
+   nz_fit = nz_model(
        "smail",
        z,
        z0=z0,
@@ -244,7 +245,7 @@ models reproduce the behavior measured directly from the mock catalog.
    from matplotlib.colors import to_rgba
    import cmasher as cmr
 
-   from binny import NZTomography
+   from binny.nz import calibrate_depth_smail_from_mock
 
    rng = np.random.default_rng(42)
 
@@ -257,7 +258,7 @@ models reproduce the behavior measured directly from the mock catalog.
 
    maglims = np.array([22.5, 23.0, 23.5, 24.0, 24.5])
 
-   result = NZTomography.calibrate_smail_from_mock(
+   result = calibrate_depth_smail_from_mock(
        z_true=z_true,
        mag=mag,
        maglims=maglims,

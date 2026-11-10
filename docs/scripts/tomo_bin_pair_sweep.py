@@ -6,7 +6,8 @@ import numpy as np
 from matplotlib.animation import FuncAnimation, PillowWriter
 from matplotlib.patches import Polygon
 
-from binny import NZTomography
+from binny.nz import nz_model
+from binny.tomography import build_tomography_from_spec
 
 
 def ordered_curves(bin_dict):
@@ -35,11 +36,10 @@ OUTDIR = HERE.parent / "_static" / "animations"
 OUTDIR.mkdir(parents=True, exist_ok=True)
 OUTFILE = OUTDIR / "tomo_bin_pair_sweep.gif"
 
-tomo = NZTomography()
 
 z = np.linspace(0.0, 2.0, 500)
 
-nz = NZTomography.nz_model(
+nz = nz_model(
     "smail",
     z,
     z0=0.2,
@@ -60,7 +60,7 @@ spec = {
     "normalize_bins": True,
 }
 
-result = tomo.build_bins(z=z, nz=nz, tomo_spec=spec)
+result = build_tomography_from_spec(z=z, nz=nz, tomo_spec=spec)
 curves = ordered_curves(result.bins)
 n_bins = len(curves)
 pairs = pair_list(n_bins)

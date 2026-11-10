@@ -1,6 +1,10 @@
 binny.axes package
 ==================
 
+.. automodule:: binny.axes
+   :no-index:
+   :show-inheritance:
+
 Submodules
 ----------
 
@@ -10,11 +14,3 @@ Submodules
    binny.axes.bin_edges
    binny.axes.grids
    binny.axes.mixed_edges
-
-Module contents
----------------
-
-.. automodule:: binny.axes
-   :members:
-   :show-inheritance:
-   :undoc-members:

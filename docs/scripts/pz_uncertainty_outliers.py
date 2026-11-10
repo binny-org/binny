@@ -6,7 +6,8 @@ import numpy as np
 from matplotlib.animation import FuncAnimation, PillowWriter
 from matplotlib.patches import Polygon
 
-from binny import NZTomography
+from binny.nz import nz_model
+from binny.tomography import build_tomography_from_spec
 
 DEFAULT_FONTSIZE = 17
 plt.rcParams.update(
@@ -82,11 +83,10 @@ OUTDIR = HERE.parent / "_static" / "animations"
 OUTDIR.mkdir(parents=True, exist_ok=True)
 OUTFILE = OUTDIR / "pz_uncertainty_outliers.gif"
 
-tomo = NZTomography()
 
 z = np.linspace(0.0, 2.0, 180)
 
-nz = NZTomography.nz_model(
+nz = nz_model(
     "smail",
     z,
     z0=0.2,
@@ -135,7 +135,7 @@ base_spec = make_spec(
     outlier_mean_offset=baseline_outlier_mean_offset,
 )
 
-base_result = tomo.build_bins(z=z, nz=nz, tomo_spec=base_spec)
+base_result = build_tomography_from_spec(z=z, nz=nz, tomo_spec=base_spec)
 fixed_curves = ordered_curves(base_result.bins)
 
 panel_curves = {
@@ -169,11 +169,9 @@ for val in outlier_frac_vals:
             baseline_outlier_mean_offset,
         ],
     )
-    result = tomo.build_bins(z=z, nz=nz, tomo_spec=spec)
+    result = build_tomography_from_spec(z=z, nz=nz, tomo_spec=spec)
     curves = ordered_curves(result.bins)
-    panel_curves["frac"].append(
-        [fixed_curves[0].copy(), fixed_curves[1].copy(), curves[2].copy()]
-    )
+    panel_curves["frac"].append([fixed_curves[0].copy(), fixed_curves[1].copy(), curves[2].copy()])
 
 for val in outlier_mean_offset_vals:
     spec = make_spec(
@@ -195,7 +193,7 @@ for val in outlier_mean_offset_vals:
         ],
         outlier_mean_offset=[0.0, 0.0, float(val)],
     )
-    result = tomo.build_bins(z=z, nz=nz, tomo_spec=spec)
+    result = build_tomography_from_spec(z=z, nz=nz, tomo_spec=spec)
     curves = ordered_curves(result.bins)
     panel_curves["offset"].append(
         [fixed_curves[0].copy(), fixed_curves[1].copy(), curves[2].copy()]
@@ -217,11 +215,9 @@ for val in outlier_mean_scale_vals:
         outlier_mean_scale=[1.0, 1.0, float(val)],
         outlier_mean_offset=[0.0, 0.0, baseline_outlier_mean_offset],
     )
-    result = tomo.build_bins(z=z, nz=nz, tomo_spec=spec)
+    result = build_tomography_from_spec(z=z, nz=nz, tomo_spec=spec)
     curves = ordered_curves(result.bins)
-    panel_curves["scale"].append(
-        [fixed_curves[0].copy(), fixed_curves[1].copy(), curves[2].copy()]
-    )
+    panel_curves["scale"].append([fixed_curves[0].copy(), fixed_curves[1].copy(), curves[2].copy()])
 
 for val in outlier_scatter_vals:
     spec = make_spec(
@@ -243,7 +239,7 @@ for val in outlier_scatter_vals:
         ],
         outlier_mean_offset=[0.0, 0.0, baseline_outlier_mean_offset],
     )
-    result = tomo.build_bins(z=z, nz=nz, tomo_spec=spec)
+    result = build_tomography_from_spec(z=z, nz=nz, tomo_spec=spec)
     curves = ordered_curves(result.bins)
     panel_curves["scatter"].append(
         [fixed_curves[0].copy(), fixed_curves[1].copy(), curves[2].copy()]
@@ -257,10 +253,7 @@ proxy_reference = {
 }
 
 ymax_bins = 1.08 * max(
-    np.max(curve)
-    for family in panel_curves.values()
-    for frame in family
-    for curve in frame
+    np.max(curve) for family in panel_curves.values() for frame in family for curve in frame
 )
 
 fig, axes = plt.subplots(2, 2, figsize=FIGSIZE)
@@ -434,9 +427,9 @@ def draw_panel(key, frame_idx):
         loss /= peak
         total /= peak
 
-    x_proxy = artists["proxy_x_min"] + (
-        (z - z.min()) / (z.max() - z.min())
-    ) * (artists["proxy_x_max"] - artists["proxy_x_min"])
+    x_proxy = artists["proxy_x_min"] + ((z - z.min()) / (z.max() - z.min())) * (
+        artists["proxy_x_max"] - artists["proxy_x_min"]
+    )
 
     y_base = artists["proxy_y_base"]
     amp = artists["proxy_y_amp"]

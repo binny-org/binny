@@ -7,7 +7,7 @@
 
 This page shows simple, executable examples of how to build
 **spectroscopic tomographic redshift bins** from a parent distribution
-using :class:`binny.NZTomography`.
+using :class:`binny.tomography.core.Tomography`.
 
 Compared with photometric binning, spectroscopic binning usually assumes
 much smaller redshift uncertainties. As a result, the tomographic bins
@@ -41,7 +41,8 @@ scatter term.
    import matplotlib.pyplot as plt
    import numpy as np
 
-   from binny import NZTomography
+   from binny.nz import nz_model
+   from binny.tomography.builders import build_tomography_from_spec
 
    def plot_bins(ax, z, bin_dict, title, xmin=0, xmax=1):
        keys = sorted(bin_dict.keys())
@@ -77,11 +78,10 @@ scatter term.
        ax.set_ylabel(r"Normalized $n_i(z)$")
        ax.set_xlim(xmin, xmax)
 
-   tomo = NZTomography()
 
    z = np.linspace(0.0, 1.0, 500)
 
-   nz = NZTomography.nz_model(
+   nz = nz_model(
        "smail",
        z,
        z0=0.12,
@@ -100,7 +100,7 @@ scatter term.
        "normalize_bins": True,
    }
 
-   specz_result = tomo.build_bins(z=z, nz=nz, tomo_spec=specz_spec)
+   specz_result = build_tomography_from_spec(z=z, nz=nz, tomo_spec=specz_spec)
 
    fig, ax = plt.subplots(figsize=(8.2, 4.8))
    plot_bins(
@@ -128,7 +128,8 @@ equipopulated spectroscopic bins using the same uncertainty setup.
    import matplotlib.pyplot as plt
    import numpy as np
 
-   from binny import NZTomography
+   from binny.nz import nz_model
+   from binny.tomography.builders import build_tomography_from_spec
 
    def plot_bins(ax, z, bin_dict, title, xmin=0, xmax=1):
        keys = sorted(bin_dict.keys())
@@ -149,11 +150,10 @@ equipopulated spectroscopic bins using the same uncertainty setup.
        ax.set_xlabel("Redshift $z$")
        ax.set_xlim(xmin, xmax)
 
-   tomo = NZTomography()
 
    z = np.linspace(0.0, 1.0, 500)
 
-   nz = NZTomography.nz_model(
+   nz = nz_model(
        "smail",
        z,
        z0=0.12,
@@ -182,12 +182,12 @@ equipopulated spectroscopic bins using the same uncertainty setup.
        "normalize_bins": True,
    }
 
-   equidistant_result = tomo.build_bins(
+   equidistant_result = build_tomography_from_spec(
        z=z,
        nz=nz,
        tomo_spec=equidistant_spec,
    )
-   equipopulated_result = tomo.build_bins(
+   equipopulated_result = build_tomography_from_spec(
        z=z,
        nz=nz,
        tomo_spec=equipopulated_spec,
@@ -218,7 +218,8 @@ the photo-z case because the redshift uncertainties are much smaller.
    import matplotlib.pyplot as plt
    import numpy as np
 
-   from binny import NZTomography
+   from binny.nz import nz_model
+   from binny.tomography.builders import build_tomography_from_spec
 
    def plot_bins(ax, z, bin_dict, title, xmin=0, xmax=1):
        keys = sorted(bin_dict.keys())
@@ -239,11 +240,10 @@ the photo-z case because the redshift uncertainties are much smaller.
        ax.set_xlabel("Redshift $z$")
        ax.set_xlim(xmin, xmax)
 
-   tomo = NZTomography()
 
    z = np.linspace(0.0, 1.0, 500)
 
-   nz = NZTomography.nz_model(
+   nz = nz_model(
        "smail",
        z,
        z0=0.12,
@@ -278,8 +278,8 @@ the photo-z case because the redshift uncertainties are much smaller.
        "normalize_bins": True,
    }
 
-   three_bin_result = tomo.build_bins(z=z, nz=nz, tomo_spec=three_bin_spec)
-   five_bin_result = tomo.build_bins(z=z, nz=nz, tomo_spec=five_bin_spec)
+   three_bin_result = build_tomography_from_spec(z=z, nz=nz, tomo_spec=three_bin_spec)
+   five_bin_result = build_tomography_from_spec(z=z, nz=nz, tomo_spec=five_bin_spec)
 
    fig, axes = plt.subplots(1, 2, figsize=(11.0, 4.6))
 
@@ -315,7 +315,8 @@ overlap between neighboring tomographic bins.
    import matplotlib.pyplot as plt
    import numpy as np
 
-   from binny import NZTomography
+   from binny.nz import nz_model
+   from binny.tomography.builders import build_tomography_from_spec
 
    def plot_bins(ax, z, bin_dict, title, xmin=0, xmax=1):
        keys = sorted(bin_dict.keys())
@@ -336,11 +337,10 @@ overlap between neighboring tomographic bins.
        ax.set_xlabel("Redshift $z$")
        ax.set_xlim(xmin, xmax)
 
-   tomo = NZTomography()
 
    z = np.linspace(0.0, 1.0, 500)
 
-   nz = NZTomography.nz_model(
+   nz = nz_model(
        "smail",
        z,
        z0=0.12,
@@ -375,8 +375,8 @@ overlap between neighboring tomographic bins.
        "normalize_bins": True,
    }
 
-   low_scatter = tomo.build_bins(z=z, nz=nz, tomo_spec=low_scatter_spec)
-   high_scatter = tomo.build_bins(
+   low_scatter = build_tomography_from_spec(z=z, nz=nz, tomo_spec=low_scatter_spec)
+   high_scatter = build_tomography_from_spec(
        z=z,
        nz=nz,
        tomo_spec=high_scatter_spec,
@@ -409,7 +409,8 @@ distribution to reflect incomplete sampling.
    import matplotlib.pyplot as plt
    import numpy as np
 
-   from binny import NZTomography
+   from binny.nz import nz_model
+   from binny.tomography.builders import build_tomography_from_spec
 
    def plot_bins(ax, z, bin_dict, title, xmin=0, xmax=1):
        keys = sorted(bin_dict.keys())
@@ -430,11 +431,10 @@ distribution to reflect incomplete sampling.
        ax.set_xlabel("Redshift $z$")
        ax.set_xlim(xmin, xmax)
 
-   tomo = NZTomography()
 
    z = np.linspace(0.0, 1.0, 500)
 
-   nz = NZTomography.nz_model(
+   nz = nz_model(
        "smail",
        z,
        z0=0.12,
@@ -467,8 +467,8 @@ distribution to reflect incomplete sampling.
        "normalize_bins": True,
    }
 
-   complete_result = tomo.build_bins(z=z, nz=nz, tomo_spec=complete_spec)
-   reduced_result = tomo.build_bins(
+   complete_result = build_tomography_from_spec(z=z, nz=nz, tomo_spec=complete_spec)
+   reduced_result = build_tomography_from_spec(
        z=z,
        nz=nz,
        tomo_spec=reduced_completeness_spec,
@@ -513,7 +513,8 @@ otherwise well-separated tomographic bins.
    import matplotlib.pyplot as plt
    import numpy as np
 
-   from binny import NZTomography
+   from binny.nz import nz_model
+   from binny.tomography.builders import build_tomography_from_spec
 
    def plot_bins(ax, z, bin_dict, title, xmin=0, xmax=1):
        keys = sorted(bin_dict.keys())
@@ -534,11 +535,10 @@ otherwise well-separated tomographic bins.
        ax.set_xlabel("Redshift $z$")
        ax.set_xlim(xmin, xmax)
 
-   tomo = NZTomography()
 
    z = np.linspace(0.0, 1.0, 500)
 
-   nz = NZTomography.nz_model(
+   nz = nz_model(
        "smail",
        z,
        z0=0.12,
@@ -576,12 +576,12 @@ otherwise well-separated tomographic bins.
        "normalize_bins": True,
    }
 
-   no_catastrophic_result = tomo.build_bins(
+   no_catastrophic_result = build_tomography_from_spec(
        z=z,
        nz=nz,
        tomo_spec=no_catastrophic_spec,
    )
-   catastrophic_result = tomo.build_bins(
+   catastrophic_result = build_tomography_from_spec(
        z=z,
        nz=nz,
        tomo_spec=catastrophic_spec,
@@ -625,7 +625,8 @@ spreads them across all bins with equal probability.
    import matplotlib.pyplot as plt
    import numpy as np
 
-   from binny import NZTomography
+   from binny.nz import nz_model
+   from binny.tomography.builders import build_tomography_from_spec
 
    def plot_bins(ax, z, bin_dict, title, xmin=0, xmax=1):
        keys = sorted(bin_dict.keys())
@@ -646,11 +647,10 @@ spreads them across all bins with equal probability.
        ax.set_xlabel("Redshift $z$")
        ax.set_xlim(xmin, xmax)
 
-   tomo = NZTomography()
 
    z = np.linspace(0.0, 1.0, 500)
 
-   nz = NZTomography.nz_model(
+   nz = nz_model(
        "smail",
        z,
        z0=0.12,
@@ -689,8 +689,8 @@ spreads them across all bins with equal probability.
        "normalize_bins": True,
    }
 
-   neighbor_result = tomo.build_bins(z=z, nz=nz, tomo_spec=neighbor_spec)
-   uniform_result = tomo.build_bins(z=z, nz=nz, tomo_spec=uniform_spec)
+   neighbor_result = build_tomography_from_spec(z=z, nz=nz, tomo_spec=neighbor_spec)
+   uniform_result = build_tomography_from_spec(z=z, nz=nz, tomo_spec=uniform_spec)
 
    fig, axes = plt.subplots(1, 2, figsize=(11.0, 4.6), sharey=True)
 
@@ -721,7 +721,8 @@ completeness model with a per-bin version of the same setup.
    import matplotlib.pyplot as plt
    import numpy as np
 
-   from binny import NZTomography
+   from binny.nz import nz_model
+   from binny.tomography.builders import build_tomography_from_spec
 
    def plot_bins(ax, z, bin_dict, title, xmin=0, xmax=1):
        keys = sorted(bin_dict.keys())
@@ -756,11 +757,10 @@ completeness model with a per-bin version of the same setup.
        ax.set_xlabel("Redshift $z$")
        ax.set_xlim(xmin, xmax)
 
-   tomo = NZTomography()
 
    z = np.linspace(0.0, 1.0, 500)
 
-   nz = NZTomography.nz_model(
+   nz = nz_model(
        "smail",
        z,
        z0=0.12,
@@ -799,12 +799,12 @@ completeness model with a per-bin version of the same setup.
        "normalize_bins": True,
    }
 
-   shared_result = tomo.build_bins(
+   shared_result = build_tomography_from_spec(
        z=z,
        nz=nz,
        tomo_spec=shared_uncertainty_spec,
    )
-   per_bin_result = tomo.build_bins(
+   per_bin_result = build_tomography_from_spec(
        z=z,
        nz=nz,
        tomo_spec=per_bin_uncertainty_spec,
@@ -841,7 +841,8 @@ The example below uses per-bin values for completeness,
    import matplotlib.pyplot as plt
    import numpy as np
 
-   from binny import NZTomography
+   from binny.nz import nz_model
+   from binny.tomography.builders import build_tomography_from_spec
 
    def plot_bins(ax, z, bin_dict, title, xmin=0, xmax=1):
        keys = sorted(bin_dict.keys())
@@ -877,11 +878,10 @@ The example below uses per-bin values for completeness,
        ax.set_ylabel(r"Normalized $n_i(z)$")
        ax.set_xlim(xmin, xmax)
 
-   tomo = NZTomography()
 
    z = np.linspace(0.0, 1.0, 500)
 
-   nz = NZTomography.nz_model(
+   nz = nz_model(
        "smail",
        z,
        z0=0.12,
@@ -905,7 +905,7 @@ The example below uses per-bin values for completeness,
        "normalize_bins": True,
    }
 
-   unified_result = tomo.build_bins(
+   unified_result = build_tomography_from_spec(
        z=z,
        nz=nz,
        tomo_spec=unified_uncertainty_spec,
@@ -925,7 +925,7 @@ The example below uses per-bin values for completeness,
 Inspecting the returned bins
 ----------------------------
 
-The object returned by :meth:`binny.NZTomography.build_bins` stores the
+The object returned by :func:`binny.tomography.builders.build_tomography_from_spec` stores the
 parent distribution, the resolved specification, and the tomographic bin
 curves. You can inspect these contents directly before using the result
 elsewhere.
@@ -936,13 +936,13 @@ elsewhere.
 
    import numpy as np
 
-   from binny import NZTomography
+   from binny.nz import nz_model
+   from binny.tomography.builders import build_tomography_from_spec
 
-   tomo = NZTomography()
 
    z = np.linspace(0.0, 1.0, 500)
 
-   nz = NZTomography.nz_model(
+   nz = nz_model(
        "smail",
        z,
        z0=0.12,
@@ -966,7 +966,7 @@ elsewhere.
        "normalize_bins": True,
    }
 
-   specz_result = tomo.build_bins(z=z, nz=nz, tomo_spec=specz_spec)
+   specz_result = build_tomography_from_spec(z=z, nz=nz, tomo_spec=specz_spec)
 
    print("Bin keys:")
    print(list(specz_result.bins.keys()))
@@ -982,7 +982,7 @@ elsewhere.
 Notes
 -----
 
-- These examples use :meth:`binny.NZTomography.build_bins` with a compact
+- These examples use :func:`binny.tomography.builders.build_tomography_from_spec` with a compact
   ``tomo_spec`` mapping.
 - When building bins from arrays, pass all three pieces explicitly:
   ``z``, ``nz``, and ``tomo_spec``.

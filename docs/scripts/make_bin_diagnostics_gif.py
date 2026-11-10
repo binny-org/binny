@@ -6,7 +6,8 @@ import numpy as np
 from matplotlib.animation import FuncAnimation, PillowWriter
 from matplotlib.colors import ListedColormap, to_rgba
 
-from binny import NZTomography
+from binny.nz import nz_model
+from binny.tomography import build_tomography_from_spec, leakage_matrix
 
 DEFAULT_FONTSIZE = 19
 plt.rcParams.update(
@@ -206,7 +207,7 @@ OUTFILE = OUTDIR / "tomo_bin_diagnostics.gif"
 
 z = np.linspace(0.0, 2.0, 500)
 
-nz = NZTomography.nz_model(
+nz = nz_model(
     "smail",
     z,
     z0=0.2,
@@ -244,31 +245,37 @@ equidistant_spec = {
     "normalize_bins": True,
 }
 
-tomo_eqpop = NZTomography()
-result_eqpop = tomo_eqpop.build_bins(
+result_eqpop = build_tomography_from_spec(
     z=z,
     nz=nz,
     tomo_spec=equipopulated_spec,
     include_tomo_metadata=True,
 )
 
-tomo_eqdist = NZTomography()
-result_eqdist = tomo_eqdist.build_bins(
+result_eqdist = build_tomography_from_spec(
     z=z,
     nz=nz,
     tomo_spec=equidistant_spec,
     include_tomo_metadata=True,
 )
 
-bin_edges_eqpop = result_eqpop.tomo_meta["bins"]["bin_edges"]
-bin_edges_eqdist = result_eqdist.tomo_meta["bins"]["bin_edges"]
+bin_edges_eqpop = result_eqpop.metadata["bins"]["bin_edges"]
+bin_edges_eqdist = result_eqdist.metadata["bins"]["bin_edges"]
 
-stats_eqpop = tomo_eqpop.cross_bin_stats(
-    leakage={"bin_edges": bin_edges_eqpop, "unit": "percent", "decimal_places": 3},
+leakage_eqpop = leakage_matrix(
+    result_eqpop.z,
+    result_eqpop.bins,
+    bin_edges_eqpop,
+    unit="percent",
+    decimal_places=3,
 )
 
-stats_eqdist = tomo_eqdist.cross_bin_stats(
-    leakage={"bin_edges": bin_edges_eqdist, "unit": "percent", "decimal_places": 3},
+leakage_eqdist = leakage_matrix(
+    result_eqdist.z,
+    result_eqdist.bins,
+    bin_edges_eqdist,
+    unit="percent",
+    decimal_places=3,
 )
 
 states = [
@@ -276,13 +283,13 @@ states = [
         "name": "Equipopulated",
         "annotation": "Scheme: equipopulated",
         "bins": result_eqpop.bins,
-        "leakage": stats_eqpop["leakage"],
+        "leakage": leakage_eqpop,
     },
     {
         "name": "Equidistant",
         "annotation": "Scheme: equidistant",
         "bins": result_eqdist.bins,
-        "leakage": stats_eqdist["leakage"],
+        "leakage": leakage_eqdist,
     },
 ]
 

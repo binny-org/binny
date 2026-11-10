@@ -6,7 +6,12 @@ import numpy as np
 from matplotlib.animation import FuncAnimation, PillowWriter
 from matplotlib.colors import to_rgba
 
-from binny import NZTomography
+from binny.nz import nz_model
+from binny.tomography import (
+    bin_centers,
+    build_tomography_from_spec,
+    population_stats,
+)
 
 DEFAULT_FONTSIZE = 19
 plt.rcParams.update(
@@ -178,7 +183,7 @@ OUTFILE = OUTDIR / "tomo_bin_summaries.gif"
 # Shared setup
 z = np.linspace(0.0, 2.0, 500)
 
-nz = NZTomography.nz_model(
+nz = nz_model(
     "smail",
     z,
     z0=0.2,
@@ -209,16 +214,14 @@ equidistant_spec = {
     "normalize_bins": True,
 }
 
-tomo_eqpop = NZTomography()
-result_eqpop = tomo_eqpop.build_bins(
+result_eqpop = build_tomography_from_spec(
     z=z,
     nz=nz,
     tomo_spec=equipopulated_spec,
     include_tomo_metadata=True,
 )
 
-tomo_eqdist = NZTomography()
-result_eqdist = tomo_eqdist.build_bins(
+result_eqdist = build_tomography_from_spec(
     z=z,
     nz=nz,
     tomo_spec=equidistant_spec,
@@ -231,20 +234,24 @@ states = [
         "annotation": "Scheme: equipopulated",
         "bins": result_eqpop.bins,
         "centers": {
-            m: tomo_eqpop.shape_stats(center_method=m, decimal_places=3)["centers"]
+            m: bin_centers(result_eqpop.z, result_eqpop.bins, method=m, decimal_places=3)
             for m in ["mean", "median", "mode"]
         },
-        "fractions": tomo_eqpop.population_stats(decimal_places=4)["fractions"],
+        "fractions": population_stats(result_eqpop.bins, result_eqpop.metadata, decimal_places=4)[
+            "fractions"
+        ],
     },
     {
         "name": "Equidistant",
         "annotation": "Scheme: equidistant",
         "bins": result_eqdist.bins,
         "centers": {
-            m: tomo_eqdist.shape_stats(center_method=m, decimal_places=3)["centers"]
+            m: bin_centers(result_eqdist.z, result_eqdist.bins, method=m, decimal_places=3)
             for m in ["mean", "median", "mode"]
         },
-        "fractions": tomo_eqdist.population_stats(decimal_places=4)["fractions"],
+        "fractions": population_stats(result_eqdist.bins, result_eqdist.metadata, decimal_places=4)[
+            "fractions"
+        ],
     },
 ]
 

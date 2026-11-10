@@ -7,15 +7,13 @@ from pathlib import Path
 import matplotlib.pyplot as plt
 import numpy as np
 
-from binny.api.nz_tomography import NZTomography
-from binny.nz_tomo.photoz import photoz_assignment_probability
-
-
-OUTPUT_DIR = (
-    Path(__file__).resolve().parent
-    / "output"
-    / "photoz_reconstruction"
+from binny.binning.photoz import photoz_assignment_probability
+from binny.binning.photoz_fitting import (
+    fit_photoz_errors,
+    to_binny_photoz_params,
 )
+
+OUTPUT_DIR = Path(__file__).resolve().parent / "output" / "photoz_reconstruction"
 
 SEED = 42
 N_GALAXIES = 100_000
@@ -52,9 +50,7 @@ def generate_catalogue(
     rng = np.random.default_rng(seed)
 
     cdf = np.zeros_like(z)
-    cdf[1:] = np.cumsum(
-        0.5 * (nz[1:] + nz[:-1]) * np.diff(z)
-    )
+    cdf[1:] = np.cumsum(0.5 * (nz[1:] + nz[:-1]) * np.diff(z))
     cdf /= cdf[-1]
 
     z_true = np.interp(rng.random(n_galaxies), cdf, z)
@@ -93,12 +89,8 @@ def mixture_pdf(
     Returns:
         Probability density evaluated at each residual.
     """
-    core = np.exp(-0.5 * (eps / scatter_scale) ** 2) / (
-        np.sqrt(2.0 * np.pi) * scatter_scale
-    )
-    tail = np.exp(
-        -0.5 * ((eps - outlier_mean_shift) / outlier_scatter_scale) ** 2
-    ) / (
+    core = np.exp(-0.5 * (eps / scatter_scale) ** 2) / (np.sqrt(2.0 * np.pi) * scatter_scale)
+    tail = np.exp(-0.5 * ((eps - outlier_mean_shift) / outlier_scatter_scale) ** 2) / (
         np.sqrt(2.0 * np.pi) * outlier_scatter_scale
     )
 
@@ -229,9 +221,7 @@ def plot_tomography(
 
     colors = plt.cm.viridis(np.linspace(0.1, 0.9, len(true_bins)))
 
-    for i, (nz_true, nz_fit, color) in enumerate(
-        zip(true_bins, fitted_bins, colors, strict=True)
-    ):
+    for i, (nz_true, nz_fit, color) in enumerate(zip(true_bins, fitted_bins, colors, strict=True)):
         ax.plot(
             z,
             nz_true,
@@ -276,9 +266,7 @@ def main() -> None:
         seed=SEED,
     )
 
-    tomo = NZTomography()
-
-    fit, metadata = tomo.fit_photoz_errors(
+    fit, metadata = fit_photoz_errors(
         z_true,
         z_obs,
         n_init=N_INIT,
@@ -288,9 +276,9 @@ def main() -> None:
         return_metadata=True,
     )
 
-    fitted_params = tomo.to_binny_photoz_params(fit)
+    fitted_params = to_binny_photoz_params(fit)
 
-    injected_params = tomo.to_binny_photoz_params(
+    injected_params = to_binny_photoz_params(
         {
             "scatter_scale": SCATTER_SCALE,
             "outlier_scatter_scale": OUTLIER_SCATTER_SCALE,
@@ -299,21 +287,12 @@ def main() -> None:
         }
     )
 
-    true_bins, true_pop, true_means = construct_tomography(
-        z, nz, BIN_EDGES, injected_params
-    )
-    fitted_bins, fitted_pop, fitted_means = construct_tomography(
-        z, nz, BIN_EDGES, fitted_params
-    )
+    true_bins, true_pop, true_means = construct_tomography(z, nz, BIN_EDGES, injected_params)
+    fitted_bins, fitted_pop, fitted_means = construct_tomography(z, nz, BIN_EDGES, fitted_params)
 
     print("\nPHOTOMETRIC-REDSHIFT PARAMETER RECOVERY")
     print("-" * 85)
-    print(
-        f"{'Parameter':<24} "
-        f"{'Injected':>12} "
-        f"{'Fitted':>12} "
-        f"{'Difference':>12}"
-    )
+    print(f"{'Parameter':<24} {'Injected':>12} {'Fitted':>12} {'Difference':>12}")
     print("-" * 85)
 
     for name, true_value in [
@@ -322,12 +301,7 @@ def main() -> None:
         ("outlier_mean_shift", OUTLIER_MEAN_SHIFT),
         ("outlier_frac", OUTLIER_FRAC),
     ]:
-        print(
-            f"{name:<24} "
-            f"{true_value:>12.5f} "
-            f"{fit[name]:>12.5f} "
-            f"{fit[name] - true_value:>+12.5f}"
-        )
+        print(f"{name:<24} {true_value:>12.5f} {fit[name]:>12.5f} {fit[name] - true_value:>+12.5f}")
 
     print("\nFIT DIAGNOSTICS")
     print("-" * 55)
@@ -341,29 +315,19 @@ def main() -> None:
 
     print("\nTOMOGRAPHIC RECONSTRUCTION")
     print("-" * 78)
-    print(
-        f"{'Bin':<6} {'Population error (%)':>22} "
-        f"{'Mean z shift':>18} {'L1 distance':>18}"
-    )
+    print(f"{'Bin':<6} {'Population error (%)':>22} {'Mean z shift':>18} {'L1 distance':>18}")
     print("-" * 78)
 
     rows = []
 
-    for i, (nz_true, nz_fit) in enumerate(
-        zip(true_bins, fitted_bins, strict=True)
-    ):
-        pop_error = 100.0 * (
-            fitted_pop[i] / true_pop[i] - 1.0
-        )
+    for i, (nz_true, nz_fit) in enumerate(zip(true_bins, fitted_bins, strict=True)):
+        pop_error = 100.0 * (fitted_pop[i] / true_pop[i] - 1.0)
         mean_shift = fitted_means[i] - true_means[i]
         l1 = np.trapezoid(np.abs(nz_fit - nz_true), z)
 
         rows.append((i + 1, pop_error, mean_shift, l1))
 
-        print(
-            f"{i + 1:<6} {pop_error:>22.4f} "
-            f"{mean_shift:>18.6f} {l1:>18.6f}"
-        )
+        print(f"{i + 1:<6} {pop_error:>22.4f} {mean_shift:>18.6f} {l1:>18.6f}")
 
     plot_parent_distribution(z, nz, z_true, OUTPUT_DIR)
     plot_residual_fit(z_true, z_obs, fit, OUTPUT_DIR)

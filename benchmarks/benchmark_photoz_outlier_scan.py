@@ -7,15 +7,14 @@ from pathlib import Path
 import matplotlib.pyplot as plt
 import numpy as np
 
-from binny.api.nz_tomography import NZTomography
-from binny.nz_tomo.photoz import photoz_assignment_probability
-
-
-OUTPUT_DIR = (
-    Path(__file__).resolve().parent
-    / "output"
-    / "photoz_unbinned_scan"
+from binny.binning.photoz import photoz_assignment_probability
+from binny.binning.photoz_fitting import (
+    fit_photoz_errors,
+    to_binny_photoz_params,
 )
+
+
+OUTPUT_DIR = Path(__file__).resolve().parent / "output" / "photoz_unbinned_scan"
 
 N_GALAXIES = 100_000
 N_REALIZATIONS = 5
@@ -68,9 +67,7 @@ def generate_catalogue(
     rng = np.random.default_rng(seed)
 
     cdf = np.zeros_like(z)
-    cdf[1:] = np.cumsum(
-        0.5 * (nz[:-1] + nz[1:]) * np.diff(z)
-    )
+    cdf[1:] = np.cumsum(0.5 * (nz[:-1] + nz[1:]) * np.diff(z))
     cdf /= cdf[-1]
 
     z_true = np.interp(rng.random(N_GALAXIES), cdf, z)
@@ -99,9 +96,7 @@ def tomography_diagnostics(
     mean_shifts = []
     l1_distances = []
 
-    for z_min, z_max in zip(
-        BIN_EDGES[:-1], BIN_EDGES[1:], strict=True
-    ):
+    for z_min, z_max in zip(BIN_EDGES[:-1], BIN_EDGES[1:], strict=True):
         p_true = photoz_assignment_probability(
             Z,
             bin_min=z_min,
@@ -121,9 +116,7 @@ def tomography_diagnostics(
         n_true = np.trapezoid(nz_true, Z)
         n_fit = np.trapezoid(nz_fit, Z)
 
-        population_errors.append(
-            100.0 * (n_fit / n_true - 1.0)
-        )
+        population_errors.append(100.0 * (n_fit / n_true - 1.0))
 
         mean_true = np.trapezoid(Z * nz_true, Z) / n_true
         mean_fit = np.trapezoid(Z * nz_fit, Z) / n_fit
@@ -147,12 +140,11 @@ def tomography_diagnostics(
 def run_scan() -> np.ndarray:
     """Measure parameter recovery and tomography errors across fractions."""
     nz = parent_nz(Z)
-    tomo = NZTomography()
 
     rows = []
 
     for outlier_frac in OUTLIER_FRACTIONS:
-        injected = tomo.to_binny_photoz_params(
+        injected = to_binny_photoz_params(
             {
                 "scatter_scale": SCATTER_SCALE,
                 "outlier_scatter_scale": OUTLIER_SCATTER_SCALE,
@@ -171,7 +163,7 @@ def run_scan() -> np.ndarray:
                 seed,
             )
 
-            fit, metadata = tomo.fit_photoz_errors(
+            fit, metadata = fit_photoz_errors(
                 z_true,
                 z_obs,
                 n_init=N_INIT,
@@ -181,7 +173,7 @@ def run_scan() -> np.ndarray:
                 return_metadata=True,
             )
 
-            recovered = tomo.to_binny_photoz_params(fit)
+            recovered = to_binny_photoz_params(fit)
 
             pop_error, mean_shift, l1 = tomography_diagnostics(
                 nz,
@@ -315,38 +307,14 @@ def print_summary(results: np.ndarray) -> None:
     print("\nOVERALL DIAGNOSTICS")
     print("-" * 55)
     print(f"Number of fits:          {len(results)}")
-    print(
-        f"Converged fits:          "
-        f"{int(np.sum(results[:, 9]))}/{len(results)}"
-    )
-    print(
-        f"Mean outlier bias:       "
-        f"{np.mean(results[:, 5]):+.6f}"
-    )
-    print(
-        f"Maximum |outlier bias|:  "
-        f"{np.max(np.abs(results[:, 5])):.6f}"
-    )
-    print(
-        f"Maximum |mean-z shift|:  "
-        f"{np.max(results[:, 7]):.6f}"
-    )
-    print(
-        f"Maximum population err:  "
-        f"{np.max(results[:, 6]):.4f}%"
-    )
-    print(
-        f"Maximum L1 distance:     "
-        f"{np.max(results[:, 8]):.6f}"
-    )
-    print(
-        f"Mean KS statistic:       "
-        f"{np.mean(results[:, 11]):.6f}"
-    )
-    print(
-        f"Mean fitting iterations: "
-        f"{np.mean(results[:, 10]):.1f}"
-    )
+    print(f"Converged fits:          {int(np.sum(results[:, 9]))}/{len(results)}")
+    print(f"Mean outlier bias:       {np.mean(results[:, 5]):+.6f}")
+    print(f"Maximum |outlier bias|:  {np.max(np.abs(results[:, 5])):.6f}")
+    print(f"Maximum |mean-z shift|:  {np.max(results[:, 7]):.6f}")
+    print(f"Maximum population err:  {np.max(results[:, 6]):.4f}%")
+    print(f"Maximum L1 distance:     {np.max(results[:, 8]):.6f}")
+    print(f"Mean KS statistic:       {np.mean(results[:, 11]):.6f}")
+    print(f"Mean fitting iterations: {np.mean(results[:, 10]):.1f}")
 
 
 def main() -> None:
