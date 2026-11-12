@@ -42,12 +42,29 @@ Redshift grid and binning interval
    redshift grid or the parent distribution.**
 
 For example, a parent distribution defined over
-:math:`0 \leq z \leq 3` may be divided into five bins covering only
-:math:`0.2 \leq z \leq 1.2`.
+:math:`0 \leq z \leq 3` may be divided into five bins covering
+the entire grid or a restricted interval, such as
+:math:`0.3 \leq z \leq 2.4`.
 
 The parent distribution remains defined over its original grid,
 while the binning prescription determines the interval and placement
 of the bin boundaries.
+
+The figure below illustrates four ways of constructing five tomographic
+bins from the same parent redshift distribution.
+
+The upper panel shows equidistant binning over the full input grid.
+The lower panels show explicitly specified boundaries, equipopulated
+binning over a restricted interval, and mixed binning combining
+equidistant and equipopulated segments.
+
+In all cases, the parent distribution remains unchanged; only the
+bin boundaries and the interval covered by the bins differ.
+
+.. image:: ../_static/animations/binning_interval_modes.png
+   :alt: Comparison of full-grid, explicit, equipopulated, and mixed tomographic binning
+   :width: 100%
+   :align: center
 
 
 Binning modes
@@ -62,6 +79,21 @@ Binny supports three mutually exclusive ways of specifying bin edges:
   redshift intervals.
 
 All three modes use the same ``bins`` specification.
+
+For generated binning, the number of bins is specified by
+``n_bins``, while the optional ``range`` defines the interval
+``[z_min, z_max]`` over which the boundaries are constructed.
+
+If ``range`` is omitted, the full input redshift grid is used.
+
+For explicit binning, ``edges`` directly specifies all
+boundaries, including the lower and upper limits.
+Neither ``n_bins`` nor ``range`` should be supplied alongside
+``edges``.
+
+These options are mutually exclusive rather than overriding
+one another.
+
 
 The central resolver is
 :func:`binny.binning.edges.resolve_bin_edges`.
@@ -269,6 +301,124 @@ When a restricted binning interval is specified, the resolver
 interpolates the comoving-distance samples onto the restricted grid.
 
 See :ref:`example-generalized`.
+
+
+
+.. _theory-comoving-distance:
+
+Comoving-distance binning
+-------------------------
+
+Tomographic bins can be constructed using comoving radial distance
+rather than redshift.
+
+This approach is discussed by Moskowitz et al. (2023),
+`Improved Tomographic Binning of 3x2pt Lens Samples
+<https://arxiv.org/abs/2212.06754>`_, who compare equal-width
+redshift bins, equal-width comoving-distance bins, and
+equipopulated bins.
+
+They find that equal-width comoving-distance bins provide the
+highest dark energy figure of merit among their initial
+binning prescriptions, although further optimization of the
+bin boundaries can improve the constraints.
+
+For a cosmological model with comoving radial distance
+:math:`\chi(z)`, equal-width comoving-distance boundaries
+are defined by
+
+.. math::
+
+   \chi_i =
+   \chi(z_{\min}) +
+   \frac{i}{N}
+   \left[\chi(z_{\max})-\chi(z_{\min})\right],
+   \qquad i=0,\ldots,N.
+
+The corresponding redshift boundaries are obtained by
+inverting the distance-redshift relation,
+
+.. math::
+
+   z_i = \chi^{-1}(\chi_i).
+
+Because :math:`\chi(z)` is nonlinear, equal-width
+comoving-distance bins generally have unequal redshift
+widths.
+
+In Binny, this prescription is implemented by
+:func:`binny.axes.bin_edges.equidistant_chi_edges`.
+
+It is also a special case of generalized binning,
+corresponding to :math:`\alpha=0` and :math:`\beta=1`.
+
+
+Equal-width redshift versus comoving-distance bins
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+The following animation compares equal-width comoving-distance
+bins (solid curves and colored regions) with equal-width
+redshift bins (gray dashed curves).
+
+Both prescriptions cover the same redshift interval, but
+their internal boundaries differ because the comoving-distance
+relation is nonlinear.
+
+.. image:: ../_static/animations/tomo_chi_equidistant_binning.gif
+   :alt: Equal-width comoving-distance versus equal-width redshift tomography
+   :width: 85%
+   :align: center
+
+
+Comoving-distance versus equipopulated bins
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Equal-number binning instead chooses boundaries such that
+each bin contains the same integrated galaxy population,
+
+.. math::
+
+   \int_{z_i}^{z_{i+1}} n(z)\,\mathrm{d}z
+   =
+   \frac{1}{N}
+   \int_{z_{\min}}^{z_{\max}} n(z)\,\mathrm{d}z.
+
+Unlike equal-width comoving-distance binning, this
+prescription depends on the parent redshift distribution.
+
+The following animation compares equal-width comoving-distance
+bins (solid curves and colored regions) with equipopulated
+redshift bins (gray dashed curves).
+
+.. image:: ../_static/animations/tomo_chi_equipopulated_binning.gif
+   :alt: Equal-width comoving-distance versus equipopulated redshift tomography
+   :width: 85%
+   :align: center
+
+For the illustrated example, four equipopulated bins are
+constructed over :math:`0.2 \leq z \leq 1.2`.
+Each contains approximately 25 percent of the population
+within that interval.
+
+Equal-number binning is invariant under a monotonic
+coordinate transformation when the number density is
+transformed consistently,
+
+.. math::
+
+   n(\chi)\,\mathrm{d}\chi
+   =
+   n(z)\,\mathrm{d}z.
+
+Consequently, equipopulated binning in comoving distance
+and equipopulated binning in redshift yield the same
+physical boundaries.
+
+Equal-width binning, however, is coordinate-dependent.
+
+In Binny, the two prescriptions are available through
+:func:`binny.axes.bin_edges.equidistant_chi_edges`
+and :func:`binny.axes.bin_edges.equal_number_edges`.
 
 
 .. _theory-mixed-binning:

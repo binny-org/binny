@@ -237,6 +237,24 @@ requires comoving-distance information.
 Suppose ``chi`` contains the comoving radial distance
 evaluated on the same grid as ``z``.
 
+
+.. code-block:: python
+
+   import pyccl as ccl
+
+   cosmo = ccl.CosmologyVanillaLCDM()
+   chi = ccl.comoving_radial_distance(
+       cosmo,
+       1.0 / (1.0 + z),
+   )
+
+.. note::
+
+   PyCCL is used here to calculate the comoving-distance
+   relation. It is not required by Binny's bin-edge
+   construction functions, which accept precomputed
+   comoving-distance arrays.
+
 The underlying numerical function can be called directly:
 
 .. code-block:: python
@@ -277,6 +295,100 @@ the comoving-distance samples onto the restricted grid.
 
 For the mathematical definition, see
 :ref:`theory-generalized`.
+
+
+.. _example-comoving-distance:
+
+Comoving-distance binning
+-------------------------
+
+Binny supports equal-width comoving-distance binning through
+:func:`binny.axes.bin_edges.equidistant_chi_edges`.
+
+Unlike equidistant redshift binning, this prescription
+constructs boundaries uniformly in comoving radial distance
+and returns the corresponding redshift edges.
+
+Using the fiducial cosmology defined in the preceding example,
+we can compare equal-width comoving-distance, equal-width
+redshift, and equipopulated binning.
+
+.. code-block:: python
+
+   from binny.axes import (
+       equidistant_chi_edges,
+       equidistant_edges,
+       equal_number_edges,
+   )
+
+For example, construct four bins over
+:math:`0.2 \leq z \leq 1.2`.
+
+.. code-block:: python
+
+   z_fine = np.linspace(0.2, 1.2, 10000)
+   nz_fine = np.interp(z_fine, z, nz)
+   chi_fine = ccl.comoving_radial_distance(
+       cosmo,
+       1.0 / (1.0 + z_fine),
+   )
+
+   chi_z_edges = equidistant_chi_edges(
+       z_fine,
+       chi_fine,
+       n_bins=4,
+   )
+
+   equal_z_edges = equidistant_edges(0.2, 1.2, n_bins=4)
+
+   equipopulated_z_edges = equal_number_edges(
+       z_fine,
+       nz_fine,
+       n_bins=4,
+   )
+
+   print("Equal-width chi:", chi_z_edges)
+   print("Equal-width z:", equal_z_edges)
+   print("Equipopulated z:", equipopulated_z_edges)
+
+All three arrays contain redshift boundaries.
+Only the prescription used to construct them differs.
+
+
+Equal-width comoving distance versus redshift
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+The following animation compares equal-width comoving-distance
+bins (colored regions) against equal-width redshift bins
+(gray dashed curves).
+
+.. image:: ../../_static/animations/tomo_chi_equidistant_binning.gif
+   :alt: Equal-width comoving-distance versus redshift tomography
+   :width: 85%
+   :align: center
+
+
+Equal-width comoving distance versus equipopulated bins
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+The following animation compares equal-width comoving-distance
+bins (colored regions) against equipopulated redshift bins
+(gray dashed curves).
+
+.. image:: ../../_static/animations/tomo_chi_equipopulated_binning.gif
+   :alt: Equal-width comoving-distance versus equipopulated tomography
+   :width: 85%
+   :align: center
+
+Both animations show the parent distribution, spectroscopic
+tomography, and photometric tomography.
+
+The binning prescription determines the boundaries, while
+the tomography kind determines how galaxies are assigned
+to the bins.
+
+For the mathematical explanation and the relation to
+generalized binning, see :ref:`theory-comoving-distance`.
 
 
 .. _example-mixed-binning:
