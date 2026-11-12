@@ -13,6 +13,7 @@ dependencies = [
   "scipy",
   "cmasher",
   "matplotlib",
+  "derivkit",
 ]
 
 [project.optional-dependencies]
