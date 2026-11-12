@@ -1094,3 +1094,174 @@ def test_load_predefined_bin_source_validates_n_bins(
                 },
             }
         )
+
+
+def test_parse_bins_accepts_mixed_segments() -> None:
+    """Tests that _parse_bins accepts mixed binning schemes."""
+    segments = [
+        {
+            "scheme": "equidistant",
+            "n_bins": 2,
+            "x_min": 0.4,
+            "x_max": 0.9,
+        },
+        {
+            "scheme": "equal_number",
+            "n_bins": 3,
+            "x_min": 0.9,
+            "x_max": 2.4,
+        },
+    ]
+
+    bins = _parse_bins({"segments": segments})
+
+    assert len(bins["segments"]) == 2
+    assert bins["segments"][0]["scheme"] == "equidistant"
+    assert bins["segments"][0]["n_bins"] == 2
+    assert bins["segments"][1]["scheme"] == "equal_number"
+    assert bins["segments"][1]["n_bins"] == 3
+    assert bins["segments"][0]["x_max"] == bins["segments"][1]["x_min"]
+
+
+def test_parse_bins_preserves_mixed_segment_params() -> None:
+    """Tests that _parse_bins preserves scheme-specific segment parameters."""
+    bins = _parse_bins(
+        {
+            "segments": [
+                {
+                    "scheme": "equidistant",
+                    "n_bins": 2,
+                    "x_min": 0.0,
+                    "x_max": 1.0,
+                    "params": {"custom": 1.5},
+                }
+            ]
+        }
+    )
+
+    assert bins["segments"][0]["params"] == {"custom": 1.5}
+
+
+@pytest.mark.parametrize(
+    "extra",
+    [
+        {"scheme": "equidistant"},
+        {"edges": [0.0, 1.0]},
+        {"n_bins": 5},
+        {"range": [0.0, 2.0]},
+    ],
+)
+def test_parse_bins_rejects_mixed_modes(extra: dict[str, Any]) -> None:
+    """Tests that mixed segments cannot be combined with other binning modes."""
+    bins = {
+        "segments": [
+            {
+                "scheme": "equidistant",
+                "n_bins": 2,
+                "x_min": 0.0,
+                "x_max": 1.0,
+            }
+        ],
+        **extra,
+    }
+
+    with pytest.raises(ValueError):
+        _parse_bins(bins)
+
+
+@pytest.mark.parametrize(
+    "segments",
+    [
+        [],
+        "invalid",
+        [{"scheme": "equidistant", "n_bins": 2}],
+        [
+            {
+                "scheme": "equidistant",
+                "n_bins": 0,
+                "x_min": 0.0,
+                "x_max": 1.0,
+            }
+        ],
+        [
+            {
+                "scheme": "equidistant",
+                "n_bins": 2,
+                "x_min": 1.0,
+                "x_max": 0.0,
+            }
+        ],
+        [
+            {
+                "scheme": "equidistant",
+                "n_bins": 2,
+                "x_min": 0.0,
+                "x_max": 1.0,
+                "unknown": True,
+            }
+        ],
+    ],
+)
+def test_parse_bins_rejects_invalid_mixed_segments(segments: Any) -> None:
+    """Tests that malformed mixed binning segments raise ValueError."""
+    with pytest.raises(ValueError):
+        _parse_bins({"segments": segments})
+
+
+@pytest.mark.parametrize(
+    "second_start",
+    [0.8, 1.2],
+)
+def test_parse_bins_rejects_nonadjacent_segments(
+    second_start: float,
+) -> None:
+    """Tests that mixed binning segments cannot overlap or have gaps."""
+    bins = {
+        "segments": [
+            {
+                "scheme": "equidistant",
+                "n_bins": 2,
+                "x_min": 0.0,
+                "x_max": 1.0,
+            },
+            {
+                "scheme": "equal_number",
+                "n_bins": 3,
+                "x_min": second_start,
+                "x_max": 2.0,
+            },
+        ]
+    }
+
+    with pytest.raises(ValueError, match="must be adjacent"):
+        _parse_bins(bins)
+
+
+def test_builder_kwargs_from_spec_preserves_mixed_segments() -> None:
+    """Tests that mixed binning specifications reach the builder unchanged."""
+    bins = {
+        "segments": [
+            {
+                "scheme": "equidistant",
+                "n_bins": 2,
+                "x_min": 0.0,
+                "x_max": 1.0,
+            },
+            {
+                "scheme": "equal_number",
+                "n_bins": 3,
+                "x_min": 1.0,
+                "x_max": 2.0,
+            },
+        ]
+    }
+
+    kwargs = _builder_kwargs_from_spec(
+        {
+            "bins": bins,
+            "uncertainties": {"scatter_scale": 0.03},
+        }
+    )
+
+    assert kwargs["bins"] == bins
+    assert kwargs["scatter_scale"] == pytest.approx(0.03)
