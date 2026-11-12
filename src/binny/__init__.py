@@ -11,6 +11,7 @@ from binny.tomography import (
     Tomography,
     build_predefined_tomography,
     build_tomography,
+    build_tomography_from_spec,
     load_predefined_bins,
 )
 from binny.utils.colors import (
@@ -25,6 +26,7 @@ from binny.utils.colors import (
 __all__ = [
     "Tomography",
     "build_tomography",
+    "build_tomography_from_spec",
     "build_survey_tomography",
     "build_predefined_tomography",
     "load_predefined_bins",
