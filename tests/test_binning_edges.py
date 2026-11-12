@@ -26,7 +26,7 @@ def _gaussian(z: np.ndarray, mu: float, sig: float) -> np.ndarray:
 
 
 def test_photoz_segments_to_axes_converts_keys_and_types() -> None:
-    """Test conversion of segment specifications."""
+    """Tests that segment specifications use normalized keys and types."""
     segments: list[dict[str, Any]] = [
         {"scheme": "equidistant", "n_bins": 2, "z_min": 0.0, "z_max": 0.8},
         {"scheme": "equal_number", "n_bins": 3, "z_min": 0.8, "z_max": 2.0},
@@ -38,24 +38,27 @@ def test_photoz_segments_to_axes_converts_keys_and_types() -> None:
     assert out[0] == {
         "method": "equidistant",
         "n_bins": 2,
-        "params": {"x_min": 0.0, "x_max": 0.8},
+        "range": (0.0, 0.8),
+        "params": {},
     }
     assert out[1] == {
         "method": "equal_number",
         "n_bins": 3,
-        "params": {"x_min": 0.8, "x_max": 2.0},
+        "range": (0.8, 2.0),
+        "params": {},
     }
 
 
 def test_photoz_segments_to_axes_missing_key_raises() -> None:
-    """Test rejection of incomplete segment specifications."""
+    """Tests that incomplete segment specifications are rejected."""
     segments = [{"scheme": "equidistant", "n_bins": 2, "z_min": 0.0}]
 
-    with pytest.raises(ValueError, match="Each mixed segment requires x_min and x_max"):
+    with pytest.raises(ValueError, match="requires x_min and x_max"):
         segments_to_axes(segments)
 
 
-def test_mixed_edges_requires_paired_photoz_inputs():
+def test_mixed_edges_requires_paired_photoz_inputs() -> None:
+    """Tests that selection axes and densities must be supplied together."""
     z = np.linspace(0.0, 2.0, 100)
     nz = np.exp(-z)
 
@@ -68,7 +71,10 @@ def test_mixed_edges_requires_paired_photoz_inputs():
         }
     ]
 
-    with pytest.raises(ValueError, match="Provide both selection_axis and selection_density"):
+    with pytest.raises(
+        ValueError,
+        match="Provide both selection_axis and selection_density",
+    ):
         mixed_edges_from_segments(
             segments,
             axis=z,
@@ -79,7 +85,7 @@ def test_mixed_edges_requires_paired_photoz_inputs():
 
 
 def test_mixed_edges_uses_parent_axis() -> None:
-    """Test default parent-axis selection."""
+    """Tests that mixed binning defaults to the parent redshift axis."""
     z = _toy_grid()
     nz = _gaussian(z, 1.0, 0.3)
     segments = [{"scheme": "equidistant", "n_bins": 5, "z_min": 0.0, "z_max": 2.0}]
@@ -96,7 +102,7 @@ def test_mixed_edges_uses_parent_axis() -> None:
 
 
 def test_mixed_edges_uses_photoz_axis() -> None:
-    """Test that photo-z weights determine equal-number edges."""
+    """Tests that photo-z selection densities determine equal-number edges."""
     z = _toy_grid()
     nz = _gaussian(z, 1.0, 0.3)
 
@@ -127,7 +133,7 @@ def test_mixed_edges_uses_photoz_axis() -> None:
 
 
 def test_mixed_edges_total_bins_matches_segments() -> None:
-    """Test total number of bins across multiple segments."""
+    """Tests that mixed segments produce the requested total bin count."""
     z = _toy_grid()
     nz = _gaussian(z, 1.0, 0.3)
 
@@ -149,12 +155,12 @@ def test_mixed_edges_total_bins_matches_segments() -> None:
 
 
 def test_mixed_edges_missing_segment_key_raises() -> None:
-    """Test rejection of incomplete mixed segments."""
+    """Tests that mixed segments require complete interval boundaries."""
     z = _toy_grid()
     nz = _gaussian(z, 1.0, 0.3)
     segments = [{"scheme": "equidistant", "n_bins": 2, "z_min": 0.0}]
 
-    with pytest.raises(ValueError, match="Each mixed segment requires x_min and x_max"):
+    with pytest.raises(ValueError, match="requires x_min and x_max"):
         mixed_edges_from_segments(
             segments,
             axis=z,
@@ -173,7 +179,7 @@ def test_mixed_edges_missing_segment_key_raises() -> None:
     ],
 )
 def test_validate_bin_edges_accepts_valid(edges: list[float]) -> None:
-    """Test valid edge arrays."""
+    """Tests that valid bin boundaries are accepted as float64 arrays."""
     result = validate_bin_edges(edges)
 
     np.testing.assert_array_equal(result, edges)
@@ -195,13 +201,13 @@ def test_validate_bin_edges_rejects_invalid(
     edges: Any,
     message: str,
 ) -> None:
-    """Test rejection of invalid edges."""
+    """Tests that invalid bin boundaries raise informative errors."""
     with pytest.raises(ValueError, match=message):
         validate_bin_edges(edges)
 
 
 def test_validate_bin_edges_require_within() -> None:
-    """Test optional interval restriction."""
+    """Tests that optional interval restrictions are enforced."""
     np.testing.assert_allclose(
         validate_bin_edges([0.2, 0.5, 0.8], require_within=(0.0, 1.0)),
         [0.2, 0.5, 0.8],
@@ -212,7 +218,7 @@ def test_validate_bin_edges_require_within() -> None:
 
 
 def test_resolve_bin_edges_explicit() -> None:
-    """Test explicitly supplied edges."""
+    """Tests that explicitly supplied bin boundaries are preserved."""
     z = _toy_grid()
     nz = _gaussian(z, 1.0, 0.3)
 
@@ -226,7 +232,7 @@ def test_resolve_bin_edges_explicit() -> None:
 
 
 def test_resolve_bin_edges_equidistant() -> None:
-    """Test equally spaced edges."""
+    """Tests that equidistant binning generates uniformly spaced edges."""
     z = _toy_grid()
     nz = _gaussian(z, 1.0, 0.3)
 
@@ -240,7 +246,7 @@ def test_resolve_bin_edges_equidistant() -> None:
 
 
 def test_resolve_bin_edges_respects_range() -> None:
-    """Test that bin range endpoints are not snapped to the grid."""
+    """Tests that bin-range endpoints are not snapped to the input grid."""
     z = _toy_grid()
     nz = _gaussian(z, 1.0, 0.3)
 
@@ -258,7 +264,7 @@ def test_resolve_bin_edges_respects_range() -> None:
 
 
 def test_resolve_bin_edges_equal_number() -> None:
-    """Test equal-number edges for a uniform distribution."""
+    """Tests that uniform densities produce equidistant equal-number edges."""
     z = _toy_grid()
     nz = np.ones_like(z)
 
@@ -272,7 +278,7 @@ def test_resolve_bin_edges_equal_number() -> None:
 
 
 def test_resolve_bin_edges_mixed() -> None:
-    """Test mixed-segment edge construction through the resolver."""
+    """Tests that mixed segments are constructed through the edge resolver."""
     z = _toy_grid()
     nz = np.ones_like(z)
 
@@ -305,7 +311,7 @@ def test_resolve_bin_edges_mixed() -> None:
 def test_resolve_bin_edges_rejects_conflicting_inputs(
     bins: dict[str, Any],
 ) -> None:
-    """Test that multiple bin specification modes are rejected."""
+    """Tests that conflicting bin specification modes are rejected."""
     z = _toy_grid()
     nz = np.ones_like(z)
 
@@ -318,7 +324,7 @@ def test_resolve_bin_edges_rejects_conflicting_inputs(
 
 
 def test_resolve_bin_edges_requires_scheme() -> None:
-    """Test rejection of a bin specification without a mode."""
+    """Tests that bin specifications must select exactly one mode."""
     z = _toy_grid()
     nz = np.ones_like(z)
 
@@ -331,7 +337,7 @@ def test_resolve_bin_edges_requires_scheme() -> None:
 
 
 def test_resolve_bin_edges_rejects_unknown_scheme() -> None:
-    """Test unsupported binning schemes."""
+    """Tests that unsupported binning schemes are rejected."""
     z = _toy_grid()
     nz = np.ones_like(z)
 
@@ -344,7 +350,7 @@ def test_resolve_bin_edges_rejects_unknown_scheme() -> None:
 
 
 def test_resolve_bin_edges_generalized() -> None:
-    """Test generalized alpha-beta binning through the resolver."""
+    """Tests that generalized alpha-beta binning works through the resolver."""
     z = _toy_grid()
     nz = _gaussian(z, 1.0, 0.3)
 
@@ -371,7 +377,7 @@ def test_resolve_bin_edges_generalized() -> None:
 
 
 def test_resolve_bin_edges_generalized_requires_n_bins() -> None:
-    """Test that generalized binning requires a bin count."""
+    """Tests that generalized binning requires a valid bin count."""
     z = _toy_grid()
     nz = _gaussian(z, 1.0, 0.3)
 
@@ -397,7 +403,7 @@ def test_resolve_bin_edges_range_applies_to_schemes(
     scheme: str,
     expected: np.ndarray,
 ) -> None:
-    """Test range restriction for multiple generating schemes."""
+    """Tests that interval restrictions apply to multiple binning schemes."""
     z = _toy_grid()
     nz = np.ones_like(z)
 
@@ -415,7 +421,7 @@ def test_resolve_bin_edges_range_applies_to_schemes(
 
 
 def test_resolve_bin_edges_rejects_unknown_params() -> None:
-    """Test rejection of unsupported scheme parameters."""
+    """Tests that unsupported scheme parameters are rejected."""
     z = _toy_grid()
     nz = np.ones_like(z)
 
@@ -432,7 +438,7 @@ def test_resolve_bin_edges_rejects_unknown_params() -> None:
 
 
 def test_resolve_bin_edges_rejects_range_outside_grid() -> None:
-    """Test rejection of ranges outside the sampled grid."""
+    """Tests that binning ranges outside the sampled grid are rejected."""
     z = _toy_grid()
     nz = np.ones_like(z)
 
@@ -448,11 +454,8 @@ def test_resolve_bin_edges_rejects_range_outside_grid() -> None:
         )
 
 
-def test_generalized_nonzero_beta_via_bins():
-    import numpy as np
-
-    from binny.binning.edges import resolve_bin_edges
-
+def test_generalized_nonzero_beta_via_bins() -> None:
+    """Tests that generalized binning supports nonzero beta and custom ranges."""
     z = np.linspace(0.0, 3.0, 501)
     nz = z**2 * np.exp(-z / 0.5)
     chi = 3000.0 * np.log1p(z)
@@ -478,13 +481,13 @@ def test_generalized_nonzero_beta_via_bins():
     assert np.isclose(edges[-1], 2.5)
 
 
-def test_generalized_derivative_methods_through_resolver():
-    """Both derivative methods are available through the binning API."""
+def test_generalized_derivative_methods_through_resolver() -> None:
+    """Tests that analytic and numerical derivatives give consistent edges."""
     axis = np.linspace(0.0, 2.0, 101)
     density = np.exp(-axis)
     chi = 1000.0 * axis + 100.0 * axis**2
 
-    def calculate(method):
+    def calculate(method: str) -> np.ndarray:
         return resolve_bin_edges(
             axis=axis,
             density=density,
