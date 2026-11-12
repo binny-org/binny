@@ -1,25 +1,53 @@
+.. |logo| image:: ../../_static/assets/logo.png
+   :alt: logo
+   :width: 32px
 
-Binning schemes
-===============
+|logo| Binning schemes
+======================
 
-Binny supports several prescriptions for constructing tomographic bin
-edges. All prescriptions use a unified ``bins`` dictionary, which
-separates the binning configuration from the parent redshift distribution
-and the redshift uncertainty model.
+This page demonstrates how to configure and use the binning
+prescriptions available in Binny.
 
-A bin specification selects exactly one of three modes:
+For mathematical definitions and explanations of the individual
+schemes, see :doc:`../../theory/binning_schemes`.
 
-- Explicit edges, using ``edges``.
-- Generated edges, using ``scheme`` and ``n_bins``.
-- Mixed binning, using ``segments``.
+All examples use the unified ``bins`` dictionary.
 
-The central resolver is
-:func:`binny.binning.edges.resolve_bin_edges`.
+
+Preparing a parent distribution
+-------------------------------
+
+We begin with a synthetic parent redshift distribution.
+
+.. code-block:: python
+
+   import numpy as np
+
+   from binny.binning import resolve_bin_edges
+
+   z = np.linspace(0.0, 3.0, 501)
+   nz = z**2 * np.exp(-z / 0.5)
+
+The array ``z`` defines the redshift grid, while ``nz`` contains
+the corresponding parent distribution.
+
+.. note::
+
+   **The input grid is not the binning interval.**
+
+   In the examples below, the parent distribution is defined
+   over :math:`0 \leq z \leq 3`.
+
+   We can construct bins over the full interval or restrict
+   them to a smaller interval without redefining ``z`` or ``nz``.
+
+
+.. _example-explicit-edges:
 
 Explicit bin edges
 ------------------
 
-When the bin boundaries are already known, they can be supplied directly.
+When the bin boundaries are already known, supply them directly.
 
 .. code-block:: python
 
@@ -27,13 +55,55 @@ When the bin boundaries are already known, they can be supplied directly.
        "edges": [0.2, 0.4, 0.6, 0.8, 1.0, 1.2],
    }
 
-The edges must form a strictly increasing sequence. This mode does not
-accept a generating scheme, number of bins, or separate binning range.
+   edges = resolve_bin_edges(
+       axis=z,
+       density=nz,
+       bins=bins,
+   )
+
+   print(edges)
+
+The supplied boundaries are returned directly after validation.
+
+Explicit edges must be strictly increasing.
+
+Do not combine ``edges`` with ``scheme``, ``n_bins``,
+``range``, or ``segments``.
+
+
+.. _example-generated-edges:
 
 Generated bin edges
 -------------------
 
-Generated binning uses a named scheme and a requested number of bins.
+Generated binning requires a named scheme and the number of bins.
+
+For example:
+
+.. code-block:: python
+
+   bins = {
+       "scheme": "equidistant",
+       "n_bins": 5,
+   }
+
+   edges = resolve_bin_edges(
+       axis=z,
+       density=nz,
+       bins=bins,
+   )
+
+   print(edges)
+
+Because no ``range`` is specified, the full interval of the
+input redshift grid is used.
+
+
+Restricting the binning interval
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+To construct bins over only part of the input grid, supply
+``range`` inside ``bins``.
 
 .. code-block:: python
 
@@ -43,49 +113,31 @@ Generated binning uses a named scheme and a requested number of bins.
        "range": [0.2, 1.2],
    }
 
-The optional ``range`` restricts the interval over which edges are
-constructed. If omitted, the supplied redshift grid determines the
-interval.
+   edges = resolve_bin_edges(
+       axis=z,
+       density=nz,
+       bins=bins,
+   )
 
-Scheme-specific parameters belong in the nested ``params`` dictionary.
+   print(edges)
 
-Built-in schemes
-~~~~~~~~~~~~~~~~
+The result is
 
-The following schemes are registered by default.
+.. code-block:: text
 
-.. list-table::
-   :header-rows: 1
-   :widths: 25 35 40
+   [0.2 0.4 0.6 0.8 1.0 1.2]
 
-   * - Scheme
-     - Aliases
-     - Description
-   * - ``equidistant``
-     - ``eq``, ``linear``
-     - Equal-width redshift intervals.
-   * - ``equal_number``
-     - ``equipopulated``, ``en``
-     - Equal integrated population per bin.
-   * - ``generalized``
-     - None
-     - Equal integrated generalized weight per bin.
+The original ``z`` and ``nz`` arrays remain unchanged.
+
+Only the interval over which bin edges are generated is restricted.
+
+
+.. _example-equidistant:
 
 Equidistant binning
-~~~~~~~~~~~~~~~~~~~
+-------------------
 
-Equidistant binning divides the requested interval into equal-width
-redshift bins.
-
-For an interval from :math:`z_{\min}` to :math:`z_{\max}`, the edges are
-
-.. math::
-
-   z_i = z_{\min}
-   + \frac{i}{N}(z_{\max}-z_{\min}),
-   \qquad i=0,\ldots,N.
-
-For example:
+Equidistant binning creates bins with equal redshift widths.
 
 .. code-block:: python
 
@@ -95,22 +147,28 @@ For example:
        "range": [0.2, 1.2],
    }
 
+   edges = resolve_bin_edges(
+       axis=z,
+       density=nz,
+       bins=bins,
+   )
+
+   print(edges)
+
+The alias ``eq`` or ``linear`` can be used instead of
+``equidistant``.
+
+For the mathematical definition, see
+:ref:`theory-equidistant`.
+
+
+.. _example-equal-number:
+
 Equal-number binning
-~~~~~~~~~~~~~~~~~~~~
+--------------------
 
-Equal-number binning selects boundaries such that each bin contains the
-same integrated population.
-
-For a parent distribution :math:`n(z)`, the boundaries satisfy
-
-.. math::
-
-   \int_{z_i}^{z_{i+1}} n(z)\,\mathrm{d}z
-   =
-   \frac{1}{N}
-   \int_{z_{\min}}^{z_{\max}} n(z)\,\mathrm{d}z.
-
-For example:
+Equal-number binning places boundaries so that every bin
+contains the same integrated population.
 
 .. code-block:: python
 
@@ -120,63 +178,33 @@ For example:
        "range": [0.2, 1.2],
    }
 
-The alias ``equipopulated`` is equivalent to ``equal_number``.
+   edges = resolve_bin_edges(
+       axis=z,
+       density=nz,
+       bins=bins,
+   )
 
-The resolver can also use a separate distribution for computing
-equal-number edges through ``equal_number_axis`` and
-``equal_number_weights``.
+   print(edges)
+
+The resulting bins generally have different redshift widths.
+
+The aliases ``equipopulated`` and ``en`` are equivalent to
+``equal_number``.
+
+For the mathematical definition, see
+:ref:`theory-equal-number`.
+
+
+.. _example-generalized:
 
 Generalized binning
 -------------------
 
-Generalized binning constructs boundaries by integrating a weight
-function that depends on the parent redshift distribution and,
-optionally, the comoving radial distance.
+Generalized binning allows the user to interpolate between
+different binning prescriptions through the parameters
+``alpha`` and ``beta``.
 
-The generalized weight is
-
-.. math::
-
-   w(z) =
-   [n(z)]^\alpha
-   \left(\frac{\mathrm{d}\chi}{\mathrm{d}z}\right)^\beta,
-
-where :math:`\chi(z)` is the comoving radial distance and
-:math:`\alpha` and :math:`\beta` are configurable exponents.
-
-The edges satisfy
-
-.. math::
-
-   \int_{z_i}^{z_{i+1}} w(z)\,\mathrm{d}z
-   =
-   \frac{1}{N}
-   \int_{z_{\min}}^{z_{\max}} w(z)\,\mathrm{d}z.
-
-This prescription contains several familiar binning strategies as
-special cases.
-
-.. list-table::
-   :header-rows: 1
-
-   * - :math:`\alpha`
-     - :math:`\beta`
-     - Interpretation
-   * - 0
-     - 0
-     - Equidistant redshift binning
-   * - 1
-     - 0
-     - Equal-number binning
-   * - 0
-     - 1
-     - Equal comoving-distance binning
-
-Intermediate exponent values allow bin boundaries to interpolate between
-these prescriptions.
-
-For example, generalized binning with :math:`\alpha=0.5` and
-:math:`\beta=0` can be configured as follows:
+For example, with :math:`\alpha=0.5` and :math:`\beta=0`:
 
 .. code-block:: python
 
@@ -189,12 +217,27 @@ For example, generalized binning with :math:`\alpha=0.5` and
        },
    }
 
-When :math:`\beta=0`, comoving-distance information is unnecessary.
+   edges = resolve_bin_edges(
+       axis=z,
+       density=nz,
+       bins=bins,
+   )
 
-For nonzero :math:`\beta`, the underlying
-:func:`binny.axes.bin_edges.generalized_tomographic_edges`
-function requires a comoving-distance array evaluated on the same
-redshift grid.
+   print(edges)
+
+Scheme-specific arguments must be nested inside ``params``.
+
+
+Generalized binning with comoving distance
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+When :math:`\beta \neq 0`, the generalized prescription
+requires comoving-distance information.
+
+Suppose ``chi`` contains the comoving radial distance
+evaluated on the same grid as ``z``.
+
+The underlying numerical function can be called directly:
 
 .. code-block:: python
 
@@ -209,23 +252,43 @@ redshift grid.
        comoving_distance=chi,
    )
 
-Here ``z``, ``nz``, and ``chi`` are one-dimensional arrays, with
-``chi`` containing strictly increasing comoving radial distances.
+Alternatively, use the unified bin specification:
 
-The current ``resolve_bin_edges`` interface does not expose a
-``comoving_distance`` argument. Therefore, generalized configurations
-with nonzero ``beta`` should use the lower-level function directly.
+.. code-block:: python
+
+   bins = {
+       "scheme": "generalized",
+       "n_bins": 5,
+       "params": {
+           "alpha": 0.5,
+           "beta": 1.0,
+           "comoving_distance": chi,
+       },
+   }
+
+   edges = resolve_bin_edges(
+       axis=z,
+       density=nz,
+       bins=bins,
+   )
+
+When ``range`` is specified, the resolver interpolates
+the comoving-distance samples onto the restricted grid.
+
+For the mathematical definition, see
+:ref:`theory-generalized`.
+
+
+.. _example-mixed-binning:
 
 Mixed binning
 -------------
 
-Mixed binning combines different binning methods across adjacent
+Mixed binning combines multiple schemes across adjacent
 redshift intervals.
 
-Each segment specifies a scheme, a number of bins, and its redshift
-boundaries.
-
-For example:
+For example, use two equidistant bins at low redshift
+and three equal-number bins at higher redshift.
 
 .. code-block:: python
 
@@ -246,44 +309,6 @@ For example:
        ],
    }
 
-The resulting edges form one increasing array. Shared boundaries
-between adjacent segments are included only once.
-
-The total number of bins is the sum of the segment counts.
-
-Mixed binning uses the underlying
-:func:`binny.axes.mixed_edges.mixed_edges` machinery.
-
-For equal-number segments, the parent distribution is used as the
-population proxy unless a separate selection distribution is provided
-through ``selection_axis`` and ``selection_density``. In photo-z
-tomography, these may represent the observed-redshift grid and its
-corresponding distribution.
-
-Resolving bin specifications
-----------------------------
-
-The same resolver accepts explicit, generated, and mixed bin
-specifications.
-
-.. code-block:: python
-
-   import numpy as np
-
-   from binny.binning.edges import resolve_bin_edges
-
-   z = np.linspace(0.0, 3.0, 501)
-   nz = z**2 * np.exp(-z / 0.5)
-
-   bins = {
-       "scheme": "generalized",
-       "n_bins": 5,
-       "params": {
-           "alpha": 0.5,
-           "beta": 0.0,
-       },
-   }
-
    edges = resolve_bin_edges(
        axis=z,
        density=nz,
@@ -292,15 +317,96 @@ specifications.
 
    print(edges)
 
-The returned array contains ``n_bins + 1`` edges.
+The resulting array contains six boundaries defining
+five tomographic bins.
 
-The resolver validates the specification and dispatches it to the
-appropriate binning implementation.
+The shared boundary at :math:`z=0.6` is included only once.
+
+For the theoretical description, see
+:ref:`theory-mixed-binning`.
+
+
+.. _example-custom-scheme:
+
+Custom binning schemes
+----------------------
+
+Binny allows users to register their own binning schemes
+and use them through the same interface as built-in schemes.
+
+The following example creates a power-law mapping of
+uniformly spaced coordinates into bin edges.
+
+.. code-block:: python
+
+   import numpy as np
+
+   from binny.binning import (
+       available_binning_schemes,
+       get_binning_scheme,
+       register_binning_scheme,
+       resolve_bin_edges,
+   )
+
+   @register_binning_scheme("custom_power")
+   def custom_power(axis, density, n_bins, *, power=2.0):
+       """Construct power-law-spaced bin edges."""
+       u = np.linspace(0.0, 1.0, n_bins + 1)
+       return axis[0] + (axis[-1] - axis[0]) * u**power
+
+   axis = np.linspace(0.0, 3.0, 1000)
+   density = np.exp(-axis)
+
+   edges = resolve_bin_edges(
+       axis=axis,
+       density=density,
+       bins={
+           "scheme": "custom_power",
+           "n_bins": 5,
+           "params": {"power": 2.0},
+       },
+   )
+
+   print(edges)
+   print(available_binning_schemes())
+
+The returned boundaries are
+
+.. code-block:: text
+
+   [0.   0.12 0.48 1.08 1.92 3.  ]
+
+The custom scheme is now registered under the name
+``custom_power`` and can be selected just like any
+built-in scheme.
+
+
+Inspecting registered schemes
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+The registry provides functions for discovering available
+schemes and retrieving registered implementations.
+
+.. code-block:: python
+
+   schemes = available_binning_schemes()
+   print(schemes)
+
+   scheme_function = get_binning_scheme("custom_power")
+   print(scheme_function)
+
+Custom scheme names are case-insensitive.
+
+Duplicate names are rejected.
+
+Scheme-specific parameters are supplied through ``params``
+and validated against the registered function's signature.
+
 
 Survey YAML configurations
 --------------------------
 
-The same ``bins`` structure is used in survey presets.
+The same ``bins`` structure can be used in survey presets.
 
 For example:
 
@@ -330,62 +436,18 @@ For example:
 
        normalize_bins: true
 
-The ``nz`` parameters describe the parent distribution, while the
-parameters nested under ``bins`` describe the binning prescription.
+The parameters under ``nz`` describe the parent distribution.
+
+The parameters under ``bins`` describe the binning prescription.
 
 The uncertainty model is configured independently.
 
-Custom binning schemes
-----------------------
-
-Additional binning schemes can be registered through
-:func:`binny.binning.scheme_registry.register_binning_scheme`.
-
-A registered scheme receives the redshift grid, parent distribution,
-and requested number of bins. It must return the corresponding
-numerical edges.
-
-For example:
-
-.. code-block:: python
-
-   import numpy as np
-
-   from binny.binning.scheme_registry import register_binning_scheme
-   from binny.binning.edges import resolve_bin_edges
-
-   @register_binning_scheme("quadratic_spacing")
-   def quadratic_spacing(z, nz, n_bins):
-       t = np.linspace(0.0, 1.0, n_bins + 1)
-       return z[0] + (z[-1] - z[0]) * t**2
-
-   z = np.linspace(0.0, 3.0, 501)
-   nz = z**2 * np.exp(-z / 0.5)
-
-   edges = resolve_bin_edges(
-       axis=z,
-       density=nz,
-       bins={
-           "scheme": "quadratic_spacing",
-           "n_bins": 5,
-       },
-   )
-
-Registered schemes are available by name through the same resolver.
-
-Scheme names and aliases are case-insensitive. Duplicate registered
-names are rejected.
-
-The registry also provides
-:func:`binny.binning.scheme_registry.get_binning_scheme`
-and
-:func:`binny.binning.scheme_registry.available_binning_schemes`.
 
 See also
 --------
 
+- :doc:`../../theory/binning_schemes`
 - :doc:`photoz_bins`
 - :doc:`specz_bins`
 - :doc:`../../theory/tomography`
 - :mod:`binny.binning.edges`
-- :mod:`binny.axes.bin_edges`
