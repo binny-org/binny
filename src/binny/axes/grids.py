@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Callable
-from typing import Any
+from typing import Any, Literal
 
 import numpy as np
 
@@ -160,35 +160,48 @@ def sinh_grid(
     n: int,
     *,
     strength: float = 3.0,
+    concentration: Literal["midpoint", "endpoints"] = "midpoint",
 ) -> np.ndarray:
-    """Construct a sinh-stretched grid concentrated near the midpoint.
+    """Construct a sinh-based grid with configurable point concentration.
 
     The transformation is symmetric around the interval midpoint.
-    Larger ``strength`` values increase the concentration of points
-    near the center, while zero gives linear spacing.
+    The ``concentration`` parameter selects whether points cluster
+    near the midpoint or near both endpoints.
+
+    Larger ``strength`` values increase the concentration.
+    Zero strength produces linear spacing in either mode.
 
     Args:
         start: Lower endpoint.
         stop: Upper endpoint.
         n: Number of grid points, at least 2.
         strength: Nonnegative stretching parameter.
+        concentration: Where grid points are concentrated.
+            Either ``"midpoint"`` or ``"endpoints"``.
 
     Returns:
-        One-dimensional array of sinh-stretched grid points.
+        One-dimensional array of strictly increasing grid points.
 
     Raises:
-        ValueError: If ``strength`` is negative or non-finite.
+        ValueError: If ``strength`` or ``concentration`` is invalid.
     """
     x0, x1, n_int = validate_grid_spec(start, stop, n, log=False)
 
     if not np.isfinite(strength) or strength < 0:
         raise ValueError("strength must be nonnegative and finite.")
 
+    if concentration not in {"midpoint", "endpoints"}:
+        raise ValueError("concentration must be 'midpoint' or 'endpoints'.")
+
     if strength == 0:
         return np.linspace(x0, x1, n_int, dtype=np.float64)
 
     t = np.linspace(-1.0, 1.0, n_int)
-    u = np.sinh(strength * t) / np.sinh(strength)
+
+    if concentration == "midpoint":
+        u = np.sinh(strength * t) / np.sinh(strength)
+    else:
+        u = np.arcsinh(np.sinh(strength) * t) / strength
 
     return x0 + 0.5 * (x1 - x0) * (u + 1.0)
 
