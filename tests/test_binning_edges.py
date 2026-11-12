@@ -9,8 +9,8 @@ import pytest
 
 from binny.binning.edges import (
     mixed_edges_from_segments,
-    photoz_segments_to_axes,
     resolve_bin_edges,
+    segments_to_axes,
     validate_bin_edges,
 )
 
@@ -32,7 +32,7 @@ def test_photoz_segments_to_axes_converts_keys_and_types() -> None:
         {"scheme": "equal_number", "n_bins": 3, "z_min": 0.8, "z_max": 2.0},
     ]
 
-    out = photoz_segments_to_axes(segments)
+    out = segments_to_axes(segments)
 
     assert len(out) == 2
     assert out[0] == {
@@ -51,8 +51,8 @@ def test_photoz_segments_to_axes_missing_key_raises() -> None:
     """Test rejection of incomplete segment specifications."""
     segments = [{"scheme": "equidistant", "n_bins": 2, "z_min": 0.0}]
 
-    with pytest.raises(ValueError, match="Missing key in mixed bin spec"):
-        photoz_segments_to_axes(segments)
+    with pytest.raises(ValueError, match="Each mixed segment requires x_min and x_max"):
+        segments_to_axes(segments)
 
 
 def test_mixed_edges_requires_paired_photoz_inputs():
@@ -68,13 +68,13 @@ def test_mixed_edges_requires_paired_photoz_inputs():
         }
     ]
 
-    with pytest.raises(ValueError, match="Provide both z_ph and nz_ph"):
+    with pytest.raises(ValueError, match="Provide both selection_axis and selection_density"):
         mixed_edges_from_segments(
             segments,
             axis=z,
             density=nz,
-            z_ph=z,
-            nz_ph=None,
+            selection_axis=z,
+            selection_density=None,
         )
 
 
@@ -88,8 +88,8 @@ def test_mixed_edges_uses_parent_axis() -> None:
         segments,
         axis=z,
         density=nz,
-        z_ph=None,
-        nz_ph=None,
+        selection_axis=None,
+        selection_density=None,
     )
 
     np.testing.assert_allclose(edges, np.linspace(0.0, 2.0, 6))
@@ -100,8 +100,8 @@ def test_mixed_edges_uses_photoz_axis() -> None:
     z = _toy_grid()
     nz = _gaussian(z, 1.0, 0.3)
 
-    z_ph = np.linspace(0.0, 2.0, 801)
-    nz_ph = _gaussian(z_ph, 0.6, 0.2)
+    selection_axis = np.linspace(0.0, 2.0, 801)
+    selection_density = _gaussian(selection_axis, 0.6, 0.2)
 
     segments = [{"scheme": "equal_number", "n_bins": 4, "z_min": 0.0, "z_max": 2.0}]
 
@@ -109,16 +109,16 @@ def test_mixed_edges_uses_photoz_axis() -> None:
         segments,
         axis=z,
         density=nz,
-        z_ph=z_ph,
-        nz_ph=nz_ph,
+        selection_axis=selection_axis,
+        selection_density=selection_density,
     )
 
     edges_parent = mixed_edges_from_segments(
         segments,
         axis=z,
         density=nz,
-        z_ph=None,
-        nz_ph=None,
+        selection_axis=None,
+        selection_density=None,
     )
 
     assert len(edges_photoz) == 5
@@ -140,8 +140,8 @@ def test_mixed_edges_total_bins_matches_segments() -> None:
         segments,
         axis=z,
         density=nz,
-        z_ph=None,
-        nz_ph=None,
+        selection_axis=None,
+        selection_density=None,
     )
 
     assert len(edges) == 6
@@ -154,13 +154,13 @@ def test_mixed_edges_missing_segment_key_raises() -> None:
     nz = _gaussian(z, 1.0, 0.3)
     segments = [{"scheme": "equidistant", "n_bins": 2, "z_min": 0.0}]
 
-    with pytest.raises(ValueError, match="Missing key in mixed bin spec"):
+    with pytest.raises(ValueError, match="Each mixed segment requires x_min and x_max"):
         mixed_edges_from_segments(
             segments,
             axis=z,
             density=nz,
-            z_ph=None,
-            nz_ph=None,
+            selection_axis=None,
+            selection_density=None,
         )
 
 
@@ -476,3 +476,31 @@ def test_generalized_nonzero_beta_via_bins():
     assert np.all(np.diff(edges) > 0)
     assert np.isclose(edges[0], 0.2)
     assert np.isclose(edges[-1], 2.5)
+
+
+def test_generalized_derivative_methods_through_resolver():
+    """Both derivative methods are available through the binning API."""
+    axis = np.linspace(0.0, 2.0, 101)
+    density = np.exp(-axis)
+    chi = 1000.0 * axis + 100.0 * axis**2
+
+    def calculate(method):
+        return resolve_bin_edges(
+            axis=axis,
+            density=density,
+            bins={
+                "scheme": "generalized",
+                "n_bins": 4,
+                "params": {
+                    "alpha": 1.0,
+                    "beta": 1.0,
+                    "comoving_distance": chi,
+                    "derivative_method": method,
+                },
+            },
+        )
+
+    analytic = calculate("analytic")
+    numerical = calculate("numerical")
+
+    np.testing.assert_allclose(analytic, numerical, rtol=1e-3, atol=1e-3)
