@@ -5,7 +5,9 @@ from __future__ import annotations
 import numpy as np
 import pytest
 
+from binny.axes.bin_edges import generalized_tomographic_edges
 from binny.binning.photoz import build_photoz_bins, photoz_assignment_probability
+from binny.binning.scheme_registry import register_binning_scheme
 
 
 @pytest.fixture
@@ -221,7 +223,7 @@ def test_build_photoz_bins_basic_shapes_and_keys(z_nz):
     bins = build_photoz_bins(
         z,
         nz,
-        edges,
+        bins={"edges": edges},
         scatter_scale=0.05,
         mean_offset=0.01,
         mean_scale=1.0,
@@ -244,7 +246,7 @@ def test_build_photoz_bins_per_bin_parameters(z_nz):
     bins = build_photoz_bins(
         z,
         nz,
-        edges,
+        bins={"edges": edges},
         scatter_scale=[0.04, 0.05, 0.06, 0.05],
         mean_offset=[0.00, 0.01, 0.02, 0.02],
         mean_scale=[1.00, 1.00, 0.98, 0.98],
@@ -269,7 +271,7 @@ def test_build_photoz_bins_broadcasting_wrong_length_raises(z_nz):
         build_photoz_bins(
             z,
             nz,
-            edges,
+            bins={"edges": edges},
             scatter_scale=[0.05, 0.06],  # should be length 3
             mean_offset=0.01,
         )
@@ -284,7 +286,7 @@ def test_build_photoz_bins_accepts_lists():
     bins = build_photoz_bins(
         z,
         nz,
-        bin_edges,
+        bins={"edges": bin_edges},
         scatter_scale=0.05,
         mean_offset=0.01,
     )
@@ -307,25 +309,25 @@ def test_build_photoz_bins_list_vs_array_same():
     bins_list = build_photoz_bins(
         z_list,
         nz_list,
-        edges_list,
+        bins={"edges": edges_list},
         scatter_scale=0.05,
         mean_offset=0.01,
     )
-    bins_arr = build_photoz_bins(z, nz, edges, scatter_scale=0.05, mean_offset=0.01)
+    bins_arr = build_photoz_bins(z, nz, bins={"edges": edges}, scatter_scale=0.05, mean_offset=0.01)
 
     assert np.allclose(bins_list[0], bins_arr[0])
     assert np.allclose(bins_list[1], bins_arr[1])
 
 
 def test_build_photoz_bins_invalid_bin_edges_raises(z_nz):
-    """Tests that invalid bin_edges raise ValueError."""
+    """Test that invalid explicit bin edges raise ValueError."""
     z, nz = z_nz
 
     with pytest.raises(ValueError, match=r"at least two"):
         build_photoz_bins(
             z,
             nz,
-            bin_edges=[0.0],
+            bins={"edges": [0.0]},
             scatter_scale=0.05,
             mean_offset=0.0,
         )
@@ -334,52 +336,48 @@ def test_build_photoz_bins_invalid_bin_edges_raises(z_nz):
         build_photoz_bins(
             z,
             nz,
-            bin_edges=[0.0, 1.0, 1.0],
+            bins={"edges": [0.0, 1.0, 1.0]},
             scatter_scale=0.05,
             mean_offset=0.0,
         )
 
 
 def test_build_photoz_bins_scheme_requires_n_bins(z_nz):
-    """Tests that string binning_scheme requires n_bins."""
+    """Test that generated bin specifications require n_bins."""
     z, nz = z_nz
     with pytest.raises(ValueError, match=r"n_bins"):
         build_photoz_bins(
             z,
             nz,
-            bin_edges=None,
-            binning_scheme="equidistant",
-            n_bins=None,
+            bins={"scheme": "equidistant"},
             scatter_scale=0.05,
             mean_offset=0.0,
         )
 
 
 def test_build_photoz_bins_requires_binning_scheme_when_no_edges(z_nz):
-    """Tests that missing binning_scheme raises when bin_edges is None."""
+    """Test that a bin specification must select a mode."""
     z, nz = z_nz
-    with pytest.raises(ValueError, match=r"binning_scheme"):
+    with pytest.raises(ValueError, match=r"exactly one"):
         build_photoz_bins(
             z,
             nz,
-            bin_edges=None,
+            bins={},
             scatter_scale=0.05,
             mean_offset=0.0,
         )
 
 
 def test_build_photoz_bins_bin_edges_mutually_exclusive_with_scheme(z_nz):
-    """Tests that bin_edges conflicts with (binning_scheme, n_bins)."""
+    """Test that explicit and generated bin specifications cannot be combined."""
     z, nz = z_nz
-    with pytest.raises(ValueError, match=r"either.*bin_edges|bin_edges.*either"):
+    with pytest.raises(ValueError, match=r"exactly one"):
         build_photoz_bins(
             z,
             nz,
-            bin_edges=[0.0, 1.0],
+            bins={"edges": [0.0, 1.0], "scheme": "equidistant", "n_bins": 2},
             scatter_scale=0.05,
             mean_offset=0.0,
-            binning_scheme="equidistant",
-            n_bins=2,
         )
 
 
@@ -390,9 +388,7 @@ def test_build_photoz_bins_equal_number_requires_both_zph_and_nzph(z_nz):
         build_photoz_bins(
             z,
             nz,
-            bin_edges=None,
-            binning_scheme="equal_number",
-            n_bins=3,
+            bins={"scheme": "equal_number", "n_bins": 3},
             z_ph=z,  # nz_ph missing
             scatter_scale=0.05,
             mean_offset=0.0,
@@ -407,7 +403,7 @@ def test_build_photoz_bins_normalize_bins_true_integrates_to_one(z_nz):
     bins = build_photoz_bins(
         z,
         nz,
-        edges,
+        bins={"edges": edges},
         scatter_scale=0.05,
         mean_offset=0.01,
         normalize_bins=True,
@@ -426,7 +422,7 @@ def test_build_photoz_bins_normalize_bins_false_scales_with_parent(z_nz):
     bins_a = build_photoz_bins(
         z,
         nz,
-        edges,
+        bins={"edges": edges},
         scatter_scale=0.05,
         mean_offset=0.01,
         normalize_input=False,
@@ -435,7 +431,7 @@ def test_build_photoz_bins_normalize_bins_false_scales_with_parent(z_nz):
     bins_b = build_photoz_bins(
         z,
         3.0 * nz,
-        edges,
+        bins={"edges": edges},
         scatter_scale=0.05,
         mean_offset=0.01,
         normalize_input=False,
@@ -452,9 +448,7 @@ def test_build_photoz_bins_equidistant_scheme_counts_bins(z_nz):
     bins = build_photoz_bins(
         z,
         nz,
-        bin_edges=None,
-        binning_scheme="equidistant",
-        n_bins=4,
+        bins={"scheme": "equidistant", "n_bins": 4},
         scatter_scale=0.05,
         mean_offset=0.0,
     )
@@ -467,9 +461,7 @@ def test_build_photoz_bins_equidistant_scheme_shapes(z_nz):
     bins = build_photoz_bins(
         z,
         nz,
-        bin_edges=None,
-        binning_scheme="equidistant",
-        n_bins=3,
+        bins={"scheme": "equidistant", "n_bins": 3},
         scatter_scale=0.05,
         mean_offset=0.01,
     )
@@ -484,9 +476,7 @@ def test_build_photoz_bins_equal_number_with_observed_inputs(z_nz):
     bins = build_photoz_bins(
         z,
         nz,
-        bin_edges=None,
-        binning_scheme="equal_number",
-        n_bins=3,
+        bins={"scheme": "equal_number", "n_bins": 3},
         z_ph=z,
         nz_ph=nz,
         scatter_scale=0.05,
@@ -502,42 +492,37 @@ def test_build_photoz_bins_unsupported_scheme_raises(z_nz):
         build_photoz_bins(
             z,
             nz,
-            bin_edges=None,
-            binning_scheme="banana",
-            n_bins=3,
+            bins={"scheme": "banana", "n_bins": 3},
             scatter_scale=0.05,
             mean_offset=0.0,
         )
 
 
 def test_build_photoz_bins_mixed_requires_no_top_level_n_bins(z_nz):
-    """Tests that mixed mode rejects top-level n_bins."""
+    """Test that mixed bin specifications reject top-level n_bins."""
     z, nz = z_nz
     segs = [
         {"z_min": 0.0, "z_max": 1.0, "scheme": "eq_dist", "n_bins": 2},
         {"z_min": 1.0, "z_max": 2.0, "scheme": "eq_dist", "n_bins": 2},
     ]
-    with pytest.raises(ValueError, match=r"mixed|segments"):
+    with pytest.raises(ValueError, match=r"unsupported"):
         build_photoz_bins(
             z,
             nz,
-            bin_edges=None,
-            binning_scheme=segs,
-            n_bins=4,
+            bins={"segments": segs, "n_bins": 4},
             scatter_scale=0.05,
             mean_offset=0.0,
         )
 
 
 def test_build_photoz_bins_mixed_dict_requires_segments_key(z_nz):
-    """Tests that mixed dict form must include a 'segments' key."""
+    """Test that an unrecognized bin specification is rejected."""
     z, nz = z_nz
-    with pytest.raises(ValueError, match=r"segments"):
+    with pytest.raises(ValueError, match=r"exactly one"):
         build_photoz_bins(
             z,
             nz,
-            bin_edges=None,
-            binning_scheme={"nope": []},
+            bins={"nope": []},
             scatter_scale=0.05,
             mean_offset=0.0,
         )
@@ -553,8 +538,7 @@ def test_build_photoz_bins_mixed_sequence_builds_bins(z_nz):
     bins = build_photoz_bins(
         z,
         nz,
-        bin_edges=None,
-        binning_scheme=segs,
+        bins={"segments": segs},
         scatter_scale=0.05,
         mean_offset=0.0,
     )
@@ -571,8 +555,7 @@ def test_build_photoz_bins_mixed_dict_builds_bins(z_nz):
     bins = build_photoz_bins(
         z,
         nz,
-        bin_edges=None,
-        binning_scheme={"segments": segs},
+        bins={"segments": segs},
         scatter_scale=0.05,
         mean_offset=0.0,
     )
@@ -588,7 +571,7 @@ def test_build_photoz_bins_metadata_round_trip(z_nz, tmp_path):
     bins, meta = build_photoz_bins(
         z,
         nz,
-        edges,
+        bins={"edges": edges},
         scatter_scale=0.05,
         mean_offset=0.01,
         normalize_bins=True,
@@ -623,7 +606,7 @@ def test_build_photoz_bins_metadata_includes_truez_summary(z_nz):
     bins, meta = build_photoz_bins(
         z,
         nz,
-        edges,
+        bins={"edges": edges},
         scatter_scale=0.05,
         mean_offset=0.01,
         normalize_bins=True,
@@ -666,7 +649,7 @@ def test_build_photoz_bins_metadata_truez_summary_is_ordered(z_nz):
     _, meta = build_photoz_bins(
         z,
         nz,
-        edges,
+        bins={"edges": edges},
         scatter_scale=0.05,
         mean_offset=0.01,
         normalize_bins=True,
@@ -710,3 +693,97 @@ def test_build_photoz_bins_metadata_truez_summary_is_ordered(z_nz):
 
         assert z[0] <= stats["z_mode"] <= z[-1]
         assert z[0] <= stats["z_mean"] <= z[-1]
+
+
+def test_build_photoz_bins_generalized(z_nz):
+    """Test generalized binning against explicitly supplied photo-z edges."""
+    z, nz = z_nz
+    dchi_dz = 1.0 / np.sqrt(0.3 * (1.0 + z) ** 3 + 0.7)
+    chi = np.zeros_like(z)
+    chi[1:] = np.cumsum(0.5 * (dchi_dz[1:] + dchi_dz[:-1]) * np.diff(z))
+
+    alpha = 0.5
+    beta = 0.5
+    n_bins = 5
+
+    edges = generalized_tomographic_edges(
+        z,
+        nz,
+        n_bins,
+        alpha=alpha,
+        beta=beta,
+        comoving_distance=chi,
+    )
+
+    bins_generalized = build_photoz_bins(
+        z,
+        nz,
+        bins={
+            "scheme": "generalized",
+            "n_bins": n_bins,
+            "params": {
+                "alpha": alpha,
+                "beta": beta,
+                "comoving_distance": chi,
+            },
+        },
+        scatter_scale=0.05,
+    )
+
+    bins_explicit = build_photoz_bins(
+        z,
+        nz,
+        bins={"edges": edges},
+        scatter_scale=0.05,
+    )
+
+    assert list(bins_generalized) == list(bins_explicit) == list(range(n_bins))
+
+    for i in range(n_bins):
+        np.testing.assert_allclose(
+            bins_generalized[i],
+            bins_explicit[i],
+            rtol=1e-12,
+            atol=1e-14,
+        )
+
+
+def test_build_photoz_bins_custom_scheme(z_nz) -> None:
+    """Tests that registered custom schemes generate the expected photo-z bins."""
+    z, nz = z_nz
+    n_bins = 4
+
+    @register_binning_scheme("test_photoz_custom_power")
+    def custom_scheme(z, nz, n_bins, *, power=2.0):
+        t = np.linspace(0.0, 1.0, n_bins + 1)
+        return z[0] + (z[-1] - z[0]) * t**power
+
+    edges = custom_scheme(z, nz, n_bins, power=2.0)
+
+    bins_custom = build_photoz_bins(
+        z,
+        nz,
+        bins={
+            "scheme": "test_photoz_custom_power",
+            "n_bins": n_bins,
+            "params": {"power": 2.0},
+        },
+        scatter_scale=0.05,
+    )
+
+    bins_explicit = build_photoz_bins(
+        z,
+        nz,
+        bins={"edges": edges},
+        scatter_scale=0.05,
+    )
+
+    assert list(bins_custom) == list(bins_explicit) == list(range(n_bins))
+
+    for i in range(n_bins):
+        np.testing.assert_allclose(
+            bins_custom[i],
+            bins_explicit[i],
+            rtol=1e-12,
+            atol=1e-14,
+        )

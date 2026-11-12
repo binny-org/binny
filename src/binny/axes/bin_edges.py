@@ -5,7 +5,10 @@ from __future__ import annotations
 from typing import Any
 
 import numpy as np
+from derivkit import DerivativeKit
+from scipy.interpolate import CubicSpline
 
+from binny.utils.types import FloatArray
 from binny.utils.validators import (
     validate_axis_and_weights,
     validate_interval,
@@ -184,69 +187,97 @@ def geometric_edges(x_min: float, x_max: float, n_bins: int) -> np.ndarray:
 
 
 def generalized_tomographic_edges(
-    z: Any,
-    nz: Any,
+    z: FloatArray,
+    nz: FloatArray,
     n_bins: int,
     *,
     alpha: float = 0.0,
     beta: float = 0.0,
-    dchi_dz: Any | None = None,
-) -> np.ndarray:
-    """Compute generalized tomographic bin edges.
+    comoving_distance: Any | None = None,
+) -> FloatArray:
+    r"""Generate generalized tomographic bin edges.
 
-    Edges divide the cumulative integral of
-    ``nz(z)**alpha * (dchi/dz)**beta`` into equal intervals.
+    The binning weight is defined as
 
-    Special cases:
-        alpha=0, beta=0: Equal redshift width.
-        alpha=1, beta=0: Equal number.
-        alpha=0, beta=1: Equal comoving distance.
+    .. math::
+
+        w(z) = n(z)^\alpha
+        \left(\frac{\mathrm{d}\chi}{\mathrm{d}z}\right)^\beta,
+
+    where ``n(z)`` is the parent redshift distribution and ``chi(z)``
+    is the comoving radial distance.
+
+    The special cases ``(alpha, beta) = (0, 0)``, ``(1, 0)``, and
+    ``(0, 1)`` correspond to equidistant, equal-number, and equal
+    comoving-distance binning, respectively.
 
     Args:
-        z: Strictly increasing redshift grid.
-        nz: Non-negative redshift distribution evaluated on ``z``.
+        z: One-dimensional, strictly increasing redshift grid.
+        nz: Parent redshift distribution evaluated on ``z``.
         n_bins: Number of tomographic bins.
-        alpha: Exponent of the redshift distribution.
+        alpha: Exponent of the parent redshift distribution.
         beta: Exponent of the comoving-distance derivative.
-        dchi_dz: Positive comoving-distance derivative on ``z``.
-            Required when ``beta != 0``.
+        comoving_distance: Comoving radial distances evaluated on ``z``.
+            Required when ``beta`` is nonzero.
 
     Returns:
-        Strictly increasing redshift edges of shape ``(n_bins + 1,)``.
+        One-dimensional array of ``n_bins + 1`` redshift bin edges.
 
     Raises:
-        ValueError: If inputs are invalid or the generalized weights
-            cannot produce strictly increasing edges.
+        ValueError: If the inputs, comoving distances, or computed
+            generalized weights are invalid.
     """
+    z, nz = validate_axis_and_weights(z, nz)
     validate_n_bins(n_bins)
-    z_arr, nz_arr = validate_axis_and_weights(z, nz)
 
     if not np.isfinite(alpha) or not np.isfinite(beta):
         raise ValueError("alpha and beta must be finite.")
-
-    if np.any(nz_arr < 0):
+    if np.any(nz < 0.0):
         raise ValueError("nz must be non-negative.")
 
-    if alpha < 0 and np.any(nz_arr == 0):
-        raise ValueError("nz must be strictly positive when alpha < 0.")
+    if alpha == 0.0 and beta == 0.0:
+        return equidistant_edges(z[0], z[-1], n_bins)
 
-    if beta == 0:
-        weights = np.power(nz_arr, alpha)
-    else:
-        if dchi_dz is None:
-            raise ValueError("dchi_dz is required when beta != 0.")
+    weights = np.ones_like(z)
 
-        _, chi_derivative = validate_axis_and_weights(z_arr, dchi_dz)
+    if alpha != 0.0:
+        if alpha < 0.0 and np.any(nz <= 0.0):
+            raise ValueError("nz must be strictly positive when alpha is negative.")
+        weights *= np.power(nz, alpha)
 
-        if np.any(chi_derivative <= 0):
-            raise ValueError("dchi_dz must be strictly positive.")
+    if beta != 0.0:
+        if comoving_distance is None:
+            raise ValueError("comoving_distance is required when beta != 0.")
 
-        weights = np.power(nz_arr, alpha) * np.power(chi_derivative, beta)
+        chi = np.asarray(comoving_distance, dtype=float)
+        if chi.shape != z.shape or not np.all(np.isfinite(chi)):
+            raise ValueError("comoving_distance must be finite and match z.")
+        if np.any(np.diff(chi) <= 0.0):
+            raise ValueError("comoving_distance must be strictly increasing.")
+
+        if alpha == 0.0 and beta == 1.0:
+            return equidistant_chi_edges(z, chi, n_bins)
+
+        distance_model = CubicSpline(z, chi)
+        distance_derivative = np.array(
+            [
+                DerivativeKit(function=distance_model, x0=float(zi)).differentiate(
+                    method="lp", order=1, degree=5
+                )
+                for zi in z
+            ],
+            dtype=float,
+        )
+
+        if not np.all(np.isfinite(distance_derivative)) or np.any(distance_derivative <= 0.0):
+            raise ValueError("Comoving-distance derivatives must be finite and positive.")
+
+        weights *= np.power(distance_derivative, beta)
 
     if not np.all(np.isfinite(weights)):
-        raise ValueError("Generalized weights must be finite.")
+        raise ValueError("Generalized binning weights must be finite.")
 
-    return _equal_weight_edges(z_arr, weights, n_bins)
+    return _equal_weight_edges(z, weights, n_bins)
 
 
 def _cumulative_trapz(x: np.ndarray, weights: np.ndarray) -> np.ndarray:

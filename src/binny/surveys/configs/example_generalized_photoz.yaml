@@ -1,0 +1,32 @@
+name: example_generalized_photoz
+
+z_grid:
+  start: 0.0
+  stop: 3.0
+  n: 501
+
+tomography:
+  - role: lens
+    year: "1"
+    sample: example
+    kind: photoz
+
+    nz:
+      model: smail
+      params:
+        z0: 0.5
+        alpha: 2.0
+        beta: 1.0
+
+    bins:
+      scheme: generalized
+      n_bins: 5
+      params:
+        alpha: 0.5
+        beta: 0.0
+
+    uncertainties:
+      scatter_scale: 0.05
+      mean_offset: 0.0
+
+    normalize_bins: true

@@ -1,16 +1,23 @@
-"""Resolve and validate tomographic bin edges."""
+"""Resolve explicit, generated, and mixed tomographic bin specifications."""
 
 from __future__ import annotations
 
+import inspect
 from collections.abc import Mapping, Sequence
 from typing import Any, Literal
 
 import numpy as np
 
-from binny.axes.bin_edges import equal_number_edges, equidistant_edges
+from binny.axes.bin_edges import (
+    equal_number_edges,
+    equidistant_edges,
+    generalized_tomographic_edges,
+)
 from binny.axes.mixed_edges import mixed_edges as mixed_edges_axes
+from binny.binning.scheme_registry import get_binning_scheme, register_binning_scheme
+from binny.binning.specs import restrict_bin_range, validate_bins
 from binny.utils.normalization import normalize_1d
-from binny.utils.types import BinningScheme, FloatArray
+from binny.utils.types import FloatArray
 from binny.utils.validators import validate_axis_and_weights, validate_n_bins
 
 __all__ = [
@@ -21,14 +28,133 @@ __all__ = [
 ]
 
 
+@register_binning_scheme("equidistant", aliases=("eq", "linear"))
+def _equidistant_scheme(z: FloatArray, nz: FloatArray, n_bins: int) -> FloatArray:
+    """Generate equally spaced edges on the supplied grid."""
+    return equidistant_edges(float(z[0]), float(z[-1]), n_bins)
+
+
+@register_binning_scheme("equal_number", aliases=("equipopulated", "en"))
+def _equal_number_scheme(
+    z: FloatArray,
+    nz: FloatArray,
+    n_bins: int,
+    *,
+    equal_number_axis: Any | None = None,
+    equal_number_weights: Any | None = None,
+    norm_method: Literal["trapezoid", "simpson"] = "trapezoid",
+    normalize_equal_number_weights: bool = True,
+) -> FloatArray:
+    """Generate equal-population edges, optionally from separate sampled weights."""
+    if (equal_number_axis is None) ^ (equal_number_weights is None):
+        raise ValueError("Provide both equal_number_axis and equal_number_weights, or neither.")
+    if equal_number_axis is None:
+        x, w = z, nz
+    else:
+        x, w = validate_axis_and_weights(equal_number_axis, equal_number_weights)
+    if normalize_equal_number_weights:
+        total = float(np.trapezoid(w, x=x))
+        if total > 0.0 and not np.isclose(total, 1.0, rtol=1e-3, atol=1e-4):
+            w = normalize_1d(x, w, method=norm_method)
+    return equal_number_edges(x, w, n_bins)
+
+
+@register_binning_scheme("generalized")
+def _generalized_scheme(
+    z: FloatArray,
+    nz: FloatArray,
+    n_bins: int,
+    *,
+    alpha: float = 0.0,
+    beta: float = 0.0,
+    comoving_distance: Any | None = None,
+) -> FloatArray:
+    """Generate generalized edges using n(z)^alpha and (dchi/dz)^beta."""
+    return generalized_tomographic_edges(
+        z,
+        nz,
+        n_bins,
+        alpha=alpha,
+        beta=beta,
+        comoving_distance=comoving_distance,
+    )
+
+
+def _resolve_explicit(
+    spec: Mapping[str, Any], z: FloatArray, nz: FloatArray, options: dict[str, Any]
+) -> FloatArray:
+    return validate_bin_edges(spec["edges"])
+
+
+def _resolve_generated(
+    spec: Mapping[str, Any], z: FloatArray, nz: FloatArray, options: dict[str, Any]
+) -> FloatArray:
+    scheme = get_binning_scheme(spec["scheme"])
+    original_z = z
+    z, nz = restrict_bin_range(z, nz, spec.get("range"))
+    params = dict(spec.get("params", {}))
+    available = dict(options)
+    available.update(params)
+
+    # Resample a supplied chi(z) only when it corresponds to the original grid.
+    if "comoving_distance" in available and available["comoving_distance"] is not None:
+        chi = np.asarray(available["comoving_distance"], dtype=float)
+        if chi.shape != original_z.shape or not np.all(np.isfinite(chi)):
+            raise ValueError("comoving_distance must be finite and match the original z grid.")
+        if np.any(np.diff(chi) <= 0):
+            raise ValueError("comoving_distance must be strictly increasing.")
+        if spec.get("range") is not None:
+            available["comoving_distance"] = np.interp(z, original_z, chi)
+
+    # An independent equal-number distribution takes precedence over parent n(z).
+    # Restrict it to the same requested interval, on its own grid.
+    separate_axis = available.get("equal_number_axis")
+    separate_weights = available.get("equal_number_weights")
+    if (separate_axis is None) ^ (separate_weights is None):
+        raise ValueError("Provide both equal_number_axis and equal_number_weights, or neither.")
+    if separate_axis is not None and spec.get("range") is not None:
+        x, w = restrict_bin_range(separate_axis, separate_weights, spec["range"])
+        available["equal_number_axis"] = x
+        available["equal_number_weights"] = w
+
+    signature = inspect.signature(scheme)
+    accepted = set(signature.parameters)
+    reserved = {"z", "nz", "n_bins", "bin_range"}
+    unknown = set(params) - accepted
+    if unknown:
+        raise ValueError(f"Unsupported parameters for {spec['scheme']!r}: {sorted(unknown)}.")
+    if set(params) & reserved:
+        raise ValueError("Scheme parameters cannot replace z, nz, n_bins, or bin_range.")
+    kwargs = {
+        key: value for key, value in available.items() if key in accepted and key not in reserved
+    }
+    return scheme(z, nz, spec["n_bins"], **kwargs)
+
+
+def _resolve_mixed(
+    spec: Mapping[str, Any], z: FloatArray, nz: FloatArray, options: dict[str, Any]
+) -> FloatArray:
+    return mixed_edges_from_segments(
+        spec["segments"],
+        z_axis=z,
+        nz_axis=nz,
+        z_ph=options.get("z_ph"),
+        nz_ph=options.get("nz_ph"),
+    )
+
+
+_RESOLVERS = {
+    "explicit": _resolve_explicit,
+    "generated": _resolve_generated,
+    "mixed": _resolve_mixed,
+}
+
+
 def resolve_bin_edges(
     *,
     z_axis: FloatArray,
     nz_axis: FloatArray,
-    bin_edges: Any | None,
-    binning_scheme: BinningScheme | None,
-    n_bins: int | None,
-    bin_range: tuple[float, float] | None = None,
+    bins: Mapping[str, Any],
     equal_number_axis: Any | None = None,
     equal_number_weights: Any | None = None,
     z_ph: Any | None = None,
@@ -36,103 +162,31 @@ def resolve_bin_edges(
     norm_method: Literal["trapezoid", "simpson"] = "trapezoid",
     normalize_equal_number_weights: bool = True,
 ) -> FloatArray:
-    """Returns tomographic bin edges.
+    """Resolve a dictionary bin specification into numerical edges.
 
-    Args:
-        z_axis: Default axis used when edges are derived from the input range.
-        nz_axis: Default weights used when edges are derived from weights.
-        bin_edges: Explicit bin edges. Mutually exclusive with `binning_scheme`
-            and `n_bins`.
-        binning_scheme: Binning description. It may be a scheme name (e.g.
-            `"equidistant"`, `"equal_number"`) or a mixed-segment specification.
-        n_bins: Number of bins for simple scheme names.
-        bin_range: Optional `(min, max)` range for equidistant binning.
-        equal_number_axis: Optional axis used for equal-number binning.
-        equal_number_weights: Optional weights used for equal-number binning.
-        z_ph: Optional axis used by mixed-segment specifications.
-        nz_ph: Optional weights used by mixed-segment specifications.
-        norm_method: Normalization method used when normalizing weights.
-        normalize_equal_number_weights: Whether to normalize the weights used
-            for equal-number binning.
+    ``bins`` supports exactly one of:
 
-    Returns:
-        A 1D array of bin edges.
+    - ``{"edges": [...]}`` for explicit edges.
+    - ``{"scheme": name, "n_bins": n, "range": (lo, hi), "params": {...}}``
+      for generated edges.
+    - ``{"segments": [...]}`` for mixed binning.
 
-    Raises:
-        ValueError: If inputs are inconsistent or the binning specification is
-            not supported.
+    The optional generated ``range`` restricts edge construction, not the
+    parent evaluation grid.
     """
-    z_arr, nz_arr = validate_axis_and_weights(z_axis, nz_axis)
+    mode, spec = validate_bins(bins)
+    z, nz = validate_axis_and_weights(z_axis, nz_axis)
 
-    if bin_edges is not None:
-        if (binning_scheme is not None) or (n_bins is not None):
-            raise ValueError("Provide either bin_edges or (binning_scheme, n_bins), not both.")
-        return np.asarray(bin_edges, dtype=float)
+    options = {
+        "equal_number_axis": equal_number_axis,
+        "equal_number_weights": equal_number_weights,
+        "norm_method": norm_method,
+        "normalize_equal_number_weights": normalize_equal_number_weights,
+        "z_ph": z_ph,
+        "nz_ph": nz_ph,
+    }
 
-    if binning_scheme is None:
-        raise ValueError("bin_edges is None. You must provide binning_scheme.")
-
-    if isinstance(binning_scheme, str):
-        if n_bins is None:
-            raise ValueError(
-                "bin_edges is None and binning_scheme is a string. You must provide n_bins."
-            )
-        validate_n_bins(n_bins)
-
-        scheme = binning_scheme.lower()
-        if scheme in {"equidistant", "eq", "linear"}:
-            if bin_range is not None:
-                lo, hi = float(bin_range[0]), float(bin_range[1])
-                if not (np.isfinite(lo) and np.isfinite(hi) and lo < hi):
-                    raise ValueError("bin_range must be finite with bin_range[0] < bin_range[1].")
-                return equidistant_edges(lo, hi, n_bins)
-            return equidistant_edges(float(z_arr[0]), float(z_arr[-1]), n_bins)
-
-        if scheme in {"equal_number", "equipopulated", "en"}:
-            if (equal_number_axis is None) ^ (equal_number_weights is None):
-                raise ValueError(
-                    "Provide both equal_number_axis and equal_number_weights, or neither."
-                )
-
-            if equal_number_axis is None:
-                x, w = z_arr, nz_arr
-            else:
-                x, w = validate_axis_and_weights(equal_number_axis, equal_number_weights)
-
-            if normalize_equal_number_weights:
-                total = float(np.trapezoid(w, x=x))
-                if total > 0.0 and not np.isclose(total, 1.0, rtol=1e-3, atol=1e-4):
-                    w = normalize_1d(x, w, method=norm_method)
-
-            return equal_number_edges(x, w, n_bins)
-
-        raise ValueError(
-            "Unsupported binning_scheme. Supported: "
-            "'equidistant' (eq/linear) and 'equal_number' (equipopulated/en)."
-        )
-
-    if n_bins is not None:
-        raise ValueError("In mixed binning mode, set n_bins per segment and leave n_bins=None.")
-
-    if isinstance(binning_scheme, Mapping):
-        if "segments" not in binning_scheme:
-            raise ValueError(
-                "Mixed binning dict must contain key 'segments' (e.g. {'segments': [...] })."
-            )
-        segments = binning_scheme["segments"]
-    else:
-        segments = binning_scheme
-
-    if not isinstance(segments, Sequence) or isinstance(segments, str | bytes):
-        raise ValueError("Mixed binning requires a sequence of segment dicts.")
-
-    return mixed_edges_from_segments(
-        segments,
-        z_axis=z_arr,
-        nz_axis=nz_arr,
-        z_ph=z_ph,
-        nz_ph=nz_ph,
-    )
+    return _RESOLVERS[mode](spec, z, nz, options)
 
 
 def validate_bin_edges(

@@ -43,9 +43,7 @@ def test_matches_numerical_builder(sample, kind, include_metadata):
     expected = builder(
         z=z,
         nz=nz,
-        bin_edges=edges,
-        binning_scheme=None,
-        n_bins=None,
+        bins={"edges": edges},
         include_metadata=include_metadata,
     )
 

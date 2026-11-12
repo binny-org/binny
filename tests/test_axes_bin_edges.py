@@ -282,11 +282,12 @@ def test_equal_weight_edges_repeated_edges_guard_triggers(
 
 @pytest.fixture
 def generalized_sample():
-    """Return a redshift distribution and comoving-distance derivative."""
+    """Return a redshift distribution and comoving radial distances."""
     z = np.linspace(0.0, 2.0, 1001)
     nz = np.exp(-0.5 * ((z - 1.0) / 0.35) ** 2)
     dchi_dz = 3000.0 / np.sqrt(0.3 * (1.0 + z) ** 3 + 0.7)
-    return z, nz, dchi_dz
+    chi = _cumulative_trapz(z, dchi_dz)
+    return z, nz, chi
 
 
 def test_generalized_edges_equal_redshift(generalized_sample):
@@ -311,11 +312,9 @@ def test_generalized_edges_equal_number(generalized_sample):
 
 def test_generalized_edges_equal_comoving(generalized_sample):
     """Recover equal-comoving-distance binning."""
-    z, nz, dchi_dz = generalized_sample
+    z, nz, chi = generalized_sample
 
-    chi = _cumulative_trapz(z, dchi_dz)
-
-    edges = generalized_tomographic_edges(z, nz, 5, beta=1.0, dchi_dz=dchi_dz)
+    edges = generalized_tomographic_edges(z, nz, 5, beta=1.0, comoving_distance=chi)
     expected = equidistant_chi_edges(z, chi, 5)
 
     np.testing.assert_allclose(edges, expected, rtol=0, atol=1e-10)
@@ -327,16 +326,9 @@ def test_generalized_edges_equal_comoving(generalized_sample):
 )
 def test_generalized_edges_valid(generalized_sample, alpha, beta):
     """Verify edge count, monotonicity, and endpoints."""
-    z, nz, dchi_dz = generalized_sample
+    z, nz, chi = generalized_sample
 
-    edges = generalized_tomographic_edges(
-        z,
-        nz,
-        5,
-        alpha=alpha,
-        beta=beta,
-        dchi_dz=dchi_dz,
-    )
+    edges = generalized_tomographic_edges(z, nz, 5, alpha=alpha, beta=beta, comoving_distance=chi)
 
     assert edges.shape == (6,)
     assert np.all(np.diff(edges) > 0)
@@ -346,18 +338,18 @@ def test_generalized_edges_valid(generalized_sample, alpha, beta):
 
 def test_generalized_edges_single_bin(generalized_sample):
     """One bin must span the full redshift interval."""
-    z, nz, dchi_dz = generalized_sample
+    z, nz, chi = generalized_sample
 
-    edges = generalized_tomographic_edges(z, nz, 1, alpha=0.5, beta=0.5, dchi_dz=dchi_dz)
+    edges = generalized_tomographic_edges(z, nz, 1, alpha=0.5, beta=0.5, comoving_distance=chi)
 
     np.testing.assert_array_equal(edges, [z[0], z[-1]])
 
 
-def test_generalized_edges_missing_dchi_dz(generalized_sample):
-    """Require the distance derivative for nonzero beta."""
+def test_generalized_edges_missing_comoving_distance(generalized_sample):
+    """Require comoving distances for nonzero beta."""
     z, nz, _ = generalized_sample
 
-    with pytest.raises(ValueError, match="dchi_dz is required"):
+    with pytest.raises(ValueError, match="comoving_distance is required"):
         generalized_tomographic_edges(z, nz, 5, beta=1.0)
 
 
@@ -381,14 +373,21 @@ def test_generalized_edges_negative_alpha_zero_nz(generalized_sample):
         generalized_tomographic_edges(z, nz, 5, alpha=-0.5)
 
 
-def test_generalized_edges_nonpositive_dchi_dz(generalized_sample):
-    """Reject nonpositive comoving-distance derivatives."""
-    z, nz, dchi_dz = generalized_sample
-    dchi_dz = dchi_dz.copy()
-    dchi_dz[10] = 0.0
+@pytest.mark.parametrize(
+    "invalid_chi",
+    [
+        np.array([0.0, 1.0, 1.0, 2.0]),
+        np.array([0.0, 2.0, 1.0, 3.0]),
+        np.array([0.0, 1.0, np.nan, 3.0]),
+    ],
+)
+def test_generalized_edges_invalid_comoving_distance(invalid_chi):
+    """Reject nonmonotonic or nonfinite comoving distances."""
+    z = np.linspace(0.0, 1.0, 4)
+    nz = np.ones_like(z)
 
-    with pytest.raises(ValueError, match="dchi_dz must be strictly positive"):
-        generalized_tomographic_edges(z, nz, 5, beta=1.0, dchi_dz=dchi_dz)
+    with pytest.raises(ValueError):
+        generalized_tomographic_edges(z, nz, 2, beta=1.0, comoving_distance=invalid_chi)
 
 
 @pytest.mark.parametrize(

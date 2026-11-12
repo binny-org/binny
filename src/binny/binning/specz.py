@@ -15,7 +15,7 @@ from binny.binning.edges import resolve_bin_edges, validate_bin_edges
 from binny.tomography.metadata import finalize_tomo_metadata
 from binny.utils.broadcasting import as_per_bin
 from binny.utils.normalization import normalize_1d
-from binny.utils.types import BinningScheme, FloatArray1D, FloatArray2D
+from binny.utils.types import FloatArray1D, FloatArray2D
 from binny.utils.validators import (
     validate_axis_and_weights,
     validate_n_bins,
@@ -357,11 +357,8 @@ def specz_assignment(
 def build_specz_bins(
     z: FloatArray1D,
     nz: FloatArray1D,
-    bin_edges: FloatArray1D | None = None,
     *,
-    binning_scheme: BinningScheme | None = None,
-    n_bins: int | None = None,
-    bin_range: tuple[float, float] | None = None,
+    bins: Mapping[str, Any],
     completeness: Sequence[float] | float = 1.0,
     catastrophic_frac: Sequence[float] | float = 0.0,
     leakage_model: Literal["uniform", "neighbor", "gaussian"] = "neighbor",
@@ -389,12 +386,9 @@ def build_specz_bins(
     Args:
         z: True-redshift grid where all outputs are evaluated.
         nz: Parent true-redshift distribution evaluated on ``z``.
-        bin_edges: Optional true-redshift bin edges. If provided, ``binning_scheme``
-            and ``n_bins`` are ignored.
-        binning_scheme: Scheme used to derive edges when ``bin_edges`` is not
-            provided. May be a simple scheme name or a mixed-segment specification.
-        n_bins: Number of bins for simple scheme names.
-        bin_range: Optional interval used when deriving equidistant edges.
+        bins: Binning specification in true-redshift space. Supports explicit
+            edges (``{"edges": [...]}``), a named scheme with ``n_bins``
+            and optional ``range`` and ``params``, or mixed ``segments``.
         completeness: Per-bin completeness factor(s) applied to the true-bin
             selection (scalar or per-bin sequence).
         catastrophic_frac: Per-bin fraction(s) reassigned to other observed bins
@@ -435,10 +429,7 @@ def build_specz_bins(
     bin_edges_arr = resolve_bin_edges(
         z_axis=z_arr,
         nz_axis=parent_arr,
-        bin_edges=bin_edges,
-        binning_scheme=binning_scheme,
-        n_bins=n_bins,
-        bin_range=bin_range,  # NEW
+        bins=bins,
         equal_number_axis=None,
         equal_number_weights=None,
         z_ph=None,
@@ -527,7 +518,7 @@ def build_specz_bins(
         return apply_response_matrix(raw_bins, matrix_total)
 
     # Build observed bins + norms + optional per-bin normalization
-    bins, bins_norms, parent_norm = build_bins_on_edges(
+    tomo_bins, bins_norms, parent_norm = build_bins_on_edges(
         z=z_arr,
         nz_parent_for_meta=parent_arr,  # Same normalization as raw bins
         bin_edges=bin_edges_arr,
@@ -544,11 +535,9 @@ def build_specz_bins(
         z=z_arr,
         parent_nz=parent_arr,
         bin_edges=bin_edges_arr,
-        bins=bins,
+        bins=tomo_bins,
         inputs={
-            "bin_edges_provided": bin_edges is not None,
-            "binning_scheme": binning_scheme,
-            "n_bins": n_bins,
+            "bins": dict(bins),
             "normalize_input": normalize_input,
             "normalize_bins": normalize_bins,
             "norm_method": norm_method,
@@ -570,7 +559,7 @@ def build_specz_bins(
         save_metadata_path=save_metadata_path,
     )
 
-    return (bins, meta) if include_metadata else bins
+    return (tomo_bins, meta) if include_metadata else tomo_bins
 
 
 def _build_total_response_matrix(

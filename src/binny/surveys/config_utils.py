@@ -364,140 +364,116 @@ def _require_single(
     return entries[0]
 
 
-def _parse_bins(bins_block: Any) -> dict[str, Any]:
-    """Parse a bin specification.
+def _parse_n_bins(value: Any, *, predefined: bool = False) -> int:
+    """Validate and return the number of tomographic bins."""
+    label = "Predefined bins.n_bins" if predefined else "bins.n_bins"
 
-    A bin block may define explicit edges, a generated binning scheme, or
-    externally supplied predefined tomographic distributions.
+    if isinstance(value, bool):
+        raise ValueError(f"{label} must be an integer.")
 
-    Args:
-        bins_block: Mapping describing the bin configuration.
+    try:
+        n_bins = int(value)
+    except (TypeError, ValueError, OverflowError) as error:
+        raise ValueError(f"{label} must be an integer.") from error
 
-    Returns:
-        Normalized bin specification.
+    if isinstance(value, float | np.floating) and (not np.isfinite(value) or value != n_bins):
+        raise ValueError(f"{label} must be an integer.")
 
-    Raises:
-        ValueError: If the bin block is missing, malformed, or ambiguous.
-    """
-    bins = _require_mapping(
-        bins_block,
-        what="bins",
-    )
+    if n_bins < 1:
+        raise ValueError(f"{label} must be positive.")
 
-    edges = bins.get("edges")
+    return n_bins
+
+
+def _parse_explicit_bins(bins: Mapping[Any, Any]) -> dict[str, Any]:
+    """Parse explicitly supplied tomographic bin edges."""
+    if any(key != "edges" for key in bins):
+        raise ValueError("bins: if 'edges' is provided, do not provide other bin settings.")
+
+    edges = np.asarray(bins["edges"], dtype=np.float64)
+
+    if edges.ndim != 1 or edges.size < 2:
+        raise ValueError("bins.edges must be a 1D sequence with at least 2 values.")
+
+    return {"edges": edges}
+
+
+def _parse_predefined_bins(bins: Mapping[Any, Any]) -> dict[str, Any]:
+    """Parse externally supplied predefined tomographic bins."""
+    source = _require_mapping(bins.get("source"), what="bins.source")
+
+    if bins.get("range") is not None:
+        raise ValueError("Predefined bins must not provide bins.range.")
+
+    normalize_bins = bins.get("normalize_bins", False)
+
+    if not isinstance(normalize_bins, bool):
+        raise ValueError("Predefined bins.normalize_bins must be a boolean.")
+
+    norm_method = str(bins.get("norm_method", "trapezoid")).strip().lower()
+
+    if norm_method not in {"trapezoid", "simpson"}:
+        raise ValueError("Predefined bins.norm_method must be 'trapezoid' or 'simpson'.")
+
+    out: dict[str, Any] = {
+        "scheme": "predefined",
+        "source": dict(source),
+        "normalize_bins": normalize_bins,
+        "norm_method": norm_method,
+    }
+
+    if bins.get("n_bins") is not None:
+        out["n_bins"] = _parse_n_bins(bins["n_bins"], predefined=True)
+
+    return out
+
+
+def _parse_generated_bins(bins: Mapping[Any, Any]) -> dict[str, Any]:
+    """Parse a registered tomographic bin-edge generation scheme."""
     scheme = bins.get("scheme")
-    n_bins = bins.get("n_bins")
-    z_range = bins.get("range")
-
-    if edges is not None:
-        if scheme is not None or n_bins is not None or z_range is not None:
-            raise ValueError("bins: if 'edges' is provided, do not provide scheme/n_bins/range.")
-
-        edges_arr = np.asarray(
-            edges,
-            dtype=np.float64,
-        )
-
-        if edges_arr.ndim != 1 or edges_arr.size < 2:
-            raise ValueError("bins.edges must be a 1D sequence with at least 2 values.")
-
-        return {
-            "edges": edges_arr,
-        }
 
     if scheme is None:
         raise ValueError("bins must provide either 'edges' or 'scheme'.")
 
     scheme_name = str(scheme).strip()
-    scheme_normalized = scheme_name.lower()
 
-    if scheme_normalized == "predefined":
-        source = _require_mapping(
-            bins.get("source"),
-            what="bins.source",
-        )
+    if not scheme_name:
+        raise ValueError("bins.scheme must not be empty.")
 
-        if z_range is not None:
-            raise ValueError("Predefined bins must not provide bins.range.")
-
-        normalize_bins = bins.get(
-            "normalize_bins",
-            False,
-        )
-
-        if not isinstance(normalize_bins, bool):
-            raise ValueError("Predefined bins.normalize_bins must be a boolean.")
-
-        norm_method = (
-            str(
-                bins.get(
-                    "norm_method",
-                    "trapezoid",
-                )
-            )
-            .strip()
-            .lower()
-        )
-
-        if norm_method not in {
-            "trapezoid",
-            "simpson",
-        }:
-            raise ValueError("Predefined bins.norm_method must be 'trapezoid' or 'simpson'.")
-
-        out: dict[str, Any] = {
-            "scheme": "predefined",
-            "source": dict(source),
-            "normalize_bins": normalize_bins,
-            "norm_method": norm_method,
-        }
-
-        if n_bins is not None:
-            if isinstance(n_bins, bool):
-                raise ValueError("Predefined bins.n_bins must be an integer.")
-
-            try:
-                resolved_n_bins = int(n_bins)
-            except (TypeError, ValueError) as error:
-                raise ValueError("Predefined bins.n_bins must be an integer.") from error
-
-            if resolved_n_bins < 1:
-                raise ValueError("Predefined bins.n_bins must be positive.")
-
-            out["n_bins"] = resolved_n_bins
-
-        return out
-
-    if n_bins is None:
+    if bins.get("n_bins") is None:
         raise ValueError("bins.n_bins is required when using a generated bins.scheme.")
 
-    if isinstance(n_bins, bool):
-        raise ValueError("bins.n_bins must be an integer.")
-
-    try:
-        resolved_n_bins = int(n_bins)
-    except (TypeError, ValueError) as error:
-        raise ValueError("bins.n_bins must be an integer.") from error
-
-    if resolved_n_bins < 1:
-        raise ValueError("bins.n_bins must be positive.")
-
-    out = {
+    out: dict[str, Any] = {
         "scheme": scheme_name,
-        "n_bins": resolved_n_bins,
+        "n_bins": _parse_n_bins(bins["n_bins"]),
     }
 
-    if z_range is not None:
-        zlo, zhi = map(
-            float,
-            z_range,
-        )
-        out["range"] = (
-            zlo,
-            zhi,
-        )
+    if bins.get("range") is not None:
+        zlo, zhi = map(float, bins["range"])
+        out["range"] = (zlo, zhi)
+
+    scheme_params = bins.get("params", {})
+
+    if not isinstance(scheme_params, Mapping):
+        raise ValueError("bins.params must be a mapping.")
+
+    if scheme_params:
+        out["params"] = dict(scheme_params)
 
     return out
+
+
+def _parse_bins(bins_block: Any) -> dict[str, Any]:
+    """Parse explicit, predefined, or generated tomographic bins."""
+    bins = _require_mapping(bins_block, what="bins")
+
+    if bins.get("edges") is not None:
+        return _parse_explicit_bins(bins)
+
+    if str(bins.get("scheme", "")).strip().lower() == "predefined":
+        return _parse_predefined_bins(bins)
+
+    return _parse_generated_bins(bins)
 
 
 def _parse_sample_properties(entry: Mapping[Any, Any]) -> dict[str, Any]:
@@ -854,43 +830,26 @@ def _survey_meta(
 
 
 def _builder_kwargs_from_spec(spec: Mapping[str, Any]) -> dict[str, Any]:
-    """Convert a normalized tomography spec into builder keyword arguments.
+    """Convert a tomography specification into builder keyword arguments.
 
     Args:
-        spec: Normalized tomography spec containing ``bins`` and optional
-            ``uncertainties``.
+        spec: Normalized tomography specification containing ``bins``
+            and optional ``uncertainties``.
 
     Returns:
-        Keyword arguments expected by the tomography builders.
+        Keyword arguments for the tomography builders.
 
     Raises:
-        ValueError: If the normalized spec does not contain a valid ``bins``
-        mapping.
+        ValueError: If the specification lacks a valid ``bins`` mapping.
     """
     bins = spec.get("bins")
 
     if not isinstance(bins, Mapping):
         raise ValueError("tomo_spec must contain a 'bins' mapping.")
 
-    if "edges" in bins:
-        kwargs: dict[str, Any] = {
-            "bin_edges": bins["edges"],
-            "binning_scheme": None,
-            "n_bins": None,
-        }
-    else:
-        kwargs = {
-            "bin_edges": None,
-            "binning_scheme": bins["scheme"],
-            "n_bins": bins["n_bins"],
-        }
+    kwargs = dict(spec.get("uncertainties") or {})
+    kwargs["bins"] = dict(bins)
 
-    params: dict[str, Any] = dict(spec.get("uncertainties") or {})
-
-    if "range" in bins:
-        params.setdefault("bin_range", bins["range"])
-
-    kwargs.update(params)
     return kwargs
 
 

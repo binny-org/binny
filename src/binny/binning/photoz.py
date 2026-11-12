@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from collections.abc import Sequence
+from collections.abc import Mapping, Sequence
 from typing import Any, Literal
 
 import numpy as np
@@ -13,7 +13,7 @@ from binny.binning.edges import resolve_bin_edges, validate_bin_edges
 from binny.tomography.metadata import finalize_tomo_metadata
 from binny.utils.broadcasting import as_per_bin
 from binny.utils.normalization import normalize_1d
-from binny.utils.types import BinningScheme, FloatArray
+from binny.utils.types import FloatArray
 from binny.utils.validators import validate_axis_and_weights
 
 __all__ = [
@@ -22,6 +22,91 @@ __all__ = [
     "photoz_assignment",
     "photoz_assignment_probability",
 ]
+
+
+def _broadcast_photoz_params(
+    n_bins: int,
+    *,
+    scatter_scale: Sequence[float] | float,
+    mean_offset: Sequence[float] | float,
+    mean_scale: Sequence[float] | float,
+    outlier_frac: Sequence[float] | float,
+    outlier_scatter_scale: Sequence[float] | float | None,
+    outlier_mean_offset: Sequence[float] | float,
+    outlier_mean_scale: Sequence[float] | float,
+) -> list[dict[str, float | None]]:
+    """Broadcast photo-z parameters to individual tomographic bins.
+
+    Args:
+        n_bins: Number of tomographic bins.
+        scatter_scale: Core Gaussian scatter scale.
+        mean_offset: Core Gaussian mean offset.
+        mean_scale: Core Gaussian mean scale.
+        outlier_frac: Outlier mixture fraction.
+        outlier_scatter_scale: Optional outlier Gaussian scatter scale.
+        outlier_mean_offset: Outlier Gaussian mean offset.
+        outlier_mean_scale: Outlier Gaussian mean scale.
+
+    Returns:
+        List of parameter dictionaries, one per tomographic bin.
+    """
+    values = {
+        "scatter_scale": scatter_scale,
+        "mean_offset": mean_offset,
+        "mean_scale": mean_scale,
+        "outlier_frac": outlier_frac,
+        "outlier_mean_offset": outlier_mean_offset,
+        "outlier_mean_scale": outlier_mean_scale,
+    }
+
+    arrays = {name: as_per_bin(value, n_bins, name) for name, value in values.items()}
+
+    if outlier_scatter_scale is None:
+        outlier_scatter: list[float | None] = [None] * n_bins
+    else:
+        outlier_scatter = [
+            float(value)
+            for value in as_per_bin(
+                outlier_scatter_scale,
+                n_bins,
+                "outlier_scatter_scale",
+            )
+        ]
+
+    return [
+        {
+            **{name: float(array[i]) for name, array in arrays.items()},
+            "outlier_scatter_scale": outlier_scatter[i],
+        }
+        for i in range(n_bins)
+    ]
+
+
+def _resolve_photoz_edges(
+    z: FloatArray,
+    nz: FloatArray,
+    bins: Mapping[str, Any],
+    z_ph: FloatArray | None,
+    nz_ph: FloatArray | None,
+    norm_method: Literal["trapezoid", "simpson"],
+) -> FloatArray:
+    """Resolve bin edges in observed photo-z space."""
+    edge_axis = z_ph if z_ph is not None else z
+    edge_weights = nz_ph if (z_ph is not None and nz_ph is not None) else nz
+
+    edges = resolve_bin_edges(
+        z_axis=np.asarray(edge_axis, dtype=float),
+        nz_axis=np.asarray(edge_weights, dtype=float),
+        bins=bins,
+        equal_number_axis=z_ph,
+        equal_number_weights=nz_ph,
+        z_ph=z_ph,
+        nz_ph=nz_ph,
+        norm_method=norm_method,
+        normalize_equal_number_weights=True,
+    )
+
+    return validate_bin_edges(edges, require_within=None)
 
 
 def photoz_assignment_probability(
@@ -62,12 +147,6 @@ def photoz_assignment_probability(
     if not (0.0 <= outlier_frac <= 1.0):
         raise ValueError("outlier_frac must lie in [0, 1].")
 
-    if outlier_frac > 0.0 and outlier_scatter_scale is None:
-        raise ValueError(
-            "outlier_scatter_scale must be set when outlier_frac > 0. "
-            "Use 0.0 for a deterministic (no-uncertainty) outlier component."
-        )
-
     if mean_scale <= 0.0:
         raise ValueError("mean_scale must be > 0.")
     if scatter_scale < 0.0:
@@ -77,6 +156,11 @@ def photoz_assignment_probability(
     if outliers_enabled:
         if outlier_mean_scale <= 0.0:
             raise ValueError("outlier_mean_scale must be > 0.")
+        if outlier_scatter_scale is None:
+            raise ValueError(
+                "outlier_scatter_scale must be set when outlier_frac > 0. "
+                "Use 0.0 for a deterministic (no-uncertainty) outlier component."
+            )
         if outlier_scatter_scale < 0.0:
             raise ValueError("outlier_scatter_scale must be >= 0.")
 
@@ -183,29 +267,15 @@ def photoz_assignment(
     edges_arr = np.asarray(edges, dtype=float)
     n_bins = edges_arr.size - 1
 
-    scatter = as_per_bin(scatter_scale, n_bins, "scatter_scale")
-    offset = as_per_bin(mean_offset, n_bins, "mean_offset")
-    scale = as_per_bin(mean_scale, n_bins, "mean_scale")
-    frac = as_per_bin(outlier_frac, n_bins, "outlier_frac")
-
-    if outlier_scatter_scale is None:
-        out_scatter = [None] * n_bins
-    else:
-        out_scatter = as_per_bin(
-            outlier_scatter_scale,
-            n_bins,
-            "outlier_scatter_scale",
-        )
-
-    out_offset = as_per_bin(
-        outlier_mean_offset,
+    params = _broadcast_photoz_params(
         n_bins,
-        "outlier_mean_offset",
-    )
-    out_scale = as_per_bin(
-        outlier_mean_scale,
-        n_bins,
-        "outlier_mean_scale",
+        scatter_scale=scatter_scale,
+        mean_offset=mean_offset,
+        mean_scale=mean_scale,
+        outlier_frac=outlier_frac,
+        outlier_scatter_scale=outlier_scatter_scale,
+        outlier_mean_offset=outlier_mean_offset,
+        outlier_mean_scale=outlier_mean_scale,
     )
 
     return np.stack(
@@ -214,13 +284,7 @@ def photoz_assignment(
                 z_arr,
                 bin_min=float(edges_arr[i]),
                 bin_max=float(edges_arr[i + 1]),
-                scatter_scale=float(scatter[i]),
-                mean_offset=float(offset[i]),
-                mean_scale=float(scale[i]),
-                outlier_frac=float(frac[i]),
-                outlier_scatter_scale=(None if out_scatter[i] is None else float(out_scatter[i])),
-                outlier_mean_offset=float(out_offset[i]),
-                outlier_mean_scale=float(out_scale[i]),
+                **params[i],
             )
             for i in range(n_bins)
         ],
@@ -231,13 +295,10 @@ def photoz_assignment(
 def build_photoz_bins(
     z: FloatArray,
     nz: FloatArray,
-    bin_edges: FloatArray | None = None,
     *,
+    bins: Mapping[str, Any],
     scatter_scale: Sequence[float] | float = 0.0,
     mean_offset: Sequence[float] | float = 0.0,
-    binning_scheme: BinningScheme | None = None,
-    n_bins: int | None = None,
-    bin_range: tuple[float, float] | None = None,
     mean_scale: Sequence[float] | float = 1.0,
     outlier_frac: Sequence[float] | float = 0.0,
     outlier_scatter_scale: Sequence[float] | float | None = None,
@@ -257,14 +318,12 @@ def build_photoz_bins(
     Args:
         z: True-redshift grid.
         nz: Parent distribution evaluated on ``z``.
-        bin_edges: Optional photo-z bin edges. If not provided, edges are derived
-            from ``binning_scheme``.
+        bins: Dictionary specifying the observed photo-z bin edges or their
+            construction. Supports ``{"edges": [...]}``,
+            ``{"scheme": name, "n_bins": n, "range": (lo, hi),
+            "params": {...}}``, or ``{"segments": [...]}``.
         scatter_scale: Per-bin (or constant scalar) photo-z scatter scale.
         mean_offset: Per-bin (or constant scalar) photo-z mean offset.
-        binning_scheme: Scheme name or mixed segment specification used to derive
-            bin edges when ``bin_edges`` is not provided.
-        n_bins: Number of bins for simple scheme names.
-        bin_range: Optional photo-z interval used when deriving equidistant edges.
         mean_scale: Per-bin (or constant scalar) photo-z mean scale.
         outlier_frac: Per-bin (or constant scalar) outlier mixture fraction.
         outlier_scatter_scale: Per-bin (or scalar) outlier scatter scale. When
@@ -290,92 +349,38 @@ def build_photoz_bins(
         ValueError: If edge inputs are inconsistent, the binning specification
             is invalid, or photo-z model parameters are invalid.
     """
-    z_arr, parent_arr0 = validate_axis_and_weights(z, nz)
-    return_metadata = include_metadata or include_photoz_diagnostics
-    need_meta = return_metadata or (save_metadata_path is not None)
 
-    parent_arr = parent_arr0
+    z_arr, parent_arr = validate_axis_and_weights(z, nz)
+
+    return_metadata = include_metadata or include_photoz_diagnostics
+    need_meta = return_metadata or save_metadata_path is not None
+
     if normalize_input:
         parent_arr = normalize_1d(z_arr, parent_arr, method=norm_method)
 
-    # Optional restriction: define bin edges only within a sub-range.
-    # Important: do NOT snap to the grid; pass the numeric range through so
-    # edges match survey specs exactly (e.g. 0.2..1.2).
-    edge_axis = z_ph if z_ph is not None else z_arr
-    edge_weights = nz_ph if (z_ph is not None and nz_ph is not None) else parent_arr
+    # Resolve edges in observed photo-z space.
+    edges = _resolve_photoz_edges(z_arr, parent_arr, bins, z_ph, nz_ph, norm_method)
 
-    edge_axis = np.asarray(edge_axis, dtype=float)
-    edge_weights = np.asarray(edge_weights, dtype=float)
-
-    # 1) Resolve + validate photo-z bin edges (edges live in *photo-z* space)
-    bin_edges_arr = resolve_bin_edges(
-        z_axis=edge_axis,
-        nz_axis=edge_weights,
-        bin_edges=bin_edges,
-        binning_scheme=binning_scheme,
-        n_bins=n_bins,
-        bin_range=bin_range,
-        # equal-number in photo-z space if (z_ph, nz_ph) provided,
-        # else fallback to (z, nz)
-        equal_number_axis=z_ph,
-        equal_number_weights=nz_ph,
-        # mixed segments equal-number should also use (z_ph, nz_ph)
-        # if provided
-        z_ph=z_ph,
-        nz_ph=nz_ph,
-        norm_method=norm_method,
-        normalize_equal_number_weights=True,
-    )
-
-    bin_edges_arr = validate_bin_edges(bin_edges_arr, require_within=None)
-
-    n_bins_eff = int(bin_edges_arr.size - 1)
-
-    # 2) Broadcast per-bin model params
-    scatter_scale_arr = as_per_bin(scatter_scale, n_bins_eff, "scatter_scale")
-    mean_offset_arr = as_per_bin(mean_offset, n_bins_eff, "mean_offset")
-    mean_scale_arr = as_per_bin(mean_scale, n_bins_eff, "mean_scale")
-    outlier_frac_arr = as_per_bin(outlier_frac, n_bins_eff, "outlier_frac")
-
-    if outlier_scatter_scale is None:
-        outlier_scatter_arr = np.array([None] * n_bins_eff, dtype=object)
-    else:
-        outlier_scatter_arr = as_per_bin(
-            outlier_scatter_scale,
-            n_bins_eff,
-            "outlier_scatter_scale",
-        )
-
-    outlier_mean_offset_arr = as_per_bin(
-        outlier_mean_offset,
-        n_bins_eff,
-        "outlier_mean_offset",
-    )
-    outlier_mean_scale_arr = as_per_bin(
-        outlier_mean_scale,
-        n_bins_eff,
-        "outlier_mean_scale",
+    # Prepare one set of model parameters per tomographic bin.
+    params = _broadcast_photoz_params(
+        len(edges) - 1,
+        scatter_scale=scatter_scale,
+        mean_offset=mean_offset,
+        mean_scale=mean_scale,
+        outlier_frac=outlier_frac,
+        outlier_scatter_scale=outlier_scatter_scale,
+        outlier_mean_offset=outlier_mean_offset,
+        outlier_mean_scale=outlier_mean_scale,
     )
 
     assignment_probabilities: dict[int, FloatArray] = {}
 
-    # 3) Raw-bin callback (edge in photo-z space, but output is always on true-z grid z_arr)
     def raw_bin_for_edge(i: int, zmin: float, zmax: float) -> FloatArray:
-        out_scatter = None
-        if outlier_scatter_arr[i] is not None:
-            out_scatter = float(outlier_scatter_arr[i])
-
         p_bin = photoz_assignment_probability(
             z_arr,
             bin_min=float(zmin),
             bin_max=float(zmax),
-            scatter_scale=float(scatter_scale_arr[i]),
-            mean_offset=float(mean_offset_arr[i]),
-            mean_scale=float(mean_scale_arr[i]),
-            outlier_frac=float(outlier_frac_arr[i]),
-            outlier_scatter_scale=out_scatter,
-            outlier_mean_offset=float(outlier_mean_offset_arr[i]),
-            outlier_mean_scale=float(outlier_mean_scale_arr[i]),
+            **params[i],
         )
 
         if include_photoz_diagnostics:
@@ -383,11 +388,11 @@ def build_photoz_bins(
 
         return (parent_arr * p_bin).astype(np.float64, copy=False)
 
-    # 4) Build bins + norms (agnostic)
-    bins, bins_norms, parent_norm = build_bins_on_edges(
+    # Construct and optionally normalize the true-redshift distributions.
+    tomo_bins, bins_norms, parent_norm = build_bins_on_edges(
         z=z_arr,
-        nz_parent_for_meta=parent_arr,  # Same normalization as raw bins
-        bin_edges=bin_edges_arr,
+        nz_parent_for_meta=parent_arr,
+        bin_edges=edges,
         raw_bin_for_edge=raw_bin_for_edge,
         normalize_bins=normalize_bins,
         norm_method=norm_method,
@@ -395,18 +400,15 @@ def build_photoz_bins(
         need_meta=need_meta,
     )
 
-    # 5) Metadata
+    # Preserve the existing metadata schema and saving behavior.
     meta = finalize_tomo_metadata(
         kind="photoz",
         z=z_arr,
         parent_nz=parent_arr,
-        bin_edges=bin_edges_arr,
-        bins=bins,
+        bin_edges=edges,
+        bins=tomo_bins,
         inputs={
-            "bin_edges_provided": bin_edges is not None,
-            "binning_scheme": binning_scheme,
-            "n_bins": n_bins,
-            "bin_range": bin_range,
+            "bins": dict(bins),
             "normalize_input": normalize_input,
             "normalize_bins": normalize_bins,
             "norm_method": norm_method,
@@ -429,7 +431,7 @@ def build_photoz_bins(
 
     if include_photoz_diagnostics and meta is not None:
         meta["photoz_diagnostics"] = {
-            "observed_bin_edges": bin_edges_arr.copy(),
+            "observed_bin_edges": edges.copy(),
             "true_z": z_arr.copy(),
             "assignment_probabilities": assignment_probabilities,
             "description": (
@@ -437,7 +439,12 @@ def build_photoz_bins(
             ),
         }
 
-    return (bins, meta) if return_metadata else bins
+    if return_metadata:
+        if meta is None:
+            raise RuntimeError("Metadata was requested but not generated.")
+        return tomo_bins, meta
+
+    return tomo_bins
 
 
 def true_redshift_distribution(

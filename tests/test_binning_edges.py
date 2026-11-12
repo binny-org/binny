@@ -212,9 +212,7 @@ def test_resolve_bin_edges_explicit() -> None:
     edges = resolve_bin_edges(
         z_axis=z,
         nz_axis=nz,
-        bin_edges=[0.2, 0.5, 1.2],
-        binning_scheme=None,
-        n_bins=None,
+        bins={"edges": [0.2, 0.5, 1.2]},
     )
 
     np.testing.assert_allclose(edges, [0.2, 0.5, 1.2])
@@ -228,26 +226,25 @@ def test_resolve_bin_edges_equidistant() -> None:
     edges = resolve_bin_edges(
         z_axis=z,
         nz_axis=nz,
-        bin_edges=None,
-        binning_scheme="equidistant",
-        n_bins=4,
+        bins={"scheme": "equidistant", "n_bins": 4},
     )
 
     np.testing.assert_allclose(edges, np.linspace(0.0, 2.0, 5))
 
 
 def test_resolve_bin_edges_respects_range() -> None:
-    """Test that a specified bin range is not snapped to the grid."""
+    """Test that bin range endpoints are not snapped to the grid."""
     z = _toy_grid()
     nz = _gaussian(z, 1.0, 0.3)
 
     edges = resolve_bin_edges(
         z_axis=z,
         nz_axis=nz,
-        bin_edges=None,
-        binning_scheme="equidistant",
-        n_bins=4,
-        bin_range=(0.23, 1.37),
+        bins={
+            "scheme": "equidistant",
+            "n_bins": 4,
+            "range": (0.23, 1.37),
+        },
     )
 
     np.testing.assert_allclose(edges, np.linspace(0.23, 1.37, 5))
@@ -261,9 +258,7 @@ def test_resolve_bin_edges_equal_number() -> None:
     edges = resolve_bin_edges(
         z_axis=z,
         nz_axis=nz,
-        bin_edges=None,
-        binning_scheme="equal_number",
-        n_bins=4,
+        bins={"scheme": "equal_number", "n_bins": 4},
     )
 
     np.testing.assert_allclose(edges, np.linspace(0.0, 2.0, 5), atol=1e-3)
@@ -282,41 +277,49 @@ def test_resolve_bin_edges_mixed() -> None:
     edges = resolve_bin_edges(
         z_axis=z,
         nz_axis=nz,
-        bin_edges=None,
-        binning_scheme=segments,
-        n_bins=None,
+        bins={"segments": segments},
     )
 
     np.testing.assert_allclose(edges, [0.0, 0.5, 1.0, 1.5, 2.0])
 
 
-def test_resolve_bin_edges_rejects_conflicting_inputs() -> None:
-    """Test mutually exclusive edge specifications."""
+@pytest.mark.parametrize(
+    "bins",
+    [
+        {"edges": [0.0, 1.0], "scheme": "equidistant", "n_bins": 2},
+        {"edges": [0.0, 1.0], "segments": []},
+        {
+            "scheme": "equidistant",
+            "n_bins": 2,
+            "segments": [],
+        },
+    ],
+)
+def test_resolve_bin_edges_rejects_conflicting_inputs(
+    bins: dict[str, Any],
+) -> None:
+    """Test that multiple bin specification modes are rejected."""
     z = _toy_grid()
     nz = np.ones_like(z)
 
-    with pytest.raises(ValueError, match="Provide either bin_edges"):
+    with pytest.raises(ValueError, match="Specify exactly one"):
         resolve_bin_edges(
             z_axis=z,
             nz_axis=nz,
-            bin_edges=[0.0, 1.0],
-            binning_scheme="equidistant",
-            n_bins=2,
+            bins=bins,
         )
 
 
 def test_resolve_bin_edges_requires_scheme() -> None:
-    """Test missing edge specification."""
+    """Test rejection of a bin specification without a mode."""
     z = _toy_grid()
     nz = np.ones_like(z)
 
-    with pytest.raises(ValueError, match="must provide binning_scheme"):
+    with pytest.raises(ValueError, match="Specify exactly one"):
         resolve_bin_edges(
             z_axis=z,
             nz_axis=nz,
-            bin_edges=None,
-            binning_scheme=None,
-            n_bins=None,
+            bins={},
         )
 
 
@@ -329,7 +332,110 @@ def test_resolve_bin_edges_rejects_unknown_scheme() -> None:
         resolve_bin_edges(
             z_axis=z,
             nz_axis=nz,
-            bin_edges=None,
-            binning_scheme="unknown",
-            n_bins=4,
+            bins={"scheme": "unknown", "n_bins": 4},
+        )
+
+
+def test_resolve_bin_edges_generalized() -> None:
+    """Test generalized alpha-beta binning through the resolver."""
+    z = _toy_grid()
+    nz = _gaussian(z, 1.0, 0.3)
+
+    dchi_dz = 1.0 / np.sqrt(0.3 * (1.0 + z) ** 3 + 0.7)
+    chi = np.zeros_like(z)
+    chi[1:] = np.cumsum(0.5 * (dchi_dz[1:] + dchi_dz[:-1]) * np.diff(z))
+
+    edges = resolve_bin_edges(
+        z_axis=z,
+        nz_axis=nz,
+        bins={
+            "scheme": "generalized",
+            "n_bins": 5,
+            "params": {
+                "alpha": 0.5,
+                "beta": 0.5,
+                "comoving_distance": chi,
+            },
+        },
+    )
+
+    assert edges.shape == (6,)
+    assert np.all(np.diff(edges) > 0)
+
+
+def test_resolve_bin_edges_generalized_requires_n_bins() -> None:
+    """Test that generalized binning requires a bin count."""
+    z = _toy_grid()
+    nz = _gaussian(z, 1.0, 0.3)
+
+    with pytest.raises(ValueError, match="n_bins"):
+        resolve_bin_edges(
+            z_axis=z,
+            nz_axis=nz,
+            bins={
+                "scheme": "generalized",
+                "n_bins": None,
+            },
+        )
+
+
+@pytest.mark.parametrize(
+    ("scheme", "expected"),
+    [
+        ("equidistant", np.linspace(0.2, 1.8, 5)),
+        ("equal_number", np.linspace(0.2, 1.8, 5)),
+    ],
+)
+def test_resolve_bin_edges_range_applies_to_schemes(
+    scheme: str,
+    expected: np.ndarray,
+) -> None:
+    """Test range restriction for multiple generating schemes."""
+    z = _toy_grid()
+    nz = np.ones_like(z)
+
+    edges = resolve_bin_edges(
+        z_axis=z,
+        nz_axis=nz,
+        bins={
+            "scheme": scheme,
+            "n_bins": 4,
+            "range": (0.2, 1.8),
+        },
+    )
+
+    np.testing.assert_allclose(edges, expected, atol=1e-3)
+
+
+def test_resolve_bin_edges_rejects_unknown_params() -> None:
+    """Test rejection of unsupported scheme parameters."""
+    z = _toy_grid()
+    nz = np.ones_like(z)
+
+    with pytest.raises(ValueError, match="Unsupported parameters"):
+        resolve_bin_edges(
+            z_axis=z,
+            nz_axis=nz,
+            bins={
+                "scheme": "equidistant",
+                "n_bins": 4,
+                "params": {"alpha": 0.5},
+            },
+        )
+
+
+def test_resolve_bin_edges_rejects_range_outside_grid() -> None:
+    """Test rejection of ranges outside the sampled grid."""
+    z = _toy_grid()
+    nz = np.ones_like(z)
+
+    with pytest.raises(ValueError, match="within the binning grid"):
+        resolve_bin_edges(
+            z_axis=z,
+            nz_axis=nz,
+            bins={
+                "scheme": "equidistant",
+                "n_bins": 4,
+                "range": (0.2, 2.5),
+            },
         )

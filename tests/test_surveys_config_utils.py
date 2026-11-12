@@ -662,7 +662,7 @@ def test_parse_bins_rejects_missing_edges_or_scheme() -> None:
 
 
 def test_builder_kwargs_from_spec_uses_edges() -> None:
-    """Tests that _builder_kwargs_from_spec converts explicit edges."""
+    """Test that explicit bin edges are passed through unchanged."""
     spec = {
         "bins": {"edges": np.array([0.0, 0.5, 1.0])},
         "uncertainties": {"sigma_z": 0.05},
@@ -670,15 +670,15 @@ def test_builder_kwargs_from_spec_uses_edges() -> None:
 
     kwargs = _builder_kwargs_from_spec(spec)
 
-    assert np.allclose(kwargs["bin_edges"], [0.0, 0.5, 1.0])
-    assert kwargs["binning_scheme"] is None
-    assert kwargs["n_bins"] is None
+    assert np.allclose(kwargs["bins"]["edges"], [0.0, 0.5, 1.0])
     assert kwargs["sigma_z"] == pytest.approx(0.05)
+    assert "bin_edges" not in kwargs
+    assert "binning_scheme" not in kwargs
+    assert "n_bins" not in kwargs
 
 
 def test_builder_kwargs_from_spec_uses_scheme_and_range() -> None:
-    """Tests that _builder_kwargs_from_spec converts scheme bins."""
-
+    """Test that scheme, bin count, and range remain in the bins mapping."""
     spec = {
         "bins": {
             "scheme": "equidistant",
@@ -690,28 +690,29 @@ def test_builder_kwargs_from_spec_uses_scheme_and_range() -> None:
 
     kwargs = _builder_kwargs_from_spec(spec)
 
-    assert kwargs["bin_edges"] is None
-    assert kwargs["binning_scheme"] == "equidistant"
-    assert kwargs["n_bins"] == 4
-    assert kwargs["bin_range"] == (0.2, 1.2)
+    assert kwargs["bins"] == spec["bins"]
     assert kwargs["scatter_scale"] == pytest.approx(0.03)
+    assert "bin_edges" not in kwargs
+    assert "binning_scheme" not in kwargs
+    assert "n_bins" not in kwargs
+    assert "bin_range" not in kwargs
 
 
-def test_builder_kwargs_from_spec_preserves_explicit_bin_range_uncertainty() -> None:
-    """Tests that uncertainties can explicitly override bin_range."""
-
+def test_builder_kwargs_from_spec_preserves_bin_range() -> None:
+    """Test that the configured bin range stays in the bins mapping."""
     spec = {
         "bins": {
             "scheme": "equidistant",
             "n_bins": 4,
             "range": (0.2, 1.2),
         },
-        "uncertainties": {"bin_range": (0.3, 1.1)},
+        "uncertainties": {"scatter_scale": 0.03},
     }
 
     kwargs = _builder_kwargs_from_spec(spec)
 
-    assert kwargs["bin_range"] == (0.3, 1.1)
+    assert kwargs["bins"]["range"] == (0.2, 1.2)
+    assert "bin_range" not in kwargs
 
 
 def test_survey_meta_preserves_scenario_and_survey_meta(

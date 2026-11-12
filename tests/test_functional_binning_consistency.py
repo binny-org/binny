@@ -47,7 +47,7 @@ def test_photoz_consistency(sample, params, normalize):
     specialized = build_photoz_bins(
         z,
         nz,
-        bin_edges=edges,
+        bins={"edges": edges},
         normalize_input=True,
         normalize_bins=normalize,
         **params,
@@ -94,7 +94,7 @@ def test_specz_consistency(sample, params, normalize):
     specialized = build_specz_bins(
         z,
         nz,
-        bin_edges=edges,
+        bins={"edges": edges},
         normalize_input=True,
         normalize_bins=normalize,
         **params,
