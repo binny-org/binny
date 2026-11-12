@@ -234,14 +234,14 @@ For example:
            {
                "scheme": "equidistant",
                "n_bins": 2,
-               "z_min": 0.2,
-               "z_max": 0.6,
+               "x_min": 0.2,
+               "x_max": 0.6,
            },
            {
                "scheme": "equal_number",
                "n_bins": 3,
-               "z_min": 0.6,
-               "z_max": 1.2,
+               "x_min": 0.6,
+               "x_max": 1.2,
            },
        ],
    }
@@ -255,8 +255,10 @@ Mixed binning uses the underlying
 :func:`binny.axes.mixed_edges.mixed_edges` machinery.
 
 For equal-number segments, the parent distribution is used as the
-population proxy unless a separate photo-z distribution is provided
-through ``z_ph`` and ``nz_ph``.
+population proxy unless a separate selection distribution is provided
+through ``selection_axis`` and ``selection_density``. In photo-z
+tomography, these may represent the observed-redshift grid and its
+corresponding distribution.
 
 Resolving bin specifications
 ----------------------------
