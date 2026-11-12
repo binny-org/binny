@@ -384,12 +384,15 @@ def test_build_photoz_bins_bin_edges_mutually_exclusive_with_scheme(z_nz):
 def test_build_photoz_bins_equal_number_requires_both_zph_and_nzph(z_nz):
     """Tests that equal_number forbids providing only one of (z_ph, nz_ph)."""
     z, nz = z_nz
-    with pytest.raises(ValueError, match=r"z_ph.*nz_ph|nz_ph.*z_ph|both"):
+    with pytest.raises(
+        ValueError,
+        match=r"selection_axis.*selection_density|selection_density.*selection_axis|both",
+    ):
         build_photoz_bins(
             z,
             nz,
             bins={"scheme": "equal_number", "n_bins": 3},
-            z_ph=z,  # nz_ph missing
+            z_ph=z,  # selection_density missing
             scatter_scale=0.05,
             mean_offset=0.0,
         )

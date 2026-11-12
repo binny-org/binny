@@ -432,8 +432,6 @@ def build_specz_bins(
         bins=bins,
         equal_number_axis=None,
         equal_number_weights=None,
-        z_ph=None,
-        nz_ph=None,
         norm_method=norm_method,
         normalize_equal_number_weights=False,
     )

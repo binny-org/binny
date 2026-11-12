@@ -100,8 +100,8 @@ def _resolve_photoz_edges(
         bins=bins,
         equal_number_axis=z_ph,
         equal_number_weights=nz_ph,
-        z_ph=z_ph,
-        nz_ph=nz_ph,
+        selection_axis=z_ph,
+        selection_density=nz_ph,
         norm_method=norm_method,
         normalize_equal_number_weights=True,
     )
