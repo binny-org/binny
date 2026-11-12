@@ -1,4 +1,4 @@
-"""Resolve explicit, generated, and mixed tomographic bin specifications."""
+"""Resolve bin-edge specifications for one-dimensional sampled densities."""
 
 from __future__ import annotations
 
@@ -9,9 +9,12 @@ from typing import Any, Literal
 import numpy as np
 
 from binny.axes.bin_edges import (
+    equal_information_edges,
     equal_number_edges,
     equidistant_edges,
     generalized_tomographic_edges,
+    geometric_edges,
+    log_edges,
 )
 from binny.axes.mixed_edges import mixed_edges as mixed_edges_axes
 from binny.binning.scheme_registry import get_binning_scheme, register_binning_scheme
@@ -29,15 +32,50 @@ __all__ = [
 
 
 @register_binning_scheme("equidistant", aliases=("eq", "linear"))
-def _equidistant_scheme(z: FloatArray, nz: FloatArray, n_bins: int) -> FloatArray:
+def _equidistant_scheme(axis: FloatArray, density: FloatArray, n_bins: int) -> FloatArray:
     """Generate equally spaced edges on the supplied grid."""
-    return equidistant_edges(float(z[0]), float(z[-1]), n_bins)
+    return equidistant_edges(float(axis[0]), float(axis[-1]), n_bins)
+
+
+@register_binning_scheme("logarithmic", aliases=("log",))
+def _logarithmic_scheme(
+    axis: FloatArray,
+    density: FloatArray,
+    n_bins: int,
+) -> FloatArray:
+    """Generate logarithmically spaced edges."""
+    return log_edges(float(axis[0]), float(axis[-1]), n_bins)
+
+
+@register_binning_scheme("geometric", aliases=("geom",))
+def _geometric_scheme(
+    axis: FloatArray,
+    density: FloatArray,
+    n_bins: int,
+) -> FloatArray:
+    """Generate geometrically spaced edges."""
+    return geometric_edges(float(axis[0]), float(axis[-1]), n_bins)
+
+
+@register_binning_scheme("equal_information")
+def _equal_information_scheme(
+    axis: FloatArray,
+    density: FloatArray,
+    n_bins: int,
+    *,
+    info_density: Any | None = None,
+) -> FloatArray:
+    """Generate edges with equal integrated information per bin."""
+    if info_density is None:
+        raise ValueError("equal_information requires bins.params.info_density.")
+
+    return equal_information_edges(axis, info_density, n_bins)
 
 
 @register_binning_scheme("equal_number", aliases=("equipopulated", "en"))
 def _equal_number_scheme(
-    z: FloatArray,
-    nz: FloatArray,
+    axis: FloatArray,
+    density: FloatArray,
     n_bins: int,
     *,
     equal_number_axis: Any | None = None,
@@ -49,7 +87,7 @@ def _equal_number_scheme(
     if (equal_number_axis is None) ^ (equal_number_weights is None):
         raise ValueError("Provide both equal_number_axis and equal_number_weights, or neither.")
     if equal_number_axis is None:
-        x, w = z, nz
+        x, w = axis, density
     else:
         x, w = validate_axis_and_weights(equal_number_axis, equal_number_weights)
     if normalize_equal_number_weights:
@@ -61,18 +99,18 @@ def _equal_number_scheme(
 
 @register_binning_scheme("generalized")
 def _generalized_scheme(
-    z: FloatArray,
-    nz: FloatArray,
+    axis: FloatArray,
+    density: FloatArray,
     n_bins: int,
     *,
     alpha: float = 0.0,
     beta: float = 0.0,
     comoving_distance: Any | None = None,
 ) -> FloatArray:
-    """Generate generalized edges using n(z)^alpha and (dchi/dz)^beta."""
+    """Generate generalized edges using n(axis)^alpha and (dchi/dz)^beta."""
     return generalized_tomographic_edges(
-        z,
-        nz,
+        axis,
+        density,
         n_bins,
         alpha=alpha,
         beta=beta,
@@ -81,17 +119,17 @@ def _generalized_scheme(
 
 
 def _resolve_explicit(
-    spec: Mapping[str, Any], z: FloatArray, nz: FloatArray, options: dict[str, Any]
+    spec: Mapping[str, Any], axis: FloatArray, density: FloatArray, options: dict[str, Any]
 ) -> FloatArray:
     return validate_bin_edges(spec["edges"])
 
 
 def _resolve_generated(
-    spec: Mapping[str, Any], z: FloatArray, nz: FloatArray, options: dict[str, Any]
+    spec: Mapping[str, Any], axis: FloatArray, density: FloatArray, options: dict[str, Any]
 ) -> FloatArray:
     scheme = get_binning_scheme(spec["scheme"])
-    original_z = z
-    z, nz = restrict_bin_range(z, nz, spec.get("range"))
+    original_axis = axis
+    axis, density = restrict_bin_range(axis, density, spec.get("range"))
     params = dict(spec.get("params", {}))
     available = dict(options)
     available.update(params)
@@ -99,14 +137,14 @@ def _resolve_generated(
     # Resample a supplied chi(z) only when it corresponds to the original grid.
     if "comoving_distance" in available and available["comoving_distance"] is not None:
         chi = np.asarray(available["comoving_distance"], dtype=float)
-        if chi.shape != original_z.shape or not np.all(np.isfinite(chi)):
-            raise ValueError("comoving_distance must be finite and match the original z grid.")
+        if chi.shape != original_axis.shape or not np.all(np.isfinite(chi)):
+            raise ValueError("comoving_distance must be finite and match the original axis grid.")
         if np.any(np.diff(chi) <= 0):
             raise ValueError("comoving_distance must be strictly increasing.")
         if spec.get("range") is not None:
-            available["comoving_distance"] = np.interp(z, original_z, chi)
+            available["comoving_distance"] = np.interp(axis, original_axis, chi)
 
-    # An independent equal-number distribution takes precedence over parent n(z).
+    # An independent equal-number distribution takes precedence over parent density.
     # Restrict it to the same requested interval, on its own grid.
     separate_axis = available.get("equal_number_axis")
     separate_weights = available.get("equal_number_weights")
@@ -119,25 +157,25 @@ def _resolve_generated(
 
     signature = inspect.signature(scheme)
     accepted = set(signature.parameters)
-    reserved = {"z", "nz", "n_bins", "bin_range"}
+    reserved = {"axis", "density", "n_bins", "bin_range"}
     unknown = set(params) - accepted
     if unknown:
         raise ValueError(f"Unsupported parameters for {spec['scheme']!r}: {sorted(unknown)}.")
     if set(params) & reserved:
-        raise ValueError("Scheme parameters cannot replace z, nz, n_bins, or bin_range.")
+        raise ValueError("Scheme parameters cannot replace axis, density, n_bins, or bin_range.")
     kwargs = {
         key: value for key, value in available.items() if key in accepted and key not in reserved
     }
-    return scheme(z, nz, spec["n_bins"], **kwargs)
+    return scheme(axis, density, spec["n_bins"], **kwargs)
 
 
 def _resolve_mixed(
-    spec: Mapping[str, Any], z: FloatArray, nz: FloatArray, options: dict[str, Any]
+    spec: Mapping[str, Any], axis: FloatArray, density: FloatArray, options: dict[str, Any]
 ) -> FloatArray:
     return mixed_edges_from_segments(
         spec["segments"],
-        z_axis=z,
-        nz_axis=nz,
+        axis=axis,
+        density=density,
         z_ph=options.get("z_ph"),
         nz_ph=options.get("nz_ph"),
     )
@@ -152,8 +190,8 @@ _RESOLVERS = {
 
 def resolve_bin_edges(
     *,
-    z_axis: FloatArray,
-    nz_axis: FloatArray,
+    axis: FloatArray,
+    density: FloatArray,
     bins: Mapping[str, Any],
     equal_number_axis: Any | None = None,
     equal_number_weights: Any | None = None,
@@ -162,20 +200,44 @@ def resolve_bin_edges(
     norm_method: Literal["trapezoid", "simpson"] = "trapezoid",
     normalize_equal_number_weights: bool = True,
 ) -> FloatArray:
-    """Resolve a dictionary bin specification into numerical edges.
+    """Resolve bin edges for a one-dimensional sampled density.
 
-    ``bins`` supports exactly one of:
+    The coordinate can represent redshift, magnitude, luminosity, mass,
+    or any other strictly increasing numerical axis. The density is
+    sampled on that axis and need not be normalized.
 
-    - ``{"edges": [...]}`` for explicit edges.
-    - ``{"scheme": name, "n_bins": n, "range": (lo, hi), "params": {...}}``
-      for generated edges.
-    - ``{"segments": [...]}`` for mixed binning.
+    Args:
+        axis: Strictly increasing one-dimensional coordinates.
+        density: Nonnegative sampled density values on ``axis``.
+            Used by density-dependent schemes such as ``equal_number``
+            and ``generalized``.
+        bins: Specification selecting exactly one mode:
 
-    The optional generated ``range`` restricts edge construction, not the
-    parent evaluation grid.
+            - ``{"edges": [...]}``: explicit boundaries.
+            - ``{"scheme": name, "n_bins": n, "range": (lo, hi),
+              "params": {...}}``: generated boundaries.
+            - ``{"segments": [...]}``: mixed segments.
+
+            ``range`` is optional and limits edge construction without
+            modifying the original input arrays.
+        equal_number_axis: Optional independent coordinate grid for
+            equal-number binning; requires ``equal_number_weights``.
+        equal_number_weights: Sampled weights on ``equal_number_axis``.
+        z_ph: Optional photometric-redshift proxy axis for mixed segments.
+        nz_ph: Proxy distribution on ``z_ph``; requires ``z_ph``.
+        norm_method: Integration method used to normalize independent
+            equal-number weights when requested.
+        normalize_equal_number_weights: Whether to normalize independent
+            equal-number weights before calculating edges.
+
+    Returns:
+        Strictly increasing one-dimensional array of bin boundaries.
+
+    Raises:
+        ValueError: If the input arrays or bin specification are invalid.
     """
     mode, spec = validate_bins(bins)
-    z, nz = validate_axis_and_weights(z_axis, nz_axis)
+    axis, density = validate_axis_and_weights(axis, density)
 
     options = {
         "equal_number_axis": equal_number_axis,
@@ -186,7 +248,7 @@ def resolve_bin_edges(
         "nz_ph": nz_ph,
     }
 
-    return _RESOLVERS[mode](spec, z, nz, options)
+    return _RESOLVERS[mode](spec, axis, density, options)
 
 
 def validate_bin_edges(
@@ -277,8 +339,8 @@ def photoz_segments_to_axes(
 def mixed_edges_from_segments(
     segments: Sequence[Mapping[str, Any]],
     *,
-    z_axis: Any,
-    nz_axis: Any,
+    axis: Any,
+    density: Any,
     z_ph: Any | None,
     nz_ph: Any | None,
 ) -> np.ndarray:
@@ -321,7 +383,7 @@ def mixed_edges_from_segments(
     if z_ph is not None:
         x_full, w_full = validate_axis_and_weights(z_ph, nz_ph)
     else:
-        x_full, w_full = validate_axis_and_weights(z_axis, nz_axis)
+        x_full, w_full = validate_axis_and_weights(axis, density)
 
     segments_axes = photoz_segments_to_axes(segments)
     total = sum(int(s["n_bins"]) for s in segments_axes)

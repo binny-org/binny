@@ -55,17 +55,24 @@ def test_photoz_segments_to_axes_missing_key_raises() -> None:
         photoz_segments_to_axes(segments)
 
 
-def test_mixed_edges_requires_paired_photoz_inputs() -> None:
-    """Require both photo-z axis and weights."""
-    z = _toy_grid()
-    nz = _gaussian(z, 1.0, 0.3)
-    segments = [{"scheme": "equidistant", "n_bins": 2, "z_min": 0.0, "z_max": 2.0}]
+def test_mixed_edges_requires_paired_photoz_inputs():
+    z = np.linspace(0.0, 2.0, 100)
+    nz = np.exp(-z)
+
+    segments = [
+        {
+            "scheme": "equal_number",
+            "n_bins": 2,
+            "z_min": 0.0,
+            "z_max": 2.0,
+        }
+    ]
 
     with pytest.raises(ValueError, match="Provide both z_ph and nz_ph"):
         mixed_edges_from_segments(
             segments,
-            z_axis=z,
-            nz_axis=nz,
+            axis=z,
+            density=nz,
             z_ph=z,
             nz_ph=None,
         )
@@ -79,8 +86,8 @@ def test_mixed_edges_uses_parent_axis() -> None:
 
     edges = mixed_edges_from_segments(
         segments,
-        z_axis=z,
-        nz_axis=nz,
+        axis=z,
+        density=nz,
         z_ph=None,
         nz_ph=None,
     )
@@ -100,16 +107,16 @@ def test_mixed_edges_uses_photoz_axis() -> None:
 
     edges_photoz = mixed_edges_from_segments(
         segments,
-        z_axis=z,
-        nz_axis=nz,
+        axis=z,
+        density=nz,
         z_ph=z_ph,
         nz_ph=nz_ph,
     )
 
     edges_parent = mixed_edges_from_segments(
         segments,
-        z_axis=z,
-        nz_axis=nz,
+        axis=z,
+        density=nz,
         z_ph=None,
         nz_ph=None,
     )
@@ -131,8 +138,8 @@ def test_mixed_edges_total_bins_matches_segments() -> None:
 
     edges = mixed_edges_from_segments(
         segments,
-        z_axis=z,
-        nz_axis=nz,
+        axis=z,
+        density=nz,
         z_ph=None,
         nz_ph=None,
     )
@@ -150,8 +157,8 @@ def test_mixed_edges_missing_segment_key_raises() -> None:
     with pytest.raises(ValueError, match="Missing key in mixed bin spec"):
         mixed_edges_from_segments(
             segments,
-            z_axis=z,
-            nz_axis=nz,
+            axis=z,
+            density=nz,
             z_ph=None,
             nz_ph=None,
         )
@@ -210,8 +217,8 @@ def test_resolve_bin_edges_explicit() -> None:
     nz = _gaussian(z, 1.0, 0.3)
 
     edges = resolve_bin_edges(
-        z_axis=z,
-        nz_axis=nz,
+        axis=z,
+        density=nz,
         bins={"edges": [0.2, 0.5, 1.2]},
     )
 
@@ -224,8 +231,8 @@ def test_resolve_bin_edges_equidistant() -> None:
     nz = _gaussian(z, 1.0, 0.3)
 
     edges = resolve_bin_edges(
-        z_axis=z,
-        nz_axis=nz,
+        axis=z,
+        density=nz,
         bins={"scheme": "equidistant", "n_bins": 4},
     )
 
@@ -238,8 +245,8 @@ def test_resolve_bin_edges_respects_range() -> None:
     nz = _gaussian(z, 1.0, 0.3)
 
     edges = resolve_bin_edges(
-        z_axis=z,
-        nz_axis=nz,
+        axis=z,
+        density=nz,
         bins={
             "scheme": "equidistant",
             "n_bins": 4,
@@ -256,8 +263,8 @@ def test_resolve_bin_edges_equal_number() -> None:
     nz = np.ones_like(z)
 
     edges = resolve_bin_edges(
-        z_axis=z,
-        nz_axis=nz,
+        axis=z,
+        density=nz,
         bins={"scheme": "equal_number", "n_bins": 4},
     )
 
@@ -275,8 +282,8 @@ def test_resolve_bin_edges_mixed() -> None:
     ]
 
     edges = resolve_bin_edges(
-        z_axis=z,
-        nz_axis=nz,
+        axis=z,
+        density=nz,
         bins={"segments": segments},
     )
 
@@ -304,8 +311,8 @@ def test_resolve_bin_edges_rejects_conflicting_inputs(
 
     with pytest.raises(ValueError, match="Specify exactly one"):
         resolve_bin_edges(
-            z_axis=z,
-            nz_axis=nz,
+            axis=z,
+            density=nz,
             bins=bins,
         )
 
@@ -317,8 +324,8 @@ def test_resolve_bin_edges_requires_scheme() -> None:
 
     with pytest.raises(ValueError, match="Specify exactly one"):
         resolve_bin_edges(
-            z_axis=z,
-            nz_axis=nz,
+            axis=z,
+            density=nz,
             bins={},
         )
 
@@ -330,8 +337,8 @@ def test_resolve_bin_edges_rejects_unknown_scheme() -> None:
 
     with pytest.raises(ValueError, match="Unsupported binning_scheme"):
         resolve_bin_edges(
-            z_axis=z,
-            nz_axis=nz,
+            axis=z,
+            density=nz,
             bins={"scheme": "unknown", "n_bins": 4},
         )
 
@@ -346,8 +353,8 @@ def test_resolve_bin_edges_generalized() -> None:
     chi[1:] = np.cumsum(0.5 * (dchi_dz[1:] + dchi_dz[:-1]) * np.diff(z))
 
     edges = resolve_bin_edges(
-        z_axis=z,
-        nz_axis=nz,
+        axis=z,
+        density=nz,
         bins={
             "scheme": "generalized",
             "n_bins": 5,
@@ -370,8 +377,8 @@ def test_resolve_bin_edges_generalized_requires_n_bins() -> None:
 
     with pytest.raises(ValueError, match="n_bins"):
         resolve_bin_edges(
-            z_axis=z,
-            nz_axis=nz,
+            axis=z,
+            density=nz,
             bins={
                 "scheme": "generalized",
                 "n_bins": None,
@@ -395,8 +402,8 @@ def test_resolve_bin_edges_range_applies_to_schemes(
     nz = np.ones_like(z)
 
     edges = resolve_bin_edges(
-        z_axis=z,
-        nz_axis=nz,
+        axis=z,
+        density=nz,
         bins={
             "scheme": scheme,
             "n_bins": 4,
@@ -414,8 +421,8 @@ def test_resolve_bin_edges_rejects_unknown_params() -> None:
 
     with pytest.raises(ValueError, match="Unsupported parameters"):
         resolve_bin_edges(
-            z_axis=z,
-            nz_axis=nz,
+            axis=z,
+            density=nz,
             bins={
                 "scheme": "equidistant",
                 "n_bins": 4,
@@ -431,11 +438,41 @@ def test_resolve_bin_edges_rejects_range_outside_grid() -> None:
 
     with pytest.raises(ValueError, match="within the binning grid"):
         resolve_bin_edges(
-            z_axis=z,
-            nz_axis=nz,
+            axis=z,
+            density=nz,
             bins={
                 "scheme": "equidistant",
                 "n_bins": 4,
                 "range": (0.2, 2.5),
             },
         )
+
+
+def test_generalized_nonzero_beta_via_bins():
+    import numpy as np
+
+    from binny.binning.edges import resolve_bin_edges
+
+    z = np.linspace(0.0, 3.0, 501)
+    nz = z**2 * np.exp(-z / 0.5)
+    chi = 3000.0 * np.log1p(z)
+
+    edges = resolve_bin_edges(
+        axis=z,
+        density=nz,
+        bins={
+            "scheme": "generalized",
+            "n_bins": 5,
+            "range": [0.2, 2.5],
+            "params": {
+                "alpha": 0.5,
+                "beta": 1.0,
+                "comoving_distance": chi,
+            },
+        },
+    )
+
+    assert edges.shape == (6,)
+    assert np.all(np.diff(edges) > 0)
+    assert np.isclose(edges[0], 0.2)
+    assert np.isclose(edges[-1], 2.5)

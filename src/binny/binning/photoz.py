@@ -95,8 +95,8 @@ def _resolve_photoz_edges(
     edge_weights = nz_ph if (z_ph is not None and nz_ph is not None) else nz
 
     edges = resolve_bin_edges(
-        z_axis=np.asarray(edge_axis, dtype=float),
-        nz_axis=np.asarray(edge_weights, dtype=float),
+        axis=np.asarray(edge_axis, dtype=float),
+        density=np.asarray(edge_weights, dtype=float),
         bins=bins,
         equal_number_axis=z_ph,
         equal_number_weights=nz_ph,

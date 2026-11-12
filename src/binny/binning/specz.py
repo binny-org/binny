@@ -427,8 +427,8 @@ def build_specz_bins(
     )
 
     bin_edges_arr = resolve_bin_edges(
-        z_axis=z_arr,
-        nz_axis=parent_arr,
+        axis=z_arr,
+        density=parent_arr,
         bins=bins,
         equal_number_axis=None,
         equal_number_weights=None,
