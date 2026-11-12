@@ -509,3 +509,81 @@ def test_grid_forwards_custom_keyword_arguments():
     )
 
     np.testing.assert_allclose(actual, np.linspace(0.0, 1.0, 5) ** 2)
+
+
+def test_sinh_grid_midpoint_concentration():
+    """Tests that sinh grids concentrate points near the midpoint."""
+    x = sinh_grid(0.0, 1.0, 101, strength=3.0)
+
+    spacing = np.diff(x)
+
+    assert np.all(np.diff(x) > 0.0)
+    assert np.isclose(x[0], 0.0)
+    assert np.isclose(x[-1], 1.0)
+    assert spacing[49] < spacing[0]
+    assert spacing[50] < spacing[-1]
+
+
+def test_sinh_grid_endpoints_concentration():
+    """Tests that endpoint mode concentrates points near both endpoints."""
+    x = sinh_grid(
+        0.0,
+        1.0,
+        101,
+        strength=3.0,
+        concentration="endpoints",
+    )
+
+    spacing = np.diff(x)
+
+    assert np.all(spacing > 0.0)
+    assert np.isclose(x[0], 0.0)
+    assert np.isclose(x[-1], 1.0)
+    assert spacing[0] < spacing[49]
+    assert spacing[-1] < spacing[50]
+
+
+def test_sinh_grid_endpoints_strength():
+    """Tests that stronger endpoint stretching increases concentration."""
+    weak = sinh_grid(
+        0.0,
+        1.0,
+        101,
+        strength=1.0,
+        concentration="endpoints",
+    )
+    strong = sinh_grid(
+        0.0,
+        1.0,
+        101,
+        strength=4.0,
+        concentration="endpoints",
+    )
+
+    assert strong[1] - strong[0] < weak[1] - weak[0]
+
+
+def test_sinh_grid_invalid_concentration():
+    """Tests that invalid concentration modes are rejected."""
+    with pytest.raises(ValueError, match="concentration"):
+        sinh_grid(
+            0.0,
+            1.0,
+            101,
+            concentration="invalid",
+        )
+
+
+def test_sinh_grid_zero_strength_both_modes():
+    """Tests that zero strength produces linear spacing in both modes."""
+    expected = np.linspace(0.0, 1.0, 101)
+
+    for mode in ("midpoint", "endpoints"):
+        actual = sinh_grid(
+            0.0,
+            1.0,
+            101,
+            strength=0.0,
+            concentration=mode,
+        )
+        np.testing.assert_allclose(actual, expected)
