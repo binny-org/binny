@@ -1,8 +1,12 @@
-"""Survey config parsing utilities.
+"""Survey configuration parsing utilities.
 
-This module reads survey YAML files using a flat tomography-list schema. Each
-tomography entry defines one sample, its parent redshift distribution, its bin
-definition, and optional observational sample metadata.
+This module reads survey YAML files using a flat tomography-list schema.
+Each tomography entry defines one sample, its parent redshift distribution,
+its binning prescription, and optional observational sample metadata.
+
+The parent redshift distribution is evaluated on the full redshift grid.
+Tomographic bin boundaries can cover the full grid or a restricted interval
+without changing the underlying parent distribution.
 
 Expected schema::
 
@@ -26,14 +30,16 @@ Expected schema::
         sample: <optional str>
         scenario: <optional str>
         name: <optional str>
-        kind: photoz|specz
+        kind: photoz|specz|predefined
 
         nz:
           model: <str>
           params: <optional mapping>
+
           # For tabulated n(z), either inline arrays:
           z_input: <optional list[float]>
           nz_input: <optional list[float]>
+
           # Or a packaged source file:
           source:
             path: <str>
@@ -57,14 +63,131 @@ Expected schema::
             frac_sky: <optional float>
 
         bins:
-          edges: <list[float]>
-          # OR
-          scheme: <str>
-          n_bins: <int>
-          range: <optional [float, float]>
+          # Exactly one binning mode must be specified.
+          # See the alternatives below.
 
         uncertainties:
-          <builder kwargs>
+          <optional builder keyword arguments>
+
+        normalize_bins: <optional bool>
+
+Binning modes
+-------------
+
+The ``bins`` mapping supports four mutually exclusive configurations.
+
+1. Generated bin edges
+~~~~~~~~~~~~~~~~~~~~~~
+
+Generate bin boundaries using a registered binning scheme::
+
+    bins:
+      scheme: equidistant
+      n_bins: 5
+
+An optional ``range`` restricts the binning interval while retaining
+the original redshift grid and parent distribution::
+
+    bins:
+      scheme: equal_number
+      n_bins: 5
+      range: [0.3, 2.4]
+
+Scheme-specific parameters can be supplied through ``params``::
+
+    bins:
+      scheme: generalized
+      n_bins: 5
+      range: [0.3, 2.4]
+      params:
+        alpha: 1.0
+        beta: 0.0
+
+The ``params`` mapping belongs to the binning scheme and is independent
+of ``nz.params``, which configures the parent redshift distribution.
+
+2. Explicit bin edges
+~~~~~~~~~~~~~~~~~~~~~
+
+Supply the bin boundaries directly::
+
+    bins:
+      edges: [0.25, 0.35, 0.65, 1.10, 1.63, 2.0]
+
+The number of bins is inferred from the number of edges.
+Do not combine ``edges`` with ``scheme``, ``n_bins``, ``range``,
+or ``segments``.
+
+3. Mixed binning
+~~~~~~~~~~~~~~~~
+
+Combine multiple binning schemes over adjacent intervals::
+
+    bins:
+      segments:
+        - scheme: equidistant
+          n_bins: 2
+          x_min: 0.4
+          x_max: 0.9
+        - scheme: equal_number
+          n_bins: 3
+          x_min: 0.9
+          x_max: 2.4
+
+Each segment specifies its own scheme, number of bins, and interval.
+Segments must be ordered and adjacent, with no gaps or overlaps.
+
+Scheme-specific ``params`` may also be provided for individual segments.
+
+The total number of bins is the sum of the bins in all segments.
+Do not combine ``segments`` with top-level ``scheme``, ``n_bins``,
+``range``, or ``edges``.
+
+4. Predefined tomography
+~~~~~~~~~~~~~~~~~~~~~~~~
+
+Load externally supplied tomographic redshift distributions::
+
+    kind: predefined
+
+    bins:
+      scheme: predefined
+      source:
+        path: mock_predefined_bins.txt
+        z_col: z
+        bin_cols:
+          0: bin_0
+          1: bin_1
+      n_bins: 2
+      normalize_bins: false
+      norm_method: trapezoid
+
+For predefined tomography, the supplied bin distributions are loaded
+directly rather than generated from a parent distribution.
+
+The ``nz`` block is not required for predefined tomography.
+
+The ``n_bins`` field is optional and, when supplied, is checked against
+the number of loaded distributions.
+
+The ``normalize_bins`` and ``norm_method`` fields control normalization
+of the predefined distributions.
+
+General rules
+-------------
+
+- The ``z_grid`` defines the full redshift grid used for generated
+  tomography and is independent of the binning interval.
+- Generated binning uses the full grid unless ``bins.range`` is given.
+- Explicit binning uses the supplied ``bins.edges``.
+- Mixed binning uses the intervals specified by ``bins.segments``.
+- The binning modes are mutually exclusive; conflicting settings
+  must raise an error rather than silently override one another.
+- ``nz.params`` configures the parent redshift-distribution model.
+- ``bins.params`` configures the bin-edge generation scheme.
+- ``uncertainties`` configures the photo-z or spec-z assignment model.
+- ``sample_properties`` stores observational metadata independently
+  of the redshift-distribution and binning models.
 """
 
 from __future__ import annotations
@@ -430,6 +553,13 @@ def _parse_predefined_bins(bins: Mapping[Any, Any]) -> dict[str, Any]:
 
 def _parse_generated_bins(bins: Mapping[Any, Any]) -> dict[str, Any]:
     """Parse a registered tomographic bin-edge generation scheme."""
+    allowed = {"scheme", "n_bins", "range", "params"}
+
+    unknown = set(bins) - allowed
+
+    if unknown:
+        raise ValueError(f"Unknown generated bin settings: {sorted(unknown)}")
+
     scheme = bins.get("scheme")
 
     if scheme is None:
@@ -449,8 +579,16 @@ def _parse_generated_bins(bins: Mapping[Any, Any]) -> dict[str, Any]:
     }
 
     if bins.get("range") is not None:
-        zlo, zhi = map(float, bins["range"])
-        out["range"] = (zlo, zhi)
+        bin_range = np.asarray(bins["range"], dtype=np.float64)
+
+        if (
+            bin_range.shape != (2,)
+            or not np.all(np.isfinite(bin_range))
+            or bin_range[0] >= bin_range[1]
+        ):
+            raise ValueError("bins.range must contain two finite, strictly increasing values.")
+
+        out["range"] = tuple(bin_range)
 
     scheme_params = bins.get("params", {})
 
@@ -463,14 +601,94 @@ def _parse_generated_bins(bins: Mapping[Any, Any]) -> dict[str, Any]:
     return out
 
 
+def _parse_mixed_bins(bins: Mapping[Any, Any]) -> dict[str, Any]:
+    """Parse a mixed tomographic binning specification."""
+    if set(bins) != {"segments"}:
+        raise ValueError("Mixed bins must contain only 'segments'.")
+
+    segments = bins["segments"]
+
+    if not isinstance(segments, Sequence) or isinstance(segments, str | bytes) or not segments:
+        raise ValueError("bins.segments must be a non-empty sequence.")
+
+    parsed = []
+
+    for i, segment in enumerate(segments):
+        segment = _require_mapping(
+            segment,
+            what=f"bins.segments[{i}]",
+        )
+
+        allowed = {"scheme", "n_bins", "x_min", "x_max", "params"}
+
+        if set(segment) - allowed:
+            raise ValueError(
+                f"Unknown fields in bins.segments[{i}]: {sorted(set(segment) - allowed)}"
+            )
+
+        required = {"scheme", "n_bins", "x_min", "x_max"}
+
+        if not required <= set(segment):
+            raise ValueError(
+                f"bins.segments[{i}] requires 'scheme', 'n_bins', 'x_min', and 'x_max'."
+            )
+
+        lo = float(segment["x_min"])
+        hi = float(segment["x_max"])
+
+        if not np.isfinite(lo) or not np.isfinite(hi) or lo >= hi:
+            raise ValueError(f"bins.segments[{i}] requires finite x_min < x_max.")
+
+        scheme = str(segment["scheme"]).strip()
+
+        if not scheme:
+            raise ValueError(f"bins.segments[{i}].scheme must not be empty.")
+
+        params = segment.get("params", {})
+
+        if not isinstance(params, Mapping):
+            raise ValueError(f"bins.segments[{i}].params must be a mapping.")
+
+        parsed_segment = {
+            "scheme": scheme,
+            "n_bins": _parse_n_bins(segment["n_bins"]),
+            "x_min": lo,
+            "x_max": hi,
+        }
+
+        if params:
+            parsed_segment["params"] = dict(params)
+
+        parsed.append(parsed_segment)
+
+    for previous, current in zip(parsed[:-1], parsed[1:], strict=True):
+        if not np.isclose(
+            previous["x_max"],
+            current["x_min"],
+            rtol=0.0,
+            atol=1e-12,
+        ):
+            raise ValueError("Mixed binning segments must be adjacent.")
+
+    return {"segments": parsed}
+
+
 def _parse_bins(bins_block: Any) -> dict[str, Any]:
-    """Parse explicit, predefined, or generated tomographic bins."""
+    """Parse mutually exclusive tomographic binning specifications."""
     bins = _require_mapping(bins_block, what="bins")
 
-    if bins.get("edges") is not None:
+    modes = [key for key in ("edges", "scheme", "segments") if key in bins]
+
+    if len(modes) != 1:
+        raise ValueError("bins must specify exactly one of 'edges', 'scheme', or 'segments'.")
+
+    if "edges" in bins:
         return _parse_explicit_bins(bins)
 
-    if str(bins.get("scheme", "")).strip().lower() == "predefined":
+    if "segments" in bins:
+        return _parse_mixed_bins(bins)
+
+    if str(bins["scheme"]).strip().lower() == "predefined":
         return _parse_predefined_bins(bins)
 
     return _parse_generated_bins(bins)

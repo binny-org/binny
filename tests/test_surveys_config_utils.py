@@ -392,8 +392,8 @@ def test_iter_tomography_entries_rejects_non_list() -> None:
 
 
 def test_parse_bins_rejects_edges_with_scheme() -> None:
-    """Tests that _parse_bins rejects edges mixed with scheme/n_bins/range."""
-    with pytest.raises(ValueError, match="if 'edges' is provided"):
+    """Tests that _parse_bins rejects conflicting binning modes."""
+    with pytest.raises(ValueError, match="must specify exactly one of"):
         _parse_bins({"edges": [0.0, 1.0], "scheme": "equidistant", "n_bins": 2})
 
 
@@ -656,8 +656,8 @@ def test_parse_bins_rejects_missing_n_bins() -> None:
 
 
 def test_parse_bins_rejects_missing_edges_or_scheme() -> None:
-    """Tests that _parse_bins requires either edges or scheme."""
-    with pytest.raises(ValueError, match="must provide either 'edges' or 'scheme'"):
+    """Tests that _parse_bins requires exactly one binning mode."""
+    with pytest.raises(ValueError, match="must specify exactly one of"):
         _parse_bins({})
 
 
