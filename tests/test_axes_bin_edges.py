@@ -359,7 +359,7 @@ def test_generalized_edges_negative_nz(generalized_sample):
     nz = nz.copy()
     nz[10] = -1.0
 
-    with pytest.raises(ValueError, match="nz must be non-negative"):
+    with pytest.raises(ValueError, match="density must be non-negative"):
         generalized_tomographic_edges(z, nz, 5)
 
 
@@ -369,7 +369,7 @@ def test_generalized_edges_negative_alpha_zero_nz(generalized_sample):
     nz = nz.copy()
     nz[0] = 0.0
 
-    with pytest.raises(ValueError, match="nz must be strictly positive"):
+    with pytest.raises(ValueError, match="density must be strictly positive"):
         generalized_tomographic_edges(z, nz, 5, alpha=-0.5)
 
 
@@ -417,3 +417,60 @@ def test_generalized_edges_invalid_n_bins(generalized_sample):
 
     with pytest.raises(ValueError):
         generalized_tomographic_edges(z, nz, 0)
+
+
+@pytest.mark.parametrize("method", ["analytic", "numerical"])
+def test_generalized_tomographic_derivative_methods(method):
+    """Both derivative methods produce valid tomographic edges."""
+    z = np.linspace(0.0, 2.0, 50)
+    nz = np.exp(-z)
+    chi = 1000.0 * (z + 0.1 * z**2)
+
+    edges = generalized_tomographic_edges(
+        z,
+        nz,
+        n_bins=5,
+        alpha=1.0,
+        beta=1.0,
+        comoving_distance=chi,
+        derivative_method=method,
+    )
+
+    assert edges.shape == (6,)
+    assert np.all(np.isfinite(edges))
+    assert np.all(np.diff(edges) > 0)
+
+
+def test_generalized_tomographic_derivative_methods_agree():
+    """Compare numerical and analytic spline differentiation."""
+    z = np.linspace(0.0, 2.0, 50)
+    nz = np.exp(-z)
+    chi = 1000.0 * (z + 0.1 * z**2)
+
+    kwargs = {
+        "axis": z,
+        "density": nz,
+        "n_bins": 5,
+        "alpha": 1.0,
+        "beta": 1.0,
+        "comoving_distance": chi,
+    }
+
+    analytic = generalized_tomographic_edges(**kwargs, derivative_method="analytic")
+    numerical = generalized_tomographic_edges(**kwargs, derivative_method="numerical")
+
+    np.testing.assert_allclose(analytic, numerical, rtol=1e-3, atol=1e-5)
+
+
+def test_generalized_tomographic_invalid_derivative_method():
+    """Reject unsupported derivative methods, including early-return cases."""
+    z = np.linspace(0.0, 2.0, 50)
+    nz = np.exp(-z)
+
+    with pytest.raises(ValueError, match="derivative_method"):
+        generalized_tomographic_edges(
+            z,
+            nz,
+            n_bins=5,
+            derivative_method="invalid",
+        )

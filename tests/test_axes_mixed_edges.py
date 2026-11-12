@@ -5,6 +5,7 @@ from importlib import import_module
 import numpy as np
 import pytest
 
+from binny.axes.bin_edges import equal_number_edges
 from binny.axes.mixed_edges import (
     _call_with,
     _get,
@@ -36,16 +37,16 @@ def test_get_raises_when_missing_and_fallback_none():
         _get(2, {}, "x_min", None)
 
 
-def test_call_with_applies_casts_and_calls_func():
-    """Tests that _call_with casts params and calls the function correctly."""
+def test_call_with_passes_parameters_to_func():
+    """Test that _call_with forwards parameters correctly."""
 
     def dummy_func(*, x_min: float, x_max: float, n_bins: int) -> np.ndarray:
-        """Dummy function that returns a linspace."""
         assert isinstance(x_min, float)
         assert isinstance(x_max, float)
         return np.linspace(x_min, x_max, n_bins + 1)
 
-    params = {"x_min": "0", "x_max": "10"}
+    params = {"x_min": 0.0, "x_max": 10.0}
+
     edges = _call_with(
         0,
         params,
@@ -53,11 +54,9 @@ def test_call_with_applies_casts_and_calls_func():
         {},
         func=dummy_func,
         required=("x_min", "x_max"),
-        casts={"x_min": float, "x_max": float},
     )
 
-    assert edges.shape == (5,)
-    assert np.allclose(edges, np.array([0.0, 2.5, 5.0, 7.5, 10.0]))
+    np.testing.assert_allclose(edges, np.linspace(0.0, 10.0, 5))
 
 
 def test_mixed_edges_concatenates_segments_without_duplicate_boundary():
@@ -348,12 +347,13 @@ def test_slice_axis_weights_rejects_mismatched_shapes():
         _slice_axis_weights(0, x, w, 0.0, 1.0)
 
 
-def test_slice_axis_weights_rejects_too_few_points_in_range():
-    """Tests that _slice_axis_weights raises when the sliced range has < 2 points."""
+def test_slice_axis_weights_rejects_zero_width_range():
+    """Test that a zero-width segment is rejected."""
     x = np.array([0.0, 1.0, 2.0])
     w = np.ones_like(x)
-    with pytest.raises(ValueError, match=r"contains fewer than 2 x points"):
-        _slice_axis_weights(0, x, w, 1.0, 1.0)  # only one point (x==1)
+
+    with pytest.raises(ValueError, match="lies outside the axis"):
+        _slice_axis_weights(0, x, w, 1.0, 1.0)
 
 
 def test_mixed_edges_accepts_top_level_range_keys_without_params():
@@ -394,3 +394,90 @@ def test_maybe_get_range_raises_on_invalid_range():
         memod._maybe_get_range({"x_min": 1.0, "x_max": 1.0})
     with pytest.raises(ValueError, match=r"Invalid segment range"):
         memod._maybe_get_range({"x_min": np.nan, "x_max": 2.0})
+
+
+@pytest.mark.parametrize("method", ["equal_number", "equal_information"])
+def test_mixed_edges_interpolates_segment_boundaries(method):
+    x = np.linspace(0.0, 2.0, 11)
+    density = 1.0 + x
+
+    segments = [
+        {
+            "method": method,
+            "n_bins": 3,
+            "params": {
+                "x_min": 0.35,
+                "x_max": 1.65,
+            },
+        }
+    ]
+
+    kwargs = {"x": x}
+    if method == "equal_number":
+        kwargs["weights"] = density
+    else:
+        kwargs["info_density"] = density
+
+    edges = mixed_edges(segments, **kwargs)
+
+    assert edges.shape == (4,)
+    assert edges[0] == pytest.approx(0.35)
+    assert edges[-1] == pytest.approx(1.65)
+    assert np.all(np.diff(edges) > 0)
+
+
+def test_slice_axis_weights_interpolates_boundaries():
+    """Test interpolation at boundaries between original grid points."""
+    x = np.array([0.0, 1.0, 2.0])
+    w = np.array([0.0, 2.0, 4.0])
+
+    xs, ws = _slice_axis_weights(0, x, w, 0.25, 1.75)
+
+    np.testing.assert_allclose(xs, [0.25, 1.0, 1.75])
+    np.testing.assert_allclose(ws, [0.5, 2.0, 3.5])
+
+
+def test_mixed_edges_segment_params_override_globals():
+    """Segment-specific arrays take precedence over global arrays."""
+    x = np.linspace(0.0, 2.0, 101)
+    global_weights = np.ones_like(x)
+    local_weights = 1.0 + x
+
+    segments = [
+        {
+            "method": "equal_number",
+            "n_bins": 2,
+            "params": {"x": x, "weights": local_weights},
+        }
+    ]
+
+    result = mixed_edges(segments, x=x, weights=global_weights)
+    expected = equal_number_edges(x=x, weights=local_weights, n_bins=2)
+
+    np.testing.assert_allclose(result, expected)
+
+
+def test_mixed_edges_rejects_total_bin_count_mismatch():
+    """Total bin count must agree with the segment definitions."""
+    segments = [
+        {"method": "equidistant", "n_bins": 2, "params": {"x_min": 0.0, "x_max": 1.0}},
+    ]
+
+    with pytest.raises(ValueError):
+        mixed_edges(segments, total_n_bins=3)
+
+
+def test_mixed_edges_rejects_range_outside_axis():
+    """Weighted segments cannot extend beyond their sampling axis."""
+    x = np.linspace(0.0, 2.0, 101)
+
+    segments = [
+        {
+            "method": "equal_number",
+            "n_bins": 2,
+            "params": {"x_min": -0.5, "x_max": 1.5},
+        }
+    ]
+
+    with pytest.raises(ValueError, match="lies outside the axis"):
+        mixed_edges(segments, x=x, weights=np.ones_like(x))

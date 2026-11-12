@@ -1,11 +1,8 @@
-"""Axis grid builders.
-
-Small helpers for building 1D grids commonly used in numerical work
-(e.g. k, ell, z).
-"""
+"""Utilities for constructing one-dimensional sampling grids."""
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from typing import Any
 
 import numpy as np
@@ -16,74 +13,225 @@ from binny.utils.validators import validate_grid_spec
 __all__ = [
     "linear_grid",
     "log_grid",
+    "power_grid",
+    "chebyshev_grid",
+    "sinh_grid",
+    "register_grid",
     "grid",
 ]
 
+_GRID_REGISTRY: dict[str, Callable[..., np.ndarray]] = {}
 
-def linear_grid(start: float, stop: float, n: int) -> np.ndarray:
-    """Builds a linearly spaced 1D grid including endpoints.
+_GRID_ALIASES = {
+    "lin": "linear",
+    "uniform": "linear",
+    "log_grid": "log",
+    "logarithmic": "log",
+    "geom": "log",
+    "geometric": "log",
+}
+
+
+def register_grid(name: str) -> Callable:
+    """Register a custom grid builder under a case-insensitive name.
 
     Args:
-        start: Lower endpoint of the grid.
-        stop: Upper endpoint of the grid.
-        n: Number of grid points (>= 2).
+        name: Unique name identifying the grid strategy.
 
     Returns:
-        A 1D NumPy array of shape ``(n,)`` with dtype ``float64``.
+        Decorator that registers the grid builder.
 
     Raises:
-        TypeError: If ``start``/``stop`` are not real numbers or ``n`` is not
-            integer-like.
-        ValueError: If the grid specification is invalid (e.g., non-finite or
-            non-increasing endpoints, or ``n < 2``).
+        TypeError: If ``name`` is not a string.
+        ValueError: If the name is empty or already registered.
+    """
+    if not isinstance(name, str):
+        raise TypeError("Grid name must be a string.")
+
+    key = name.lower()
+
+    if not key or key in _GRID_REGISTRY or key in _GRID_ALIASES:
+        raise ValueError(f"Invalid or already registered grid name {name!r}.")
+
+    def decorator(func: Callable) -> Callable:
+        if not callable(func):
+            raise TypeError("Grid builder must be callable.")
+        if key in _GRID_REGISTRY:
+            raise ValueError(f"Grid kind {name!r} is already registered.")
+        _GRID_REGISTRY[key] = func
+        return func
+
+    return decorator
+
+
+@register_grid("linear")
+def linear_grid(start: float, stop: float, n: int) -> np.ndarray:
+    """Construct a linearly spaced grid including both endpoints.
+
+    Args:
+        start: Lower endpoint.
+        stop: Upper endpoint.
+        n: Number of grid points, at least 2.
+
+    Returns:
+        One-dimensional array of equally spaced points.
     """
     x0, x1, n_int = validate_grid_spec(start, stop, n, log=False)
     return np.linspace(x0, x1, n_int, dtype=np.float64)
 
 
+@register_grid("log")
 def log_grid(start: float, stop: float, n: int) -> np.ndarray:
-    """Builds a log-spaced 1D grid including endpoints.
-
-    Values are evenly spaced in ``log(x)`` (geometric progression).
+    """Construct a logarithmically spaced grid including both endpoints.
 
     Args:
-        start: Lower endpoint of the grid (must be > 0).
-        stop: Upper endpoint of the grid (must be > ``start``).
-        n: Number of grid points (>= 2).
+        start: Positive lower endpoint.
+        stop: Upper endpoint, greater than ``start``.
+        n: Number of grid points, at least 2.
 
     Returns:
-        A 1D NumPy array of shape ``(n,)`` with dtype ``float64``.
-
-    Raises:
-        TypeError: If ``start``/``stop`` are not real numbers or ``n`` is not
-            integer-like.
-        ValueError: If the grid specification is invalid (e.g., non-finite,
-            non-increasing, or non-positive endpoints, or ``n < 2``).
+        One-dimensional array of logarithmically spaced points.
     """
     x0, x1, n_int = validate_grid_spec(start, stop, n, log=True)
     return log_edges(x0, x1, n_int - 1).astype(np.float64, copy=False)
 
 
-def grid(kind: str, /, **kwargs: Any):
-    """Constructs a 1D sampling grid using a named strategy.
+@register_grid("power")
+def power_grid(
+    start: float,
+    stop: float,
+    n: int,
+    *,
+    power: float = 2.0,
+) -> np.ndarray:
+    """Construct a power-law stretched grid.
 
-    Supported kinds (case-insensitive) and common aliases:
-        - ``"linear"``: ``"lin"``, ``"uniform"``
-        - ``"log"``: ``"log_grid"``, ``"logarithmic"``, ``"geom"``
+    Grid points follow ``x = start + (stop - start) * t**power``,
+    where ``t`` is uniformly spaced between zero and one.
 
     Args:
-        kind: Grid strategy selector (case-insensitive).
-        **kwargs: Parameters forwarded to the underlying grid builder.
+        start: Lower endpoint.
+        stop: Upper endpoint.
+        n: Number of grid points, at least 2.
+        power: Positive stretching exponent. Values greater than one
+            cluster points near ``start``, while values below one
+            cluster points near ``stop``. A value of one is linear.
 
     Returns:
-        1D NumPy array of grid points (dtype ``float64``).
+        One-dimensional array of power-law spaced points.
 
     Raises:
-        ValueError: If ``kind`` is not recognized.
+        ValueError: If ``power`` is not positive and finite.
     """
-    k = kind.lower()
-    if k in {"linear", "lin", "uniform"}:
-        return linear_grid(**kwargs)
-    if k in {"log", "log_grid", "logarithmic", "geom", "geometric"}:
-        return log_grid(**kwargs)
-    raise ValueError(f"Unknown grid kind {kind!r}.")
+    x0, x1, n_int = validate_grid_spec(start, stop, n, log=False)
+
+    if not np.isfinite(power) or power <= 0:
+        raise ValueError("power must be positive and finite.")
+
+    t = np.linspace(0.0, 1.0, n_int)
+    return x0 + (x1 - x0) * t**power
+
+
+@register_grid("chebyshev")
+def chebyshev_grid(start: float, stop: float, n: int) -> np.ndarray:
+    """Construct Chebyshev-Lobatto nodes including both endpoints.
+
+    Nodes cluster near both endpoints, making them useful for
+    polynomial interpolation and spectral methods.
+
+    Args:
+        start: Lower endpoint.
+        stop: Upper endpoint.
+        n: Number of grid points, at least 2.
+
+    Returns:
+        One-dimensional array of Chebyshev-Lobatto nodes.
+    """
+    x0, x1, n_int = validate_grid_spec(start, stop, n, log=False)
+
+    theta = np.linspace(0.0, np.pi, n_int)
+    return x0 + 0.5 * (x1 - x0) * (1.0 - np.cos(theta))
+
+
+@register_grid("sinh")
+def sinh_grid(
+    start: float,
+    stop: float,
+    n: int,
+    *,
+    strength: float = 3.0,
+) -> np.ndarray:
+    """Construct a sinh-stretched grid concentrated near the midpoint.
+
+    The transformation is symmetric around the interval midpoint.
+    Larger ``strength`` values increase the concentration of points
+    near the center, while zero gives linear spacing.
+
+    Args:
+        start: Lower endpoint.
+        stop: Upper endpoint.
+        n: Number of grid points, at least 2.
+        strength: Nonnegative stretching parameter.
+
+    Returns:
+        One-dimensional array of sinh-stretched grid points.
+
+    Raises:
+        ValueError: If ``strength`` is negative or non-finite.
+    """
+    x0, x1, n_int = validate_grid_spec(start, stop, n, log=False)
+
+    if not np.isfinite(strength) or strength < 0:
+        raise ValueError("strength must be nonnegative and finite.")
+
+    if strength == 0:
+        return np.linspace(x0, x1, n_int, dtype=np.float64)
+
+    t = np.linspace(-1.0, 1.0, n_int)
+    u = np.sinh(strength * t) / np.sinh(strength)
+
+    return x0 + 0.5 * (x1 - x0) * (u + 1.0)
+
+
+def grid(kind: str, /, **kwargs: Any) -> np.ndarray:
+    """Construct a one-dimensional grid using a registered strategy.
+
+    Built-in strategies are ``"linear"``, ``"log"``, ``"power"``,
+    ``"chebyshev"``, and ``"sinh"``. Custom strategies can be added
+    using :func:`register_grid`.
+
+    Strategy names are case-insensitive.
+
+    Args:
+        kind: Registered grid strategy or supported alias.
+        **kwargs: Arguments passed to the selected grid builder.
+
+    Returns:
+        Finite, strictly increasing one-dimensional array of grid
+        points with dtype ``float64``.
+
+    Raises:
+        ValueError: If the strategy is unknown or its output is invalid.
+    """
+    key = kind.lower()
+    key = _GRID_ALIASES.get(key, key)
+
+    try:
+        builder = _GRID_REGISTRY[key]
+    except KeyError as exc:
+        raise ValueError(f"Unknown grid kind {kind!r}.") from exc
+
+    result = np.asarray(builder(**kwargs), dtype=np.float64)
+
+    if (
+        result.ndim != 1
+        or result.size < 2
+        or not np.all(np.isfinite(result))
+        or not np.all(np.diff(result) > 0)
+    ):
+        raise ValueError(
+            f"Grid builder {kind!r} must return a finite, "
+            "strictly increasing 1D array with at least two points."
+        )
+
+    return result
