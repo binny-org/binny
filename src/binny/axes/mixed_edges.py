@@ -1,278 +1,108 @@
-"""Combine multiple binning strategies into a single set of bin edges."""
+"""Utilities for combining adjacent arrays of bin boundaries."""
 
 from __future__ import annotations
 
-from collections.abc import Callable, Mapping, Sequence
+from collections.abc import Sequence
 from typing import Any
 
 import numpy as np
 
-from binny.axes.bin_edges import (
-    equal_information_edges,
-    equal_number_edges,
-    equidistant_chi_edges,
-    equidistant_edges,
-    geometric_edges,
-    log_edges,
-)
-from binny.utils.validators import (
-    resolve_binning_method,
-    validate_mixed_segments,
-)
-
 __all__ = ["mixed_edges"]
-
-EdgeFunc = Callable[..., np.ndarray]
-
-_METHODS: dict[str, tuple[EdgeFunc, tuple[str, ...]]] = {
-    "equidistant": (equidistant_edges, ("x_min", "x_max")),
-    "log": (log_edges, ("x_min", "x_max")),
-    "geometric": (geometric_edges, ("x_min", "x_max")),
-    "equal_number": (equal_number_edges, ("x", "weights")),
-    "equal_information": (equal_information_edges, ("x", "info_density")),
-    "equidistant_chi": (equidistant_chi_edges, ("z", "chi")),
-}
-
-
-def _get(
-    seg_i: int,
-    params: Mapping[str, Any],
-    key: str,
-    fallback: Any,
-) -> Any:
-    """Resolve a segment parameter, falling back to a global value."""
-    value = params.get(key, fallback)
-
-    if value is None:
-        raise ValueError(f"Segment {seg_i} requires {key!r} in params or as a global argument.")
-
-    return value
-
-
-def _call_with(
-    seg_i: int,
-    params: Mapping[str, Any],
-    n_bins: int,
-    g: Mapping[str, Any],
-    *,
-    func: EdgeFunc,
-    required: tuple[str, ...],
-) -> np.ndarray:
-    """Call an existing edge builder with resolved segment parameters."""
-    kwargs = {key: _get(seg_i, params, key, g.get(key)) for key in required}
-
-    for key in ("x_min", "x_max"):
-        if key in kwargs:
-            kwargs[key] = float(kwargs[key])
-
-    return func(**kwargs, n_bins=n_bins)
-
-
-def _maybe_get_range(
-    params: Mapping[str, Any],
-) -> tuple[float, float] | None:
-    """Return an optional segment range, accepting legacy redshift keys."""
-    lo = params.get("x_min", params.get("z_min"))
-    hi = params.get("x_max", params.get("z_max"))
-
-    if lo is None or hi is None:
-        return None
-
-    lo, hi = float(lo), float(hi)
-
-    if not np.isfinite(lo) or not np.isfinite(hi) or hi <= lo:
-        raise ValueError(f"Invalid segment range x_min/x_max: ({lo}, {hi}).")
-
-    return lo, hi
-
-
-def _slice_axis_weights(
-    seg_i: int,
-    x: np.ndarray,
-    w: np.ndarray,
-    lo: float,
-    hi: float,
-) -> tuple[np.ndarray, np.ndarray]:
-    """Restrict an axis and weights to a segment, interpolating its bounds.
-
-    Args:
-        seg_i: Segment index for error messages.
-        x: Strictly increasing sampling axis.
-        w: Weights evaluated on the axis.
-        lo: Lower segment boundary.
-        hi: Upper segment boundary.
-
-    Returns:
-        Restricted axis and weights, including both exact boundaries.
-
-    Raises:
-        ValueError: If the arrays or requested range are invalid.
-    """
-    x = np.asarray(x, dtype=float)
-    w = np.asarray(w, dtype=float)
-
-    if x.ndim != 1 or w.ndim != 1 or x.size != w.size:
-        raise ValueError(f"Segment {seg_i}: x/weights must be 1D and same length.")
-
-    if x.size < 2 or not np.all(np.isfinite(x)) or not np.all(np.diff(x) > 0):
-        raise ValueError(f"Segment {seg_i}: x must be finite and strictly increasing.")
-
-    if not np.all(np.isfinite(w)):
-        raise ValueError(f"Segment {seg_i}: weights must be finite.")
-
-    if not (np.isfinite(lo) and np.isfinite(hi) and x[0] <= lo < hi <= x[-1]):
-        raise ValueError(f"Segment {seg_i}: range [{lo}, {hi}] lies outside the axis.")
-
-    interior = (x > lo) & (x < hi)
-
-    xs = np.concatenate(([lo], x[interior], [hi]))
-    ws = np.concatenate(
-        (
-            [np.interp(lo, x, w)],
-            w[interior],
-            [np.interp(hi, x, w)],
-        )
-    )
-
-    return xs, ws
-
-
-def _validate_segment_edges(
-    seg_i: int,
-    edges: np.ndarray,
-    *,
-    n_bins: int,
-    prev_right: float | None,
-    atol: float = 1e-12,
-) -> float:
-    """Validate a segment's edges and its connection to the previous one."""
-    edges = np.asarray(edges, dtype=float)
-
-    if edges.ndim != 1:
-        raise ValueError(f"Segment {seg_i}: edges must be 1D, got shape {edges.shape}.")
-
-    if edges.size != n_bins + 1:
-        raise ValueError(f"Segment {seg_i}: expected {n_bins + 1} edges, got {edges.size}.")
-
-    if not np.all(np.isfinite(edges)):
-        raise ValueError(f"Segment {seg_i}: edges must be finite.")
-
-    if not np.all(np.diff(edges) > 0):
-        raise ValueError(f"Segment {seg_i}: edges must be strictly increasing.")
-
-    if prev_right is not None and not np.isclose(edges[0], prev_right, rtol=0, atol=atol):
-        raise ValueError(
-            f"Segment {seg_i}: left edge {edges[0]} does not match "
-            f"previous right edge {prev_right}."
-        )
-
-    return float(edges[-1])
 
 
 def mixed_edges(
-    segments: Sequence[Mapping[str, Any]],
+    segments: Sequence[Any],
     *,
-    x: Any | None = None,
-    weights: Any | None = None,
-    info_density: Any | None = None,
-    z: Any | None = None,
-    chi: Any | None = None,
     total_n_bins: int | None = None,
+    atol: float = 1e-12,
 ) -> np.ndarray:
-    """Construct bin edges by combining multiple binning strategies.
+    """Combine adjacent sets of bin boundaries into one array.
 
-    Each segment specifies a ``method``, ``n_bins``, and optional
-    ``params`` mapping. Parameters can be supplied per segment or
-    through the global keyword arguments.
+    Each segment contains an independently constructed, strictly
+    increasing array of boundaries. Adjacent segments must share
+    a common endpoint. The shared boundary is included only once
+    in the combined result.
 
-    Supported methods are ``equidistant``, ``log``, ``geometric``,
-    ``equal_number``, ``equal_information``, and ``equidistant_chi``.
-
-    Weighted methods can be restricted to a segment using
-    ``x_min``/``x_max`` (or legacy ``z_min``/``z_max``).
-    The weights are interpolated at the exact segment boundaries.
-
-    Adjacent segments must share a boundary. Duplicate boundaries
-    are removed when combining their edges.
+    This function does not construct boundaries or interpret binning
+    schemes. Any edge-construction method can be used to generate
+    the input segments.
 
     Args:
-        segments: Ordered segment specifications.
-        x: Sampling axis for weighted binning methods.
-        weights: Weights for equal-number binning.
-        info_density: Weights for equal-information binning.
-        z: Redshift axis for equal-distance binning.
-        chi: Comoving distances corresponding to ``z``.
-        total_n_bins: Optional expected total number of bins.
+        segments: Ordered sequence of one-dimensional arrays of bin
+            boundaries. Each array must contain at least two values.
+        total_n_bins: Optional expected number of bins across all
+            segments. If provided, it must match the combined result.
+        atol: Absolute tolerance used to compare adjacent segment
+            endpoints. Must be finite and nonnegative.
 
     Returns:
-        Strictly increasing array of combined bin edges.
+        One-dimensional float64 array of strictly increasing bin
+        boundaries. Its length is the total number of bins plus one.
 
     Raises:
-        ValueError: If segment specifications, inputs, or resulting
-            edges are invalid.
+        ValueError: If no segments are supplied, a segment contains
+            invalid boundaries, adjacent segments do not share an
+            endpoint, or the total number of bins is inconsistent.
     """
-    validate_mixed_segments(segments, total_n_bins=total_n_bins)
+    if not np.isfinite(atol) or atol < 0:
+        raise ValueError("atol must be finite and nonnegative.")
 
-    global_params = {
-        "x": x,
-        "weights": weights,
-        "info_density": info_density,
-        "z": z,
-        "chi": chi,
-    }
+    if not segments:
+        raise ValueError("At least one segment is required.")
 
-    all_edges: list[np.ndarray] = []
-    prev_right: float | None = None
+    if total_n_bins is not None:
+        if (
+            isinstance(total_n_bins, bool | np.bool_)
+            or not isinstance(total_n_bins, int | np.integer)
+            or total_n_bins < 1
+        ):
+            raise ValueError("total_n_bins must be a positive integer.")
 
-    for i, segment in enumerate(segments):
-        method = resolve_binning_method(segment["method"])
-        n_bins = int(segment["n_bins"])
-        params = dict(segment.get("params", {}) or {})
+    combined: list[np.ndarray] = []
+    previous_right: float | None = None
+    number_of_bins = 0
 
-        # Accept ranges specified directly on the segment.
-        for key in ("x_min", "x_max", "z_min", "z_max"):
-            if key in segment and key not in params:
-                params[key] = segment[key]
+    for index, segment in enumerate(segments):
+        edges = np.asarray(segment, dtype=np.float64)
 
-        if method not in _METHODS:
-            raise ValueError(f"Unknown binning method {method!r} in mixed_edges.")
+        if edges.ndim != 1 or edges.size < 2:
+            raise ValueError(
+                f"Segment {index} must contain at least two one-dimensional boundaries."
+            )
 
-        func, required = _METHODS[method]
+        if not np.all(np.isfinite(edges)):
+            raise ValueError(f"Segment {index} contains non-finite boundaries.")
 
-        # Restrict weighted methods to their requested segment range.
-        if method in {"equal_number", "equal_information"}:
-            bounds = _maybe_get_range(params)
+        if not np.all(np.diff(edges) > 0):
+            raise ValueError(f"Segment {index} boundaries must be strictly increasing.")
 
-            if bounds is not None:
-                weight_key = "weights" if method == "equal_number" else "info_density"
+        # Count bins before removing the shared boundary.
+        number_of_bins += edges.size - 1
 
-                x_in = _get(i, params, "x", global_params["x"])
-                w_in = _get(i, params, weight_key, global_params[weight_key])
+        if previous_right is not None:
+            if not np.isclose(
+                edges[0],
+                previous_right,
+                rtol=0.0,
+                atol=atol,
+            ):
+                raise ValueError(
+                    f"Segment {index} starts at {edges[0]}, "
+                    f"but the previous segment ends at {previous_right}."
+                )
 
-                params["x"], params[weight_key] = _slice_axis_weights(i, x_in, w_in, *bounds)
+            # Preserve the previous segment's shared boundary.
+            edges = edges[1:]
 
-        edges = _call_with(
-            i,
-            params,
-            n_bins,
-            global_params,
-            func=func,
-            required=required,
-        )
+        combined.append(edges)
+        previous_right = float(edges[-1])
 
-        prev_right = _validate_segment_edges(
-            i,
-            edges,
-            n_bins=n_bins,
-            prev_right=prev_right,
-        )
+    if total_n_bins is not None and number_of_bins != total_n_bins:
+        raise ValueError(f"Expected {total_n_bins} bins, got {number_of_bins}.")
 
-        edges = np.asarray(edges, dtype=float)
-        all_edges.append(edges if i == 0 else edges[1:])
+    result = np.concatenate(combined)
 
-    out = np.concatenate(all_edges)
+    if not np.all(np.diff(result) > 0):
+        raise ValueError("Combined bin boundaries must be strictly increasing.")
 
-    if out.ndim != 1 or not np.all(np.diff(out) > 0):
-        raise ValueError("Combined mixed edges are not strictly increasing.")
-
-    return out
+    return result

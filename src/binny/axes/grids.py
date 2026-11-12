@@ -7,7 +7,6 @@ from typing import Any, Literal
 
 import numpy as np
 
-from binny.axes.bin_edges import log_edges
 from binny.utils.validators import validate_grid_spec
 
 __all__ = [
@@ -93,7 +92,7 @@ def log_grid(start: float, stop: float, n: int) -> np.ndarray:
         One-dimensional array of logarithmically spaced points.
     """
     x0, x1, n_int = validate_grid_spec(start, stop, n, log=True)
-    return log_edges(x0, x1, n_int - 1).astype(np.float64, copy=False)
+    return np.geomspace(x0, x1, n_int, dtype=np.float64)
 
 
 @register_grid("power")

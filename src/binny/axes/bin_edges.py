@@ -8,6 +8,7 @@ import numpy as np
 from derivkit import DerivativeKit
 from scipy.interpolate import CubicSpline
 
+from binny.axes.grids import chebyshev_grid, power_grid, sinh_grid
 from binny.utils.types import FloatArray
 from binny.utils.validators import (
     validate_axis_and_weights,
@@ -23,6 +24,9 @@ __all__ = [
     "equidistant_chi_edges",
     "equal_information_edges",
     "geometric_edges",
+    "power_edges",
+    "chebyshev_edges",
+    "sinh_edges",
     "_equal_weight_edges",
     "_cumulative_trapz",
 ]
@@ -184,6 +188,136 @@ def geometric_edges(x_min: float, x_max: float, n_bins: int) -> np.ndarray:
     """
     validate_interval(x_min, x_max, n_bins, log=True)
     return np.geomspace(x_min, x_max, n_bins + 1, dtype=float)
+
+
+def power_edges(
+    x_min: float,
+    x_max: float,
+    n_bins: int,
+    *,
+    power: float = 2.0,
+) -> np.ndarray:
+    """Construct power-law spaced bin boundaries.
+
+    Bin boundaries are generated using :func:`binny.axes.grids.power_grid`.
+    The spacing follows
+
+    ``x = x_min + (x_max - x_min) * t**power``,
+
+    where ``t`` is uniformly spaced between zero and one.
+
+    Values of ``power`` greater than one concentrate boundaries near
+    ``x_min``, while values below one concentrate them near ``x_max``.
+    A value of one produces uniformly spaced boundaries.
+
+    Args:
+        x_min: Lower endpoint of the binning interval.
+        x_max: Upper endpoint, greater than ``x_min``.
+        n_bins: Number of bins, at least one.
+        power: Positive stretching exponent.
+
+    Returns:
+        One-dimensional array of ``n_bins + 1`` strictly increasing
+        bin boundaries, including both endpoints.
+
+    Raises:
+        ValueError: If the interval, number of bins, or stretching
+            exponent is invalid.
+    """
+    validate_interval(x_min, x_max, n_bins, log=False)
+
+    return power_grid(
+        x_min,
+        x_max,
+        n_bins + 1,
+        power=power,
+    )
+
+
+def chebyshev_edges(
+    x_min: float,
+    x_max: float,
+    n_bins: int,
+) -> np.ndarray:
+    """Construct bin boundaries using Chebyshev-Lobatto nodes.
+
+    Bin boundaries are generated using
+    :func:`binny.axes.grids.chebyshev_grid`.
+
+    The boundaries are distributed symmetrically and concentrate near
+    both endpoints of the interval. This produces narrower bins near
+    the boundaries and wider bins around the interval midpoint.
+
+    Args:
+        x_min: Lower endpoint of the binning interval.
+        x_max: Upper endpoint, greater than ``x_min``.
+        n_bins: Number of bins, at least one.
+
+    Returns:
+        One-dimensional array of ``n_bins + 1`` strictly increasing
+        bin boundaries, including both endpoints.
+
+    Raises:
+        ValueError: If the interval or number of bins is invalid.
+    """
+    validate_interval(x_min, x_max, n_bins, log=False)
+
+    return chebyshev_grid(
+        x_min,
+        x_max,
+        n_bins + 1,
+    )
+
+
+def sinh_edges(
+    x_min: float,
+    x_max: float,
+    n_bins: int,
+    *,
+    strength: float = 3.0,
+    concentration: Literal["midpoint", "endpoints"] = "midpoint",
+) -> np.ndarray:
+    """Construct sinh-stretched bin boundaries.
+
+    Bin boundaries are generated using :func:`binny.axes.grids.sinh_grid`.
+
+    The ``concentration`` parameter controls where boundaries accumulate:
+
+    - ``"midpoint"`` concentrates boundaries near the interval midpoint,
+      producing narrower central bins.
+    - ``"endpoints"`` concentrates boundaries near both endpoints,
+      producing narrower outer bins.
+
+    Larger ``strength`` values increase the concentration of boundaries.
+    Setting ``strength=0`` produces uniformly spaced boundaries for
+    either concentration mode.
+
+    Args:
+        x_min: Lower endpoint of the binning interval.
+        x_max: Upper endpoint, greater than ``x_min``.
+        n_bins: Number of bins, at least one.
+        strength: Nonnegative stretching parameter. Defaults to 3.0.
+        concentration: Boundary concentration mode, either
+            ``"midpoint"`` or ``"endpoints"``. Defaults to
+            ``"midpoint"``.
+
+    Returns:
+        One-dimensional array of ``n_bins + 1`` strictly increasing
+        bin boundaries, including both endpoints.
+
+    Raises:
+        ValueError: If the interval, number of bins, stretching
+            strength, or concentration mode is invalid.
+    """
+    validate_interval(x_min, x_max, n_bins, log=False)
+
+    return sinh_grid(
+        x_min,
+        x_max,
+        n_bins + 1,
+        strength=strength,
+        concentration=concentration,
+    )
 
 
 def generalized_tomographic_edges(
