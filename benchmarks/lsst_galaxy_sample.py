@@ -9,10 +9,9 @@ import numpy as np
 import pandas
 import yaml
 from numpy import exp
+from presets import Presets
 from scipy.integrate import cumulative_trapezoid, simpson
 from scipy.special import erf
-
-from presets import Presets
 
 
 class LSSTGalaxySample:
@@ -33,7 +32,7 @@ class LSSTGalaxySample:
         script_dir = os.path.dirname(os.path.abspath(__file__))
         lsst_desc_path = os.path.join(script_dir, "lsst_desc_specs.yaml")
 
-        with open(lsst_desc_path, "r") as f:
+        with open(lsst_desc_path) as f:
             lsst_desc_parameters = yaml.load(f, Loader=yaml.FullLoader)
 
         self.lens_params = lsst_desc_parameters["lens_sample"][self.forecast_year]
@@ -54,10 +53,12 @@ class LSSTGalaxySample:
             np.array: Normalized p(z), suitable for CCL.
         """
         # Compute the Smail-type redshift distribution (not yet normalized)
-        p_z = self.smail_type_distribution(self.redshift_range,
-                                           self.lens_params["z_0"],
-                                           self.lens_params["alpha"],
-                                           self.lens_params["gamma"])
+        p_z = self.smail_type_distribution(
+            self.redshift_range,
+            self.lens_params["z_0"],
+            self.lens_params["alpha"],
+            self.lens_params["gamma"],
+        )
 
         # Normalize the distribution if requested (ALWAYS needed for CCL)
         if normalized:
@@ -65,9 +66,11 @@ class LSSTGalaxySample:
 
         # Save the data if requested
         if save_file:
-            self.save_to_file("lens_sample_nz",
-                              {"redshift": self.redshift_range,
-                               "distribution": p_z}, file_format)
+            self.save_to_file(
+                "lens_sample_nz",
+                {"redshift": self.redshift_range, "distribution": p_z},
+                file_format,
+            )
 
         return p_z
 
@@ -84,10 +87,12 @@ class LSSTGalaxySample:
             np.array: Normalized p(z), suitable for CCL.
         """
         # Compute the Smail-type redshift distribution (not yet normalized)
-        p_z = self.smail_type_distribution(self.redshift_range,
-                                           self.source_params["z_0"],
-                                           self.source_params["alpha"],
-                                           self.source_params["gamma"])
+        p_z = self.smail_type_distribution(
+            self.redshift_range,
+            self.source_params["z_0"],
+            self.source_params["alpha"],
+            self.source_params["gamma"],
+        )
 
         # Normalize the distribution if requested (ALWAYS needed for CCL)
         if normalized:
@@ -95,16 +100,15 @@ class LSSTGalaxySample:
 
         # Save the data if requested
         if save_file:
-            self.save_to_file("source_sample_nz",
-                              {"redshift": self.redshift_range, "distribution": p_z},
-                              file_format)
+            self.save_to_file(
+                "source_sample_nz",
+                {"redshift": self.redshift_range, "distribution": p_z},
+                file_format,
+            )
 
         return p_z
 
-    def lens_bins(self,
-                  normalized=True,
-                  save_file=False,
-                  file_format='npy'):
+    def lens_bins(self, normalized=True, save_file=False, file_format="npy"):
         """
         Split the initial redshift distribution of lens galaxies (lenses) into tomographic bins.
         In the LSST DESC case, lenses are split into 5 tomographic bins (year 1 forecast) or 10
@@ -140,18 +144,17 @@ class LSSTGalaxySample:
         z_bias, z_variance = self.get_biases("lens")
 
         # Create a dictionary of the redshift distributions for each bin
-        redshift_distribution_dict = self.create_redshift_bins(lens_dndz,
-                                                               bin_edges,
-                                                               z_bias,
-                                                               z_variance)
+        redshift_distribution_dict = self.create_redshift_bins(
+            lens_dndz, bin_edges, z_bias, z_variance
+        )
 
         # Normalise the distributions
         if normalized:
-            redshift_distribution_dict = self.normalize_distribution(redshift_distribution_dict,
-                                                                     method="trapezoid")
+            redshift_distribution_dict = self.normalize_distribution(
+                redshift_distribution_dict, method="trapezoid"
+            )
 
-        combined_data = {'redshift_range': self.redshift_range,
-                         'bins': redshift_distribution_dict}
+        combined_data = {"redshift_range": self.redshift_range, "bins": redshift_distribution_dict}
 
         # Save the distributions to a file
         if save_file:
@@ -159,7 +162,7 @@ class LSSTGalaxySample:
 
         return redshift_distribution_dict
 
-    def source_bins(self, normalized=True, save_file=False, file_format='npy'):
+    def source_bins(self, normalized=True, save_file=False, file_format="npy"):
         """split the initial redshift distribution of source galaxies into tomographic bins.
         LSST DESC case, sources are split into 5 tomographic bins (year 1 and year 10 forecast).
         Each bin has equal number of galaxies. Variance is 0.05 for both forecast years while z_bias is zero.
@@ -186,19 +189,18 @@ class LSSTGalaxySample:
         z_bias, z_variance = self.get_biases("source")
 
         # Create a dictionary of the redshift distributions for each bin
-        redshift_distribution_dict = self.create_redshift_bins(source_dndz,
-                                                               bin_edges,
-                                                               z_bias,
-                                                               z_variance)
+        redshift_distribution_dict = self.create_redshift_bins(
+            source_dndz, bin_edges, z_bias, z_variance
+        )
 
         # Normalise the distributions
         if normalized:
-            redshift_distribution_dict = self.normalize_distribution(redshift_distribution_dict,
-                                                                     method="trapezoid")
+            redshift_distribution_dict = self.normalize_distribution(
+                redshift_distribution_dict, method="trapezoid"
+            )
 
             # Create a combined dictionary
-        combined_data = {'redshift_range': self.redshift_range,
-                         'bins': redshift_distribution_dict}
+        combined_data = {"redshift_range": self.redshift_range, "bins": redshift_distribution_dict}
 
         # Save the data
         if save_file:
@@ -243,13 +245,7 @@ class LSSTGalaxySample:
             self.save_to_file("source_bin_centers", bin_centers, file_format)
         return bin_centers
 
-    def smail_type_distribution(self,
-                                redshift_range,
-                                pivot_redshift,
-                                alpha,
-                                gamma
-                                ):
-
+    def smail_type_distribution(self, redshift_range, pivot_redshift, alpha, gamma):
         """
         Generate the LSST DESC SRD parametric redshift distribution (Smail-type).
         For details check LSST DESC SRD paper https://arxiv.org/abs/1809.01669, equation 5.
@@ -269,9 +265,12 @@ class LSSTGalaxySample:
         Returns:
             redshift_distribution: array
                 A Smail-type redshift distribution over a range of redshifts.
-                """
+        """
 
-        pz = [(z / pivot_redshift) ** gamma * exp(-(z / pivot_redshift) ** alpha) for z in redshift_range]
+        pz = [
+            (z / pivot_redshift) ** gamma * exp(-((z / pivot_redshift) ** alpha))
+            for z in redshift_range
+        ]
 
         return np.array(pz)
 
@@ -301,7 +300,9 @@ class LSSTGalaxySample:
         lower_limit = (bin_min - self.redshift_range + z_bias) / (np.sqrt(2) * scatter)
 
         # Compute the photometric redshift distribution
-        p_z_photometric = 0.5 * np.array(redshift_distribution) * (erf(upper_limit) - erf(lower_limit))
+        p_z_photometric = (
+            0.5 * np.array(redshift_distribution) * (erf(upper_limit) - erf(lower_limit))
+        )
 
         return p_z_photometric
 
@@ -321,7 +322,9 @@ class LSSTGalaxySample:
             total_galaxies: float
                 The total number of galaxies (area under the distribution).
         """
-        cumulative_distribution = cumulative_trapezoid(redshift_distribution, redshift_range, initial=0)
+        cumulative_distribution = cumulative_trapezoid(
+            redshift_distribution, redshift_range, initial=0
+        )
         total_galaxies = cumulative_distribution[-1]
         return cumulative_distribution, total_galaxies
 
@@ -342,8 +345,9 @@ class LSSTGalaxySample:
         redshift_distribution = np.asarray(redshift_distribution)
 
         # Calculate the cumulative distribution
-        cumulative_distribution, total_galaxies = self.compute_cumulative_distribution(redshift_range,
-                                                                                       redshift_distribution)
+        cumulative_distribution, total_galaxies = self.compute_cumulative_distribution(
+            redshift_range, redshift_distribution
+        )
 
         # Find the bin edges
         bin_edges = []
@@ -370,10 +374,7 @@ class LSSTGalaxySample:
 
         """
 
-        param_dict = {
-            "lens": self.lens_params,
-            "source": self.source_params
-        }
+        param_dict = {"lens": self.lens_params, "source": self.source_params}
 
         params = param_dict[sample_type]
         z_bias = np.repeat(params["z_bias"], params["n_tomo_bins"])
@@ -403,11 +404,9 @@ class LSSTGalaxySample:
         for index, (x1, x2) in enumerate(zip(bin_edges[:-1], bin_edges[1:], strict=False)):
             z_bias = float(z_bias_list[index])
             z_variance = float(z_variance_list[index])
-            redshift_distribution_dict[index] = self.true_redshift_distribution(redshift_distribution,
-                                                                                x1,
-                                                                                x2,
-                                                                                z_variance,
-                                                                                z_bias)
+            redshift_distribution_dict[index] = self.true_redshift_distribution(
+                redshift_distribution, x1, x2, z_variance, z_bias
+            )
         return redshift_distribution_dict
 
     def normalize_distribution(self, redshift_distribution, method="trapezoid"):
@@ -433,10 +432,16 @@ class LSSTGalaxySample:
             elif method == "trapezoid":
                 norm_factor = np.trapezoid(distribution, x=self.redshift_range)
             else:
-                raise ValueError(f"Unsupported normalization method: {method}. Use 'trapezoid' or 'simpson'.")
+                raise ValueError(
+                    f"Unsupported normalization method: {method}. Use 'trapezoid' or 'simpson'."
+                )
 
-            if np.isclose(norm_factor, 0, atol=1e-10):  # Tolerance for handling close to zero values
-                raise ValueError("Normalization factor is zero or too small, check the input distribution.")
+            if np.isclose(
+                norm_factor, 0, atol=1e-10
+            ):  # Tolerance for handling close to zero values
+                raise ValueError(
+                    "Normalization factor is zero or too small, check the input distribution."
+                )
 
             return norm_factor
 
@@ -446,7 +451,9 @@ class LSSTGalaxySample:
 
         # Handle dictionary input
         if isinstance(redshift_distribution, dict):
-            return {key: dist / compute_norm_factor(dist) for key, dist in redshift_distribution.items()}
+            return {
+                key: dist / compute_norm_factor(dist) for key, dist in redshift_distribution.items()
+            }
 
         raise TypeError("Input must be a dictionary of distributions or a single numpy array.")
 
@@ -463,12 +470,14 @@ class LSSTGalaxySample:
 
         # Get the bin edges as redshift values directly
         sample_dict = {
-            "source": self.compute_equal_number_bounds(self.redshift_range,
-                                                       self.source_sample(),
-                                                       self.source_params["n_tomo_bins"]),
-            "lens": np.arange(self.lens_params["bin_start"],
-                              self.lens_params["bin_stop"] + self.lens_params["bin_spacing"],
-                              self.lens_params["bin_spacing"])
+            "source": self.compute_equal_number_bounds(
+                self.redshift_range, self.source_sample(), self.source_params["n_tomo_bins"]
+            ),
+            "lens": np.arange(
+                self.lens_params["bin_start"],
+                self.lens_params["bin_stop"] + self.lens_params["bin_spacing"],
+                self.lens_params["bin_spacing"],
+            ),
         }
 
         bin_edges = sample_dict[sample_type]
@@ -522,7 +531,9 @@ class LSSTGalaxySample:
         os.makedirs(output_dir, exist_ok=True)
 
         # Define file path
-        file_path = os.path.join(output_dir, f"lsst_{data_name}_year_{self.forecast_year}.{file_format}")
+        file_path = os.path.join(
+            output_dir, f"lsst_{data_name}_year_{self.forecast_year}.{file_format}"
+        )
 
         if file_format == "npy":
             np.save(file_path, data)
@@ -537,7 +548,9 @@ class LSSTGalaxySample:
                 for key, sub_data in data.items():
                     if isinstance(sub_data, dict):
                         sub_df = pandas.DataFrame(sub_data)
-                        sub_df.to_csv(f"./lsst_{data_name}_{key}_year_{self.forecast_year}.csv", index=False)
+                        sub_df.to_csv(
+                            f"./lsst_{data_name}_{key}_year_{self.forecast_year}.csv", index=False
+                        )
 
         else:
             raise ValueError(f"Unsupported file format: {file_format}. Use 'npy' or 'csv'.")

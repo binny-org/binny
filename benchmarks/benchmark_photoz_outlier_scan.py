@@ -13,7 +13,6 @@ from binny.binning.photoz_fitting import (
     to_binny_photoz_params,
 )
 
-
 OUTPUT_DIR = Path(__file__).resolve().parent / "output" / "photoz_unbinned_scan"
 
 N_GALAXIES = 100_000

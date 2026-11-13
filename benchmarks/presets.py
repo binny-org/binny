@@ -5,16 +5,15 @@ import yaml
 
 
 class Presets:
-
     SUPPORTED_FORECAST_YEARS = {"1", "4", "7", "10"}
     SUPPORTED_CORRELATION_PAIR_TYPES = {"srd", "all"}
 
-    def __init__(self,
-                 forecast_year,
-                 redshift_range=None,
-                 correlation_pair_type="srd",
-
-                 ):
+    def __init__(
+        self,
+        forecast_year,
+        redshift_range=None,
+        correlation_pair_type="srd",
+    ):
         """
         Initialize the Presets object.
 
@@ -31,7 +30,9 @@ class Presets:
             self.redshift_range = redshift_range
 
         self.forecast_year = self.validate_input(forecast_year, self.SUPPORTED_FORECAST_YEARS)
-        self.correlation_pair_type = self.validate_input(correlation_pair_type, self.SUPPORTED_CORRELATION_PAIR_TYPES)
+        self.correlation_pair_type = self.validate_input(
+            correlation_pair_type, self.SUPPORTED_CORRELATION_PAIR_TYPES
+        )
 
         # Directory containing this file (benchmarks/)
         script_dir = os.path.dirname(os.path.abspath(__file__))
@@ -42,7 +43,7 @@ class Presets:
         if not os.path.exists(lsst_desc_path):
             raise FileNotFoundError(f"File not found: {lsst_desc_path}")
 
-        with open(lsst_desc_path, "r") as f:
+        with open(lsst_desc_path) as f:
             lsst_desc_parameters = yaml.load(f, Loader=yaml.FullLoader)
 
         self.lens_params = lsst_desc_parameters["lens_sample"][self.forecast_year]
