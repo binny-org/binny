@@ -11,6 +11,7 @@ from binny.utils.validators import (
     validate_interval,
     validate_mixed_segments,
     validate_n_bins,
+    validate_positive_integer,
     validate_probability_vector,
     validate_response_matrix,
     validate_same_shape,
@@ -476,3 +477,32 @@ def test_edge_coercion_array_happy_path_builds_mapping():
     """Tests that edge_coercion array case builds the expected mapping."""
     out = edge_coercion([0, 1], [0.0, 1.0, 3.0])
     assert out == {0: (0.0, 1.0), 1: (1.0, 3.0)}
+
+
+@pytest.mark.parametrize("value", [1, 2, 10, 100, np.int64(5)])
+def test_validate_positive_integer_accepts_valid_values(value):
+    """Tests that positive Python and NumPy integers are accepted."""
+    assert validate_positive_integer(value) == int(value)
+
+
+@pytest.mark.parametrize("value", [True, False, np.bool_(True), 1.0, 2.5, "5", None])
+def test_validate_positive_integer_rejects_invalid_types(value):
+    """Tests that booleans and noninteger values raise TypeError."""
+    with pytest.raises(TypeError, match="value must be a positive integer"):
+        validate_positive_integer(value)
+
+
+@pytest.mark.parametrize("value", [0, -1, -10, np.int64(-5)])
+def test_validate_positive_integer_rejects_nonpositive_values(value):
+    """Tests that zero and negative integers raise ValueError."""
+    with pytest.raises(ValueError, match="value must be positive"):
+        validate_positive_integer(value)
+
+
+def test_validate_positive_integer_custom_name():
+    """Tests that a custom parameter name appears in validation errors."""
+    with pytest.raises(ValueError, match="n_samples must be positive"):
+        validate_positive_integer(0, name="n_samples")
+
+    with pytest.raises(TypeError, match="n_samples must be a positive integer"):
+        validate_positive_integer(1.5, name="n_samples")

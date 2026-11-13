@@ -77,3 +77,4 @@ Detailed pages
    nz_from_mocks
    nz_from_lf
    psf_selection
+   nz_sampling

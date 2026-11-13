@@ -160,10 +160,10 @@ Documentation
 .. toctree::
    :maxdepth: 1
 
-   theory/index
-   workflow
-   examples/index
    installation
+   workflow
+   theory/index
+   examples/index
    citation
    contributing
    api/index

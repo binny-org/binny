@@ -59,3 +59,5 @@ IndexTuple = tuple[int, ...]
 IndexTuples = list[IndexTuple]
 
 MetricUnit = Literal["fraction", "percent"]
+
+ObservationModel = Callable[[FloatArray, np.random.Generator], FloatArray]
