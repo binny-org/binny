@@ -1,6 +1,12 @@
 """Public Binny API."""
 
-from binny.nz import available_models, get_model, nz_model
+from binny.nz import (
+    available_models,
+    get_model,
+    nz_model,
+    sample_mock_catalog_from_nz,
+    sample_redshifts_from_nz,
+)
 from binny.surveys.survey_presets import (
     build_survey_tomography,
     list_survey_configs,
@@ -33,6 +39,8 @@ __all__ = [
     "available_models",
     "get_model",
     "nz_model",
+    "sample_redshifts_from_nz",
+    "sample_mock_catalog_from_nz",
     "list_survey_configs",
     "load_survey_config",
     "show_survey_config",

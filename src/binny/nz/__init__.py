@@ -30,6 +30,10 @@ from binny.nz.psf_selection import (
     weighted_nz_from_mock,
 )
 from binny.nz.registry import available_models, get_model, nz_model
+from binny.nz.sampling import (
+    sample_mock_catalog_from_nz,
+    sample_redshifts_from_nz,
+)
 
 __all__ = [
     "available_models",
@@ -58,4 +62,6 @@ __all__ = [
     "weighted_nz_from_mock",
     "selected_number_density_from_mock",
     "calibrate_psf_depth_from_mock",
+    "sample_redshifts_from_nz",
+    "sample_mock_catalog_from_nz",
 ]
