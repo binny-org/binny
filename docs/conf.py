@@ -1,68 +1,59 @@
 """Sphinx configuration for the Binny documentation."""
 
-# -----------------------------------------------------------------------------
-# Standard library imports
-# -----------------------------------------------------------------------------
-import warnings
 from pathlib import Path
 
-# -----------------------------------------------------------------------------
-# Third-party imports
-# -----------------------------------------------------------------------------
-import cmasher as cmr
+from matplotlib.colors import to_hex
 
-# -----------------------------------------------------------------------------
-# Global setup
-# -----------------------------------------------------------------------------
+from binny import BINNY_CMAP, pastelize
+
+
 HERE = Path(__file__).resolve().parent
 
-# -----------------------------------------------------------------------------
-# Binny theme colors
-# -----------------------------------------------------------------------------
-DEFAULT_CMAP = "viridis"
-DEFAULT_CMAP_RANGE = (0.0, 1.0)
+BINNY_PURPLE = to_hex(BINNY_CMAP(0.00))
+BINNY_VIOLET = to_hex(BINNY_CMAP(0.10))
+BINNY_BLUE = to_hex(BINNY_CMAP(0.25))
+BINNY_LIGHT_BLUE = to_hex(BINNY_CMAP(0.40))
+BINNY_GREEN = to_hex(BINNY_CMAP(0.65))
+
+BINNY_DARK_PURPLE = pastelize(BINNY_PURPLE, 0.65)
+BINNY_DARK_VIOLET = pastelize(BINNY_VIOLET, 0.65)
+BINNY_DARK_BLUE = pastelize(BINNY_BLUE, 0.65)
+BINNY_DARK_GREEN = pastelize(BINNY_GREEN, 0.35)
+
+BINNY_THEME_COLORS = {
+    "purple": BINNY_PURPLE,
+    "violet": BINNY_VIOLET,
+    "blue": BINNY_BLUE,
+    "light-blue": BINNY_LIGHT_BLUE,
+    "green": BINNY_GREEN,
+    "purple-dark": BINNY_DARK_PURPLE,
+    "violet-dark": BINNY_DARK_VIOLET,
+    "blue-dark": BINNY_DARK_BLUE,
+    "green-dark": BINNY_DARK_GREEN,
+}
 
 
-warnings.filterwarnings(
-    "ignore",
-    category=SyntaxWarning,
-    module=r"colorspacious\.comparison",
-)
+def write_binny_palette_css(app, exception):
+    """Generate the documentation CSS palette from Binny colors."""
+    if exception is not None or app.builder.format != "html":
+        return
 
-
-def get_binny_theme_colors(
-    cmap: str = DEFAULT_CMAP,
-    cmap_range: tuple[float, float] = DEFAULT_CMAP_RANGE,
-) -> tuple[str, str, str, str]:
-    """Return the four default Binny theme colors as hex strings.
-
-    Colors are sampled from the colormap in the order:
-
-        purple → blue → green → yellow
-
-    Args:
-        cmap:
-            Name of the colormap.
-        cmap_range:
-            Fractional range of the colormap to sample.
-
-    Returns
-    -------
-    tuple[str, str, str, str]
-        Hex colors (purple, blue, green, yellow).
-    """
-
-    purple, blue, green, yellow = cmr.take_cmap_colors(
-        cmap,
-        4,
-        cmap_range=cmap_range,
-        return_fmt="hex",
+    css = ":root {\n"
+    css += "".join(
+        f"  --binny-{name}: {color};\n"
+        for name, color in BINNY_THEME_COLORS.items()
     )
+    css += "}\n"
 
-    return purple, blue, green, yellow
+    output = Path(app.outdir) / "_static" / "binny-palette.css"
+    output.parent.mkdir(parents=True, exist_ok=True)
+    output.write_text(css, encoding="utf-8")
 
 
-BINNY_PURPLE, BINNY_BLUE, BINNY_GREEN, BINNY_YELLOW = get_binny_theme_colors()
+def setup(app):
+    """Register the generated Binny palette."""
+    app.connect("build-finished", write_binny_palette_css)
+
 
 # -----------------------------------------------------------------------------
 # Project information
@@ -203,21 +194,22 @@ if html_theme == "furo":
         "light_css_variables": {
             "color-brand-primary": BINNY_PURPLE,
             "color-brand-content": BINNY_BLUE,
-            "color-link": BINNY_GREEN,
-            "color-link--hover": BINNY_BLUE,
-            "color-link--visited": BINNY_YELLOW,
+            "color-link": BINNY_BLUE,
+            "color-link--hover": BINNY_VIOLET,
+            "color-link--visited": BINNY_PURPLE,
         },
         "dark_css_variables": {
-            "color-brand-primary": "#7ee0b0",
-            "color-brand-content": "#7ee0b0",
-            "color-link": "#7ee0b0",
-            "color-link--hover": "#7ee0b0",
-            "color-link--visited": "#7ee0b0",
+            "color-brand-primary": BINNY_DARK_GREEN,
+            "color-brand-content": BINNY_DARK_BLUE,
+            "color-link": BINNY_DARK_BLUE,
+            "color-link--hover": BINNY_DARK_GREEN,
+            "color-link--visited": BINNY_DARK_BLUE,
         },
     }
 
 html_static_path = ["_static"]
 
 html_css_files = [
+    "binny-palette.css",
     "binny.css",
 ]

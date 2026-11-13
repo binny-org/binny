@@ -4,19 +4,7 @@
 
 /* --- Brand palette ------------------------------------------------------- */
 :root {
-  --binny-purple: rgba(68, 1, 84, 0.85);
-  --binny-green:  rgba(53, 183, 121, 0.85);
-  --binny-blue:   rgba(49, 104, 142, 0.85);
-  --binny-yellow: rgba(253, 231, 37, 0.6);
-
-  /* Dedicated dark palette */
-  --binny-purple-dark: #c7a6ff;
-  --binny-blue-dark:   #7fc8ff;
-  --binny-green-dark:  #7ee0b0;
-  --binny-yellow-dark: #e7d36f;
-
-  /* Change ONLY this variable to switch the dark-mode accent */
-  --binny-dark-accent: var(--binny-green-dark);
+  --binny-dark-accent: var(--binny-blue-dark);
 
   /* Theme-agnostic mapping: LIGHT DEFAULT */
   --color-brand-primary: var(--binny-purple);
@@ -24,7 +12,7 @@
 
   --color-link: var(--binny-purple);
   --color-link--visited: var(--binny-purple);
-  --color-link--hover: var(--binny-green);
+  --color-link--hover: var(--binny-violet);
   --color-link--active: var(--binny-blue);
 }
 
@@ -35,7 +23,7 @@ html[data-theme="light"] {
 
   --color-link: var(--binny-purple);
   --color-link--visited: var(--binny-purple);
-  --color-link--hover: var(--binny-green);
+  --color-link--hover: var(--binny-violet);
   --color-link--active: var(--binny-blue);
 }
 
@@ -131,7 +119,7 @@ html[data-theme]
 
 .highlight .s,
 .highlight .m {
-  color: var(--binny-green);
+  color: var(--binny-violet);
 }
 
 .highlight .o,
@@ -161,7 +149,7 @@ code.descname {
 }
 
 a.reference code {
-  color: var(--binny-green);
+  color: var(--binny-violet);
 }
 
 /* ==========================================================================
@@ -189,7 +177,7 @@ a.reference code {
 .admonition.tip,
 .admonition.hint,
 .admonition.important {
-  border-left: 0.25rem solid var(--binny-green);
+  border-left: 0.25rem solid var(--binny-violet);
 }
 
 .admonition.warning,
@@ -314,15 +302,15 @@ div.figure img {
 }
 
 /* -----------------------------
-   H3–H6 — Binny green
+   H3–H6 — Binny violet
 -------------------------------- */
 
 .content h3,
 .content h4,
 .content h5,
 .content h6 {
-  color: var(--binny-green);
-  border-bottom: 2px solid var(--binny-green);
+  color: var(--binny-violet);
+  border-bottom: 2px solid var(--binny-violet);
   padding-bottom: 0.15em;
 }
 
@@ -374,11 +362,11 @@ table.binny-table tbody td {
 /* alternating Binny row colors */
 
 table.binny-table tbody tr:nth-child(odd) {
-  background: rgba(253, 231, 37, 0.10); /* binny yellow */
+  background: color-mix(in srgb, var(--binny-purple) 10%, white);
 }
 
 table.binny-table tbody tr:nth-child(even) {
-  background: rgba(53, 183, 121, 0.10); /* binny green */
+  background: color-mix(in srgb, var(--binny-blue) 10%, white);
 }
 
 /* remove last border */
@@ -427,28 +415,49 @@ table.binny-table code {
   --color-link--active: var(--binny-dark-accent);
 }
 
+
 /* All headings */
 
-:is(html, body)[data-theme="dark"] .content :is(h1, h2, h3, h4, h5, h6) {
-  color: var(--binny-dark-accent) !important;
-  border-bottom-color: var(--binny-dark-accent) !important;
+:is(html, body)[data-theme="dark"] .content h1 {
+  color: var(--binny-green-dark) !important;
+  border-bottom-color: var(--binny-green-dark) !important;
+}
+
+:is(html, body)[data-theme="dark"] .content :is(h2, h3, h4, h5, h6) {
+  color: var(--binny-blue-dark) !important;
+  border-bottom-color: var(--binny-blue-dark) !important;
 }
 
 /* All links and sidebar navigation */
 
-:is(html, body)[data-theme="dark"] :is(a, a:link, a:visited, a:hover, a:active),
+:is(html, body)[data-theme="dark"] :is(a, a:link, a:visited, a:hover, a:active) {
+  color: var(--binny-blue-dark) !important;
+}
+
 :is(html, body)[data-theme="dark"] .sidebar-tree a,
 :is(html, body)[data-theme="dark"] .sidebar-tree a:visited,
 :is(html, body)[data-theme="dark"] .sidebar-tree a:hover {
-  color: var(--binny-dark-accent) !important;
+  color: var(--binny-green-dark) !important;
 }
 
 /* Sidebar, API signatures and custom text */
 
-:is(html, body)[data-theme="dark"] :is(.sidebar-brand-text, .sidebar-tree .caption-text),
-:is(html, body)[data-theme="dark"] :is(.sig .sig-name, .sig .k, code.descname, a.reference code),
-:is(html, body)[data-theme="dark"] :is(.name-purple, .role-blue) {
-  color: var(--binny-dark-accent) !important;
+:is(html, body)[data-theme="dark"] :is(
+  .sidebar-brand-text,
+  .sidebar-tree .caption-text
+) {
+  color: var(--binny-green-dark) !important;
+}
+
+:is(html, body)[data-theme="dark"] :is(
+  .sig .sig-name,
+  .sig .k,
+  code.descname,
+  a.reference code,
+  .name-purple,
+  .role-blue
+) {
+  color: var(--binny-blue-dark) !important;
 }
 
 /* Code backgrounds */
@@ -462,16 +471,16 @@ table.binny-table code {
 /* Syntax highlighting */
 
 :is(html, body)[data-theme="dark"] .highlight :is(.k, .kd, .kn, .kp, .kr, .kt, .o, .ow) {
-  color: #c7a6ff !important;
+  color: var(--binny-purple-dark) !important;
   font-weight: 600;
 }
 
 :is(html, body)[data-theme="dark"] .highlight :is(.nf, .fm, .nc, .ne, .nn) {
-  color: #7fc8ff !important;
+  color: var(--binny-blue-dark) !important;
 }
 
 :is(html, body)[data-theme="dark"] .highlight :is(.s, .m) {
-  color: var(--binny-green-dark) !important;
+  color: var(--binny-violet-dark) !important;
 }
 
 :is(html, body)[data-theme="dark"] .highlight :is(.c, .ch, .cm, .c1, .cs, .cp) {
