@@ -1,0 +1,1095 @@
+<!doctype html>
+<html class="no-js" lang="en" data-content_root="../../">
+  <head><meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <meta name="color-scheme" content="light dark"><meta name="viewport" content="width=device-width, initial-scale=1" />
+<link rel="index" title="Index" href="../../genindex.html"><link rel="search" title="Search" href="../../search.html"><link rel="next" title="Binning schemes" href="../binning_schemes.html"><link rel="prev" title="PSF-dependent source selection" href="psf_selection.html">
+        <link rel="prefetch" href="../../_static/assets/logo.png" as="image">
+        <link rel="prefetch" href="../../_static/assets/logo.png" as="image">
+
+    <link rel="shortcut icon" href="../../_static/favicon.png"><!-- Generated with Sphinx 8.2.3 and Furo 2025.12.19 -->
+        <title>Mock redshift catalog sampling - Binny documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=d111a655" />
+    <link rel="stylesheet" type="text/css" href="../../_static/styles/furo.css?v=7bdb33bb" />
+    <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
+    <link rel="stylesheet" type="text/css" href="../../_static/plot_directive.css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/sphinx-design.min.css?v=6a604523" />
+    <link rel="stylesheet" type="text/css" href="../../_static/styles/furo-extensions.css?v=8dab3a3b" />
+    <link rel="stylesheet" type="text/css" href="../../_static/binny-palette.css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/binny.css?v=04eb2bfd" />
+    
+    
+
+
+<style>
+  body {
+    --color-code-background: #f2f2f2;
+  --color-code-foreground: #1e1e1e;
+  --color-brand-primary: #73407f;
+  --color-brand-content: #6c7da8;
+  --color-link: #6c7da8;
+  --color-link--hover: #765b98;
+  --color-link--visited: #73407f;
+  
+  }
+  @media not print {
+    body[data-theme="dark"] {
+      --color-code-background: #202020;
+  --color-code-foreground: #d0d0d0;
+  --color-brand-primary: #9adbbf;
+  --color-brand-content: #ccd2e1;
+  --color-link: #ccd2e1;
+  --color-link--hover: #9adbbf;
+  --color-link--visited: #ccd2e1;
+  
+    }
+    @media (prefers-color-scheme: dark) {
+      body:not([data-theme="light"]) {
+        --color-code-background: #202020;
+  --color-code-foreground: #d0d0d0;
+  --color-brand-primary: #9adbbf;
+  --color-brand-content: #ccd2e1;
+  --color-link: #ccd2e1;
+  --color-link--hover: #9adbbf;
+  --color-link--visited: #ccd2e1;
+  
+      }
+    }
+  }
+</style></head>
+  <body>
+    
+    <script>
+      document.body.dataset.theme = localStorage.getItem("theme") || "auto";
+    </script>
+    
+
+<svg xmlns="http://www.w3.org/2000/svg" style="display: none;">
+  <symbol id="svg-toc" viewBox="0 0 24 24">
+    <title>Contents</title>
+    <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 1024 1024">
+      <path d="M408 442h480c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8H408c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8zm-8 204c0 4.4 3.6 8 8 8h480c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8H408c-4.4 0-8 3.6-8 8v56zm504-486H120c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h784c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8zm0 632H120c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h784c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8zM115.4 518.9L271.7 642c5.8 4.6 14.4.5 14.4-6.9V388.9c0-7.4-8.5-11.5-14.4-6.9L115.4 505.1a8.74 8.74 0 0 0 0 13.8z"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-menu" viewBox="0 0 24 24">
+    <title>Menu</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather-menu">
+      <line x1="3" y1="12" x2="21" y2="12"></line>
+      <line x1="3" y1="6" x2="21" y2="6"></line>
+      <line x1="3" y1="18" x2="21" y2="18"></line>
+    </svg>
+  </symbol>
+  <symbol id="svg-arrow-right" viewBox="0 0 24 24">
+    <title>Expand</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather-chevron-right">
+      <polyline points="9 18 15 12 9 6"></polyline>
+    </svg>
+  </symbol>
+  <symbol id="svg-sun" viewBox="0 0 24 24">
+    <title>Light mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="feather-sun">
+      <circle cx="12" cy="12" r="5"></circle>
+      <line x1="12" y1="1" x2="12" y2="3"></line>
+      <line x1="12" y1="21" x2="12" y2="23"></line>
+      <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+      <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+      <line x1="1" y1="12" x2="3" y2="12"></line>
+      <line x1="21" y1="12" x2="23" y2="12"></line>
+      <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+      <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+    </svg>
+  </symbol>
+  <symbol id="svg-moon" viewBox="0 0 24 24">
+    <title>Dark mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-moon">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+      <path d="M12 3c.132 0 .263 0 .393 0a7.5 7.5 0 0 0 7.92 12.446a9 9 0 1 1 -8.313 -12.454z" />
+    </svg>
+  </symbol>
+  <symbol id="svg-sun-with-moon" viewBox="0 0 24 24">
+    <title>Auto light/dark, in light mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round"
+      class="icon-custom-derived-from-feather-sun-and-tabler-moon">
+      <path style="opacity: 50%" d="M 5.411 14.504 C 5.471 14.504 5.532 14.504 5.591 14.504 C 3.639 16.319 4.383 19.569 6.931 20.352 C 7.693 20.586 8.512 20.551 9.25 20.252 C 8.023 23.207 4.056 23.725 2.11 21.184 C 0.166 18.642 1.702 14.949 4.874 14.536 C 5.051 14.512 5.231 14.5 5.411 14.5 L 5.411 14.504 Z"/>
+      <line x1="14.5" y1="3.25" x2="14.5" y2="1.25"/>
+      <line x1="14.5" y1="15.85" x2="14.5" y2="17.85"/>
+      <line x1="10.044" y1="5.094" x2="8.63" y2="3.68"/>
+      <line x1="19" y1="14.05" x2="20.414" y2="15.464"/>
+      <line x1="8.2" y1="9.55" x2="6.2" y2="9.55"/>
+      <line x1="20.8" y1="9.55" x2="22.8" y2="9.55"/>
+      <line x1="10.044" y1="14.006" x2="8.63" y2="15.42"/>
+      <line x1="19" y1="5.05" x2="20.414" y2="3.636"/>
+      <circle cx="14.5" cy="9.55" r="3.6"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-moon-with-sun" viewBox="0 0 24 24">
+    <title>Auto light/dark, in dark mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round"
+      class="icon-custom-derived-from-feather-sun-and-tabler-moon">
+      <path d="M 8.282 7.007 C 8.385 7.007 8.494 7.007 8.595 7.007 C 5.18 10.184 6.481 15.869 10.942 17.24 C 12.275 17.648 13.706 17.589 15 17.066 C 12.851 22.236 5.91 23.143 2.505 18.696 C -0.897 14.249 1.791 7.786 7.342 7.063 C 7.652 7.021 7.965 7 8.282 7 L 8.282 7.007 Z"/>
+      <line style="opacity: 50%" x1="18" y1="3.705" x2="18" y2="2.5"/>
+      <line style="opacity: 50%" x1="18" y1="11.295" x2="18" y2="12.5"/>
+      <line style="opacity: 50%" x1="15.316" y1="4.816" x2="14.464" y2="3.964"/>
+      <line style="opacity: 50%" x1="20.711" y1="10.212" x2="21.563" y2="11.063"/>
+      <line style="opacity: 50%" x1="14.205" y1="7.5" x2="13.001" y2="7.5"/>
+      <line style="opacity: 50%" x1="21.795" y1="7.5" x2="23" y2="7.5"/>
+      <line style="opacity: 50%" x1="15.316" y1="10.184" x2="14.464" y2="11.036"/>
+      <line style="opacity: 50%" x1="20.711" y1="4.789" x2="21.563" y2="3.937"/>
+      <circle style="opacity: 50%" cx="18" cy="7.5" r="2.169"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-pencil" viewBox="0 0 24 24">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-pencil-code">
+      <path d="M4 20h4l10.5 -10.5a2.828 2.828 0 1 0 -4 -4l-10.5 10.5v4" />
+      <path d="M13.5 6.5l4 4" />
+      <path d="M20 21l2 -2l-2 -2" />
+      <path d="M17 17l-2 2l2 2" />
+    </svg>
+  </symbol>
+  <symbol id="svg-eye" viewBox="0 0 24 24">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-eye-code">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+      <path d="M10 12a2 2 0 1 0 4 0a2 2 0 0 0 -4 0" />
+      <path
+        d="M11.11 17.958c-3.209 -.307 -5.91 -2.293 -8.11 -5.958c2.4 -4 5.4 -6 9 -6c3.6 0 6.6 2 9 6c-.21 .352 -.427 .688 -.647 1.008" />
+      <path d="M20 21l2 -2l-2 -2" />
+      <path d="M17 17l-2 2l2 2" />
+    </svg>
+  </symbol>
+</svg>
+
+<input type="checkbox" class="sidebar-toggle" name="__navigation" id="__navigation" aria-label="Toggle site navigation sidebar">
+<input type="checkbox" class="sidebar-toggle" name="__toc" id="__toc" aria-label="Toggle table of contents sidebar">
+<label class="overlay sidebar-overlay" for="__navigation"></label>
+<label class="overlay toc-overlay" for="__toc"></label>
+
+<a class="skip-to-content muted-link" href="#furo-main-content">Skip to content</a>
+
+
+
+<div class="page">
+  <header class="mobile-header">
+    <div class="header-left">
+      <label class="nav-overlay-icon" for="__navigation">
+        <span class="icon"><svg><use href="#svg-menu"></use></svg></span>
+      </label>
+    </div>
+    <div class="header-center">
+      <a href="../../index.html"><div class="brand">Binny  documentation</div></a>
+    </div>
+    <div class="header-right">
+      <div class="theme-toggle-container theme-toggle-header">
+        <button class="theme-toggle" aria-label="Toggle Light / Dark / Auto color theme">
+          <svg class="theme-icon-when-auto-light"><use href="#svg-sun-with-moon"></use></svg>
+          <svg class="theme-icon-when-auto-dark"><use href="#svg-moon-with-sun"></use></svg>
+          <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
+          <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
+        </button>
+      </div>
+      <label class="toc-overlay-icon toc-header-icon" for="__toc">
+        <span class="icon"><svg><use href="#svg-toc"></use></svg></span>
+      </label>
+    </div>
+  </header>
+  <aside class="sidebar-drawer">
+    <div class="sidebar-container">
+      
+      <div class="sidebar-sticky"><a class="sidebar-brand" href="../../index.html">
+  <div class="sidebar-logo-container">
+    <img class="sidebar-logo only-light" src="../../_static/assets/logo.png" alt="Light Logo"/>
+    <img class="sidebar-logo only-dark" src="../../_static/assets/logo.png" alt="Dark Logo"/>
+  </div>
+  
+  <span class="sidebar-brand-text">Binny  documentation</span>
+  
+</a><form class="sidebar-search-container" method="get" action="../../search.html" role="search">
+  <input class="sidebar-search" placeholder="Search" name="q" aria-label="Search">
+  <input type="hidden" name="check_keywords" value="yes">
+  <input type="hidden" name="area" value="default">
+</form>
+<div id="searchbox"></div><div class="sidebar-scroll"><div class="sidebar-tree">
+  <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../../installation.html"> Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../workflow.html"> Workflow</a></li>
+<li class="toctree-l1 current has-children"><a class="reference internal" href="../index.html"> Theory</a><input aria-label="Toggle navigation of  Theory" checked="" class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" role="switch" type="checkbox"/><label for="toctree-checkbox-1"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul class="current">
+<li class="toctree-l2 current has-children"><a class="reference internal" href="index.html"> Parent redshift distributions</a><input aria-label="Toggle navigation of  Parent redshift distributions" checked="" class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" role="switch" type="checkbox"/><label for="toctree-checkbox-2"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="parent_nz.html"> Analytic parent n(z) models</a></li>
+<li class="toctree-l3"><a class="reference internal" href="nz_from_mocks.html"> Calibration from mocks</a></li>
+<li class="toctree-l3"><a class="reference internal" href="nz_from_lf.html"> LF-weighted parent n(z)</a></li>
+<li class="toctree-l3"><a class="reference internal" href="psf_selection.html"> PSF-dependent source selection</a></li>
+<li class="toctree-l3 current current-page"><a class="current reference internal" href="#"> Mock redshift catalog sampling</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../binning_schemes.html"> Binning schemes</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../tomography.html"> Tomography</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../photoz_fitting.html"> Photometric-redshift error fitting</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../uncertainties/index.html"> Redshift uncertainties</a><input aria-label="Toggle navigation of  Redshift uncertainties" class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" role="switch" type="checkbox"/><label for="toctree-checkbox-3"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="../uncertainties/photoz.html"> Photometric-redshift uncertainties</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../uncertainties/specz.html"> Spectroscopic-redshift uncertainties</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../statistics.html"> Bin summaries</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../diagnostics.html"> Bin diagnostics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../bin_combos.html"> Bin-index combinations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../conventions.html"> Conventions</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../examples/index.html"> Examples</a><input aria-label="Toggle navigation of  Examples" class="toctree-checkbox" id="toctree-checkbox-4" name="toctree-checkbox-4" role="switch" type="checkbox"/><label for="toctree-checkbox-4"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../../examples/parent_nz/index.html">Parent redshift distributions</a><input aria-label="Toggle navigation of Parent redshift distributions" class="toctree-checkbox" id="toctree-checkbox-5" name="toctree-checkbox-5" role="switch" type="checkbox"/><label for="toctree-checkbox-5"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../examples/parent_nz/nz_modelling.html"> Parent n(z) models</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../examples/parent_nz/nz_calibration.html"> Parent n(z) from mocks</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../examples/parent_nz/luminosity_function_distribution.html"> LF-weighted n(z) models</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../examples/parent_nz/psf_selection.html"> PSF-dependent source selection</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../examples/parent_nz/nz_sampling.html"> Mock redshift catalog sampling</a></li>
+</ul>
+</li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../../examples/tomography/index.html">Tomographic binning</a><input aria-label="Toggle navigation of Tomographic binning" class="toctree-checkbox" id="toctree-checkbox-6" name="toctree-checkbox-6" role="switch" type="checkbox"/><label for="toctree-checkbox-6"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../examples/tomography/binning_schemes.html"> Binning schemes</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../examples/tomography/photoz_bins.html"> Photometric bins</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../examples/tomography/specz_bins.html"> Spectroscopic bins</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../examples/tomography/predefined_bins.html">Predefined bins</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../examples/tomography/selections.html"> Bin-pair selections</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../examples/tomography/sample_composition.html"> Sample composition</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../examples/tomography/photoz_fitting.html"> Photometric-redshift error fitting</a></li>
+</ul>
+</li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../../examples/diagnostics/index.html">Diagnostics</a><input aria-label="Toggle navigation of Diagnostics" class="toctree-checkbox" id="toctree-checkbox-7" name="toctree-checkbox-7" role="switch" type="checkbox"/><label for="toctree-checkbox-7"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../examples/diagnostics/parent_statistics.html"> Parent distribution statistics</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../examples/diagnostics/bin_summaries.html"> Bin summaries</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../examples/diagnostics/bin_diagnostics.html"> Bin diagnostics</a></li>
+</ul>
+</li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../../examples/surveys/index.html">Survey presets</a><input aria-label="Toggle navigation of Survey presets" class="toctree-checkbox" id="toctree-checkbox-8" name="toctree-checkbox-8" role="switch" type="checkbox"/><label for="toctree-checkbox-8"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../examples/surveys/survey_presets.html"> Survey presets</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../citation.html"> Citation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../contributing.html"> Contributing</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../api/index.html">Binny API</a><input aria-label="Toggle navigation of Binny API" class="toctree-checkbox" id="toctree-checkbox-9" name="toctree-checkbox-9" role="switch" type="checkbox"/><label for="toctree-checkbox-9"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../../api/modules.html">binny</a><input aria-label="Toggle navigation of binny" class="toctree-checkbox" id="toctree-checkbox-10" name="toctree-checkbox-10" role="switch" type="checkbox"/><label for="toctree-checkbox-10"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l3 has-children"><a class="reference internal" href="../../api/binny.html">binny package</a><input aria-label="Toggle navigation of binny package" class="toctree-checkbox" id="toctree-checkbox-11" name="toctree-checkbox-11" role="switch" type="checkbox"/><label for="toctree-checkbox-11"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l4 has-children"><a class="reference internal" href="../../api/binny.axes.html">binny.axes package</a><input aria-label="Toggle navigation of binny.axes package" class="toctree-checkbox" id="toctree-checkbox-12" name="toctree-checkbox-12" role="switch" type="checkbox"/><label for="toctree-checkbox-12"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l5"><a class="reference internal" href="../../api/binny.axes.bin_edges.html">binny.axes.bin_edges module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../../api/binny.axes.grids.html">binny.axes.grids module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../../api/binny.axes.mixed_edges.html">binny.axes.mixed_edges module</a></li>
+</ul>
+</li>
+<li class="toctree-l4 has-children"><a class="reference internal" href="../../api/binny.binning.html">binny.binning package</a><input aria-label="Toggle navigation of binny.binning package" class="toctree-checkbox" id="toctree-checkbox-13" name="toctree-checkbox-13" role="switch" type="checkbox"/><label for="toctree-checkbox-13"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l5"><a class="reference internal" href="../../api/binny.binning.assignments.html">binny.binning.assignments module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../../api/binny.binning.core.html">binny.binning.core module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../../api/binny.binning.edges.html">binny.binning.edges module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../../api/binny.binning.photoz.html">binny.binning.photoz module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../../api/binny.binning.photoz_fitting.html">binny.binning.photoz_fitting module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../../api/binny.binning.scheme_registry.html">binny.binning.scheme_registry module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../../api/binny.binning.specs.html">binny.binning.specs module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../../api/binny.binning.specz.html">binny.binning.specz module</a></li>
+</ul>
+</li>
+<li class="toctree-l4 has-children"><a class="reference internal" href="../../api/binny.correlations.html">binny.correlations package</a><input aria-label="Toggle navigation of binny.correlations package" class="toctree-checkbox" id="toctree-checkbox-14" name="toctree-checkbox-14" role="switch" type="checkbox"/><label for="toctree-checkbox-14"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l5"><a class="reference internal" href="../../api/binny.correlations.bin_combo_filter.html">binny.correlations.bin_combo_filter module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../../api/binny.correlations.filters.html">binny.correlations.filters module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../../api/binny.correlations.metrics.html">binny.correlations.metrics module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../../api/binny.correlations.scores.html">binny.correlations.scores module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../../api/binny.correlations.topology.html">binny.correlations.topology module</a></li>
+</ul>
+</li>
+<li class="toctree-l4 has-children"><a class="reference internal" href="../../api/binny.cosmology.html">binny.cosmology package</a><input aria-label="Toggle navigation of binny.cosmology package" class="toctree-checkbox" id="toctree-checkbox-15" name="toctree-checkbox-15" role="switch" type="checkbox"/><label for="toctree-checkbox-15"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l5"><a class="reference internal" href="../../api/binny.cosmology.ccl_wrappers.html">binny.cosmology.ccl_wrappers module</a></li>
+</ul>
+</li>
+<li class="toctree-l4 has-children"><a class="reference internal" href="../../api/binny.nz.html">binny.nz package</a><input aria-label="Toggle navigation of binny.nz package" class="toctree-checkbox" id="toctree-checkbox-16" name="toctree-checkbox-16" role="switch" type="checkbox"/><label for="toctree-checkbox-16"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l5"><a class="reference internal" href="../../api/binny.nz.calibration.html">binny.nz.calibration module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../../api/binny.nz.luminosity_function_distribution.html">Luminosity-function distribution</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../../api/binny.nz.models.html">binny.nz.models module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../../api/binny.nz.psf_selection.html">binny.nz.psf_selection module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../../api/binny.nz.registry.html">binny.nz.registry module</a></li>
+</ul>
+</li>
+<li class="toctree-l4 has-children"><a class="reference internal" href="../../api/binny.surveys.html">binny.surveys package</a><input aria-label="Toggle navigation of binny.surveys package" class="toctree-checkbox" id="toctree-checkbox-17" name="toctree-checkbox-17" role="switch" type="checkbox"/><label for="toctree-checkbox-17"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l5"><a class="reference internal" href="../../api/binny.surveys.configs.html">binny.surveys.configs package</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../../api/binny.surveys.data.html">binny.surveys.data package</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../../api/binny.surveys.config_utils.html">binny.surveys.config_utils module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../../api/binny.surveys.sky.html">binny.surveys.sky module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../../api/binny.surveys.survey_presets.html">binny.surveys.survey_presets module</a></li>
+</ul>
+</li>
+<li class="toctree-l4 has-children"><a class="reference internal" href="../../api/binny.tomography.html">binny.tomography package</a><input aria-label="Toggle navigation of binny.tomography package" class="toctree-checkbox" id="toctree-checkbox-18" name="toctree-checkbox-18" role="switch" type="checkbox"/><label for="toctree-checkbox-18"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l5"><a class="reference internal" href="../../api/binny.tomography.builders.html">binny.tomography.builders module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../../api/binny.tomography.combinations.html">binny.tomography.combinations module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../../api/binny.tomography.comparison.html">binny.tomography.comparison module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../../api/binny.tomography.composition.html">binny.tomography.composition module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../../api/binny.tomography.core.html">binny.tomography.core module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../../api/binny.tomography.metadata.html">binny.tomography.metadata module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../../api/binny.tomography.predefined.html">binny.tomography.predefined module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../../api/binny.tomography.stats.html">binny.tomography.stats module</a></li>
+</ul>
+</li>
+<li class="toctree-l4 has-children"><a class="reference internal" href="../../api/binny.utils.html">binny.utils package</a><input aria-label="Toggle navigation of binny.utils package" class="toctree-checkbox" id="toctree-checkbox-19" name="toctree-checkbox-19" role="switch" type="checkbox"/><label for="toctree-checkbox-19"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l5"><a class="reference internal" href="../../api/binny.utils.broadcasting.html">binny.utils.broadcasting module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../../api/binny.utils.colors.html">binny.utils.colors module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../../api/binny.utils.io.html">binny.utils.io module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../../api/binny.utils.metadata.html">binny.utils.metadata module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../../api/binny.utils.normalization.html">binny.utils.normalization module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../../api/binny.utils.pairwise_metrics.html">binny.utils.pairwise_metrics module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../../api/binny.utils.relations.html">binny.utils.relations module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../../api/binny.utils.types.html">binny.utils.types module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../../api/binny.utils.validators.html">binny.utils.validators module</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+</div>
+</div>
+
+      </div>
+      
+    </div>
+  </aside>
+  <div class="main">
+    <div class="content">
+      <div class="article-container">
+        <a href="#" class="back-to-top muted-link">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+            <path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8v12z"></path>
+          </svg>
+          <span>Back to top</span>
+        </a>
+        <div class="content-icon-container">
+          <div class="view-this-page">
+  <a class="muted-link" href="https://github.com/binny-org/binny/blob/main/docs/theory/nz/nz_sampling.rst?plain=true" title="View this page">
+    <svg><use href="#svg-eye"></use></svg>
+    <span class="visually-hidden">View this page</span>
+  </a>
+</div><div class="edit-this-page">
+  <a class="muted-link" href="https://github.com/binny-org/binny/edit/main/docs/theory/nz/nz_sampling.rst" rel="edit" title="Edit this page">
+    <svg><use href="#svg-pencil"></use></svg>
+    <span class="visually-hidden">Edit this page</span>
+  </a>
+</div><div class="theme-toggle-container theme-toggle-content">
+            <button class="theme-toggle" aria-label="Toggle Light / Dark / Auto color theme">
+              <svg class="theme-icon-when-auto-light"><use href="#svg-sun-with-moon"></use></svg>
+              <svg class="theme-icon-when-auto-dark"><use href="#svg-moon-with-sun"></use></svg>
+              <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
+              <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
+            </button>
+          </div>
+          <label class="toc-overlay-icon toc-content-icon" for="__toc">
+            <span class="icon"><svg><use href="#svg-toc"></use></svg></span>
+          </label>
+        </div>
+        <article role="main" id="furo-main-content">
+          <section id="logo-mock-redshift-catalog-sampling">
+<h1><a class="reference internal" href="../../_images/logo.png"><img alt="logo" src="../../_images/logo.png" style="width: 32px;" /></a> Mock redshift catalog sampling<a class="headerlink" href="#logo-mock-redshift-catalog-sampling" title="Link to this heading"><span>#</span></a></h1>
+<p>Binny provides utilities for generating mock redshift catalogs from
+tabulated parent redshift distributions <span class="math notranslate nohighlight">\(n(z)\)</span>.</p>
+<p>The sampling machinery converts a continuous redshift distribution into
+individual galaxy redshifts while preserving the statistical properties
+of the input distribution. It supports arbitrary nonnegative tabulated
+distributions, nonuniform redshift grids, reproducible random sampling,
+and optional observational transformations.</p>
+<p>The implementation uses inverse cumulative distribution function (CDF)
+sampling with exact inversion of the piecewise-linear density between
+grid nodes.</p>
+<p>This provides a direct connection between theoretical redshift
+distributions and object-level mock catalogs.</p>
+<p>For executable examples, see the corresponding mock redshift sampling
+examples page.</p>
+<section id="overview">
+<h2>Overview<a class="headerlink" href="#overview" title="Link to this heading"><span>#</span></a></h2>
+<p>Many cosmological calculations begin with a continuous parent redshift
+distribution,</p>
+<div class="math-wrapper docutils container">
+<div class="math notranslate nohighlight">
+\[n(z),\]</div>
+</div>
+<p>which describes the relative abundance of galaxies as a function of
+redshift.</p>
+<p>Tomographic analyses generally operate on continuous distributions
+or their integrals, whereas simulations, calibration studies, and
+catalog-based workflows often require individual galaxy redshifts.</p>
+<p>We denote the total number of sampled galaxies by <span class="math notranslate nohighlight">\(N\)</span>, with
+<span class="math notranslate nohighlight">\(i=1,\ldots,N\)</span> indexing individual galaxies,</p>
+<div class="math-wrapper docutils container">
+<div class="math notranslate nohighlight">
+\[\{z_1,z_2,\ldots,z_N\}.\]</div>
+</div>
+<p>Binny connects these representations through the transformation</p>
+<div class="math-wrapper docutils container">
+<div class="math notranslate nohighlight">
+\[n(z) \longrightarrow \{z_i\}_{i=1}^{N}.\]</div>
+</div>
+<p>The resulting samples are independent draws from the probability
+density defined by the supplied tabulated distribution.</p>
+<p>The sampling process does not assume a particular survey, galaxy
+population, or redshift measurement technique.</p>
+</section>
+<section id="probability-density-and-normalization">
+<h2>Probability density and normalization<a class="headerlink" href="#probability-density-and-normalization" title="Link to this heading"><span>#</span></a></h2>
+<p>The input distribution is specified at <span class="math notranslate nohighlight">\(K\)</span> redshift grid nodes,
+where <span class="math notranslate nohighlight">\(K \geq 2\)</span> is the total number of nodes. The grid is
+strictly increasing,</p>
+<div class="math-wrapper docutils container">
+<div class="math notranslate nohighlight">
+\[z_0 &lt; z_1 &lt; \cdots &lt; z_{K-1}.\]</div>
+</div>
+<p>We use <span class="math notranslate nohighlight">\(k=0,\ldots,K-1\)</span> to index the grid nodes, with
+<span class="math notranslate nohighlight">\(z_k\)</span> denoting the redshift at node <span class="math notranslate nohighlight">\(k\)</span>.</p>
+<p>The corresponding distribution values are nonnegative,</p>
+<div class="math-wrapper docutils container">
+<div class="math notranslate nohighlight">
+\[n_k = n(z_k) \geq 0.\]</div>
+</div>
+<p>The input distribution does not need to be normalized.</p>
+<p>The corresponding probability density is</p>
+<div class="math-wrapper docutils container">
+<div class="math notranslate nohighlight">
+\[p(z) = \frac{n(z)}{\mathcal{N}},\]</div>
+</div>
+<p>where</p>
+<div class="math-wrapper docutils container">
+<div class="math notranslate nohighlight">
+\[\mathcal{N}
+= \int_{z_0}^{z_{K-1}} n(z)\,\mathrm{d}z.\]</div>
+</div>
+<p>The normalization must be positive and finite.</p>
+<p>For numerical stability, Binny first rescales the input distribution
+by its maximum value. Since the sampling probabilities depend only
+on relative amplitudes, this rescaling does not change the resulting
+probability distribution.</p>
+<p>The normalization is then calculated using trapezoidal integration
+over the supplied redshift grid.</p>
+<p>The resulting density satisfies</p>
+<div class="math-wrapper docutils container">
+<div class="math notranslate nohighlight">
+\[\int_{z_0}^{z_{K-1}} p(z)\,\mathrm{d}z = 1,\]</div>
+</div>
+<p>up to floating-point precision.</p>
+<p>Multiplying the input distribution by any positive constant therefore
+does not change the sampling distribution.</p>
+</section>
+<section id="piecewise-linear-representation">
+<h2>Piecewise-linear representation<a class="headerlink" href="#piecewise-linear-representation" title="Link to this heading"><span>#</span></a></h2>
+<p>Between adjacent grid nodes, Binny interprets the redshift
+distribution as piecewise linear.</p>
+<p>The index <span class="math notranslate nohighlight">\(k=0,\ldots,K-2\)</span> labels the intervals between
+consecutive nodes. There are therefore <span class="math notranslate nohighlight">\(K-1\)</span> intervals
+for <span class="math notranslate nohighlight">\(K\)</span> grid nodes.</p>
+<p>For an interval</p>
+<div class="math-wrapper docutils container">
+<div class="math notranslate nohighlight">
+\[z \in [z_k,z_{k+1}],\]</div>
+</div>
+<p>define its width as</p>
+<div class="math-wrapper docutils container">
+<div class="math notranslate nohighlight">
+\[\Delta z_k = z_{k+1}-z_k.\]</div>
+</div>
+<p>The local coordinate within the interval is</p>
+<div class="math-wrapper docutils container">
+<div class="math notranslate nohighlight">
+\[t = \frac{z-z_k}{\Delta z_k},
+\qquad 0 \leq t \leq 1.\]</div>
+</div>
+<p>The interpolated distribution is</p>
+<div class="math-wrapper docutils container">
+<div class="math notranslate nohighlight">
+\[n(z) = n_k + (n_{k+1}-n_k)t.\]</div>
+</div>
+<p>This convention defines the continuous probability distribution
+from which the samples are drawn.</p>
+<p>The probability mass associated with each interval is proportional
+to its trapezoidal area,</p>
+<div class="math-wrapper docutils container">
+<div class="math notranslate nohighlight">
+\[A_k
+= \frac{n_k+n_{k+1}}{2}\Delta z_k.\]</div>
+</div>
+<p>The construction is valid for both uniform and nonuniform redshift
+grids.</p>
+<p>Importantly, the algorithm samples continuously within each
+interval rather than restricting sampled redshifts to the original
+grid nodes.</p>
+</section>
+<section id="cumulative-distribution-function">
+<h2>Cumulative distribution function<a class="headerlink" href="#cumulative-distribution-function" title="Link to this heading"><span>#</span></a></h2>
+<p>The cumulative distribution function is</p>
+<div class="math-wrapper docutils container">
+<div class="math notranslate nohighlight">
+\[F(z) = \int_{z_0}^{z} p(z')\,\mathrm{d}z'.\]</div>
+</div>
+<p>At the grid nodes, the cumulative masses are constructed from the
+trapezoidal interval contributions. Here <span class="math notranslate nohighlight">\(j=0,\ldots,K-1\)</span>
+indexes the node at which the cumulative mass is evaluated,
+while <span class="math notranslate nohighlight">\(k\)</span> indexes the intervals included in the sum.</p>
+<div class="math-wrapper docutils container">
+<div class="math notranslate nohighlight">
+\[C_0 = 0,\]</div>
+</div>
+<div class="math-wrapper docutils container">
+<div class="math notranslate nohighlight">
+\[C_j = \sum_{k=0}^{j-1} A_k.\]</div>
+</div>
+<p>Here, <span class="math notranslate nohighlight">\(C_j\)</span> is the cumulative unnormalized probability mass
+up to redshift <span class="math notranslate nohighlight">\(z_j\)</span>. The normalized CDF evaluated at that
+node is denoted by <span class="math notranslate nohighlight">\(F_j = F(z_j)\)</span>,</p>
+<div class="math-wrapper docutils container">
+<div class="math notranslate nohighlight">
+\[F_j = \frac{C_j}{C_{K-1}}.\]</div>
+</div>
+<p>Consequently,</p>
+<div class="math-wrapper docutils container">
+<div class="math notranslate nohighlight">
+\[F_0 = 0,
+\qquad
+F_{K-1} = 1.\]</div>
+</div>
+<p>Binny uses its existing <code class="docutils literal notranslate"><span class="pre">cdf_from_curve</span></code> utility to construct
+the cumulative trapezoidal masses and their normalization.</p>
+<p>This ensures consistency with the numerical conventions used
+elsewhere in the package.</p>
+</section>
+<section id="inverse-cdf-sampling">
+<h2>Inverse-CDF sampling<a class="headerlink" href="#inverse-cdf-sampling" title="Link to this heading"><span>#</span></a></h2>
+<p>Inverse-CDF sampling generates each redshift by first drawing a
+random number <span class="math notranslate nohighlight">\(u\)</span> from the continuous uniform distribution
+<span class="math notranslate nohighlight">\(\mathcal{U}(0,1)\)</span>,</p>
+<div class="math-wrapper docutils container">
+<div class="math notranslate nohighlight">
+\[u \sim \mathcal{U}(0,1)\]</div>
+</div>
+<p>and solving</p>
+<div class="math-wrapper docutils container">
+<div class="math notranslate nohighlight">
+\[F(z) = u.\]</div>
+</div>
+<p>For each random variate, Binny first identifies the interval
+containing the corresponding cumulative probability.</p>
+<p>If</p>
+<div class="math-wrapper docutils container">
+<div class="math notranslate nohighlight">
+\[F_k \leq u &lt; F_{k+1},\]</div>
+</div>
+<p>the sample lies in the interval</p>
+<div class="math-wrapper docutils container">
+<div class="math notranslate nohighlight">
+\[z \in [z_k,z_{k+1}].\]</div>
+</div>
+<p>The normalized position in cumulative probability within that
+interval is</p>
+<div class="math-wrapper docutils container">
+<div class="math notranslate nohighlight">
+\[q = \frac{u-F_k}{F_{k+1}-F_k}.\]</div>
+</div>
+<p>A direct linear interpolation of the CDF would generally be
+incorrect because the underlying probability density is
+piecewise linear rather than piecewise constant.</p>
+<p>Instead, Binny analytically inverts the integrated
+piecewise-linear density within each interval.</p>
+</section>
+<section id="exact-inversion-within-an-interval">
+<h2>Exact inversion within an interval<a class="headerlink" href="#exact-inversion-within-an-interval" title="Link to this heading"><span>#</span></a></h2>
+<p>Let the endpoint densities of the selected interval be</p>
+<div class="math-wrapper docutils container">
+<div class="math notranslate nohighlight">
+\[a = n_k,
+\qquad
+b = n_{k+1}.\]</div>
+</div>
+<p>Using the local coordinate <span class="math notranslate nohighlight">\(t\)</span>, the density is</p>
+<div class="math-wrapper docutils container">
+<div class="math notranslate nohighlight">
+\[n(t) = a+(b-a)t.\]</div>
+</div>
+<p>The cumulative mass from the left endpoint to <span class="math notranslate nohighlight">\(t\)</span> is
+proportional to</p>
+<div class="math-wrapper docutils container">
+<div class="math notranslate nohighlight">
+\[\int_0^t [a+(b-a)s]\,\mathrm{d}s
+= at+\frac{b-a}{2}t^2.\]</div>
+</div>
+<p>The total mass of the interval is proportional to</p>
+<div class="math-wrapper docutils container">
+<div class="math notranslate nohighlight">
+\[\frac{a+b}{2}.\]</div>
+</div>
+<p>The local cumulative probability therefore satisfies</p>
+<div class="math-wrapper docutils container">
+<div class="math notranslate nohighlight">
+\[q =
+\frac{at+\frac{1}{2}(b-a)t^2}
+     {\frac{1}{2}(a+b)}.\]</div>
+</div>
+<p>Rearranging gives the quadratic equation</p>
+<div class="math-wrapper docutils container">
+<div class="math notranslate nohighlight">
+\[(b-a)t^2+2at-q(a+b)=0.\]</div>
+</div>
+<p>Define</p>
+<div class="math-wrapper docutils container">
+<div class="math notranslate nohighlight">
+\[T = \frac{q(a+b)}{2}.\]</div>
+</div>
+<p>The physically relevant solution can be written in the
+numerically stable form</p>
+<div class="math-wrapper docutils container">
+<div class="math notranslate nohighlight">
+\[t =
+\frac{2T}
+     {a+\sqrt{a^2+2(b-a)T}}.\]</div>
+</div>
+<p>The sampled redshift is then</p>
+<div class="math-wrapper docutils container">
+<div class="math notranslate nohighlight">
+\[z = z_k+t\Delta z_k.\]</div>
+</div>
+<p>This inversion is exact for the piecewise-linear distribution
+represented by the input grid, up to floating-point precision.</p>
+<p>For constant-density intervals, where <span class="math notranslate nohighlight">\(a=b\)</span>, the
+solution simplifies to</p>
+<div class="math-wrapper docutils container">
+<div class="math notranslate nohighlight">
+\[t=q.\]</div>
+</div>
+<p>Zero-probability intervals do not contribute to the sampling
+distribution.</p>
+</section>
+<section id="statistical-interpretation">
+<h2>Statistical interpretation<a class="headerlink" href="#statistical-interpretation" title="Link to this heading"><span>#</span></a></h2>
+<p>The sampled catalog represents a Monte Carlo realization of
+the continuous probability distribution.</p>
+<p>For a sufficiently large number of samples, the empirical
+redshift distribution approaches the normalized input
+distribution.</p>
+<p>Consider an arbitrary redshift interval <span class="math notranslate nohighlight">\(B\)</span> within the
+sampling range. Let <span class="math notranslate nohighlight">\(P(z\in B)\)</span> denote the probability
+that a sampled galaxy lies inside this interval. This probability
+is given by</p>
+<div class="math-wrapper docutils container">
+<div class="math notranslate nohighlight">
+\[P(z\in B) = \int_B p(z)\,\mathrm{d}z.\]</div>
+</div>
+<p>Let <span class="math notranslate nohighlight">\(N_B\)</span> denote the random number of galaxies among the
+<span class="math notranslate nohighlight">\(N\)</span> samples that fall inside <span class="math notranslate nohighlight">\(B\)</span>. Its expectation
+<span class="math notranslate nohighlight">\(\mathbb{E}[N_B]\)</span> is</p>
+<div class="math-wrapper docutils container">
+<div class="math notranslate nohighlight">
+\[\mathbb{E}[N_B] = N P(z\in B).\]</div>
+</div>
+<p>For independent samples, the corresponding variance is</p>
+<div class="math-wrapper docutils container">
+<div class="math notranslate nohighlight">
+\[\operatorname{Var}(N_B)
+= NP(z\in B)[1-P(z\in B)].\]</div>
+</div>
+<p>Consequently, a finite sampled catalog will not reproduce
+the input distribution exactly.</p>
+<p>Differences between the empirical histogram and the
+underlying probability density are expected Monte Carlo
+fluctuations rather than errors in the sampling procedure.</p>
+<p>The quality of the representation also depends on the
+resolution of the original redshift grid. The algorithm
+samples exactly from the piecewise-linear interpolation,
+not from an unknown continuous function between grid nodes.</p>
+</section>
+<section id="random-number-generation">
+<h2>Random-number generation<a class="headerlink" href="#random-number-generation" title="Link to this heading"><span>#</span></a></h2>
+<p>Binny supports reproducible sampling through either a
+random seed or an existing NumPy random generator.</p>
+<p>The two options are mutually exclusive.</p>
+<p>When a seed is supplied, Binny creates a NumPy
+<code class="docutils literal notranslate"><span class="pre">Generator</span></code> using <code class="docutils literal notranslate"><span class="pre">numpy.random.default_rng</span></code>.</p>
+<p>When an existing generator is supplied, its state is
+advanced by the sampling operation.</p>
+<p>Using the same seed, input distribution, and sample count
+reproduces the same redshift realization under the same
+random-number generation implementation.</p>
+<p>Passing an existing generator is particularly useful when
+redshift sampling is part of a larger simulation workflow
+that requires a shared random-number stream.</p>
+</section>
+<section id="mock-catalog-construction">
+<h2>Mock catalog construction<a class="headerlink" href="#mock-catalog-construction" title="Link to this heading"><span>#</span></a></h2>
+<p>In addition to returning an array of sampled redshifts,
+Binny provides a higher-level mock catalog utility.</p>
+<p>The catalog is represented as a dictionary of NumPy arrays.</p>
+<p>The default output contains:</p>
+<dl class="simple">
+<dt><code class="docutils literal notranslate"><span class="pre">z</span></code></dt><dd><p>Sampled redshifts drawn from the input distribution.</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">weight</span></code></dt><dd><p>Per-object weights, equal to one by default.</p>
+</dd>
+</dl>
+<p>The catalog helper does not impose a particular physical
+interpretation on the input distribution.</p>
+<p>For example, when the supplied <span class="math notranslate nohighlight">\(n(z)\)</span> describes the
+underlying true-redshift population, the sampled <code class="docutils literal notranslate"><span class="pre">z</span></code>
+values represent true redshifts.</p>
+<p>If the input distribution instead describes another
+redshift population, the sampled values inherit that
+interpretation.</p>
+<p>This distinction is important when constructing mock
+observations.</p>
+</section>
+<section id="object-weights">
+<h2>Object weights<a class="headerlink" href="#object-weights" title="Link to this heading"><span>#</span></a></h2>
+<p>Each sampled object can optionally carry a weight,</p>
+<div class="math-wrapper docutils container">
+<div class="math notranslate nohighlight">
+\[w_i \geq 0.\]</div>
+</div>
+<p>By default,</p>
+<div class="math-wrapper docutils container">
+<div class="math notranslate nohighlight">
+\[w_i = 1.\]</div>
+</div>
+<p>Users can provide either a single scalar weight applied
+to every sampled object or a one-dimensional array
+containing one weight per object.</p>
+<p>The weights must be finite and nonnegative.</p>
+<p>Weights are attached after the redshift sampling step.
+They do not modify the probability distribution used
+to generate the sampled redshifts.</p>
+<p>A weighted empirical redshift distribution can be represented
+by <span class="math notranslate nohighlight">\(\hat{p}_w(z)\)</span>, where the hat denotes an empirical
+estimate and the subscript <span class="math notranslate nohighlight">\(w\)</span> indicates weighting.
+Using the Dirac delta distribution <span class="math notranslate nohighlight">\(\delta_{\rm D}\)</span>,
+which represents a point contribution at each sampled
+redshift, we write</p>
+<div class="math-wrapper docutils container">
+<div class="math notranslate nohighlight">
+\[\hat{p}_w(z)
+= \frac{1}{\sum_i w_i}
+  \sum_{i=1}^{N} w_i\,\delta_{\rm D}(z-z_i),\]</div>
+</div>
+<p>provided the total weight is positive.</p>
+<p>This is useful for representing selection weights,
+statistical weights, or survey-specific catalog
+weighting schemes.</p>
+</section>
+<section id="observation-models">
+<h2>Observation models<a class="headerlink" href="#observation-models" title="Link to this heading"><span>#</span></a></h2>
+<p>The mock catalog utility optionally accepts an observation
+model that transforms sampled redshifts into observed
+redshifts.</p>
+<p>Conceptually, an observation model describes a conditional
+distribution,</p>
+<div class="math-wrapper docutils container">
+<div class="math notranslate nohighlight">
+\[p(z_{\rm obs}\mid z).\]</div>
+</div>
+<p>For an underlying true-redshift distribution, the
+corresponding observed-redshift distribution is</p>
+<div class="math-wrapper docutils container">
+<div class="math notranslate nohighlight">
+\[p_{\rm obs}(z_{\rm obs})
+= \int p(z_{\rm obs}\mid z)
+       p(z)\,\mathrm{d}z.\]</div>
+</div>
+<p>At the catalog level, this corresponds to drawing</p>
+<div class="math-wrapper docutils container">
+<div class="math notranslate nohighlight">
+\[z_i \sim p(z),\]</div>
+</div>
+<p>followed by</p>
+<div class="math-wrapper docutils container">
+<div class="math notranslate nohighlight">
+\[z_{{\rm obs},i}
+\sim p(z_{\rm obs}\mid z_i).\]</div>
+</div>
+<p>The observation model is supplied as a callable that
+accepts the sampled redshift array and a NumPy random
+generator.</p>
+<p>The callable must return one finite observed redshift
+per sampled object.</p>
+<p>When provided, the catalog contains the additional
+column <code class="docutils literal notranslate"><span class="pre">z_obs</span></code>.</p>
+<p>The same random generator is used for both the
+underlying redshift samples and the observation model.</p>
+<p>This makes the entire mock catalog generation procedure
+reproducible with a single seed.</p>
+</section>
+<section id="redshift-measurement-models">
+<h2>Redshift measurement models<a class="headerlink" href="#redshift-measurement-models" title="Link to this heading"><span>#</span></a></h2>
+<p>The observation-model interface is intentionally general.</p>
+<p>It can represent different redshift measurement techniques,
+including:</p>
+<ul class="simple">
+<li><p>photometric redshift estimates;</p></li>
+<li><p>spectroscopic redshift measurements;</p></li>
+<li><p>grism or narrow-band redshift estimates;</p></li>
+<li><p>user-defined redshift measurement models.</p></li>
+</ul>
+<p>For example, a Gaussian measurement model may be written as</p>
+<div class="math-wrapper docutils container">
+<div class="math notranslate nohighlight">
+\[z_{\rm obs}
+= z+\mu(z)+\sigma(z)\epsilon,\]</div>
+</div>
+<p>where</p>
+<div class="math-wrapper docutils container">
+<div class="math notranslate nohighlight">
+\[\epsilon\sim\mathcal{N}(0,1).\]</div>
+</div>
+<p>Here, <span class="math notranslate nohighlight">\(\mu(z)\)</span> describes a redshift-dependent
+systematic offset and <span class="math notranslate nohighlight">\(\sigma(z)\)</span> describes the
+measurement scatter.</p>
+<p>More general observation models can include non-Gaussian
+tails, asymmetric errors, catastrophic outliers, or
+population-dependent measurement uncertainties.</p>
+<p>The catalog sampler itself does not prescribe these
+models.</p>
+<p>Instead, the observation-model callable defines the
+measurement transformation.</p>
+<p>This avoids introducing a second, independent photo-z
+error prescription into the sampling utilities.</p>
+</section>
+<section id="connection-to-photo-z-tomography">
+<h2>Connection to photo-z tomography<a class="headerlink" href="#connection-to-photo-z-tomography" title="Link to this heading"><span>#</span></a></h2>
+<p>Binny already provides photo-z error modelling and
+tomographic selection machinery.</p>
+<p>The catalog sampling utilities complement this
+infrastructure by generating individual redshift
+realizations from a continuous parent distribution.</p>
+<p>The two operations are conceptually distinct:</p>
+<ul class="simple">
+<li><p>parent distribution sampling generates the underlying
+object-level redshift population;</p></li>
+<li><p>an observation model generates measured redshifts
+conditional on those sampled values;</p></li>
+<li><p>tomographic selection assigns objects or probabilities
+to redshift bins.</p></li>
+</ul>
+<p>For a tomographic bin <span class="math notranslate nohighlight">\(i\)</span>, where <span class="math notranslate nohighlight">\(i\)</span> now labels
+tomographic bins rather than individual galaxies, let
+<span class="math notranslate nohighlight">\(z_{{\rm obs},i}^{\rm min}\)</span> and
+<span class="math notranslate nohighlight">\(z_{{\rm obs},i}^{\rm max}\)</span> denote its lower and upper
+observed-redshift boundaries, respectively.</p>
+<p>The probability <span class="math notranslate nohighlight">\(P_i(z)\)</span> that a galaxy at true redshift
+<span class="math notranslate nohighlight">\(z\)</span> is assigned to bin <span class="math notranslate nohighlight">\(i\)</span> is</p>
+<div class="math-wrapper docutils container">
+<div class="math notranslate nohighlight">
+\[P_i(z)
+= \int_{z_{{\rm obs},i}^{\rm min}}^
+       {z_{{\rm obs},i}^{\rm max}}
+  p(z_{\rm obs}\mid z)\,\mathrm{d}z_{\rm obs}.\]</div>
+</div>
+<p>The expected true-redshift distribution of objects
+assigned to that bin is then proportional to</p>
+<div class="math-wrapper docutils container">
+<div class="math notranslate nohighlight">
+\[n_i(z) = n(z)P_i(z).\]</div>
+</div>
+<p>At the catalog level, the analogous procedure is
+to sample underlying redshifts, generate observed
+redshifts, and apply the corresponding selection
+criteria.</p>
+<p>Consistency between catalog-based and analytic
+tomography requires using the same conditional
+redshift-error model and selection conventions.</p>
+<p>The generic observation-model interface makes such
+workflows possible without embedding a separate
+photo-z model directly in the catalog sampler.</p>
+<p>The current catalog utility does not automatically
+generate tomographic bin assignments or outlier
+classification flags.</p>
+</section>
+<section id="input-validation-and-numerical-considerations">
+<h2>Input validation and numerical considerations<a class="headerlink" href="#input-validation-and-numerical-considerations" title="Link to this heading"><span>#</span></a></h2>
+<p>The redshift sampler validates that the supplied
+redshift grid is one-dimensional, finite, strictly
+increasing, and contains at least two nodes.</p>
+<p>Redshift values must be nonnegative.</p>
+<p>The tabulated distribution must have the same shape
+as the redshift grid and contain finite, nonnegative
+values with a positive integral.</p>
+<p>The number of requested samples must be a positive
+integer.</p>
+<p>The returned redshifts are continuous floating-point
+values within the supplied redshift range.</p>
+<p>The implementation handles nonuniform grids and
+piecewise-linear distributions with zero-density
+regions.</p>
+<p>As with any floating-point numerical procedure,
+extreme dynamic ranges and very small cumulative
+probability intervals can be sensitive to finite
+precision.</p>
+<p>For typical survey redshift distributions, the
+method provides an efficient vectorized approach
+to generating large mock catalogs.</p>
+</section>
+<section id="relationship-to-analytic-parent-models">
+<h2>Relationship to analytic parent models<a class="headerlink" href="#relationship-to-analytic-parent-models" title="Link to this heading"><span>#</span></a></h2>
+<p>The sampler operates on tabulated distributions and
+does not require a particular analytic model.</p>
+<p>An analytic parent model can first be evaluated on
+a redshift grid. Denoting its model parameters collectively
+by the vector <span class="math notranslate nohighlight">\(\boldsymbol{\theta}\)</span>, we write</p>
+<div class="math-wrapper docutils container">
+<div class="math notranslate nohighlight">
+\[n(z_k;\boldsymbol{\theta}),\]</div>
+</div>
+<p>and the resulting tabulated curve can then be
+passed to the sampler.</p>
+<p>This supports mock catalog generation from the
+analytic parent models provided by Binny, including
+Smail-like, Gaussian, mixture, and other supported
+redshift distributions.</p>
+<p>The same procedure applies to parent distributions
+calibrated from mock catalogs or constructed from
+luminosity-function-weighted models.</p>
+<p>Thus, the sampling utilities are independent of
+the physical or phenomenological origin of the
+input <span class="math notranslate nohighlight">\(n(z)\)</span>.</p>
+</section>
+<section id="summary">
+<h2>Summary<a class="headerlink" href="#summary" title="Link to this heading"><span>#</span></a></h2>
+<p>Binny’s mock redshift sampling utilities connect
+continuous parent redshift distributions to
+object-level mock catalogs.</p>
+<p>The implementation provides:</p>
+<ul class="simple">
+<li><p>exact inverse-CDF sampling for piecewise-linear
+tabulated redshift distributions;</p></li>
+<li><p>automatic normalization of nonnegative inputs;</p></li>
+<li><p>support for nonuniform redshift grids;</p></li>
+<li><p>reproducible sampling with seeds or NumPy generators;</p></li>
+<li><p>optional per-object weights;</p></li>
+<li><p>optional observed-redshift generation through
+user-defined observation models;</p></li>
+<li><p>dictionary-based mock catalog outputs.</p></li>
+</ul>
+<p>The approach keeps parent distribution modelling,
+redshift measurement modelling, and tomographic
+selection conceptually separate.</p>
+<p>For executable usage examples, see the mock
+redshift sampling examples page.</p>
+</section>
+</section>
+
+        </article>
+      </div>
+      <footer>
+        
+        <div class="related-pages">
+          <a class="next-page" href="../binning_schemes.html">
+              <div class="page-info">
+                <div class="context">
+                  <span>Next</span>
+                </div>
+                <div class="title"> Binning schemes</div>
+              </div>
+              <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
+            </a>
+          <a class="prev-page" href="psf_selection.html">
+              <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
+              <div class="page-info">
+                <div class="context">
+                  <span>Previous</span>
+                </div>
+                
+                <div class="title"> PSF-dependent source selection</div>
+                
+              </div>
+            </a>
+        </div>
+        <div class="bottom-of-page">
+          <div class="left-details">
+            <div class="copyright">
+                Copyright &#169; 2026, Nikolina Šarčević, Matthijs van der Wild, Rebekah Polen
+            </div>
+            Made with <a href="https://www.sphinx-doc.org/">Sphinx</a> and <a class="muted-link" href="https://pradyunsg.me">@pradyunsg</a>'s
+            
+            <a href="https://github.com/pradyunsg/furo">Furo</a>
+            
+          </div>
+          <div class="right-details">
+            <div class="icons">
+              <a class="muted-link " href="https://github.com/binny-org/binny" aria-label="GitHub">
+                <svg stroke="currentColor" fill="currentColor" stroke-width="0"
+                     viewBox="0 0 16 16">
+                    <path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38
+                    0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13
+                    -.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87
+                    2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95
+                    0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21
+                    2.2.82A7.65 7.65 0 0 1 8 3.87c.68 0 1.36.09 2 .26
+                    1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12
+                    .51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65
+                    3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01
+                    2.2 0 .21.15.46.55.38A8.013 8.013 0 0 0 16
+                    8c0-4.42-3.58-8-8-8z"></path>
+                </svg>
+            </a>
+              
+            </div>
+          </div>
+        </div>
+        
+      </footer>
+    </div>
+    <aside class="toc-drawer">
+      
+      
+      <div class="toc-sticky toc-scroll">
+        <div class="toc-title-container">
+          <span class="toc-title">
+            On this page
+          </span>
+        </div>
+        <div class="toc-tree-container">
+          <div class="toc-tree">
+            <ul>
+<li><a class="reference internal" href="#"> Mock redshift catalog sampling</a><ul>
+<li><a class="reference internal" href="#overview">Overview</a></li>
+<li><a class="reference internal" href="#probability-density-and-normalization">Probability density and normalization</a></li>
+<li><a class="reference internal" href="#piecewise-linear-representation">Piecewise-linear representation</a></li>
+<li><a class="reference internal" href="#cumulative-distribution-function">Cumulative distribution function</a></li>
+<li><a class="reference internal" href="#inverse-cdf-sampling">Inverse-CDF sampling</a></li>
+<li><a class="reference internal" href="#exact-inversion-within-an-interval">Exact inversion within an interval</a></li>
+<li><a class="reference internal" href="#statistical-interpretation">Statistical interpretation</a></li>
+<li><a class="reference internal" href="#random-number-generation">Random-number generation</a></li>
+<li><a class="reference internal" href="#mock-catalog-construction">Mock catalog construction</a></li>
+<li><a class="reference internal" href="#object-weights">Object weights</a></li>
+<li><a class="reference internal" href="#observation-models">Observation models</a></li>
+<li><a class="reference internal" href="#redshift-measurement-models">Redshift measurement models</a></li>
+<li><a class="reference internal" href="#connection-to-photo-z-tomography">Connection to photo-z tomography</a></li>
+<li><a class="reference internal" href="#input-validation-and-numerical-considerations">Input validation and numerical considerations</a></li>
+<li><a class="reference internal" href="#relationship-to-analytic-parent-models">Relationship to analytic parent models</a></li>
+<li><a class="reference internal" href="#summary">Summary</a></li>
+</ul>
+</li>
+</ul>
+
+          </div>
+        </div>
+      </div>
+      
+      
+    </aside>
+  </div>
+</div><script src="../../_static/documentation_options.js?v=5929fcd5"></script>
+    <script src="../../_static/doctools.js?v=9bcbadda"></script>
+    <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../_static/scripts/furo.js?v=46bd48cc"></script>
+    <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="../../_static/copybutton.js?v=f16c4c56"></script>
+    <script data-sd-tabs-storage-prefix="sphinx-design-tab-id-" src="../../_static/design-tabs.js?v=fcb327ea"></script>
+    <script async="async" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    </body>
+</html>

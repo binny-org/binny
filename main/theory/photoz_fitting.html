@@ -1,0 +1,989 @@
+<!doctype html>
+<html class="no-js" lang="en" data-content_root="../">
+  <head><meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <meta name="color-scheme" content="light dark"><meta name="viewport" content="width=device-width, initial-scale=1" />
+<link rel="index" title="Index" href="../genindex.html"><link rel="search" title="Search" href="../search.html"><link rel="next" title="Redshift uncertainties" href="uncertainties/index.html"><link rel="prev" title="Tomography" href="tomography.html">
+        <link rel="prefetch" href="../_static/assets/logo.png" as="image">
+        <link rel="prefetch" href="../_static/assets/logo.png" as="image">
+
+    <link rel="shortcut icon" href="../_static/favicon.png"><!-- Generated with Sphinx 8.2.3 and Furo 2025.12.19 -->
+        <title>Photometric-redshift error fitting - Binny documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=d111a655" />
+    <link rel="stylesheet" type="text/css" href="../_static/styles/furo.css?v=7bdb33bb" />
+    <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
+    <link rel="stylesheet" type="text/css" href="../_static/plot_directive.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/sphinx-design.min.css?v=6a604523" />
+    <link rel="stylesheet" type="text/css" href="../_static/styles/furo-extensions.css?v=8dab3a3b" />
+    <link rel="stylesheet" type="text/css" href="../_static/binny-palette.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/binny.css?v=04eb2bfd" />
+    
+    
+
+
+<style>
+  body {
+    --color-code-background: #f2f2f2;
+  --color-code-foreground: #1e1e1e;
+  --color-brand-primary: #73407f;
+  --color-brand-content: #6c7da8;
+  --color-link: #6c7da8;
+  --color-link--hover: #765b98;
+  --color-link--visited: #73407f;
+  
+  }
+  @media not print {
+    body[data-theme="dark"] {
+      --color-code-background: #202020;
+  --color-code-foreground: #d0d0d0;
+  --color-brand-primary: #9adbbf;
+  --color-brand-content: #ccd2e1;
+  --color-link: #ccd2e1;
+  --color-link--hover: #9adbbf;
+  --color-link--visited: #ccd2e1;
+  
+    }
+    @media (prefers-color-scheme: dark) {
+      body:not([data-theme="light"]) {
+        --color-code-background: #202020;
+  --color-code-foreground: #d0d0d0;
+  --color-brand-primary: #9adbbf;
+  --color-brand-content: #ccd2e1;
+  --color-link: #ccd2e1;
+  --color-link--hover: #9adbbf;
+  --color-link--visited: #ccd2e1;
+  
+      }
+    }
+  }
+</style></head>
+  <body>
+    
+    <script>
+      document.body.dataset.theme = localStorage.getItem("theme") || "auto";
+    </script>
+    
+
+<svg xmlns="http://www.w3.org/2000/svg" style="display: none;">
+  <symbol id="svg-toc" viewBox="0 0 24 24">
+    <title>Contents</title>
+    <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 1024 1024">
+      <path d="M408 442h480c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8H408c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8zm-8 204c0 4.4 3.6 8 8 8h480c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8H408c-4.4 0-8 3.6-8 8v56zm504-486H120c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h784c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8zm0 632H120c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h784c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8zM115.4 518.9L271.7 642c5.8 4.6 14.4.5 14.4-6.9V388.9c0-7.4-8.5-11.5-14.4-6.9L115.4 505.1a8.74 8.74 0 0 0 0 13.8z"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-menu" viewBox="0 0 24 24">
+    <title>Menu</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather-menu">
+      <line x1="3" y1="12" x2="21" y2="12"></line>
+      <line x1="3" y1="6" x2="21" y2="6"></line>
+      <line x1="3" y1="18" x2="21" y2="18"></line>
+    </svg>
+  </symbol>
+  <symbol id="svg-arrow-right" viewBox="0 0 24 24">
+    <title>Expand</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather-chevron-right">
+      <polyline points="9 18 15 12 9 6"></polyline>
+    </svg>
+  </symbol>
+  <symbol id="svg-sun" viewBox="0 0 24 24">
+    <title>Light mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="feather-sun">
+      <circle cx="12" cy="12" r="5"></circle>
+      <line x1="12" y1="1" x2="12" y2="3"></line>
+      <line x1="12" y1="21" x2="12" y2="23"></line>
+      <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+      <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+      <line x1="1" y1="12" x2="3" y2="12"></line>
+      <line x1="21" y1="12" x2="23" y2="12"></line>
+      <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+      <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+    </svg>
+  </symbol>
+  <symbol id="svg-moon" viewBox="0 0 24 24">
+    <title>Dark mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-moon">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+      <path d="M12 3c.132 0 .263 0 .393 0a7.5 7.5 0 0 0 7.92 12.446a9 9 0 1 1 -8.313 -12.454z" />
+    </svg>
+  </symbol>
+  <symbol id="svg-sun-with-moon" viewBox="0 0 24 24">
+    <title>Auto light/dark, in light mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round"
+      class="icon-custom-derived-from-feather-sun-and-tabler-moon">
+      <path style="opacity: 50%" d="M 5.411 14.504 C 5.471 14.504 5.532 14.504 5.591 14.504 C 3.639 16.319 4.383 19.569 6.931 20.352 C 7.693 20.586 8.512 20.551 9.25 20.252 C 8.023 23.207 4.056 23.725 2.11 21.184 C 0.166 18.642 1.702 14.949 4.874 14.536 C 5.051 14.512 5.231 14.5 5.411 14.5 L 5.411 14.504 Z"/>
+      <line x1="14.5" y1="3.25" x2="14.5" y2="1.25"/>
+      <line x1="14.5" y1="15.85" x2="14.5" y2="17.85"/>
+      <line x1="10.044" y1="5.094" x2="8.63" y2="3.68"/>
+      <line x1="19" y1="14.05" x2="20.414" y2="15.464"/>
+      <line x1="8.2" y1="9.55" x2="6.2" y2="9.55"/>
+      <line x1="20.8" y1="9.55" x2="22.8" y2="9.55"/>
+      <line x1="10.044" y1="14.006" x2="8.63" y2="15.42"/>
+      <line x1="19" y1="5.05" x2="20.414" y2="3.636"/>
+      <circle cx="14.5" cy="9.55" r="3.6"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-moon-with-sun" viewBox="0 0 24 24">
+    <title>Auto light/dark, in dark mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round"
+      class="icon-custom-derived-from-feather-sun-and-tabler-moon">
+      <path d="M 8.282 7.007 C 8.385 7.007 8.494 7.007 8.595 7.007 C 5.18 10.184 6.481 15.869 10.942 17.24 C 12.275 17.648 13.706 17.589 15 17.066 C 12.851 22.236 5.91 23.143 2.505 18.696 C -0.897 14.249 1.791 7.786 7.342 7.063 C 7.652 7.021 7.965 7 8.282 7 L 8.282 7.007 Z"/>
+      <line style="opacity: 50%" x1="18" y1="3.705" x2="18" y2="2.5"/>
+      <line style="opacity: 50%" x1="18" y1="11.295" x2="18" y2="12.5"/>
+      <line style="opacity: 50%" x1="15.316" y1="4.816" x2="14.464" y2="3.964"/>
+      <line style="opacity: 50%" x1="20.711" y1="10.212" x2="21.563" y2="11.063"/>
+      <line style="opacity: 50%" x1="14.205" y1="7.5" x2="13.001" y2="7.5"/>
+      <line style="opacity: 50%" x1="21.795" y1="7.5" x2="23" y2="7.5"/>
+      <line style="opacity: 50%" x1="15.316" y1="10.184" x2="14.464" y2="11.036"/>
+      <line style="opacity: 50%" x1="20.711" y1="4.789" x2="21.563" y2="3.937"/>
+      <circle style="opacity: 50%" cx="18" cy="7.5" r="2.169"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-pencil" viewBox="0 0 24 24">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-pencil-code">
+      <path d="M4 20h4l10.5 -10.5a2.828 2.828 0 1 0 -4 -4l-10.5 10.5v4" />
+      <path d="M13.5 6.5l4 4" />
+      <path d="M20 21l2 -2l-2 -2" />
+      <path d="M17 17l-2 2l2 2" />
+    </svg>
+  </symbol>
+  <symbol id="svg-eye" viewBox="0 0 24 24">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-eye-code">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+      <path d="M10 12a2 2 0 1 0 4 0a2 2 0 0 0 -4 0" />
+      <path
+        d="M11.11 17.958c-3.209 -.307 -5.91 -2.293 -8.11 -5.958c2.4 -4 5.4 -6 9 -6c3.6 0 6.6 2 9 6c-.21 .352 -.427 .688 -.647 1.008" />
+      <path d="M20 21l2 -2l-2 -2" />
+      <path d="M17 17l-2 2l2 2" />
+    </svg>
+  </symbol>
+</svg>
+
+<input type="checkbox" class="sidebar-toggle" name="__navigation" id="__navigation" aria-label="Toggle site navigation sidebar">
+<input type="checkbox" class="sidebar-toggle" name="__toc" id="__toc" aria-label="Toggle table of contents sidebar">
+<label class="overlay sidebar-overlay" for="__navigation"></label>
+<label class="overlay toc-overlay" for="__toc"></label>
+
+<a class="skip-to-content muted-link" href="#furo-main-content">Skip to content</a>
+
+
+
+<div class="page">
+  <header class="mobile-header">
+    <div class="header-left">
+      <label class="nav-overlay-icon" for="__navigation">
+        <span class="icon"><svg><use href="#svg-menu"></use></svg></span>
+      </label>
+    </div>
+    <div class="header-center">
+      <a href="../index.html"><div class="brand">Binny  documentation</div></a>
+    </div>
+    <div class="header-right">
+      <div class="theme-toggle-container theme-toggle-header">
+        <button class="theme-toggle" aria-label="Toggle Light / Dark / Auto color theme">
+          <svg class="theme-icon-when-auto-light"><use href="#svg-sun-with-moon"></use></svg>
+          <svg class="theme-icon-when-auto-dark"><use href="#svg-moon-with-sun"></use></svg>
+          <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
+          <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
+        </button>
+      </div>
+      <label class="toc-overlay-icon toc-header-icon" for="__toc">
+        <span class="icon"><svg><use href="#svg-toc"></use></svg></span>
+      </label>
+    </div>
+  </header>
+  <aside class="sidebar-drawer">
+    <div class="sidebar-container">
+      
+      <div class="sidebar-sticky"><a class="sidebar-brand" href="../index.html">
+  <div class="sidebar-logo-container">
+    <img class="sidebar-logo only-light" src="../_static/assets/logo.png" alt="Light Logo"/>
+    <img class="sidebar-logo only-dark" src="../_static/assets/logo.png" alt="Dark Logo"/>
+  </div>
+  
+  <span class="sidebar-brand-text">Binny  documentation</span>
+  
+</a><form class="sidebar-search-container" method="get" action="../search.html" role="search">
+  <input class="sidebar-search" placeholder="Search" name="q" aria-label="Search">
+  <input type="hidden" name="check_keywords" value="yes">
+  <input type="hidden" name="area" value="default">
+</form>
+<div id="searchbox"></div><div class="sidebar-scroll"><div class="sidebar-tree">
+  <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../installation.html"> Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../workflow.html"> Workflow</a></li>
+<li class="toctree-l1 current has-children"><a class="reference internal" href="index.html"> Theory</a><input aria-label="Toggle navigation of  Theory" checked="" class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" role="switch" type="checkbox"/><label for="toctree-checkbox-1"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul class="current">
+<li class="toctree-l2 has-children"><a class="reference internal" href="nz/index.html"> Parent redshift distributions</a><input aria-label="Toggle navigation of  Parent redshift distributions" class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" role="switch" type="checkbox"/><label for="toctree-checkbox-2"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="nz/parent_nz.html"> Analytic parent n(z) models</a></li>
+<li class="toctree-l3"><a class="reference internal" href="nz/nz_from_mocks.html"> Calibration from mocks</a></li>
+<li class="toctree-l3"><a class="reference internal" href="nz/nz_from_lf.html"> LF-weighted parent n(z)</a></li>
+<li class="toctree-l3"><a class="reference internal" href="nz/psf_selection.html"> PSF-dependent source selection</a></li>
+<li class="toctree-l3"><a class="reference internal" href="nz/nz_sampling.html"> Mock redshift catalog sampling</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="binning_schemes.html"> Binning schemes</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tomography.html"> Tomography</a></li>
+<li class="toctree-l2 current current-page"><a class="current reference internal" href="#"> Photometric-redshift error fitting</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="uncertainties/index.html"> Redshift uncertainties</a><input aria-label="Toggle navigation of  Redshift uncertainties" class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" role="switch" type="checkbox"/><label for="toctree-checkbox-3"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="uncertainties/photoz.html"> Photometric-redshift uncertainties</a></li>
+<li class="toctree-l3"><a class="reference internal" href="uncertainties/specz.html"> Spectroscopic-redshift uncertainties</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="statistics.html"> Bin summaries</a></li>
+<li class="toctree-l2"><a class="reference internal" href="diagnostics.html"> Bin diagnostics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="bin_combos.html"> Bin-index combinations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="conventions.html"> Conventions</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../examples/index.html"> Examples</a><input aria-label="Toggle navigation of  Examples" class="toctree-checkbox" id="toctree-checkbox-4" name="toctree-checkbox-4" role="switch" type="checkbox"/><label for="toctree-checkbox-4"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../examples/parent_nz/index.html">Parent redshift distributions</a><input aria-label="Toggle navigation of Parent redshift distributions" class="toctree-checkbox" id="toctree-checkbox-5" name="toctree-checkbox-5" role="switch" type="checkbox"/><label for="toctree-checkbox-5"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="../examples/parent_nz/nz_modelling.html"> Parent n(z) models</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../examples/parent_nz/nz_calibration.html"> Parent n(z) from mocks</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../examples/parent_nz/luminosity_function_distribution.html"> LF-weighted n(z) models</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../examples/parent_nz/psf_selection.html"> PSF-dependent source selection</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../examples/parent_nz/nz_sampling.html"> Mock redshift catalog sampling</a></li>
+</ul>
+</li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../examples/tomography/index.html">Tomographic binning</a><input aria-label="Toggle navigation of Tomographic binning" class="toctree-checkbox" id="toctree-checkbox-6" name="toctree-checkbox-6" role="switch" type="checkbox"/><label for="toctree-checkbox-6"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="../examples/tomography/binning_schemes.html"> Binning schemes</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../examples/tomography/photoz_bins.html"> Photometric bins</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../examples/tomography/specz_bins.html"> Spectroscopic bins</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../examples/tomography/predefined_bins.html">Predefined bins</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../examples/tomography/selections.html"> Bin-pair selections</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../examples/tomography/sample_composition.html"> Sample composition</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../examples/tomography/photoz_fitting.html"> Photometric-redshift error fitting</a></li>
+</ul>
+</li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../examples/diagnostics/index.html">Diagnostics</a><input aria-label="Toggle navigation of Diagnostics" class="toctree-checkbox" id="toctree-checkbox-7" name="toctree-checkbox-7" role="switch" type="checkbox"/><label for="toctree-checkbox-7"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="../examples/diagnostics/parent_statistics.html"> Parent distribution statistics</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../examples/diagnostics/bin_summaries.html"> Bin summaries</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../examples/diagnostics/bin_diagnostics.html"> Bin diagnostics</a></li>
+</ul>
+</li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../examples/surveys/index.html">Survey presets</a><input aria-label="Toggle navigation of Survey presets" class="toctree-checkbox" id="toctree-checkbox-8" name="toctree-checkbox-8" role="switch" type="checkbox"/><label for="toctree-checkbox-8"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="../examples/surveys/survey_presets.html"> Survey presets</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../citation.html"> Citation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../contributing.html"> Contributing</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../api/index.html">Binny API</a><input aria-label="Toggle navigation of Binny API" class="toctree-checkbox" id="toctree-checkbox-9" name="toctree-checkbox-9" role="switch" type="checkbox"/><label for="toctree-checkbox-9"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../api/modules.html">binny</a><input aria-label="Toggle navigation of binny" class="toctree-checkbox" id="toctree-checkbox-10" name="toctree-checkbox-10" role="switch" type="checkbox"/><label for="toctree-checkbox-10"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l3 has-children"><a class="reference internal" href="../api/binny.html">binny package</a><input aria-label="Toggle navigation of binny package" class="toctree-checkbox" id="toctree-checkbox-11" name="toctree-checkbox-11" role="switch" type="checkbox"/><label for="toctree-checkbox-11"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l4 has-children"><a class="reference internal" href="../api/binny.axes.html">binny.axes package</a><input aria-label="Toggle navigation of binny.axes package" class="toctree-checkbox" id="toctree-checkbox-12" name="toctree-checkbox-12" role="switch" type="checkbox"/><label for="toctree-checkbox-12"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l5"><a class="reference internal" href="../api/binny.axes.bin_edges.html">binny.axes.bin_edges module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../api/binny.axes.grids.html">binny.axes.grids module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../api/binny.axes.mixed_edges.html">binny.axes.mixed_edges module</a></li>
+</ul>
+</li>
+<li class="toctree-l4 has-children"><a class="reference internal" href="../api/binny.binning.html">binny.binning package</a><input aria-label="Toggle navigation of binny.binning package" class="toctree-checkbox" id="toctree-checkbox-13" name="toctree-checkbox-13" role="switch" type="checkbox"/><label for="toctree-checkbox-13"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l5"><a class="reference internal" href="../api/binny.binning.assignments.html">binny.binning.assignments module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../api/binny.binning.core.html">binny.binning.core module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../api/binny.binning.edges.html">binny.binning.edges module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../api/binny.binning.photoz.html">binny.binning.photoz module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../api/binny.binning.photoz_fitting.html">binny.binning.photoz_fitting module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../api/binny.binning.scheme_registry.html">binny.binning.scheme_registry module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../api/binny.binning.specs.html">binny.binning.specs module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../api/binny.binning.specz.html">binny.binning.specz module</a></li>
+</ul>
+</li>
+<li class="toctree-l4 has-children"><a class="reference internal" href="../api/binny.correlations.html">binny.correlations package</a><input aria-label="Toggle navigation of binny.correlations package" class="toctree-checkbox" id="toctree-checkbox-14" name="toctree-checkbox-14" role="switch" type="checkbox"/><label for="toctree-checkbox-14"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l5"><a class="reference internal" href="../api/binny.correlations.bin_combo_filter.html">binny.correlations.bin_combo_filter module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../api/binny.correlations.filters.html">binny.correlations.filters module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../api/binny.correlations.metrics.html">binny.correlations.metrics module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../api/binny.correlations.scores.html">binny.correlations.scores module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../api/binny.correlations.topology.html">binny.correlations.topology module</a></li>
+</ul>
+</li>
+<li class="toctree-l4 has-children"><a class="reference internal" href="../api/binny.cosmology.html">binny.cosmology package</a><input aria-label="Toggle navigation of binny.cosmology package" class="toctree-checkbox" id="toctree-checkbox-15" name="toctree-checkbox-15" role="switch" type="checkbox"/><label for="toctree-checkbox-15"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l5"><a class="reference internal" href="../api/binny.cosmology.ccl_wrappers.html">binny.cosmology.ccl_wrappers module</a></li>
+</ul>
+</li>
+<li class="toctree-l4 has-children"><a class="reference internal" href="../api/binny.nz.html">binny.nz package</a><input aria-label="Toggle navigation of binny.nz package" class="toctree-checkbox" id="toctree-checkbox-16" name="toctree-checkbox-16" role="switch" type="checkbox"/><label for="toctree-checkbox-16"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l5"><a class="reference internal" href="../api/binny.nz.calibration.html">binny.nz.calibration module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../api/binny.nz.luminosity_function_distribution.html">Luminosity-function distribution</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../api/binny.nz.models.html">binny.nz.models module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../api/binny.nz.psf_selection.html">binny.nz.psf_selection module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../api/binny.nz.registry.html">binny.nz.registry module</a></li>
+</ul>
+</li>
+<li class="toctree-l4 has-children"><a class="reference internal" href="../api/binny.surveys.html">binny.surveys package</a><input aria-label="Toggle navigation of binny.surveys package" class="toctree-checkbox" id="toctree-checkbox-17" name="toctree-checkbox-17" role="switch" type="checkbox"/><label for="toctree-checkbox-17"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l5"><a class="reference internal" href="../api/binny.surveys.configs.html">binny.surveys.configs package</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../api/binny.surveys.data.html">binny.surveys.data package</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../api/binny.surveys.config_utils.html">binny.surveys.config_utils module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../api/binny.surveys.sky.html">binny.surveys.sky module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../api/binny.surveys.survey_presets.html">binny.surveys.survey_presets module</a></li>
+</ul>
+</li>
+<li class="toctree-l4 has-children"><a class="reference internal" href="../api/binny.tomography.html">binny.tomography package</a><input aria-label="Toggle navigation of binny.tomography package" class="toctree-checkbox" id="toctree-checkbox-18" name="toctree-checkbox-18" role="switch" type="checkbox"/><label for="toctree-checkbox-18"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l5"><a class="reference internal" href="../api/binny.tomography.builders.html">binny.tomography.builders module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../api/binny.tomography.combinations.html">binny.tomography.combinations module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../api/binny.tomography.comparison.html">binny.tomography.comparison module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../api/binny.tomography.composition.html">binny.tomography.composition module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../api/binny.tomography.core.html">binny.tomography.core module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../api/binny.tomography.metadata.html">binny.tomography.metadata module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../api/binny.tomography.predefined.html">binny.tomography.predefined module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../api/binny.tomography.stats.html">binny.tomography.stats module</a></li>
+</ul>
+</li>
+<li class="toctree-l4 has-children"><a class="reference internal" href="../api/binny.utils.html">binny.utils package</a><input aria-label="Toggle navigation of binny.utils package" class="toctree-checkbox" id="toctree-checkbox-19" name="toctree-checkbox-19" role="switch" type="checkbox"/><label for="toctree-checkbox-19"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l5"><a class="reference internal" href="../api/binny.utils.broadcasting.html">binny.utils.broadcasting module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../api/binny.utils.colors.html">binny.utils.colors module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../api/binny.utils.io.html">binny.utils.io module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../api/binny.utils.metadata.html">binny.utils.metadata module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../api/binny.utils.normalization.html">binny.utils.normalization module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../api/binny.utils.pairwise_metrics.html">binny.utils.pairwise_metrics module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../api/binny.utils.relations.html">binny.utils.relations module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../api/binny.utils.types.html">binny.utils.types module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../api/binny.utils.validators.html">binny.utils.validators module</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+</div>
+</div>
+
+      </div>
+      
+    </div>
+  </aside>
+  <div class="main">
+    <div class="content">
+      <div class="article-container">
+        <a href="#" class="back-to-top muted-link">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+            <path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8v12z"></path>
+          </svg>
+          <span>Back to top</span>
+        </a>
+        <div class="content-icon-container">
+          <div class="view-this-page">
+  <a class="muted-link" href="https://github.com/binny-org/binny/blob/main/docs/theory/photoz_fitting.rst?plain=true" title="View this page">
+    <svg><use href="#svg-eye"></use></svg>
+    <span class="visually-hidden">View this page</span>
+  </a>
+</div><div class="edit-this-page">
+  <a class="muted-link" href="https://github.com/binny-org/binny/edit/main/docs/theory/photoz_fitting.rst" rel="edit" title="Edit this page">
+    <svg><use href="#svg-pencil"></use></svg>
+    <span class="visually-hidden">Edit this page</span>
+  </a>
+</div><div class="theme-toggle-container theme-toggle-content">
+            <button class="theme-toggle" aria-label="Toggle Light / Dark / Auto color theme">
+              <svg class="theme-icon-when-auto-light"><use href="#svg-sun-with-moon"></use></svg>
+              <svg class="theme-icon-when-auto-dark"><use href="#svg-moon-with-sun"></use></svg>
+              <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
+              <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
+            </button>
+          </div>
+          <label class="toc-overlay-icon toc-content-icon" for="__toc">
+            <span class="icon"><svg><use href="#svg-toc"></use></svg></span>
+          </label>
+        </div>
+        <article role="main" id="furo-main-content">
+          <section id="logo-photometric-redshift-error-fitting">
+<h1><a class="reference internal" href="../_images/logo.png"><img alt="logo" src="../_images/logo.png" style="width: 32px;" /></a> Photometric-redshift error fitting<a class="headerlink" href="#logo-photometric-redshift-error-fitting" title="Link to this heading"><span>#</span></a></h1>
+<p>Photometric-redshift uncertainties affect the assignment of galaxies to
+tomographic bins and therefore the redshift distributions used in cosmological
+analyses. These uncertainties are commonly described using a statistical model
+for the relationship between true and observed redshifts.</p>
+<p>Binny provides an unbinned maximum-likelihood method for estimating
+photometric-redshift uncertainty parameters from catalogues containing matched
+true and observed redshifts.</p>
+<p>The method fits a two-component Gaussian mixture to normalized photo-z
+residuals. The recovered parameters can be converted into Binny’s forward
+photo-z uncertainty model and used to construct tomographic redshift
+distributions.</p>
+<p>For executable examples, see
+<a class="reference internal" href="../examples/tomography/photoz_fitting.html"><span class="doc"> Photometric-redshift error fitting</span></a>.</p>
+<section id="normalized-photometric-redshift-residuals">
+<h2>Normalized photometric-redshift residuals<a class="headerlink" href="#normalized-photometric-redshift-residuals" title="Link to this heading"><span>#</span></a></h2>
+<p>For a galaxy with true redshift <span class="math notranslate nohighlight">\(z\)</span> and observed photometric redshift
+<span class="math notranslate nohighlight">\(z_{\mathrm{ph}}\)</span>, define the normalized residual</p>
+<div class="math-wrapper docutils container">
+<div class="math notranslate nohighlight">
+\[\epsilon =
+\frac{z_{\mathrm{ph}} - z}{1+z}.\]</div>
+</div>
+<p>This normalization accounts for the approximate redshift dependence of
+photometric-redshift scatter, which is often modelled as proportional to
+<span class="math notranslate nohighlight">\(1+z\)</span>.</p>
+<p>The observed redshift can equivalently be expressed as</p>
+<div class="math-wrapper docutils container">
+<div class="math notranslate nohighlight">
+\[z_{\mathrm{ph}} = z + (1+z)\epsilon.\]</div>
+</div>
+<p>The fitting model assumes that the distribution of normalized residuals is
+independent of true redshift over the catalogue being fitted.</p>
+<p>This provides a compact description of the photo-z error distribution using
+parameters shared across the sample.</p>
+</section>
+<section id="gaussian-mixture-model">
+<h2>Gaussian-mixture model<a class="headerlink" href="#gaussian-mixture-model" title="Link to this heading"><span>#</span></a></h2>
+<p>Photometric-redshift errors often contain a dominant population of relatively
+accurate estimates together with a smaller population of objects exhibiting
+larger errors or systematic displacements.</p>
+<p>Binny models these populations using a two-component Gaussian mixture,</p>
+<div class="math-wrapper docutils container">
+<div class="math notranslate nohighlight">
+\[p(\epsilon \mid \boldsymbol{\phi})
+=
+(1-f_{\mathrm{out}})
+\mathcal{N}(\epsilon;0,\sigma_{\mathrm{core}}^2)
++
+f_{\mathrm{out}}
+\mathcal{N}(\epsilon;\mu_{\mathrm{out}},\sigma_{\mathrm{out}}^2),\]</div>
+</div>
+<p>where</p>
+<div class="math-wrapper docutils container">
+<div class="math notranslate nohighlight">
+\[\boldsymbol{\phi}
+=
+\left(
+\sigma_{\mathrm{core}},
+\sigma_{\mathrm{out}},
+\mu_{\mathrm{out}},
+f_{\mathrm{out}}
+\right).\]</div>
+</div>
+<p>The Gaussian probability density is defined as</p>
+<div class="math-wrapper docutils container">
+<div class="math notranslate nohighlight">
+\[\mathcal{N}(\epsilon;\mu,\sigma^2)
+=
+\frac{1}{\sqrt{2\pi}\sigma}
+\exp\left[
+-\frac{(\epsilon-\mu)^2}{2\sigma^2}
+\right].\]</div>
+</div>
+<p>The parameters describe:</p>
+<ul class="simple">
+<li><p><span class="math notranslate nohighlight">\(\sigma_{\mathrm{core}}\)</span>: scatter of the main photo-z population;</p></li>
+<li><p><span class="math notranslate nohighlight">\(\sigma_{\mathrm{out}}\)</span>: scatter of the outlier population;</p></li>
+<li><p><span class="math notranslate nohighlight">\(\mu_{\mathrm{out}}\)</span>: mean normalized residual of the outlier population;</p></li>
+<li><p><span class="math notranslate nohighlight">\(f_{\mathrm{out}}\)</span>: fraction assigned to the outlier component.</p></li>
+</ul>
+<p>The core component has a mean fixed to zero, while the outlier component has
+an independent mean and scatter.</p>
+<p>The mixture weights satisfy</p>
+<div class="math-wrapper docutils container">
+<div class="math notranslate nohighlight">
+\[0 \leq f_{\mathrm{out}} \leq 1,
+\qquad
+(1-f_{\mathrm{out}})+f_{\mathrm{out}}=1.\]</div>
+</div>
+<p>To identify the dominant population as the core, Binny imposes a minimum
+core weight,</p>
+<div class="math-wrapper docutils container">
+<div class="math notranslate nohighlight">
+\[1-f_{\mathrm{out}}
+\geq w_{\mathrm{core,min}}.\]</div>
+</div>
+<p>The default value is <span class="math notranslate nohighlight">\(w_{\mathrm{core,min}}=0.5\)</span>, restricting the fitted
+outlier fraction to at most <span class="math notranslate nohighlight">\(0.5\)</span>.</p>
+<p>This convention reduces ambiguity in component labelling but does not
+guarantee that the two populations are statistically distinguishable.</p>
+</section>
+<section id="unbinned-maximum-likelihood-estimation">
+<h2>Unbinned maximum-likelihood estimation<a class="headerlink" href="#unbinned-maximum-likelihood-estimation" title="Link to this heading"><span>#</span></a></h2>
+<p>Consider a catalogue containing <span class="math notranslate nohighlight">\(N\)</span> matched true and observed redshifts,</p>
+<div class="math-wrapper docutils container">
+<div class="math notranslate nohighlight">
+\[\mathcal{D}
+=
+\left\{
+(z_i,z_{\mathrm{ph},i})
+\right\}_{i=1}^{N}.\]</div>
+</div>
+<p>The normalized residual for each galaxy is</p>
+<div class="math-wrapper docutils container">
+<div class="math notranslate nohighlight">
+\[\epsilon_i =
+\frac{z_{\mathrm{ph},i}-z_i}{1+z_i}.\]</div>
+</div>
+<p>Assuming independent residuals, the likelihood of the mixture parameters is</p>
+<div class="math-wrapper docutils container">
+<div class="math notranslate nohighlight">
+\[\mathcal{L}(\boldsymbol{\phi})
+=
+\prod_{i=1}^{N}
+p(\epsilon_i\mid\boldsymbol{\phi}).\]</div>
+</div>
+<p>The corresponding log-likelihood is</p>
+<div class="math-wrapper docutils container">
+<div class="math notranslate nohighlight">
+\[\ln\mathcal{L}(\boldsymbol{\phi})
+=
+\sum_{i=1}^{N}
+\ln\left[
+(1-f_{\mathrm{out}})
+\mathcal{N}(\epsilon_i;0,\sigma_{\mathrm{core}}^2)
++
+f_{\mathrm{out}}
+\mathcal{N}(\epsilon_i;\mu_{\mathrm{out}},
+\sigma_{\mathrm{out}}^2)
+\right].\]</div>
+</div>
+<p>The maximum-likelihood estimator is</p>
+<div class="math-wrapper docutils container">
+<div class="math notranslate nohighlight">
+\[\hat{\boldsymbol{\phi}}
+=
+\underset{\boldsymbol{\phi}}{\operatorname{argmax}}
+\;
+\ln\mathcal{L}(\boldsymbol{\phi}),\]</div>
+</div>
+<p>subject to the mixture-weight constraint and positive component scatters.</p>
+<p>The likelihood is evaluated directly from individual galaxy residuals,
+without first constructing a histogram.</p>
+<p>Consequently, the fitted parameters do not depend on the choice of histogram
+bin edges.</p>
+</section>
+<section id="expectation-maximization-algorithm">
+<h2>Expectation-maximization algorithm<a class="headerlink" href="#expectation-maximization-algorithm" title="Link to this heading"><span>#</span></a></h2>
+<p>Binny estimates the Gaussian-mixture parameters using the
+expectation-maximization (EM) algorithm.</p>
+<p>The method introduces a latent component label <span class="math notranslate nohighlight">\(c_i\in\{0,1\}\)</span> for
+each galaxy, with <span class="math notranslate nohighlight">\(c_i=0\)</span> denoting the core and <span class="math notranslate nohighlight">\(c_i=1\)</span>
+denoting the outlier population.</p>
+<p>EM alternates between estimating the probability that each galaxy belongs
+to the outlier component and updating the mixture parameters.</p>
+<section id="expectation-step">
+<h3>Expectation step<a class="headerlink" href="#expectation-step" title="Link to this heading"><span>#</span></a></h3>
+<p>The posterior probability that galaxy <span class="math notranslate nohighlight">\(i\)</span> belongs to the outlier
+component is</p>
+<div class="math-wrapper docutils container">
+<div class="math notranslate nohighlight">
+\[r_i
+=
+\frac{
+f_{\mathrm{out}}
+\mathcal{N}(\epsilon_i;\mu_{\mathrm{out}},
+\sigma_{\mathrm{out}}^2)
+}{
+(1-f_{\mathrm{out}})
+\mathcal{N}(\epsilon_i;0,\sigma_{\mathrm{core}}^2)
++
+f_{\mathrm{out}}
+\mathcal{N}(\epsilon_i;\mu_{\mathrm{out}},
+\sigma_{\mathrm{out}}^2)
+}.\]</div>
+</div>
+<p>The quantity <span class="math notranslate nohighlight">\(r_i\)</span> is called the outlier responsibility.</p>
+<p>The corresponding probability of core membership is</p>
+<div class="math-wrapper docutils container">
+<div class="math notranslate nohighlight">
+\[1-r_i.\]</div>
+</div>
+<p>These probabilities provide a soft assignment of galaxies to the two
+mixture components.</p>
+</section>
+<section id="maximization-step">
+<h3>Maximization step<a class="headerlink" href="#maximization-step" title="Link to this heading"><span>#</span></a></h3>
+<p>Define the effective component populations as</p>
+<div class="math-wrapper docutils container">
+<div class="math notranslate nohighlight">
+\[N_{\mathrm{out}} = \sum_{i=1}^{N}r_i,
+\qquad
+N_{\mathrm{core}} = \sum_{i=1}^{N}(1-r_i).\]</div>
+</div>
+<p>The unconstrained update for the outlier fraction is</p>
+<div class="math-wrapper docutils container">
+<div class="math notranslate nohighlight">
+\[f_{\mathrm{out}}^{\mathrm{new}}
+=
+\frac{N_{\mathrm{out}}}{N}.\]</div>
+</div>
+<p>The outlier mean is updated according to</p>
+<div class="math-wrapper docutils container">
+<div class="math notranslate nohighlight">
+\[\mu_{\mathrm{out}}^{\mathrm{new}}
+=
+\frac{\sum_i r_i\epsilon_i}{N_{\mathrm{out}}}.\]</div>
+</div>
+<p>The core variance update is</p>
+<div class="math-wrapper docutils container">
+<div class="math notranslate nohighlight">
+\[\left(\sigma_{\mathrm{core}}^2\right)^{\mathrm{new}}
+=
+\frac{
+\sum_i(1-r_i)\epsilon_i^2
+}{
+N_{\mathrm{core}}
+}.\]</div>
+</div>
+<p>The core mean remains fixed at zero, so no fitted mean is subtracted in
+this expression.</p>
+<p>The outlier variance update is</p>
+<div class="math-wrapper docutils container">
+<div class="math notranslate nohighlight">
+\[\left(\sigma_{\mathrm{out}}^2\right)^{\mathrm{new}}
+=
+\frac{
+\sum_i r_i
+\left(\epsilon_i-\mu_{\mathrm{out}}^{\mathrm{new}}\right)^2
+}{
+N_{\mathrm{out}}
+}.\]</div>
+</div>
+<p>The core-weight constraint restricts the updated outlier fraction to</p>
+<div class="math-wrapper docutils container">
+<div class="math notranslate nohighlight">
+\[f_{\mathrm{out}}
+\leq 1-w_{\mathrm{core,min}}.\]</div>
+</div>
+<p>The algorithm repeats the expectation and maximization steps until its
+convergence criterion is satisfied or the maximum number of iterations
+is reached.</p>
+<p>Gaussian-mixture likelihoods may contain multiple local optima.
+Binny therefore supports multiple initializations through <code class="docutils literal notranslate"><span class="pre">n_init</span></code>.
+The <code class="docutils literal notranslate"><span class="pre">seed</span></code> argument controls the reproducibility of these
+initializations.</p>
+</section>
+</section>
+<section id="connection-to-the-forward-photo-z-model">
+<h2>Connection to the forward photo-z model<a class="headerlink" href="#connection-to-the-forward-photo-z-model" title="Link to this heading"><span>#</span></a></h2>
+<p>The fitted Gaussian mixture describes normalized residuals, while
+tomographic binning requires the conditional distribution of observed
+photometric redshift at fixed true redshift,</p>
+<div class="math-wrapper docutils container">
+<div class="math notranslate nohighlight">
+\[p(z_{\mathrm{ph}}\mid z).\]</div>
+</div>
+<p>The transformation between these quantities follows from</p>
+<div class="math-wrapper docutils container">
+<div class="math notranslate nohighlight">
+\[z_{\mathrm{ph}}=z+(1+z)\epsilon.\]</div>
+</div>
+<p>For a Gaussian residual component with mean <span class="math notranslate nohighlight">\(\mu\)</span> and standard
+deviation <span class="math notranslate nohighlight">\(\sigma\)</span>, the corresponding conditional distribution is</p>
+<div class="math-wrapper docutils container">
+<div class="math notranslate nohighlight">
+\[z_{\mathrm{ph}}\mid z
+\sim
+\mathcal{N}
+\left(
+z+(1+z)\mu,
+(1+z)^2\sigma^2
+\right).\]</div>
+</div>
+<p>The core component has zero residual mean, giving</p>
+<div class="math-wrapper docutils container">
+<div class="math notranslate nohighlight">
+\[\langle z_{\mathrm{ph}}\mid z\rangle_{\mathrm{core}}=z,\]</div>
+</div>
+<p>and</p>
+<div class="math-wrapper docutils container">
+<div class="math notranslate nohighlight">
+\[\sigma_{z,\mathrm{core}}(z)
+=
+(1+z)\sigma_{\mathrm{core}}.\]</div>
+</div>
+<p>For the outlier component,</p>
+<div class="math-wrapper docutils container">
+<div class="math notranslate nohighlight">
+\[\langle z_{\mathrm{ph}}\mid z\rangle_{\mathrm{out}}
+=
+z+(1+z)\mu_{\mathrm{out}},\]</div>
+</div>
+<p>which can be rewritten as</p>
+<div class="math-wrapper docutils container">
+<div class="math notranslate nohighlight">
+\[\langle z_{\mathrm{ph}}\mid z\rangle_{\mathrm{out}}
+=
+(1+\mu_{\mathrm{out}})z+\mu_{\mathrm{out}}.\]</div>
+</div>
+<p>Binny provides
+<a class="reference internal" href="../api/binny.binning.photoz_fitting.html#binny.binning.photoz_fitting.to_binny_photoz_params" title="binny.binning.photoz_fitting.to_binny_photoz_params"><code class="xref py py-func docutils literal notranslate"><span class="pre">binny.binning.photoz_fitting.to_binny_photoz_params()</span></code></a>
+to translate the fitted residual parameters into the uncertainty
+parameters accepted by the forward photo-z assignment model.</p>
+<p>The implemented conversion is</p>
+<div class="math-wrapper docutils container">
+<div class="math notranslate nohighlight">
+\[\begin{split}\begin{aligned}
+\texttt{scatter_scale}
+&amp;= \sigma_{\mathrm{core}},\\
+\texttt{outlier_scatter_scale}
+&amp;= \sigma_{\mathrm{out}},\\
+\texttt{outlier_frac}
+&amp;= f_{\mathrm{out}},\\
+\texttt{outlier_mean_scale}
+&amp;= 1+\mu_{\mathrm{out}},\\
+\texttt{outlier_mean_offset}
+&amp;= -\mu_{\mathrm{out}}.
+\end{aligned}\end{split}\]</div>
+</div>
+<p>The core mean parameters retain their default values,</p>
+<div class="math-wrapper docutils container">
+<div class="math notranslate nohighlight">
+\[\texttt{mean\_scale}=1,
+\qquad
+\texttt{mean\_offset}=0.\]</div>
+</div>
+<p>The offset sign follows Binny’s forward-model parameter convention.
+The conversion should be interpreted together with that convention,
+rather than as a direct identification of the offset parameter with
+the observed residual mean.</p>
+<p>The resulting parameters can be passed to the <code class="docutils literal notranslate"><span class="pre">uncertainties</span></code> field
+of a photometric tomography specification.</p>
+</section>
+<section id="tomographic-assignment-probabilities">
+<h2>Tomographic assignment probabilities<a class="headerlink" href="#tomographic-assignment-probabilities" title="Link to this heading"><span>#</span></a></h2>
+<p>Let <span class="math notranslate nohighlight">\(n(z)\)</span> denote the parent true-redshift distribution.</p>
+<p>A photometric tomographic bin <span class="math notranslate nohighlight">\(i\)</span> is defined by observed-redshift
+boundaries <span class="math notranslate nohighlight">\([z_i^{\mathrm{min}},z_i^{\mathrm{max}}]\)</span>.</p>
+<p>The probability that a galaxy at true redshift <span class="math notranslate nohighlight">\(z\)</span> is assigned
+to this bin is</p>
+<div class="math-wrapper docutils container">
+<div class="math notranslate nohighlight">
+\[P_i(z)
+=
+\int_{z_i^{\mathrm{min}}}^{z_i^{\mathrm{max}}}
+p(z_{\mathrm{ph}}\mid z)
+\,\mathrm{d}z_{\mathrm{ph}}.\]</div>
+</div>
+<p>For a Gaussian component with conditional mean <span class="math notranslate nohighlight">\(m(z)\)</span> and
+standard deviation <span class="math notranslate nohighlight">\(s(z)\)</span>, this integral can be expressed using
+the standard normal cumulative distribution function <span class="math notranslate nohighlight">\(\Phi\)</span>,</p>
+<div class="math-wrapper docutils container">
+<div class="math notranslate nohighlight">
+\[P_i(z)
+=
+\Phi\left(
+\frac{z_i^{\mathrm{max}}-m(z)}{s(z)}
+\right)
+-
+\Phi\left(
+\frac{z_i^{\mathrm{min}}-m(z)}{s(z)}
+\right).\]</div>
+</div>
+<p>For the two-component photo-z mixture, the full assignment probability is</p>
+<div class="math-wrapper docutils container">
+<div class="math notranslate nohighlight">
+\[P_i(z)
+=
+(1-f_{\mathrm{out}})
+P_{i,\mathrm{core}}(z)
++
+f_{\mathrm{out}}
+P_{i,\mathrm{out}}(z).\]</div>
+</div>
+<p>The resulting tomographic true-redshift distribution is</p>
+<div class="math-wrapper docutils container">
+<div class="math notranslate nohighlight">
+\[n_i(z)=n(z)P_i(z).\]</div>
+</div>
+<p>This is the same general window-function construction used throughout
+Binny’s tomography framework, with</p>
+<div class="math-wrapper docutils container">
+<div class="math notranslate nohighlight">
+\[W_i(z)=P_i(z).\]</div>
+</div>
+<p>The fitted photo-z uncertainty model therefore determines the
+probabilistic window functions used to construct the tomographic bins.</p>
+<p>Depending on the configuration, each resulting distribution may be
+normalized independently,</p>
+<div class="math-wrapper docutils container">
+<div class="math notranslate nohighlight">
+\[\int n_i(z)\,\mathrm{d}z=1.\]</div>
+</div>
+<p>For further discussion of tomographic construction and normalization,
+see <a class="reference internal" href="tomography.html"><span class="doc"> Tomography</span></a>.</p>
+</section>
+<section id="fit-diagnostics">
+<h2>Fit diagnostics<a class="headerlink" href="#fit-diagnostics" title="Link to this heading"><span>#</span></a></h2>
+<p>Binny optionally returns statistical and numerical diagnostics when
+<code class="docutils literal notranslate"><span class="pre">return_metadata=True</span></code>.</p>
+<p>The metadata include the log-likelihood, convergence status, number of
+iterations, information criteria, and a goodness-of-fit statistic.</p>
+<p>The Akaike information criterion is</p>
+<div class="math-wrapper docutils container">
+<div class="math notranslate nohighlight">
+\[\mathrm{AIC}
+=
+2k-2\ln\hat{\mathcal{L}},\]</div>
+</div>
+<p>where <span class="math notranslate nohighlight">\(k\)</span> is the number of fitted parameters.</p>
+<p>The Bayesian information criterion is</p>
+<div class="math-wrapper docutils container">
+<div class="math notranslate nohighlight">
+\[\mathrm{BIC}
+=
+k\ln N-2\ln\hat{\mathcal{L}}.\]</div>
+</div>
+<p>For the four-parameter Gaussian mixture, <span class="math notranslate nohighlight">\(k=4\)</span>.</p>
+<p>The Kolmogorov–Smirnov statistic compares the empirical cumulative
+distribution function of the residuals with the fitted mixture,</p>
+<div class="math-wrapper docutils container">
+<div class="math notranslate nohighlight">
+\[D_{\mathrm{KS}}
+=
+\sup_{\epsilon}
+\left|
+F_N(\epsilon)
+-
+F_{\hat{\boldsymbol{\phi}}}(\epsilon)
+\right|.\]</div>
+</div>
+<p>Here <span class="math notranslate nohighlight">\(F_N\)</span> is the empirical cumulative distribution function,
+and <span class="math notranslate nohighlight">\(F_{\hat{\boldsymbol{\phi}}}\)</span> is the cumulative distribution
+function of the fitted mixture.</p>
+<p>AIC and BIC are useful for comparing statistical models fitted to
+the same catalogue. The KS statistic measures distribution-level
+agreement, although standard KS significance thresholds do not
+directly apply when the model parameters have been estimated from
+the same observations.</p>
+<p>The convergence information describes the numerical optimization
+and should be inspected separately from statistical goodness of fit.</p>
+</section>
+<section id="assumptions-and-limitations">
+<h2>Assumptions and limitations<a class="headerlink" href="#assumptions-and-limitations" title="Link to this heading"><span>#</span></a></h2>
+<p>The two-component Gaussian mixture provides a compact approximation
+to photometric-redshift errors, but it does not capture every feature
+of realistic photo-z catalogues.</p>
+<p>The main assumptions are:</p>
+<ul class="simple">
+<li><p>The normalized residual distribution is independent of true redshift
+over the fitted sample.</p></li>
+<li><p>The core residual mean is fixed to zero.</p></li>
+<li><p>The core and outlier components are Gaussian.</p></li>
+<li><p>The outlier population is described by a single Gaussian component.</p></li>
+<li><p>The catalogue residuals are treated as independent observations.</p></li>
+<li><p>The core component satisfies a minimum mixture-weight constraint.</p></li>
+<li><p>The calibration catalogue is assumed to represent the population
+to which the fitted model will be applied.</p></li>
+</ul>
+<p>In particular, a single global residual distribution may not adequately
+describe samples with strongly redshift-dependent scatter, multiple
+outlier populations, or significant selection effects.</p>
+<p>The fitted mixture fraction is also model-dependent. It should not
+automatically be interpreted as a unique, model-independent
+catastrophic-outlier rate.</p>
+<p>The method estimates the parameters of the specified statistical model,
+rather than reconstructing an arbitrary photo-z error distribution.</p>
+<p>For practical examples of parameter recovery, fit diagnostics, and
+tomographic reconstruction, see
+<a class="reference internal" href="../examples/tomography/photoz_fitting.html"><span class="doc"> Photometric-redshift error fitting</span></a>.</p>
+</section>
+</section>
+
+        </article>
+      </div>
+      <footer>
+        
+        <div class="related-pages">
+          <a class="next-page" href="uncertainties/index.html">
+              <div class="page-info">
+                <div class="context">
+                  <span>Next</span>
+                </div>
+                <div class="title"> Redshift uncertainties</div>
+              </div>
+              <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
+            </a>
+          <a class="prev-page" href="tomography.html">
+              <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
+              <div class="page-info">
+                <div class="context">
+                  <span>Previous</span>
+                </div>
+                
+                <div class="title"> Tomography</div>
+                
+              </div>
+            </a>
+        </div>
+        <div class="bottom-of-page">
+          <div class="left-details">
+            <div class="copyright">
+                Copyright &#169; 2026, Nikolina Šarčević, Matthijs van der Wild, Rebekah Polen
+            </div>
+            Made with <a href="https://www.sphinx-doc.org/">Sphinx</a> and <a class="muted-link" href="https://pradyunsg.me">@pradyunsg</a>'s
+            
+            <a href="https://github.com/pradyunsg/furo">Furo</a>
+            
+          </div>
+          <div class="right-details">
+            <div class="icons">
+              <a class="muted-link " href="https://github.com/binny-org/binny" aria-label="GitHub">
+                <svg stroke="currentColor" fill="currentColor" stroke-width="0"
+                     viewBox="0 0 16 16">
+                    <path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38
+                    0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13
+                    -.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87
+                    2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95
+                    0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21
+                    2.2.82A7.65 7.65 0 0 1 8 3.87c.68 0 1.36.09 2 .26
+                    1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12
+                    .51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65
+                    3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01
+                    2.2 0 .21.15.46.55.38A8.013 8.013 0 0 0 16
+                    8c0-4.42-3.58-8-8-8z"></path>
+                </svg>
+            </a>
+              
+            </div>
+          </div>
+        </div>
+        
+      </footer>
+    </div>
+    <aside class="toc-drawer">
+      
+      
+      <div class="toc-sticky toc-scroll">
+        <div class="toc-title-container">
+          <span class="toc-title">
+            On this page
+          </span>
+        </div>
+        <div class="toc-tree-container">
+          <div class="toc-tree">
+            <ul>
+<li><a class="reference internal" href="#"> Photometric-redshift error fitting</a><ul>
+<li><a class="reference internal" href="#normalized-photometric-redshift-residuals">Normalized photometric-redshift residuals</a></li>
+<li><a class="reference internal" href="#gaussian-mixture-model">Gaussian-mixture model</a></li>
+<li><a class="reference internal" href="#unbinned-maximum-likelihood-estimation">Unbinned maximum-likelihood estimation</a></li>
+<li><a class="reference internal" href="#expectation-maximization-algorithm">Expectation-maximization algorithm</a><ul>
+<li><a class="reference internal" href="#expectation-step">Expectation step</a></li>
+<li><a class="reference internal" href="#maximization-step">Maximization step</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#connection-to-the-forward-photo-z-model">Connection to the forward photo-z model</a></li>
+<li><a class="reference internal" href="#tomographic-assignment-probabilities">Tomographic assignment probabilities</a></li>
+<li><a class="reference internal" href="#fit-diagnostics">Fit diagnostics</a></li>
+<li><a class="reference internal" href="#assumptions-and-limitations">Assumptions and limitations</a></li>
+</ul>
+</li>
+</ul>
+
+          </div>
+        </div>
+      </div>
+      
+      
+    </aside>
+  </div>
+</div><script src="../_static/documentation_options.js?v=5929fcd5"></script>
+    <script src="../_static/doctools.js?v=9bcbadda"></script>
+    <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../_static/scripts/furo.js?v=46bd48cc"></script>
+    <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="../_static/copybutton.js?v=f16c4c56"></script>
+    <script data-sd-tabs-storage-prefix="sphinx-design-tab-id-" src="../_static/design-tabs.js?v=fcb327ea"></script>
+    <script async="async" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    </body>
+</html>
