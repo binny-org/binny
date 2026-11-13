@@ -1,5 +1,22 @@
 # Changelog
 
+## 1.3.0 - 2026-11-13
+
+### Added
+
+- Mock redshift catalog sampling from tabulated parent distributions using exact inverse-CDF sampling.
+- Support for nonuniform redshift grids, reproducible sampling, optional catalog weights, and user-defined observation models.
+- Unit tests, theoretical documentation, and executable examples.
+
+## 1.2.0 - 2026-11-12
+
+### Changed
+
+- Automated PyPI publishing and GitHub release creation through GitHub Actions.
+- Updated Ruff and pre-commit configuration.
+- Reformatted benchmark and documentation scripts.
+- Updated release metadata and Sphinx configuration.
+
 ## *1.1.0 - 2026-11-12*
 
 ### *Added*
