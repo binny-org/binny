@@ -8,7 +8,6 @@ import numpy as np
 
 from binny.axes import equal_number_edges, equidistant_edges
 
-
 HERE = Path(__file__).resolve().parent
 OUTDIR = HERE.parent / "_static" / "animations"
 OUTDIR.mkdir(parents=True, exist_ok=True)
@@ -67,9 +66,7 @@ for segment in segment_specs:
 
     segment_edges.append(edges)
 
-mixed_edges = np.concatenate(
-    [segment_edges[0], segment_edges[1][1:]]
-)
+mixed_edges = np.concatenate([segment_edges[0], segment_edges[1][1:]])
 
 # Use the same Viridis palette as the Binny tomography animations.
 colors = cmr.take_cmap_colors(
@@ -79,14 +76,16 @@ colors = cmr.take_cmap_colors(
     return_fmt="hex",
 )
 
-plt.rcParams.update({
-    "font.family": "DejaVu Sans",
-    "font.size": 13,
-    "axes.linewidth": 1.5,
-    "xtick.direction": "in",
-    "ytick.direction": "in",
-    "savefig.facecolor": "white",
-})
+plt.rcParams.update(
+    {
+        "font.family": "DejaVu Sans",
+        "font.size": 13,
+        "axes.linewidth": 1.5,
+        "xtick.direction": "in",
+        "ytick.direction": "in",
+        "savefig.facecolor": "white",
+    }
+)
 
 # One large panel above three smaller comparison panels.
 fig = plt.figure(figsize=(8.5, 7), facecolor="white")
@@ -142,9 +141,7 @@ def draw_bins(ax, edges):
         zorder=10,
     )
 
-    for i, (lo, hi) in enumerate(
-        zip(edges[:-1], edges[1:], strict=True)
-    ):
+    for i, (lo, hi) in enumerate(zip(edges[:-1], edges[1:], strict=True)):
         mask = (z >= lo) & (z <= hi)
         x_bin = np.concatenate(([lo], z[mask], [hi]))
         y_bin = np.interp(x_bin, z, nz)
