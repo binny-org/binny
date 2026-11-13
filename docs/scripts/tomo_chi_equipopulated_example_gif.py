@@ -40,6 +40,7 @@ def top_hat_window(z, zmin, zmax, include_right=False):
         return ((z >= zmin) & (z <= zmax)).astype(float)
     return ((z >= zmin) & (z < zmax)).astype(float)
 
+
 HERE = Path(__file__).resolve().parent
 OUTDIR = HERE.parent / "_static" / "animations"
 OUTDIR.mkdir(parents=True, exist_ok=True)
@@ -181,16 +182,8 @@ reference_curves = [
 
 ymax = [
     1.08 * np.max(nz),
-    1.08
-    * max(
-        np.max(curve)
-        for curve in specz_curves + equal_chi_specz_curves
-    ),
-    1.08
-    * max(
-        np.max(curve)
-        for curve in photoz_curves + equal_chi_photoz_curves
-    ),
+    1.08 * max(np.max(curve) for curve in specz_curves + equal_chi_specz_curves),
+    1.08 * max(np.max(curve) for curve in photoz_curves + equal_chi_photoz_curves),
 ]
 
 fig, axes = plt.subplots(
@@ -309,9 +302,7 @@ annotation_positions = [
     (0.54, 0.93),
 ]
 
-for panel, (ax, (xpos, ypos)) in enumerate(
-    zip(axes, annotation_positions, strict=True)
-):
+for panel, (ax, (xpos, ypos)) in enumerate(zip(axes, annotation_positions, strict=True)):
     annotation = ax.text(
         xpos,
         ypos,
@@ -325,13 +316,15 @@ for panel, (ax, (xpos, ypos)) in enumerate(
 
 legend_handles = [
     Line2D(
-        [0], [0],
+        [0],
+        [0],
         color="k",
         linewidth=2.0,
         label=r"Equal $\Delta\chi$",
     ),
     Line2D(
-        [0], [0],
+        [0],
+        [0],
         color="0.55",
         linestyle="--",
         linewidth=2.0,
@@ -385,17 +378,9 @@ def draw_frame(zcut):
         rf"$z \in [{bin_range[0]:.1f},\, {bin_range[1]:.1f}]$"
     )
 
-    artists = [
-        line
-        for panel_lines in lines
-        for line in panel_lines
-    ]
+    artists = [line for panel_lines in lines for line in panel_lines]
 
-    reference_artists = [
-        line
-        for panel_lines in reference_lines
-        for line in panel_lines
-    ]
+    reference_artists = [line for panel_lines in reference_lines for line in panel_lines]
 
     return (*artists, *reference_artists, *annotations)
 

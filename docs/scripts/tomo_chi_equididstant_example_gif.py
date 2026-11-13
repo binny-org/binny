@@ -174,16 +174,8 @@ reference_curves = [
 
 ymax = [
     1.08 * np.max(nz),
-    1.08
-    * max(
-        np.max(curve)
-        for curve in specz_curves + equal_z_specz_curves
-    ),
-    1.08
-    * max(
-        np.max(curve)
-        for curve in photoz_curves + equal_z_photoz_curves
-    ),
+    1.08 * max(np.max(curve) for curve in specz_curves + equal_z_specz_curves),
+    1.08 * max(np.max(curve) for curve in photoz_curves + equal_z_photoz_curves),
 ]
 
 fig, axes = plt.subplots(
@@ -302,9 +294,7 @@ annotation_positions = [
     (0.54, 0.93),
 ]
 
-for ax, (xpos, ypos) in zip(
-    axes, annotation_positions, strict=True
-):
+for ax, (xpos, ypos) in zip(axes, annotation_positions, strict=True):
     annotation = ax.text(
         xpos,
         ypos,
@@ -380,17 +370,9 @@ def draw_frame(zcut):
         rf"$z \in [{bin_range[0]:.1f},\, {bin_range[1]:.1f}]$"
     )
 
-    artists = [
-        line
-        for panel_lines in lines
-        for line in panel_lines
-    ]
+    artists = [line for panel_lines in lines for line in panel_lines]
 
-    reference_artists = [
-        line
-        for panel_lines in reference_lines
-        for line in panel_lines
-    ]
+    reference_artists = [line for panel_lines in reference_lines for line in panel_lines]
 
     return (*artists, *reference_artists, *annotations)
 

@@ -70,12 +70,8 @@ for range_name, (zmin, zmax) in range_types.items():
             source_bins = init.source_bins(normalized=True, save_file=False)
             lens_bins = init.lens_bins(normalized=True, save_file=False)
 
-            source_bin_centers = init.compute_tomo_bin_centers(
-                source_bins, decimal_places=4
-            )
-            lens_bin_centers = init.compute_tomo_bin_centers(
-                lens_bins, decimal_places=4
-            )
+            source_bin_centers = init.compute_tomo_bin_centers(source_bins, decimal_places=4)
+            lens_bin_centers = init.compute_tomo_bin_centers(lens_bins, decimal_places=4)
 
             lens_neff = init.get_n_eff_clustering(save_file=False)
             source_neff = init.get_n_eff_lensing(save_file=False)
