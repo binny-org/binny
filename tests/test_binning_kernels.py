@@ -86,221 +86,216 @@ def test_validate_bin_edges_require_within_accepts_boundary():
 
 
 def test_resolve_bin_edges_rejects_edges_and_scheme_together():
-    """Tests that providing bin_edges and binning_scheme raises ValueError."""
+    """Test that explicit edges cannot be combined with a scheme."""
     z, nz = _toy_z_nz()
     edges = _edges_4bins()
-    with pytest.raises(ValueError, match=r"either bin_edges or"):
+
+    with pytest.raises(ValueError, match="Specify exactly one"):
         resolve_bin_edges(
-            z_axis=z,
-            nz_axis=nz,
-            bin_edges=edges,
-            binning_scheme="equidistant",
-            n_bins=4,
+            axis=z,
+            density=nz,
+            bins={
+                "edges": edges,
+                "scheme": "equidistant",
+                "n_bins": 4,
+            },
         )
 
 
-def test_resolve_bin_edges_requires_binning_scheme_when_edges_none():
-    """Tests that bin_edges=None requires binning_scheme."""
+def test_resolve_bin_edges_requires_binning_specification():
+    """Test that an empty bin specification is rejected."""
     z, nz = _toy_z_nz()
-    with pytest.raises(ValueError, match=r"must provide binning_scheme"):
+
+    with pytest.raises(ValueError, match="Specify exactly one"):
         resolve_bin_edges(
-            z_axis=z,
-            nz_axis=nz,
-            bin_edges=None,
-            binning_scheme=None,
-            n_bins=None,
+            axis=z,
+            density=nz,
+            bins={},
         )
 
 
 def test_resolve_bin_edges_string_scheme_requires_n_bins():
-    """Tests that string binning_scheme requires n_bins when edges are None."""
+    """Test that a generating scheme requires a bin count."""
     z, nz = _toy_z_nz()
-    with pytest.raises(ValueError, match=r"must provide n_bins"):
+
+    with pytest.raises(ValueError, match="n_bins"):
         resolve_bin_edges(
-            z_axis=z,
-            nz_axis=nz,
-            bin_edges=None,
-            binning_scheme="equidistant",
-            n_bins=None,
+            axis=z,
+            density=nz,
+            bins={"scheme": "equidistant"},
         )
 
 
 def test_resolve_bin_edges_equidistant_defaults_to_z_range():
-    """Tests that equidistant scheme uses z_axis endpoints by default."""
+    """Test that equidistant edges span the parent redshift grid."""
     z, nz = _toy_z_nz()
+
     edges = resolve_bin_edges(
-        z_axis=z,
-        nz_axis=nz,
-        bin_edges=None,
-        binning_scheme="equidistant",
-        n_bins=4,
+        axis=z,
+        density=nz,
+        bins={"scheme": "equidistant", "n_bins": 4},
     )
+
     assert edges.shape == (5,)
     assert np.isclose(edges[0], float(z[0]))
     assert np.isclose(edges[-1], float(z[-1]))
 
 
 def test_resolve_bin_edges_equidistant_aliases_work():
-    """Tests that equidistant aliases 'eq' and 'linear' are accepted."""
+    """Test that equidistant aliases are accepted."""
     z, nz = _toy_z_nz()
+
     for scheme in ["eq", "linear"]:
         edges = resolve_bin_edges(
-            z_axis=z,
-            nz_axis=nz,
-            bin_edges=None,
-            binning_scheme=scheme,
-            n_bins=3,
+            axis=z,
+            density=nz,
+            bins={"scheme": scheme, "n_bins": 3},
         )
         assert edges.shape == (4,)
 
 
 def test_resolve_bin_edges_equidistant_bin_range_used():
-    """Tests that bin_range overrides z range for equidistant edges."""
+    """Test that the configured range determines equidistant edges."""
     z, nz = _toy_z_nz()
+
     edges = resolve_bin_edges(
-        z_axis=z,
-        nz_axis=nz,
-        bin_edges=None,
-        binning_scheme="equidistant",
-        n_bins=2,
-        bin_range=(0.25, 1.25),
+        axis=z,
+        density=nz,
+        bins={
+            "scheme": "equidistant",
+            "n_bins": 2,
+            "range": (0.25, 1.25),
+        },
     )
+
     assert np.allclose(edges, np.array([0.25, 0.75, 1.25]))
 
 
 def test_resolve_bin_edges_equidistant_invalid_bin_range():
-    """Tests that invalid bin_range raises a ValueError."""
+    """Test rejection of an invalid binning range."""
     z, nz = _toy_z_nz()
-    with pytest.raises(ValueError, match=r"bin_range must be finite"):
+
+    with pytest.raises(ValueError, match=r"bins\.range must contain two finite"):
         resolve_bin_edges(
-            z_axis=z,
-            nz_axis=nz,
-            bin_edges=None,
-            binning_scheme="equidistant",
-            n_bins=2,
-            bin_range=(1.0, 1.0),
+            axis=z,
+            density=nz,
+            bins={
+                "scheme": "equidistant",
+                "n_bins": 2,
+                "range": (1.0, 1.0),
+            },
         )
 
 
 def test_resolve_bin_edges_equal_number_requires_axis_and_weights_both_or_neither():
-    """Tests that equal_number requires both equal_number_axis and weights or neither."""
+    """Test that an alternative equal-number axis requires its weights."""
     z, nz = _toy_z_nz()
-    with pytest.raises(ValueError, match=r"Provide both equal_number_axis"):
+
+    with pytest.raises(ValueError, match="Provide both equal_number_axis"):
         resolve_bin_edges(
-            z_axis=z,
-            nz_axis=nz,
-            bin_edges=None,
-            binning_scheme="equal_number",
-            n_bins=3,
+            axis=z,
+            density=nz,
+            bins={"scheme": "equal_number", "n_bins": 3},
             equal_number_axis=z,
             equal_number_weights=None,
         )
 
 
 def test_resolve_bin_edges_equal_number_aliases_work():
-    """Tests that equal_number aliases 'equipopulated' and 'en' are accepted."""
+    """Test that equal-number aliases are accepted."""
     z, nz = _toy_z_nz()
+
     for scheme in ["equipopulated", "en"]:
         edges = resolve_bin_edges(
-            z_axis=z,
-            nz_axis=nz,
-            bin_edges=None,
-            binning_scheme=scheme,
-            n_bins=4,
+            axis=z,
+            density=nz,
+            bins={"scheme": scheme, "n_bins": 4},
         )
         assert edges.shape == (5,)
         assert np.all(np.diff(edges) > 0)
 
 
 def test_resolve_bin_edges_equal_number_returns_valid_edges():
-    """Tests that equal_number returns strictly increasing edges."""
+    """Test that equal-number binning returns increasing finite edges."""
     z, nz = _toy_z_nz()
+
     edges = resolve_bin_edges(
-        z_axis=z,
-        nz_axis=nz,
-        bin_edges=None,
-        binning_scheme="equal_number",
-        n_bins=4,
+        axis=z,
+        density=nz,
+        bins={"scheme": "equal_number", "n_bins": 4},
     )
+
     assert edges.shape == (5,)
     assert np.all(np.isfinite(edges))
     assert np.all(np.diff(edges) > 0)
 
 
 def test_resolve_bin_edges_equal_number_invariant_to_global_weight_scaling():
-    """Tests that equal_number edges are invariant to scaling nz when normalization is on."""
+    """Test invariance of equal-number edges to global weight scaling."""
     z, nz = _toy_z_nz()
+
     e1 = resolve_bin_edges(
-        z_axis=z,
-        nz_axis=nz,
-        bin_edges=None,
-        binning_scheme="equal_number",
-        n_bins=4,
+        axis=z,
+        density=nz,
+        bins={"scheme": "equal_number", "n_bins": 4},
         normalize_equal_number_weights=True,
     )
     e2 = resolve_bin_edges(
-        z_axis=z,
-        nz_axis=3.0 * nz,
-        bin_edges=None,
-        binning_scheme="equal_number",
-        n_bins=4,
+        axis=z,
+        density=3.0 * nz,
+        bins={"scheme": "equal_number", "n_bins": 4},
         normalize_equal_number_weights=True,
     )
+
     assert np.allclose(e1, e2, rtol=0.0, atol=1e-12)
 
 
 def test_resolve_bin_edges_unsupported_string_scheme():
-    """Tests that unsupported string scheme raises a ValueError."""
+    """Test rejection of unsupported binning schemes."""
     z, nz = _toy_z_nz()
-    with pytest.raises(ValueError, match=r"Unsupported binning_scheme"):
+
+    with pytest.raises(ValueError, match="Unsupported binning_scheme"):
         resolve_bin_edges(
-            z_axis=z,
-            nz_axis=nz,
-            bin_edges=None,
-            binning_scheme="nope",
-            n_bins=3,
+            axis=z,
+            density=nz,
+            bins={"scheme": "nope", "n_bins": 3},
         )
 
 
 def test_resolve_bin_edges_mixed_mode_rejects_global_n_bins():
-    """Tests that mixed binning rejects providing n_bins globally."""
+    """Test that mixed binning does not accept a global bin count."""
     z, nz = _toy_z_nz()
     segments = [{"scheme": "equidistant", "n_bins": 2, "z_min": 0.0, "z_max": 2.0}]
-    with pytest.raises(ValueError, match=r"mixed binning mode"):
+
+    with pytest.raises(ValueError):
         resolve_bin_edges(
-            z_axis=z,
-            nz_axis=nz,
-            bin_edges=None,
-            binning_scheme=segments,
-            n_bins=2,
+            axis=z,
+            density=nz,
+            bins={"segments": segments, "n_bins": 2},
         )
 
 
 def test_resolve_bin_edges_mixed_dict_requires_segments_key():
-    """Tests that mixed binning dict requires key 'segments'."""
+    """Test rejection of an invalid mixed-binning specification."""
     z, nz = _toy_z_nz()
-    scheme = {"not_segments": []}
-    with pytest.raises(ValueError, match=r"must contain key 'segments'"):
+
+    with pytest.raises(ValueError):
         resolve_bin_edges(
-            z_axis=z,
-            nz_axis=nz,
-            bin_edges=None,
-            binning_scheme=scheme,
-            n_bins=None,
+            axis=z,
+            density=nz,
+            bins={"not_segments": []},
         )
 
 
 def test_resolve_bin_edges_mixed_requires_sequence_of_segments():
-    """Tests that mixed binning rejects non-sequence segments."""
+    """Test that mixed segments must be a sequence."""
     z, nz = _toy_z_nz()
-    scheme = {"segments": "not a list"}
-    with pytest.raises(ValueError, match=r"requires a sequence"):
+
+    with pytest.raises(ValueError, match=r"bins\.segments must be a sequence"):
         resolve_bin_edges(
-            z_axis=z,
-            nz_axis=nz,
-            bin_edges=None,
-            binning_scheme=scheme,
-            n_bins=None,
+            axis=z,
+            density=nz,
+            bins={"segments": "not a list"},
         )
 
 
@@ -604,12 +599,11 @@ def test_resolve_bin_edges_equal_number_produces_equal_parent_mass_per_bin():
     n_bins = 5
 
     edges = resolve_bin_edges(
-        z_axis=z,
-        nz_axis=nz,
-        bin_edges=None,
-        binning_scheme="equal_number",
-        n_bins=n_bins,
+        axis=z,
+        density=nz,
+        bins={"scheme": "equal_number", "n_bins": n_bins},
     )
+
     edges = validate_bin_edges(edges, require_within=(float(z[0]), float(z[-1])))
 
     total = float(np.trapezoid(nz, x=z))
@@ -651,7 +645,7 @@ def test_finalize_tomo_metadata_uniform_parent_tophat_bins_gives_uniform_frac_pe
         parent_nz=nz,
         bin_edges=edges,
         bins=bins,
-        inputs={"binning_scheme": "equidistant", "n_bins": n_bins},
+        inputs={"bins": {"scheme": "equidistant", "n_bins": n_bins}},
         parent_norm=parent_norm,
         bins_norms=bins_norms,
         include_metadata=True,
@@ -672,12 +666,11 @@ def test_resolve_bin_edges_mixed_eq_then_equal_number_segment_properties():
     ]
 
     edges = resolve_bin_edges(
-        z_axis=z,
-        nz_axis=nz,
-        bin_edges=None,
-        binning_scheme=segments,
-        n_bins=None,
+        axis=z,
+        density=nz,
+        bins={"segments": segments},
     )
+
     edges = validate_bin_edges(edges, require_within=(0.0, 2.0))
 
     assert edges.size == 5
@@ -714,12 +707,11 @@ def test_resolve_bin_edges_mixed_equal_number_then_eq_segment_properties():
     ]
 
     edges = resolve_bin_edges(
-        z_axis=z,
-        nz_axis=nz,
-        bin_edges=None,
-        binning_scheme=segments,
-        n_bins=None,
+        axis=z,
+        density=nz,
+        bins={"segments": segments},
     )
+
     edges = validate_bin_edges(edges, require_within=(0.0, 2.0))
 
     assert edges.size == 6

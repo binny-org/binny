@@ -11,6 +11,7 @@ from binny.axes.bin_edges import (
     equal_number_edges,
     equidistant_chi_edges,
     equidistant_edges,
+    generalized_tomographic_edges,
     geometric_edges,
     log_edges,
 )
@@ -277,3 +278,199 @@ def test_equal_weight_edges_repeated_edges_guard_triggers(
 
     with pytest.raises(ValueError, match=r"Cannot construct strictly increasing bin edges"):
         bemod._equal_weight_edges(x, w, 5)
+
+
+@pytest.fixture
+def generalized_sample():
+    """Return a redshift distribution and comoving radial distances."""
+    z = np.linspace(0.0, 2.0, 1001)
+    nz = np.exp(-0.5 * ((z - 1.0) / 0.35) ** 2)
+    dchi_dz = 3000.0 / np.sqrt(0.3 * (1.0 + z) ** 3 + 0.7)
+    chi = _cumulative_trapz(z, dchi_dz)
+    return z, nz, chi
+
+
+def test_generalized_edges_equal_redshift(generalized_sample):
+    """Recover equidistant redshift binning."""
+    z, nz, _ = generalized_sample
+
+    edges = generalized_tomographic_edges(z, nz, 5)
+    expected = equidistant_edges(z[0], z[-1], 5)
+
+    np.testing.assert_allclose(edges, expected, rtol=0, atol=1e-12)
+
+
+def test_generalized_edges_equal_number(generalized_sample):
+    """Recover equal-number binning."""
+    z, nz, _ = generalized_sample
+
+    edges = generalized_tomographic_edges(z, nz, 5, alpha=1.0)
+    expected = equal_number_edges(z, nz, 5)
+
+    np.testing.assert_allclose(edges, expected, rtol=0, atol=1e-12)
+
+
+def test_generalized_edges_equal_comoving(generalized_sample):
+    """Recover equal-comoving-distance binning."""
+    z, nz, chi = generalized_sample
+
+    edges = generalized_tomographic_edges(z, nz, 5, beta=1.0, comoving_distance=chi)
+    expected = equidistant_chi_edges(z, chi, 5)
+
+    np.testing.assert_allclose(edges, expected, rtol=0, atol=1e-10)
+
+
+@pytest.mark.parametrize(
+    ("alpha", "beta"),
+    [(0.0, 0.0), (1.0, 0.0), (0.0, 1.0), (0.5, 0.5)],
+)
+def test_generalized_edges_valid(generalized_sample, alpha, beta):
+    """Verify edge count, monotonicity, and endpoints."""
+    z, nz, chi = generalized_sample
+
+    edges = generalized_tomographic_edges(z, nz, 5, alpha=alpha, beta=beta, comoving_distance=chi)
+
+    assert edges.shape == (6,)
+    assert np.all(np.diff(edges) > 0)
+    assert edges[0] == z[0]
+    assert edges[-1] == z[-1]
+
+
+def test_generalized_edges_single_bin(generalized_sample):
+    """One bin must span the full redshift interval."""
+    z, nz, chi = generalized_sample
+
+    edges = generalized_tomographic_edges(z, nz, 1, alpha=0.5, beta=0.5, comoving_distance=chi)
+
+    np.testing.assert_array_equal(edges, [z[0], z[-1]])
+
+
+def test_generalized_edges_missing_comoving_distance(generalized_sample):
+    """Require comoving distances for nonzero beta."""
+    z, nz, _ = generalized_sample
+
+    with pytest.raises(ValueError, match="comoving_distance is required"):
+        generalized_tomographic_edges(z, nz, 5, beta=1.0)
+
+
+def test_generalized_edges_negative_nz(generalized_sample):
+    """Reject negative redshift distributions."""
+    z, nz, _ = generalized_sample
+    nz = nz.copy()
+    nz[10] = -1.0
+
+    with pytest.raises(ValueError, match="density must be non-negative"):
+        generalized_tomographic_edges(z, nz, 5)
+
+
+def test_generalized_edges_negative_alpha_zero_nz(generalized_sample):
+    """Reject zero densities raised to negative powers."""
+    z, nz, _ = generalized_sample
+    nz = nz.copy()
+    nz[0] = 0.0
+
+    with pytest.raises(ValueError, match="density must be strictly positive"):
+        generalized_tomographic_edges(z, nz, 5, alpha=-0.5)
+
+
+@pytest.mark.parametrize(
+    "invalid_chi",
+    [
+        np.array([0.0, 1.0, 1.0, 2.0]),
+        np.array([0.0, 2.0, 1.0, 3.0]),
+        np.array([0.0, 1.0, np.nan, 3.0]),
+    ],
+)
+def test_generalized_edges_invalid_comoving_distance(invalid_chi):
+    """Reject nonmonotonic or nonfinite comoving distances."""
+    z = np.linspace(0.0, 1.0, 4)
+    nz = np.ones_like(z)
+
+    with pytest.raises(ValueError):
+        generalized_tomographic_edges(z, nz, 2, beta=1.0, comoving_distance=invalid_chi)
+
+
+@pytest.mark.parametrize(
+    ("alpha", "beta"),
+    [(np.nan, 0.0), (0.0, np.inf)],
+)
+def test_generalized_edges_invalid_exponents(generalized_sample, alpha, beta):
+    """Reject non-finite alpha and beta."""
+    z, nz, _ = generalized_sample
+
+    with pytest.raises(ValueError, match="alpha and beta must be finite"):
+        generalized_tomographic_edges(z, nz, 5, alpha=alpha, beta=beta)
+
+
+def test_generalized_edges_zero_distribution():
+    """Reject a distribution with zero integrated weight."""
+    z = np.linspace(0.0, 2.0, 101)
+    nz = np.zeros_like(z)
+
+    with pytest.raises(ValueError):
+        generalized_tomographic_edges(z, nz, 5, alpha=1.0)
+
+
+def test_generalized_edges_invalid_n_bins(generalized_sample):
+    """Reject invalid numbers of bins."""
+    z, nz, _ = generalized_sample
+
+    with pytest.raises(ValueError):
+        generalized_tomographic_edges(z, nz, 0)
+
+
+@pytest.mark.parametrize("method", ["analytic", "numerical"])
+def test_generalized_tomographic_derivative_methods(method):
+    """Both derivative methods produce valid tomographic edges."""
+    z = np.linspace(0.0, 2.0, 50)
+    nz = np.exp(-z)
+    chi = 1000.0 * (z + 0.1 * z**2)
+
+    edges = generalized_tomographic_edges(
+        z,
+        nz,
+        n_bins=5,
+        alpha=1.0,
+        beta=1.0,
+        comoving_distance=chi,
+        derivative_method=method,
+    )
+
+    assert edges.shape == (6,)
+    assert np.all(np.isfinite(edges))
+    assert np.all(np.diff(edges) > 0)
+
+
+def test_generalized_tomographic_derivative_methods_agree():
+    """Compare numerical and analytic spline differentiation."""
+    z = np.linspace(0.0, 2.0, 50)
+    nz = np.exp(-z)
+    chi = 1000.0 * (z + 0.1 * z**2)
+
+    kwargs = {
+        "axis": z,
+        "density": nz,
+        "n_bins": 5,
+        "alpha": 1.0,
+        "beta": 1.0,
+        "comoving_distance": chi,
+    }
+
+    analytic = generalized_tomographic_edges(**kwargs, derivative_method="analytic")
+    numerical = generalized_tomographic_edges(**kwargs, derivative_method="numerical")
+
+    np.testing.assert_allclose(analytic, numerical, rtol=1e-3, atol=1e-5)
+
+
+def test_generalized_tomographic_invalid_derivative_method():
+    """Reject unsupported derivative methods, including early-return cases."""
+    z = np.linspace(0.0, 2.0, 50)
+    nz = np.exp(-z)
+
+    with pytest.raises(ValueError, match="derivative_method"):
+        generalized_tomographic_edges(
+            z,
+            nz,
+            n_bins=5,
+            derivative_method="invalid",
+        )

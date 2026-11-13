@@ -112,6 +112,7 @@ def test_builtin_lsst_preset() -> None:
         ("example_minimal_specz.yaml", "specz", 4),
         ("example_full_photoz.yaml", "photoz", 4),
         ("example_full_specz.yaml", "specz", 4),
+        ("example_generalized_photoz.yaml", "photoz", 5),
         ("mock_predefined_config.yaml", "predefined", 5),
     ],
 )

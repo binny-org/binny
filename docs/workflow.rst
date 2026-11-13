@@ -5,172 +5,251 @@
 |logo| Workflow
 ===============
 
-Binny provides a functional framework for constructing, combining,
-and analyzing tomographic redshift distributions used in cosmology.
+Binny is a modular Python framework for constructing, manipulating,
+and analyzing tomographic redshift distributions in cosmology.
 
-Tomographic bins can be generated from an underlying parent galaxy
-redshift distribution :math:`n(z)`, supplied externally, or
-constructed by combining existing samples.
+Its architecture separates the definition of galaxy populations,
+coordinate systems, binning prescriptions, and tomographic
+distributions into independent components. These components can be
+used individually or combined through a unified functional API.
 
-The goal is to provide reproducible, flexible binning workflows
-for cosmological forecasting, survey simulations, and data analysis.
+This page describes how Binny is organized, what each module is
+responsible for, and how the modules work together in a typical
+cosmological analysis.
 
-Typical workflow
-----------------
+Package organization
+--------------------
 
-A typical workflow consists of five steps:
+Binny is organized into modules with distinct responsibilities.
+The first four form the core tomography workflow, while the
+remaining modules provide analysis, cosmological utilities,
+and configuration-driven workflows.
 
-1. Define or load a parent redshift distribution.
-2. Construct tomographic bin edges.
-3. Select a redshift assignment model.
-4. Build the tomographic distributions.
-5. Inspect, compare, or combine the resulting bins.
+.. list-table::
+   :header-rows: 1
+   :widths: 20 31 49
 
-These operations are exposed through independent functions rather
-than requiring a persistent tomography object.
+   * - Module
+     - Responsibility
+     - Functionality
+   * - ``binny.nz``
+     - Galaxy redshift distributions
+     - Defines or loads the parent :math:`n(z)`, including analytic
+       models, luminosity-function-based distributions, and
+       observational selection effects.
+   * - ``binny.axes``
+     - Coordinates and bin boundaries
+     - Constructs redshift grids and bin edges using predefined
+       schemes, custom boundaries, or mixed binning strategies.
+   * - ``binny.binning``
+     - Binning and galaxy assignment
+     - Resolves binning specifications and applies spectroscopic,
+       photometric, or custom assignment prescriptions, including
+       redshift uncertainties and outlier populations.
+   * - ``binny.tomography``
+     - Tomographic construction and manipulation
+     - Combines the parent distribution, bin edges, and assignment
+       model into tomographic distributions. Also supports predefined
+       tomography, sample composition, and statistical diagnostics.
+   * - ``binny.correlations``
+     - Distribution comparisons and correlations
+     - Provides measures for comparing distributions and
+       characterizing statistical relationships.
+   * - ``binny.cosmology``
+     - Cosmological calculations
+     - Provides cosmology-dependent quantities used by supported
+       redshift-distribution and binning prescriptions.
+   * - ``binny.surveys``
+     - Survey configurations and presets
+     - Loads survey-specific assumptions and constructs tomography
+       through predefined or user-supplied configurations.
+   * - ``binny.utils``
+     - Shared utilities
+     - Provides numerical, validation, normalization, and
+       visualization utilities used throughout the package.
 
-Parent redshift distribution
-----------------------------
+Core workflow
+-------------
 
-For model-generated tomography, the starting point is a parent
-redshift distribution :math:`n(z)` defined on a redshift grid.
+The standard workflow follows four conceptual stages:
 
-This distribution describes the underlying galaxy population before
-tomographic selection is applied.
+.. code-block:: text
 
-Binny supports several approaches:
+   Parent redshift distribution
+            binny.nz
+                |
+                v
+   Coordinates and bin boundaries
+            binny.axes
+                |
+                v
+   Binning and assignment models
+           binny.binning
+                |
+                v
+   Tomographic redshift distributions
+          binny.tomography
+                |
+                v
+   Statistics, diagnostics, comparisons,
+   and sample composition
 
-- analytic distributions, such as the **Smail distribution**,
-- distributions derived from luminosity functions,
-- distributions inferred from mock catalogs,
-- distributions incorporating observational selection effects,
-- user-supplied redshift distributions.
+The diagram represents the conceptual workflow rather than a strict
+sequence of function calls. The ``build_tomography`` interface can
+coordinate bin-edge construction and assignment internally, while
+individual components remain independently accessible.
 
-The parent distribution can be evaluated and inspected independently
-of the tomographic binning procedure.
+1. Parent redshift distributions: ``binny.nz``
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Tomographic binning schemes
----------------------------
+The starting point is a parent galaxy redshift distribution
+:math:`n(z)`, describing the underlying population before
+tomographic selection.
 
-The next step is to define the tomographic bin boundaries.
+Binny supports analytic distributions, luminosity-function-based
+models, observational selection effects, and externally supplied
+distributions.
 
-Binny supports several binning strategies, including:
+The parent distribution is independent of the tomography
+construction procedure and can be reused across different
+binning schemes and observational assumptions.
 
-- **Equidistant binning:** bins with equal redshift widths.
-- **Equipopulated binning:** bins containing approximately equal
-  galaxy populations.
-- **Custom bin edges:** boundaries supplied directly by the user.
+2. Coordinates and bin edges: ``binny.axes``
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Bin-edge construction is separate from the assignment model,
-allowing different observational assumptions to be applied to
-the same underlying binning scheme.
+The axes module defines the coordinate grids and boundaries
+on which tomographic bins are constructed.
 
-Redshift assignment models
---------------------------
+Supported schemes include equidistant, equipopulated,
+equal-information, logarithmic, geometric, power-law,
+Chebyshev, sinh, and generalized binning.
 
-A redshift assignment model determines how galaxies are assigned
-to tomographic bins.
+Users can also provide explicit bin edges or combine multiple
+schemes into segmented binning configurations.
 
-For spectroscopic samples, assignments can be based on measured
-redshifts with optional observational uncertainties.
+The central responsibility of this module is to determine
+**where the bin boundaries lie**, without specifying how
+galaxies are assigned to those bins.
 
-For photometric samples, the assignment model can incorporate:
+3. Binning and assignment: ``binny.binning``
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-- redshift scatter,
-- systematic redshift offsets,
-- redshift-dependent transformations,
-- catastrophic outlier populations.
+The binning module connects bin boundaries with the
+observational prescription used to assign galaxies.
 
-These effects modify the relationship between true redshift and
-observed bin membership.
+For spectroscopic samples, assignments may be deterministic
+or incorporate observational redshift uncertainties.
 
-Separating bin-edge construction from redshift assignment makes
-it possible to compare different uncertainty prescriptions while
-retaining the same parent distribution and bin boundaries.
+For photometric samples, the assignment model can include
+redshift scatter, systematic offsets, and catastrophic
+outlier populations.
 
-Building tomographic distributions
-----------------------------------
+User-defined assignment functions can also be supplied.
 
-Given a parent distribution, bin edges, and an assignment model,
-Binny constructs the tomographic redshift distributions
+This separation allows the same parent distribution and
+bin boundaries to be used with different observational models.
+
+4. Tomography construction: ``binny.tomography``
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+The tomography module brings the preceding components together.
+
+Given a parent distribution :math:`n(z)` and a selection
+probability :math:`S_i(z)`, the tomographic redshift distribution
+for bin :math:`i` is
 
 .. math::
 
-   n_i(z) = n(z) S_i(z),
+   n_i(z) = n(z) S_i(z).
 
-where :math:`S_i(z)` represents the selection probability for
-tomographic bin :math:`i`.
+The selection function represents the probability that a
+galaxy at true redshift :math:`z` belongs to bin :math:`i`.
 
-The resulting distributions describe the true-redshift populations
-associated with each tomographic bin.
+The main entry point, ``build_tomography``, coordinates the
+construction and returns a ``Tomography`` result containing
+the tomographic distributions and associated information.
 
-Depending on the chosen workflow, Binny can also return
-normalization information, bin populations, and metadata.
+The module also supports externally supplied, predefined
+tomographic distributions without reapplying a binning or
+assignment prescription.
 
-The resulting arrays can be passed directly to cosmological
-modelling and forecasting pipelines.
+Analysis and sample manipulation
+--------------------------------
 
-Predefined tomography
----------------------
+After tomography is constructed, Binny provides additional
+functionality for examining and manipulating the results.
 
-Not every analysis requires constructing bins from a parent
-distribution and an assignment model.
+These operations are independent of the construction method
+and can also be applied to externally supplied tomography.
 
-Binny also supports externally supplied tomographic distributions,
-including those obtained from measurements, simulations, or
-other analysis pipelines.
+.. list-table::
+   :header-rows: 1
+   :widths: 26 30 44
 
-These distributions can be validated and prepared without
-reapplying a redshift assignment model.
+   * - Capability
+     - Module
+     - Purpose
+   * - Statistics
+     - ``binny.tomography``
+     - Compute bin populations, mean redshifts, distribution
+       widths, moments, quantiles, and normalization statistics.
+   * - Diagnostics
+     - ``binny.tomography``
+     - Examine bin overlap, leakage, and differences between
+       tomographic samples.
+   * - Correlations
+     - ``binny.correlations``
+     - Quantify statistical relationships and correlations
+       between distributions.
+   * - Sample composition
+     - ``binny.tomography``
+     - Combine samples, interpolate between redshift grids,
+       and construct new tomographic populations.
+   * - Photo-z calibration
+     - ``binny.binning``
+     - Fit redshift-error prescriptions and convert fitted
+       parameters into models suitable for tomography.
 
-This is particularly useful when working with survey data
-products or externally calibrated redshift distributions.
+These tools can be used separately or together, depending
+on the requirements of a particular analysis.
 
-Sample composition
-------------------
+Survey presets and configurations
+----------------------------------
 
-Tomographic distributions can also be combined to construct
-new samples.
+The ``binny.surveys`` module provides a convenient alternative
+to specifying every component manually.
 
-This allows workflows involving multiple galaxy populations,
-survey selections, or independently generated tomographic bins.
+Survey configurations collect assumptions about the parent
+redshift distribution, binning scheme, redshift-error model,
+and other survey-dependent parameters.
 
-When distributions are defined on different redshift grids,
-they can be interpolated onto a common grid for combination.
+The ``build_survey_tomography`` function uses these
+configurations to construct tomography through the same
+underlying numerical framework.
 
-Diagnostics and comparisons
----------------------------
+Conceptually, survey presets provide inputs to the core
+workflow rather than defining a separate implementation:
 
-After constructing tomography, Binny provides functions for
-inspecting and comparing the resulting distributions.
+.. code-block:: text
 
-Available diagnostics include:
+             Survey configuration
+                binny.surveys
+                      |
+                      v
+          Parent n(z) + binning settings
+                      |
+                      v
+               build_tomography
+                      |
+                      v
+                  Tomography
+                      |
+                      v
+           Statistics and diagnostics
 
-- bin populations and normalization,
-- mean redshifts and distribution widths,
-- overlaps between tomographic bins,
-- leakage between redshift intervals,
-- comparisons between different tomographic samples.
+Users can therefore choose between direct Python construction,
+structured tomography specifications, and survey presets
+without changing the underlying mathematical prescriptions.
 
-These diagnostics are independent of the bin-construction
-procedure and can also be applied to externally supplied bins.
-
-Configuration vs Python usage
------------------------------
-
-Binny supports both direct Python workflows and
-configuration-driven survey setups.
-
-Users can:
-
-- call individual functions to construct and analyze distributions,
-- build tomography from structured specifications,
-- load survey parameters from configuration files,
-- use predefined survey presets.
-
-The functional API allows individual operations to be reused
-without requiring a particular workflow or object lifecycle.
-
-The examples in :doc:`examples/index` demonstrate the available
-approaches and provide executable illustrations of tomography
-construction, diagnostics, and sample composition.
+See :doc:`examples/index` for executable examples of the
+different workflows.

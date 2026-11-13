@@ -2,10 +2,14 @@
 
 from __future__ import annotations
 
-from typing import Any
+from typing import Any, Literal
 
 import numpy as np
+from derivkit import DerivativeKit
+from scipy.interpolate import CubicSpline
 
+from binny.axes.grids import chebyshev_grid, power_grid, sinh_grid
+from binny.utils.types import FloatArray
 from binny.utils.validators import (
     validate_axis_and_weights,
     validate_interval,
@@ -15,10 +19,14 @@ from binny.utils.validators import (
 __all__ = [
     "equidistant_edges",
     "equal_number_edges",
+    "generalized_tomographic_edges",
     "log_edges",
     "equidistant_chi_edges",
     "equal_information_edges",
     "geometric_edges",
+    "power_edges",
+    "chebyshev_edges",
+    "sinh_edges",
     "_equal_weight_edges",
     "_cumulative_trapz",
 ]
@@ -180,6 +188,247 @@ def geometric_edges(x_min: float, x_max: float, n_bins: int) -> np.ndarray:
     """
     validate_interval(x_min, x_max, n_bins, log=True)
     return np.geomspace(x_min, x_max, n_bins + 1, dtype=float)
+
+
+def power_edges(
+    x_min: float,
+    x_max: float,
+    n_bins: int,
+    *,
+    power: float = 2.0,
+) -> np.ndarray:
+    """Construct power-law spaced bin boundaries.
+
+    Bin boundaries are generated using :func:`binny.axes.grids.power_grid`.
+    The spacing follows
+
+    ``x = x_min + (x_max - x_min) * t**power``,
+
+    where ``t`` is uniformly spaced between zero and one.
+
+    Values of ``power`` greater than one concentrate boundaries near
+    ``x_min``, while values below one concentrate them near ``x_max``.
+    A value of one produces uniformly spaced boundaries.
+
+    Args:
+        x_min: Lower endpoint of the binning interval.
+        x_max: Upper endpoint, greater than ``x_min``.
+        n_bins: Number of bins, at least one.
+        power: Positive stretching exponent.
+
+    Returns:
+        One-dimensional array of ``n_bins + 1`` strictly increasing
+        bin boundaries, including both endpoints.
+
+    Raises:
+        ValueError: If the interval, number of bins, or stretching
+            exponent is invalid.
+    """
+    validate_interval(x_min, x_max, n_bins, log=False)
+
+    return power_grid(
+        x_min,
+        x_max,
+        n_bins + 1,
+        power=power,
+    )
+
+
+def chebyshev_edges(
+    x_min: float,
+    x_max: float,
+    n_bins: int,
+) -> np.ndarray:
+    """Construct bin boundaries using Chebyshev-Lobatto nodes.
+
+    Bin boundaries are generated using
+    :func:`binny.axes.grids.chebyshev_grid`.
+
+    The boundaries are distributed symmetrically and concentrate near
+    both endpoints of the interval. This produces narrower bins near
+    the boundaries and wider bins around the interval midpoint.
+
+    Args:
+        x_min: Lower endpoint of the binning interval.
+        x_max: Upper endpoint, greater than ``x_min``.
+        n_bins: Number of bins, at least one.
+
+    Returns:
+        One-dimensional array of ``n_bins + 1`` strictly increasing
+        bin boundaries, including both endpoints.
+
+    Raises:
+        ValueError: If the interval or number of bins is invalid.
+    """
+    validate_interval(x_min, x_max, n_bins, log=False)
+
+    return chebyshev_grid(
+        x_min,
+        x_max,
+        n_bins + 1,
+    )
+
+
+def sinh_edges(
+    x_min: float,
+    x_max: float,
+    n_bins: int,
+    *,
+    strength: float = 3.0,
+    concentration: Literal["midpoint", "endpoints"] = "midpoint",
+) -> np.ndarray:
+    """Construct sinh-stretched bin boundaries.
+
+    Bin boundaries are generated using :func:`binny.axes.grids.sinh_grid`.
+
+    The ``concentration`` parameter controls where boundaries accumulate:
+
+    - ``"midpoint"`` concentrates boundaries near the interval midpoint,
+      producing narrower central bins.
+    - ``"endpoints"`` concentrates boundaries near both endpoints,
+      producing narrower outer bins.
+
+    Larger ``strength`` values increase the concentration of boundaries.
+    Setting ``strength=0`` produces uniformly spaced boundaries for
+    either concentration mode.
+
+    Args:
+        x_min: Lower endpoint of the binning interval.
+        x_max: Upper endpoint, greater than ``x_min``.
+        n_bins: Number of bins, at least one.
+        strength: Nonnegative stretching parameter. Defaults to 3.0.
+        concentration: Boundary concentration mode, either
+            ``"midpoint"`` or ``"endpoints"``. Defaults to
+            ``"midpoint"``.
+
+    Returns:
+        One-dimensional array of ``n_bins + 1`` strictly increasing
+        bin boundaries, including both endpoints.
+
+    Raises:
+        ValueError: If the interval, number of bins, stretching
+            strength, or concentration mode is invalid.
+    """
+    validate_interval(x_min, x_max, n_bins, log=False)
+
+    return sinh_grid(
+        x_min,
+        x_max,
+        n_bins + 1,
+        strength=strength,
+        concentration=concentration,
+    )
+
+
+def generalized_tomographic_edges(
+    axis: FloatArray,
+    density: FloatArray,
+    n_bins: int,
+    *,
+    alpha: float = 0.0,
+    beta: float = 0.0,
+    comoving_distance: Any | None = None,
+    derivative_method: Literal["analytic", "numerical"] = "analytic",
+) -> FloatArray:
+    r"""Construct generalized tomographic bin edges.
+
+    Bin edges are chosen to contain equal integrated weight, where
+
+    .. math::
+
+        w(x) = \rho(x)^\alpha
+        \left(\frac{\mathrm{d}\chi}{\mathrm{d}x}\right)^\beta.
+
+    Here ``x`` is the sampling axis, ``rho(x)`` its density, and
+    ``chi(x)`` a monotonically increasing distance coordinate.
+
+    Special cases:
+        - ``alpha=beta=0``: Uniform spacing along the axis.
+        - ``alpha=1, beta=0``: Equal integrated density.
+        - ``alpha=0, beta=1``: Uniform spacing in distance.
+
+    Args:
+        axis: Strictly increasing one-dimensional sampling axis.
+        density: Non-negative density evaluated on ``axis``.
+        n_bins: Number of bins.
+        alpha: Exponent applied to the density.
+        beta: Exponent applied to the distance derivative.
+        comoving_distance: Increasing distance values evaluated on
+            ``axis``. Required when ``beta`` is nonzero.
+        derivative_method: ``"analytic"`` differentiates the cubic
+            spline interpolant directly. ``"numerical"`` uses DerivKit
+            to estimate its derivative.
+
+    Returns:
+        One-dimensional array of ``n_bins + 1`` bin edges.
+
+    Raises:
+        ValueError: If inputs or computed weights are invalid.
+    """
+    axis, density = validate_axis_and_weights(axis, density)
+    validate_n_bins(n_bins)
+
+    if derivative_method not in {"analytic", "numerical"}:
+        raise ValueError("derivative_method must be 'analytic' or 'numerical'.")
+
+    if not np.isfinite(alpha) or not np.isfinite(beta):
+        raise ValueError("alpha and beta must be finite.")
+    if np.any(density < 0.0):
+        raise ValueError("density must be non-negative.")
+
+    if alpha == 0.0 and beta == 0.0:
+        return equidistant_edges(axis[0], axis[-1], n_bins)
+
+    weights = np.ones_like(axis)
+
+    if alpha != 0.0:
+        if alpha < 0.0 and np.any(density <= 0.0):
+            raise ValueError("density must be strictly positive when alpha is negative.")
+        weights *= np.power(density, alpha)
+
+    if beta != 0.0:
+        if comoving_distance is None:
+            raise ValueError("comoving_distance is required when beta != 0.")
+
+        chi = np.asarray(comoving_distance, dtype=float)
+
+        if chi.shape != axis.shape or not np.all(np.isfinite(chi)):
+            raise ValueError("comoving_distance must be finite and match axis.")
+        if np.any(np.diff(chi) <= 0.0):
+            raise ValueError("comoving_distance must be strictly increasing.")
+
+        if alpha == 0.0 and beta == 1.0:
+            return equidistant_chi_edges(axis, chi, n_bins)
+
+        distance_model = CubicSpline(axis, chi)
+
+        if derivative_method == "analytic":
+            distance_derivative = distance_model.derivative()(axis)
+        else:
+            distance_derivative = np.array(
+                [
+                    DerivativeKit(
+                        function=distance_model,
+                        x0=float(x),
+                    ).differentiate(
+                        method="lp",
+                        order=1,
+                        degree=5,
+                    )
+                    for x in axis
+                ],
+                dtype=float,
+            )
+
+        if not np.all(np.isfinite(distance_derivative)) or np.any(distance_derivative <= 0.0):
+            raise ValueError("Comoving-distance derivatives must be finite and positive.")
+
+        weights *= np.power(distance_derivative, beta)
+
+    if not np.all(np.isfinite(weights)):
+        raise ValueError("Generalized binning weights must be finite.")
+
+    return _equal_weight_edges(axis, weights, n_bins)
 
 
 def _cumulative_trapz(x: np.ndarray, weights: np.ndarray) -> np.ndarray:

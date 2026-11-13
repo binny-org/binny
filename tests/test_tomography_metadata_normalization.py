@@ -36,7 +36,7 @@ def test_metadata_normalization_consistency(
         _, meta = builder(
             z=z,
             nz=nz,
-            bin_edges=edges,
+            bins={"edges": edges},
             normalize_input=normalize_input,
             normalize_bins=normalize_bins,
             include_metadata=True,

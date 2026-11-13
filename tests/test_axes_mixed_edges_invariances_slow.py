@@ -15,6 +15,7 @@ import numpy as np
 import pytest
 
 from binny.axes.mixed_edges import mixed_edges
+from binny.binning.edges import resolve_bin_edges
 from binny.tomography.stats import bin_centers
 
 pytestmark = pytest.mark.slow
@@ -126,14 +127,16 @@ def _build_interval_segments(
     for (lo, hi), n in zip(intervals, nbins, strict=True):
         segs.append(
             {
-                "method": method,
+                "scheme": method,
                 "n_bins": int(n),
-                "params": {"x_min": lo, "x_max": hi},
+                "x_min": lo,
+                "x_max": hi,
+                "params": {},
             }
         )
 
     for i in range(1, len(segs)):
-        segs[i]["params"]["x_min"] = float(segs[i - 1]["params"]["x_max"])
+        segs[i]["x_min"] = float(segs[i - 1]["x_max"])
     return segs
 
 
@@ -146,27 +149,81 @@ def _build_array_segment(
     info: np.ndarray | None = None,
 ) -> list[dict[str, Any]]:
     """Builds an array-driven segment specification."""
-    params: dict[str, Any] = {"x": x}
+    params: dict[str, Any] = {"axis": x}
     if method == "equal_number":
         assert w is not None
-        params["weights"] = w
+        params["density"] = w
     elif method == "equal_information":
         assert info is not None
+        params["density"] = info
         params["info_density"] = info
     else:
         raise ValueError(method)
-    return [{"method": method, "n_bins": int(n_bins), "params": params}]
+    return [{"scheme": method, "n_bins": int(n_bins), "params": params}]
 
 
 def _build_chi_segment(n_bins: int, *, z: np.ndarray, chi: np.ndarray) -> list[dict[str, Any]]:
     """Builds an equidistant_chi segment specification."""
     return [
         {
-            "method": "equidistant_chi",
+            "scheme": "equidistant_chi",
             "n_bins": int(n_bins),
             "params": {"z": z, "chi": chi},
         }
     ]
+
+
+def _resolve_mixed(
+    segments: list[dict[str, Any]],
+    *,
+    total_n_bins: int,
+    x: np.ndarray | None = None,
+    weights: np.ndarray | None = None,
+    info_density: np.ndarray | None = None,
+) -> np.ndarray:
+    """Resolve registered schemes and concatenate their computed boundaries."""
+    parts: list[np.ndarray] = []
+    for segment in segments:
+        scheme = segment["scheme"]
+        n_bins = segment["n_bins"]
+        params = dict(segment.get("params", {}))
+
+        if scheme == "equidistant_chi":
+            z = np.asarray(params["z"], dtype=float)
+            chi = np.asarray(params["chi"], dtype=float)
+            chi_edges = np.linspace(chi[0], chi[-1], n_bins + 1)
+            edges = np.interp(chi_edges, chi, z)
+        elif "x_min" in segment:
+            lo = float(segment["x_min"])
+            hi = float(segment["x_max"])
+            axis = np.linspace(lo, hi, 101)
+            edges = resolve_bin_edges(
+                axis=axis,
+                density=np.ones_like(axis),
+                bins={"scheme": scheme, "n_bins": n_bins},
+            )
+        else:
+            axis = np.asarray(params.pop("axis", x), dtype=float)
+            density_input = params.pop("density", weights)
+            if density_input is None:
+                density_input = info_density
+            if density_input is None:
+                density_input = np.ones_like(axis)
+            density = np.asarray(density_input, dtype=float)
+            if scheme == "equal_information":
+                info = params.pop("info_density", info_density)
+                if info is None:
+                    info = density
+                params = {"info_density": info}
+            else:
+                params = {}
+            edges = resolve_bin_edges(
+                axis=axis,
+                density=density,
+                bins={"scheme": scheme, "n_bins": n_bins, "params": params},
+            )
+        parts.append(edges)
+    return mixed_edges(parts, total_n_bins=total_n_bins)
 
 
 @dataclass(frozen=True)
@@ -224,7 +281,7 @@ def test_mixed_edges_interval_methods_equivariance(case: IntervalCase) -> None:
         n_segments=case.n_segments,
         rng=rng,
     )
-    e0 = mixed_edges(segs, total_n_bins=case.total_n_bins)
+    e0 = _resolve_mixed(segs, total_n_bins=case.total_n_bins)
 
     a = float(rng.uniform(0.2, 5.0))
 
@@ -235,12 +292,12 @@ def test_mixed_edges_interval_methods_equivariance(case: IntervalCase) -> None:
 
     segs_t: list[dict[str, Any]] = []
     for seg in segs:
-        p = dict(seg["params"])
+        p = dict(seg)
         p["x_min"] = a * float(p["x_min"]) + b
         p["x_max"] = a * float(p["x_max"]) + b
-        segs_t.append({"method": seg["method"], "n_bins": seg["n_bins"], "params": p})
+        segs_t.append(p)
 
-    e1 = mixed_edges(segs_t, total_n_bins=case.total_n_bins)
+    e1 = _resolve_mixed(segs_t, total_n_bins=case.total_n_bins)
 
     assert np.allclose(e1, a * e0 + b, rtol=0.0, atol=2e-12)
 
@@ -263,17 +320,17 @@ def test_mixed_edges_equal_number_invariant_under_weight_scaling_and_normalizati
 
     seg = _build_array_segment("equal_number", n_bins, x=x, w=w)
 
-    e0 = mixed_edges(seg, total_n_bins=n_bins)
+    e0 = _resolve_mixed(seg, total_n_bins=n_bins)
 
     scale = float(rng.uniform(0.1, 20.0))
-    e1 = mixed_edges(
+    e1 = _resolve_mixed(
         _build_array_segment("equal_number", n_bins, x=x, w=scale * w),
         total_n_bins=n_bins,
     )
 
     norm = float(np.trapezoid(w, x=x))
     w_norm = w / norm
-    e2 = mixed_edges(
+    e2 = _resolve_mixed(
         _build_array_segment("equal_number", n_bins, x=x, w=w_norm),
         total_n_bins=n_bins,
     )
@@ -299,17 +356,17 @@ def test_mixed_edges_equal_info_invariant_under_density_scaling_and_normalizatio
     info = _gaussian(x, mu, sig) + 1e-12
 
     seg = _build_array_segment("equal_information", n_bins, x=x, info=info)
-    e0 = mixed_edges(seg, total_n_bins=n_bins)
+    e0 = _resolve_mixed(seg, total_n_bins=n_bins)
 
     scale = float(rng.uniform(0.1, 20.0))
-    e1 = mixed_edges(
+    e1 = _resolve_mixed(
         _build_array_segment("equal_information", n_bins, x=x, info=scale * info),
         total_n_bins=n_bins,
     )
 
     norm = float(np.trapezoid(info, x=x))
     info_norm = info / norm
-    e2 = mixed_edges(
+    e2 = _resolve_mixed(
         _build_array_segment("equal_information", n_bins, x=x, info=info_norm),
         total_n_bins=n_bins,
     )
@@ -345,8 +402,8 @@ def test_mixed_edges_array_methods_invariant_under_grid_refinement(
         seg0 = _build_array_segment(method, n_bins, x=x0, info=base0)
         seg1 = _build_array_segment(method, n_bins, x=x1, info=base1)
 
-    e0 = mixed_edges(seg0, total_n_bins=n_bins)
-    e1 = mixed_edges(seg1, total_n_bins=n_bins)
+    e0 = _resolve_mixed(seg0, total_n_bins=n_bins)
+    e1 = _resolve_mixed(seg1, total_n_bins=n_bins)
 
     dx = float(np.max(np.diff(x0)))
     assert np.allclose(e1, e0, rtol=0.0, atol=5.0 * dx)
@@ -367,8 +424,8 @@ def test_mixed_edges_equidistant_chi_invariant_under_affine_chi_transform(
     a = float(rng.uniform(0.2, 10.0))
     b = float(rng.uniform(-50.0, 50.0))
 
-    e0 = mixed_edges(_build_chi_segment(n_bins, z=z, chi=chi), total_n_bins=n_bins)
-    e1 = mixed_edges(_build_chi_segment(n_bins, z=z, chi=a * chi + b), total_n_bins=n_bins)
+    e0 = _resolve_mixed(_build_chi_segment(n_bins, z=z, chi=chi), total_n_bins=n_bins)
+    e1 = _resolve_mixed(_build_chi_segment(n_bins, z=z, chi=a * chi + b), total_n_bins=n_bins)
 
     assert np.allclose(e0, e1, rtol=0.0, atol=5e-12)
 
@@ -418,7 +475,7 @@ def test_bin_centers_from_mixed_edges_affine_invariance_equidistant(
         rng=rng,
     )
 
-    edges0 = mixed_edges(segs, total_n_bins=total_n_bins)
+    edges0 = _resolve_mixed(segs, total_n_bins=total_n_bins)
     axis0 = _grid_linear(n=8001, x_min=x_min, x_max=x_max)
     bins0 = _bins_from_edges_uniform(axis0, edges0)
     c0d = bin_centers(axis0, bins0, method=center_method, decimal_places=None)
@@ -429,12 +486,12 @@ def test_bin_centers_from_mixed_edges_affine_invariance_equidistant(
 
     segs_ab: list[dict[str, Any]] = []
     for seg in segs:
-        p = dict(seg["params"])
+        p = dict(seg)
         p["x_min"] = a * float(p["x_min"]) + b
         p["x_max"] = a * float(p["x_max"]) + b
-        segs_ab.append({"method": seg["method"], "n_bins": seg["n_bins"], "params": p})
+        segs_ab.append(p)
 
-    edges1 = mixed_edges(segs_ab, total_n_bins=total_n_bins)
+    edges1 = _resolve_mixed(segs_ab, total_n_bins=total_n_bins)
     axis1 = a * axis0 + b
     bins1 = _bins_from_edges_uniform(axis1, edges1)
     c1d = bin_centers(axis1, bins1, method=center_method, decimal_places=None)
@@ -470,7 +527,7 @@ def test_bin_centers_from_mixed_edges_scale_invariance_log_geometric(
         rng=rng,
     )
 
-    edges0 = mixed_edges(segs, total_n_bins=total_n_bins)
+    edges0 = _resolve_mixed(segs, total_n_bins=total_n_bins)
 
     axis0 = _grid_linear(n=20001, x_min=x_min, x_max=x_max)
 
@@ -482,12 +539,12 @@ def test_bin_centers_from_mixed_edges_scale_invariance_log_geometric(
 
     segs_a: list[dict[str, Any]] = []
     for seg in segs:
-        p = dict(seg["params"])
+        p = dict(seg)
         p["x_min"] = a * float(p["x_min"])
         p["x_max"] = a * float(p["x_max"])
-        segs_a.append({"method": seg["method"], "n_bins": seg["n_bins"], "params": p})
+        segs_a.append(p)
 
-    edges1 = mixed_edges(segs_a, total_n_bins=total_n_bins)
+    edges1 = _resolve_mixed(segs_a, total_n_bins=total_n_bins)
     axis1 = a * axis0
 
     bins1 = _bins_from_edges_triangular(axis1, edges1)
@@ -516,14 +573,14 @@ def test_bin_centers_from_mixed_edges_weight_invariance_equal_number(
     sig = float(rng.uniform(0.2, 0.7))
     w = _gaussian(x, mu, sig) + 1e-12
 
-    edges0 = mixed_edges(
-        [{"method": "equal_number", "n_bins": n_bins, "params": {}}],
+    edges0 = _resolve_mixed(
+        [{"scheme": "equal_number", "n_bins": n_bins, "params": {}}],
         x=x,
         weights=w,
         total_n_bins=n_bins,
     )
-    edges1 = mixed_edges(
-        [{"method": "equal_number", "n_bins": n_bins, "params": {}}],
+    edges1 = _resolve_mixed(
+        [{"scheme": "equal_number", "n_bins": n_bins, "params": {}}],
         x=x,
         weights=7.3 * w,
         total_n_bins=n_bins,
@@ -558,14 +615,14 @@ def test_bin_centers_from_mixed_edges_density_invariance_equal_information(
     sig = float(rng.uniform(0.2, 0.7))
     info = _gaussian(x, mu, sig) + 1e-12
 
-    edges0 = mixed_edges(
-        [{"method": "equal_information", "n_bins": n_bins, "params": {}}],
+    edges0 = _resolve_mixed(
+        [{"scheme": "equal_information", "n_bins": n_bins, "params": {}}],
         x=x,
         info_density=info,
         total_n_bins=n_bins,
     )
-    edges1 = mixed_edges(
-        [{"method": "equal_information", "n_bins": n_bins, "params": {}}],
+    edges1 = _resolve_mixed(
+        [{"scheme": "equal_information", "n_bins": n_bins, "params": {}}],
         x=x,
         info_density=11.0 * info,
         total_n_bins=n_bins,
