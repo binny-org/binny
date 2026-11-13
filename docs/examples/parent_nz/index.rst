@@ -10,3 +10,4 @@ Examples for defining and calibrating parent redshift distributions.
    nz_calibration
    luminosity_function_distribution
    psf_selection
+   nz_sampling
