@@ -27,6 +27,7 @@ __all__ = [
     "validate_probability_vector",
     "validate_same_shape",
     "validate_grid_spec",
+    "validate_positive_integer",
     "edge_coercion",
 ]
 
@@ -509,3 +510,26 @@ def edge_coercion(
         edges_map[j] = (float(edges_arr[j]), float(edges_arr[j + 1]))
 
     return edges_map
+
+
+def validate_positive_integer(value: int, *, name: str = "value") -> int:
+    """Returns a validated positive integer.
+
+    Args:
+        value: Integer value to validate.
+        name: Parameter name used in error messages.
+
+    Returns:
+        Validated integer.
+
+    Raises:
+        TypeError: If the value is not an integer.
+        ValueError: If the value is not positive.
+    """
+    if isinstance(value, (bool, np.bool_)) or not isinstance(value, (int, np.integer)):
+        raise TypeError(f"{name} must be a positive integer.")
+
+    if value <= 0:
+        raise ValueError(f"{name} must be positive.")
+
+    return int(value)
