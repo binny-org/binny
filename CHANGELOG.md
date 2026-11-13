@@ -1,4 +1,26 @@
-    # Changelog
+# Changelog
+
+## *1.1.0 - 2026-11-12*
+
+### *Added*
+
+- Generalized \(\alpha\)–\(\beta\) tomographic binning schemes.
+- Flexible coordinate grids and sampling strategies.
+- Support for explicit bin edges, custom bin ranges, and mixed binning schemes.
+- Unified binning specifications and scheme registry.
+- Support for generalized binning in survey YAML configurations.
+- New theoretical documentation, examples, and visualizations.
+
+### *Changed*
+
+- Unified bin-edge resolution across photo-z and spec-z tomography.
+- Refactored mixed-segment binning and coordinate handling.
+- Extended the public API with `build_tomography_from_spec` and additional binning utilities.
+- Expanded tests and updated documentation for the generalized binning framework.
+
+### *Compatibility*
+
+- Updated binning interfaces and configuration conventions; existing code using previous interfaces may require migration.
 
 ## 1.0.0 - 2026-11-10
 
