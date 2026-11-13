@@ -415,28 +415,49 @@ table.binny-table code {
   --color-link--active: var(--binny-dark-accent);
 }
 
+
 /* All headings */
 
-:is(html, body)[data-theme="dark"] .content :is(h1, h2, h3, h4, h5, h6) {
-  color: var(--binny-dark-accent) !important;
-  border-bottom-color: var(--binny-dark-accent) !important;
+:is(html, body)[data-theme="dark"] .content h1 {
+  color: var(--binny-green-dark) !important;
+  border-bottom-color: var(--binny-green-dark) !important;
+}
+
+:is(html, body)[data-theme="dark"] .content :is(h2, h3, h4, h5, h6) {
+  color: var(--binny-blue-dark) !important;
+  border-bottom-color: var(--binny-blue-dark) !important;
 }
 
 /* All links and sidebar navigation */
 
-:is(html, body)[data-theme="dark"] :is(a, a:link, a:visited, a:hover, a:active),
+:is(html, body)[data-theme="dark"] :is(a, a:link, a:visited, a:hover, a:active) {
+  color: var(--binny-blue-dark) !important;
+}
+
 :is(html, body)[data-theme="dark"] .sidebar-tree a,
 :is(html, body)[data-theme="dark"] .sidebar-tree a:visited,
 :is(html, body)[data-theme="dark"] .sidebar-tree a:hover {
-  color: var(--binny-dark-accent) !important;
+  color: var(--binny-green-dark) !important;
 }
 
 /* Sidebar, API signatures and custom text */
 
-:is(html, body)[data-theme="dark"] :is(.sidebar-brand-text, .sidebar-tree .caption-text),
-:is(html, body)[data-theme="dark"] :is(.sig .sig-name, .sig .k, code.descname, a.reference code),
-:is(html, body)[data-theme="dark"] :is(.name-purple, .role-blue) {
-  color: var(--binny-dark-accent) !important;
+:is(html, body)[data-theme="dark"] :is(
+  .sidebar-brand-text,
+  .sidebar-tree .caption-text
+) {
+  color: var(--binny-green-dark) !important;
+}
+
+:is(html, body)[data-theme="dark"] :is(
+  .sig .sig-name,
+  .sig .k,
+  code.descname,
+  a.reference code,
+  .name-purple,
+  .role-blue
+) {
+  color: var(--binny-blue-dark) !important;
 }
 
 /* Code backgrounds */
