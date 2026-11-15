@@ -15,21 +15,18 @@ BINNY_BLUE = to_hex(BINNY_CMAP(0.25))
 BINNY_LIGHT_BLUE = to_hex(BINNY_CMAP(0.40))
 BINNY_GREEN = to_hex(BINNY_CMAP(0.65))
 
-BINNY_DARK_PURPLE = pastelize(BINNY_PURPLE, 0.65)
-BINNY_DARK_VIOLET = pastelize(BINNY_VIOLET, 0.65)
-BINNY_DARK_BLUE = pastelize(BINNY_BLUE, 0.65)
-BINNY_DARK_GREEN = pastelize(BINNY_GREEN, 0.35)
+BINNY_DARK_PURPLE = pastelize(BINNY_PURPLE, 0.25)
+BINNY_DARK_VIOLET = pastelize(BINNY_VIOLET, 0.25)
+BINNY_DARK_BLUE = pastelize(BINNY_BLUE, 0.25)
+BINNY_DARK_LIGHT_BLUE = pastelize(BINNY_LIGHT_BLUE, 0.25)
+BINNY_DARK_GREEN = pastelize(BINNY_GREEN, 0.25)
 
 BINNY_THEME_COLORS = {
-    "purple": BINNY_PURPLE,
-    "violet": BINNY_VIOLET,
-    "blue": BINNY_BLUE,
-    "light-blue": BINNY_LIGHT_BLUE,
-    "green": BINNY_GREEN,
-    "purple-dark": BINNY_DARK_PURPLE,
-    "violet-dark": BINNY_DARK_VIOLET,
-    "blue-dark": BINNY_DARK_BLUE,
-    "green-dark": BINNY_DARK_GREEN,
+    "purple": (BINNY_PURPLE, BINNY_DARK_PURPLE),
+    "violet": (BINNY_VIOLET, BINNY_DARK_VIOLET),
+    "blue": (BINNY_BLUE, BINNY_DARK_BLUE),
+    "light-blue": (BINNY_LIGHT_BLUE, BINNY_DARK_LIGHT_BLUE),
+    "green": (BINNY_GREEN, BINNY_DARK_GREEN),
 }
 
 
