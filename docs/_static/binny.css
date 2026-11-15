@@ -17,7 +17,7 @@
 }
 
 /* --- Furo variable mapping ---------------------------------------------- */
-html[data-theme="light"] {
+html[data-theme] {
   --color-brand-primary: var(--binny-purple);
   --color-brand-content: var(--binny-purple);
 
