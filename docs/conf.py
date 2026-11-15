@@ -37,13 +37,22 @@ def write_binny_palette_css(app, exception):
     """Generate the documentation CSS palette from Binny colors."""
     if exception is not None or app.builder.format != "html":
         return
-
     css = ":root {\n"
-    css += "".join(
-        f"  --binny-{name}: {color};\n"
+    css += "  color-scheme: light dark;\n"
+    css += '\n'.join(
+        f"  --binny-{name}: light-dark({', '.join(color)});"
         for name, color in BINNY_THEME_COLORS.items()
     )
-    css += "}\n"
+    css += "\n}\n"
+    css += (
+        "[data-theme='light'] {\n"
+        "  color-scheme: light;\n"
+        "}\n"
+        "[data-theme='dark'] {\n"
+        "  color-scheme: dark;\n"
+        "}\n"
+    )
+
 
     output = Path(app.outdir) / "_static" / "binny-palette.css"
     output.parent.mkdir(parents=True, exist_ok=True)
