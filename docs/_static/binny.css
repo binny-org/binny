@@ -22,27 +22,21 @@ html[data-theme] {
   --color-brand-content: var(--binny-purple);
 
   --color-link: var(--binny-purple);
-  --color-link--visited: var(--binny-purple);
-  --color-link--hover: var(--binny-violet);
-  --color-link--active: var(--binny-blue);
+  --color-link-visited: var(--binny-purple);
+  --color-link-hover: var(--binny-violet);
+  --color-link-active: var(--binny-blue);
 }
 
 /* ==========================================================================
    LINKS
    ========================================================================== */
 
-a:link    { color: var(--color-link) !important; }
-a:visited { color: var(--color-link--visited) !important; }
-a:hover   { color: var(--color-link--hover) !important; }
-a:active  { color: var(--color-link--active) !important; }
+a:link    { color: var(--color-link); }
+a:visited { color: var(--color-link-visited); }
+a:hover   { color: var(--color-link-hover); }
+a:active  { color: var(--color-link-active); }
 
 a { text-decoration-color: currentColor; }
-
-/* Furo explicit override */
-html[data-theme] a:link    { color: var(--color-link) !important; }
-html[data-theme] a:visited { color: var(--color-link--visited) !important; }
-html[data-theme] a:hover   { color: var(--color-link--hover) !important; }
-html[data-theme] a:active  { color: var(--color-link--active) !important; }
 
 /* Strong override for sidebar + docs regions */
 html[data-theme]
@@ -53,7 +47,7 @@ html[data-theme]
     .toc-tree,
     .toctree-wrapper,
     table.contentstable) a:link
-{ color: var(--color-link) !important; }
+{ color: var(--color-link); }
 
 html[data-theme]
 :is(.content,
@@ -63,7 +57,7 @@ html[data-theme]
     .toc-tree,
     .toctree-wrapper,
     table.contentstable) a:visited
-{ color: var(--color-link--visited) !important; }
+{ color: var(--color-link-visited); }
 
 html[data-theme]
 :is(.content,
@@ -73,7 +67,7 @@ html[data-theme]
     .toc-tree,
     .toctree-wrapper,
     table.contentstable) a:hover
-{ color: var(--color-link--hover) !important; }
+{ color: var(--color-link-hover); }
 
 html[data-theme]
 :is(.content,
@@ -83,16 +77,16 @@ html[data-theme]
     .toc-tree,
     .toctree-wrapper,
     table.contentstable) a:active
-{ color: var(--color-link--active) !important; }
+{ color: var(--color-link-active); }
 
 /* FINAL hammer for sidebar */
 .sidebar-tree a,
 .sidebar-tree a:visited {
-  color: var(--color-link) !important;
+  color: var(--color-link);
 }
 
 .sidebar-tree a:hover {
-  color: var(--color-link--hover) !important;
+  color: var(--color-link-hover);
 }
 
 /* ==========================================================================
@@ -232,12 +226,12 @@ a.reference code {
 }
 
 .name-purple {
-  color: var(--binny-purple) !important;
+  color: var(--binny-purple);
   font-weight: 700;
 }
 
 .role-blue {
-  color: var(--binny-blue) !important;
+  color: var(--binny-blue);
   font-style: italic;
 }
 
@@ -256,29 +250,29 @@ div.figure img {
    ========================================================================== */
 
 .sidebar-container {
-  font-size: 1.02rem !important;
+  font-size: 1.02rem;
 }
 
 .sidebar-tree a {
-  font-size: 1.08rem !important;
-  line-height: 1.4 !important;
+  font-size: 1.08rem;
+  line-height: 1.4;
 }
 
 .sidebar-tree .caption-text {
-  font-size: 1.05rem !important;
-  font-weight: 600 !important;
+  font-size: 1.05rem;
+  font-weight: 600;
 }
 
 .sidebar-search input {
-  font-size: 1.02rem !important;
+  font-size: 1.02rem;
 }
 
 .sidebar-tree li {
-  margin-bottom: 0.15rem !important;
+  margin-bottom: 0.15rem;
 }
 
 .sidebar-tree a {
-  padding: 0.15rem 0 !important;
+  padding: 0.15rem 0;
 }
 
 /* -----------------------------
