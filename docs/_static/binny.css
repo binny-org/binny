@@ -2,20 +2,6 @@
    Binny — compact theme overrides (Furo + fallbacks for other themes)
    ========================================================================== */
 
-/* --- Brand palette ------------------------------------------------------- */
-:root {
-  --binny-dark-accent: var(--binny-blue-dark);
-
-  /* Theme-agnostic mapping: LIGHT DEFAULT */
-  --color-brand-primary: var(--binny-purple);
-  --color-brand-content: var(--binny-purple);
-
-  --color-link: var(--binny-purple);
-  --color-link--visited: var(--binny-purple);
-  --color-link--hover: var(--binny-violet);
-  --color-link--active: var(--binny-blue);
-}
-
 /* --- Furo variable mapping ---------------------------------------------- */
 html[data-theme] {
   --color-brand-primary: var(--binny-purple);
