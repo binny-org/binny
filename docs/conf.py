@@ -15,21 +15,18 @@ BINNY_BLUE = to_hex(BINNY_CMAP(0.25))
 BINNY_LIGHT_BLUE = to_hex(BINNY_CMAP(0.40))
 BINNY_GREEN = to_hex(BINNY_CMAP(0.65))
 
-BINNY_DARK_PURPLE = pastelize(BINNY_PURPLE, 0.65)
-BINNY_DARK_VIOLET = pastelize(BINNY_VIOLET, 0.65)
-BINNY_DARK_BLUE = pastelize(BINNY_BLUE, 0.65)
-BINNY_DARK_GREEN = pastelize(BINNY_GREEN, 0.35)
+BINNY_DARK_PURPLE = pastelize(BINNY_PURPLE, 0.25)
+BINNY_DARK_VIOLET = pastelize(BINNY_VIOLET, 0.25)
+BINNY_DARK_BLUE = pastelize(BINNY_BLUE, 0.25)
+BINNY_DARK_LIGHT_BLUE = pastelize(BINNY_LIGHT_BLUE, 0.25)
+BINNY_DARK_GREEN = pastelize(BINNY_GREEN, 0.25)
 
 BINNY_THEME_COLORS = {
-    "purple": BINNY_PURPLE,
-    "violet": BINNY_VIOLET,
-    "blue": BINNY_BLUE,
-    "light-blue": BINNY_LIGHT_BLUE,
-    "green": BINNY_GREEN,
-    "purple-dark": BINNY_DARK_PURPLE,
-    "violet-dark": BINNY_DARK_VIOLET,
-    "blue-dark": BINNY_DARK_BLUE,
-    "green-dark": BINNY_DARK_GREEN,
+    "purple": (BINNY_PURPLE, BINNY_DARK_PURPLE),
+    "violet": (BINNY_VIOLET, BINNY_DARK_VIOLET),
+    "blue": (BINNY_BLUE, BINNY_DARK_BLUE),
+    "light-blue": (BINNY_LIGHT_BLUE, BINNY_DARK_LIGHT_BLUE),
+    "green": (BINNY_GREEN, BINNY_DARK_GREEN),
 }
 
 
@@ -37,13 +34,22 @@ def write_binny_palette_css(app, exception):
     """Generate the documentation CSS palette from Binny colors."""
     if exception is not None or app.builder.format != "html":
         return
-
     css = ":root {\n"
-    css += "".join(
-        f"  --binny-{name}: {color};\n"
+    css += "  color-scheme: light dark;\n"
+    css += '\n'.join(
+        f"  --binny-{name}: light-dark({', '.join(color)});"
         for name, color in BINNY_THEME_COLORS.items()
     )
-    css += "}\n"
+    css += "\n}\n"
+    css += (
+        "[data-theme='light'] {\n"
+        "  color-scheme: light;\n"
+        "}\n"
+        "[data-theme='dark'] {\n"
+        "  color-scheme: dark;\n"
+        "}\n"
+    )
+
 
     output = Path(app.outdir) / "_static" / "binny-palette.css"
     output.parent.mkdir(parents=True, exist_ok=True)

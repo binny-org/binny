@@ -2,47 +2,27 @@
    Binny — compact theme overrides (Furo + fallbacks for other themes)
    ========================================================================== */
 
-/* --- Brand palette ------------------------------------------------------- */
-:root {
-  --binny-dark-accent: var(--binny-blue-dark);
-
-  /* Theme-agnostic mapping: LIGHT DEFAULT */
-  --color-brand-primary: var(--binny-purple);
-  --color-brand-content: var(--binny-purple);
-
-  --color-link: var(--binny-purple);
-  --color-link--visited: var(--binny-purple);
-  --color-link--hover: var(--binny-violet);
-  --color-link--active: var(--binny-blue);
-}
-
 /* --- Furo variable mapping ---------------------------------------------- */
-html[data-theme="light"] {
+html[data-theme] {
   --color-brand-primary: var(--binny-purple);
   --color-brand-content: var(--binny-purple);
 
   --color-link: var(--binny-purple);
-  --color-link--visited: var(--binny-purple);
-  --color-link--hover: var(--binny-violet);
-  --color-link--active: var(--binny-blue);
+  --color-link-visited: var(--binny-purple);
+  --color-link-hover: var(--binny-violet);
+  --color-link-active: var(--binny-blue);
 }
 
 /* ==========================================================================
    LINKS
    ========================================================================== */
 
-a:link    { color: var(--color-link) !important; }
-a:visited { color: var(--color-link--visited) !important; }
-a:hover   { color: var(--color-link--hover) !important; }
-a:active  { color: var(--color-link--active) !important; }
+a:link    { color: var(--color-link); }
+a:visited { color: var(--color-link-visited); }
+a:hover   { color: var(--color-link-hover); }
+a:active  { color: var(--color-link-active); }
 
 a { text-decoration-color: currentColor; }
-
-/* Furo explicit override */
-html[data-theme] a:link    { color: var(--color-link) !important; }
-html[data-theme] a:visited { color: var(--color-link--visited) !important; }
-html[data-theme] a:hover   { color: var(--color-link--hover) !important; }
-html[data-theme] a:active  { color: var(--color-link--active) !important; }
 
 /* Strong override for sidebar + docs regions */
 html[data-theme]
@@ -53,7 +33,7 @@ html[data-theme]
     .toc-tree,
     .toctree-wrapper,
     table.contentstable) a:link
-{ color: var(--color-link) !important; }
+{ color: var(--color-link); }
 
 html[data-theme]
 :is(.content,
@@ -63,7 +43,7 @@ html[data-theme]
     .toc-tree,
     .toctree-wrapper,
     table.contentstable) a:visited
-{ color: var(--color-link--visited) !important; }
+{ color: var(--color-link-visited); }
 
 html[data-theme]
 :is(.content,
@@ -73,7 +53,7 @@ html[data-theme]
     .toc-tree,
     .toctree-wrapper,
     table.contentstable) a:hover
-{ color: var(--color-link--hover) !important; }
+{ color: var(--color-link-hover); }
 
 html[data-theme]
 :is(.content,
@@ -83,16 +63,16 @@ html[data-theme]
     .toc-tree,
     .toctree-wrapper,
     table.contentstable) a:active
-{ color: var(--color-link--active) !important; }
+{ color: var(--color-link-active); }
 
 /* FINAL hammer for sidebar */
 .sidebar-tree a,
 .sidebar-tree a:visited {
-  color: var(--color-link) !important;
+  color: var(--color-link);
 }
 
 .sidebar-tree a:hover {
-  color: var(--color-link--hover) !important;
+  color: var(--color-link-hover);
 }
 
 /* ==========================================================================
@@ -232,12 +212,12 @@ a.reference code {
 }
 
 .name-purple {
-  color: var(--binny-purple) !important;
+  color: var(--binny-purple);
   font-weight: 700;
 }
 
 .role-blue {
-  color: var(--binny-blue) !important;
+  color: var(--binny-blue);
   font-style: italic;
 }
 
@@ -256,29 +236,29 @@ div.figure img {
    ========================================================================== */
 
 .sidebar-container {
-  font-size: 1.02rem !important;
+  font-size: 1.02rem;
 }
 
 .sidebar-tree a {
-  font-size: 1.08rem !important;
-  line-height: 1.4 !important;
+  font-size: 1.08rem;
+  line-height: 1.4;
 }
 
 .sidebar-tree .caption-text {
-  font-size: 1.05rem !important;
-  font-weight: 600 !important;
+  font-size: 1.05rem;
+  font-weight: 600;
 }
 
 .sidebar-search input {
-  font-size: 1.02rem !important;
+  font-size: 1.02rem;
 }
 
 .sidebar-tree li {
-  margin-bottom: 0.15rem !important;
+  margin-bottom: 0.15rem;
 }
 
 .sidebar-tree a {
-  padding: 0.15rem 0 !important;
+  padding: 0.15rem 0;
 }
 
 /* -----------------------------
@@ -391,152 +371,4 @@ table.binny-table code {
   color: black;
   padding: 0.1rem 0.25rem;
   border-radius: 4px;
-}
-
-/* ==========================================================================
-   DARK MODE — unified configurable accent (light mode remains unchanged)
-   ========================================================================== */
-
-:is(html, body)[data-theme="dark"] {
-  --color-background-primary: #111418;
-  --color-background-secondary: #181c22;
-  --color-background-border: #2a313b;
-
-  --color-foreground-primary: #e8edf3;
-  --color-foreground-secondary: #b8c0cc;
-  --color-foreground-muted: #8b95a5;
-
-  --color-brand-primary: var(--binny-dark-accent);
-  --color-brand-content: var(--binny-dark-accent);
-
-  --color-link: var(--binny-dark-accent);
-  --color-link--visited: var(--binny-dark-accent);
-  --color-link--hover: var(--binny-dark-accent);
-  --color-link--active: var(--binny-dark-accent);
-}
-
-
-/* All headings */
-
-:is(html, body)[data-theme="dark"] .content h1 {
-  color: var(--binny-green-dark) !important;
-  border-bottom-color: var(--binny-green-dark) !important;
-}
-
-:is(html, body)[data-theme="dark"] .content :is(h2, h3, h4, h5, h6) {
-  color: var(--binny-blue-dark) !important;
-  border-bottom-color: var(--binny-blue-dark) !important;
-}
-
-/* All links and sidebar navigation */
-
-:is(html, body)[data-theme="dark"] :is(a, a:link, a:visited, a:hover, a:active) {
-  color: var(--binny-blue-dark) !important;
-}
-
-:is(html, body)[data-theme="dark"] .sidebar-tree a,
-:is(html, body)[data-theme="dark"] .sidebar-tree a:visited,
-:is(html, body)[data-theme="dark"] .sidebar-tree a:hover {
-  color: var(--binny-green-dark) !important;
-}
-
-/* Sidebar, API signatures and custom text */
-
-:is(html, body)[data-theme="dark"] :is(
-  .sidebar-brand-text,
-  .sidebar-tree .caption-text
-) {
-  color: var(--binny-green-dark) !important;
-}
-
-:is(html, body)[data-theme="dark"] :is(
-  .sig .sig-name,
-  .sig .k,
-  code.descname,
-  a.reference code,
-  .name-purple,
-  .role-blue
-) {
-  color: var(--binny-blue-dark) !important;
-}
-
-/* Code backgrounds */
-
-:is(html, body)[data-theme="dark"] :is(.highlight, pre, code) {
-  background-color: #161a20;
-  color: #e6edf3;
-  border-radius: 8px;
-}
-
-/* Syntax highlighting */
-
-:is(html, body)[data-theme="dark"] .highlight :is(.k, .kd, .kn, .kp, .kr, .kt, .o, .ow) {
-  color: var(--binny-purple-dark) !important;
-  font-weight: 600;
-}
-
-:is(html, body)[data-theme="dark"] .highlight :is(.nf, .fm, .nc, .ne, .nn) {
-  color: var(--binny-blue-dark) !important;
-}
-
-:is(html, body)[data-theme="dark"] .highlight :is(.s, .m) {
-  color: var(--binny-violet-dark) !important;
-}
-
-:is(html, body)[data-theme="dark"] .highlight :is(.c, .ch, .cm, .c1, .cs, .cp) {
-  color: #a9b3c1 !important;
-  font-style: italic;
-}
-
-/* Admonition borders */
-
-:is(html, body)[data-theme="dark"] :is(
-  .admonition.note,
-  .admonition.tip,
-  .admonition.hint,
-  .admonition.important,
-  .admonition.warning,
-  .admonition.caution,
-  .admonition.attention,
-  .admonition.danger,
-  .admonition.error
-) {
-  border-left-color: var(--binny-dark-accent);
-}
-
-/* Binny tables */
-
-:is(html, body)[data-theme="dark"] table.binny-table {
-  background: #161a20;
-  border-color: var(--binny-dark-accent);
-  color: #e8edf3;
-  box-shadow: none;
-}
-
-:is(html, body)[data-theme="dark"] table.binny-table thead th {
-  background: #223247;
-  color: #f5f7fa;
-  border-bottom: 1px solid var(--binny-dark-accent);
-}
-
-:is(html, body)[data-theme="dark"] table.binny-table tbody td {
-  color: #e6e6e6;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-}
-
-:is(html, body)[data-theme="dark"] table.binny-table tbody tr:nth-child(odd) {
-  background: #151a1f;
-}
-
-:is(html, body)[data-theme="dark"] table.binny-table tbody tr:nth-child(even) {
-  background: #1a2027;
-}
-
-:is(html, body)[data-theme="dark"] table.binny-table tbody td:first-child {
-  color: var(--binny-dark-accent);
-}
-
-:is(html, body)[data-theme="dark"] table.binny-table code {
-  background: #222933;
-  color: #f0f4f8;
 }
