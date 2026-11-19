@@ -2236,11 +2236,9 @@ wheels = [
 
 [[package]]
 name = "pybinny"
-version = "1.0.0"
+version = "2.0.0"
 source = { editable = "." }
 dependencies = [
-    { name = "cmasher", version = "1.9.2", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.11'" },
-    { name = "cmasher", version = "1.9.4", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.11'" },
     { name = "derivkit" },
     { name = "matplotlib", version = "3.10.9", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.11'" },
     { name = "matplotlib", version = "3.11.2", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.11'" },
@@ -2265,6 +2263,8 @@ dev = [
     { name = "tox" },
 ]
 docs = [
+    { name = "cmasher", version = "1.9.2", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.11'" },
+    { name = "cmasher", version = "1.9.4", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.11'" },
     { name = "furo" },
     { name = "py-lfkit" },
     { name = "pyccl" },
@@ -2286,7 +2286,7 @@ lf-cosmo = [
 [package.metadata]
 requires-dist = [
     { name = "bump-my-version", marker = "extra == 'dev'", specifier = ">=0.26" },
-    { name = "cmasher" },
+    { name = "cmasher", marker = "extra == 'docs'" },
     { name = "derivkit" },
     { name = "furo", marker = "extra == 'docs'" },
     { name = "matplotlib" },
