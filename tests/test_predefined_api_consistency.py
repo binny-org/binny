@@ -26,7 +26,7 @@ def test_predefined_tomography_preserves_expected_curves(normalize, provide_pare
         z,
         bins,
         nz=parent,
-        normalize=normalize,
+        normalize_bins=normalize,
         include_metadata=True,
     )
 
@@ -71,7 +71,7 @@ def test_predefined_tomography_preserves_bin_integrals(normalize):
     result = build_predefined_tomography(
         z,
         bins,
-        normalize=normalize,
+        normalize_bins=normalize,
     )
 
     for i, curve in bins.items():

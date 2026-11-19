@@ -25,7 +25,7 @@ def _gaussian(z: np.ndarray, mu: float, sig: float) -> np.ndarray:
     return np.exp(-0.5 * ((z - mu) / sig) ** 2)
 
 
-def test_photoz_segments_to_axes_converts_keys_and_types() -> None:
+def test_segments_to_axes_converts_keys_and_types() -> None:
     """Tests that segment specifications use normalized keys and types."""
     segments: list[dict[str, Any]] = [
         {"scheme": "equidistant", "n_bins": 2, "z_min": 0.0, "z_max": 0.8},
@@ -49,7 +49,7 @@ def test_photoz_segments_to_axes_converts_keys_and_types() -> None:
     }
 
 
-def test_photoz_segments_to_axes_missing_key_raises() -> None:
+def test_segments_to_axes_missing_key_raises() -> None:
     """Tests that incomplete segment specifications are rejected."""
     segments = [{"scheme": "equidistant", "n_bins": 2, "z_min": 0.0}]
 

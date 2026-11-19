@@ -22,7 +22,7 @@ from binny.cosmology.ccl_wrappers import (
     comoving_volume_weight,
     luminosity_distance_mpc,
 )
-from binny.utils.normalization import normalize_over_z
+from binny.utils.normalization import normalize_1d
 from binny.utils.types import FloatArray
 
 __all__ = ["luminosity_function_distribution"]
@@ -268,6 +268,6 @@ def luminosity_function_distribution(
     nz[positive] = np.trapezoid(phi, x=m_grid, axis=1) * volume_weight
 
     if normalize:
-        nz = normalize_over_z(z_arr, nz)
+        nz = normalize_1d(z_arr, nz)
 
     return nz

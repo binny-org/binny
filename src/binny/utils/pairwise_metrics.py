@@ -8,15 +8,13 @@ from typing import Literal, TypeAlias
 
 import numpy as np
 
+from binny.utils.normalization import prepare_metric_inputs
 from binny.utils.types import FloatArray1D
 from binny.utils.validators import (
-    validate_axis_and_weights,
     validate_probability_vector,
     validate_same_shape,
 )
 
-PrepMode: TypeAlias = Literal["curves", "segments_prob"]
-NormMode: TypeAlias = Literal["none", "normalize", "check"]
 MetricUnit: TypeAlias = Literal["fraction", "percent"]
 
 __all__ = [
@@ -26,10 +24,7 @@ __all__ = [
     "pair_hellinger",
     "pair_tv",
     "fill_symmetric",
-    "segment_mass_probs",
     "apply_unit",
-    "prepare_metric_inputs",
-    "mass_per_segment",
 ]
 
 
@@ -376,41 +371,6 @@ def fill_symmetric(
     return out
 
 
-def segment_mass_probs(
-    z_arr: FloatArray1D,
-    p: Mapping[int, FloatArray1D],
-) -> dict[int, FloatArray1D]:
-    """Returns per-segment mass probability vectors derived from sampled curves.
-
-    This converts each curve into trapezoid masses per segment using
-    :func:`binny.utils.normalization.mass_per_segment`, then normalizes the
-    segment masses to a probability vector. The output is suitable for
-    discrete probability-vector metrics such as Jensen–Shannon, Hellinger,
-    and total variation distances.
-
-    Args:
-        z_arr: 1D grid of nodes used to define the trapezoid segments.
-        p: Mapping from bin id to curve values evaluated on ``z_arr``.
-
-    Returns:
-        Mapping from bin id to 1D ``float64`` probability vectors over segments.
-
-    Raises:
-        ValueError: If ``z_arr`` or any curve is invalid.
-        ValueError: If any curve yields non-positive total segment mass.
-    """
-    z, curves = prepare_metric_inputs(z_arr, p, mode="curves")
-
-    masses: dict[int, FloatArray1D] = {}
-    for i, curve in curves.items():
-        m = mass_per_segment(z, curve)
-        s = float(np.sum(m))
-        if s <= 0.0:
-            raise ValueError(f"bin {i} has non-positive mass on segments.")
-        masses[int(i)] = (m / s).astype(np.float64, copy=False)
-    return masses
-
-
 def apply_unit(
     mat: dict[int, dict[int, float]],
     unit: MetricUnit,
@@ -435,131 +395,3 @@ def apply_unit(
     if unit == "percent":
         return {i: {j: 100.0 * v for j, v in row.items()} for i, row in mat.items()}
     raise ValueError('unit must be "fraction" or "percent".')
-
-
-def prepare_metric_inputs(
-    z_arr: FloatArray1D,
-    p: Mapping[int, FloatArray1D],
-    *,
-    mode: PrepMode,
-    curve_norm: NormMode = "none",
-    rtol: float = 1e-3,
-    atol: float = 1e-6,
-) -> tuple[FloatArray1D, dict[int, FloatArray1D]]:
-    """Prepares inputs for pairwise metrics (validate once; optionally normalize).
-
-    This is a convenience wrapper that standardizes the common boilerplate for
-    pairwise curve metrics:
-
-    - Validates ``z_arr`` and each curve in ``p`` using
-        :func:`validate_axis_and_weights`.
-    - Optionally normalizes curves to unit trapezoid integral or
-        checks they already are.
-    - Optionally converts curves to per-segment probability vectors
-      (segment masses normalized to sum to 1), suitable for discrete
-      probability metrics.
-
-    Args:
-        z_arr: 1D strictly increasing grid of nodes.
-        p: Mapping from id to curve values evaluated on ``z_arr``.
-        mode: Output mode:
-            - ``"curves"``: return validated (and possibly normalized) node curves.
-            - ``"segments_prob"``: return per-segment mass *probability* vectors.
-        curve_norm: How to treat curve normalization before any conversion:
-            - ``"none"``: no normalization checks beyond basic validation.
-            - ``"normalize"``: divide each curve by its trapezoid integral.
-            - ``"check"``: require each curve integrates to 1 within tolerance.
-        rtol: Relative tolerance for the unit-integral check when
-            ``curve_norm="check"``.
-        atol: Absolute tolerance for the unit-integral check when
-            ``curve_norm="check"``.
-
-    Returns:
-        ``(z_arr, out)`` where ``z_arr`` is float64 and ``out`` maps ids to arrays:
-        - For ``mode="curves"``: arrays have length ``len(z_arr)``.
-        - For ``mode="segments_prob"``: arrays have length ``len(z_arr) - 1``
-            and sum to 1.
-
-    Raises:
-        ValueError: If ``z_arr`` or any curve fails validation, if a curve has
-            non-positive trapezoid integral (needed for normalize/check),
-            if a check fails, or if a curve yields non-positive total
-            segment mass in ``"segments_prob"`` mode.
-    """
-    z_arr = np.asarray(z_arr, dtype=float)
-
-    curves: dict[int, FloatArray1D] = {}
-    for idx, curve in p.items():
-        _, c = validate_axis_and_weights(z_arr, curve)
-        area = float(np.trapezoid(c, x=z_arr))
-
-        if curve_norm == "normalize":
-            if area <= 0.0:
-                raise ValueError(f"bin {idx} has non-positive integral: {area}.")
-            c = (c / area).astype(np.float64, copy=False)
-
-        elif curve_norm == "check":
-            if area <= 0.0:
-                raise ValueError(f"bin {idx} has non-positive integral: {area}.")
-            if not np.isclose(area, 1.0, rtol=rtol, atol=atol):
-                raise ValueError(
-                    f"bin {idx} does not appear normalized (integral={area}). "
-                    "Set curve_norm='normalize' or curve_norm='none'."
-                )
-            c = c.astype(np.float64, copy=False)
-
-        else:  # "none"
-            c = c.astype(np.float64, copy=False)
-
-        curves[int(idx)] = c
-
-    if mode == "curves":
-        return z_arr.astype(np.float64, copy=False), curves
-
-    if mode == "segments_prob":
-        probs: dict[int, FloatArray1D] = {}
-        for idx, c in curves.items():
-            m = mass_per_segment(z_arr, c)
-            s = float(np.sum(m))
-            if s <= 0.0:
-                raise ValueError(f"bin {idx} has non-positive mass on segments.")
-            probs[idx] = (m / s).astype(np.float64, copy=False)
-        return z_arr.astype(np.float64, copy=False), probs
-
-    raise ValueError('mode must be "curves" or "segments_prob".')
-
-
-def mass_per_segment(
-    z_arr: FloatArray1D,
-    p_arr: FloatArray1D,
-) -> FloatArray1D:
-    """Returns trapezoid masses per grid segment for a curve sampled at nodes.
-
-    This converts node values into per-interval masses using the trapezoid rule,
-    which is useful for building cumulative masses, rebinning, or diagnostics that
-    operate on segment contributions rather than node values.
-
-    Args:
-        z_arr: 1D array of grid nodes.
-        p_arr: 1D array of curve values at the nodes.
-
-    Returns:
-        A ``float64`` array of length ``len(z_arr) - 1`` containing trapezoid masses
-        for each adjacent node interval.
-
-    Raises:
-        ValueError: If inputs are not 1D arrays of the same length.
-        ValueError: If ``z_arr`` is not strictly increasing.
-    """
-    z_arr = np.asarray(z_arr, dtype=float)
-    p_arr = np.asarray(p_arr, dtype=float)
-
-    if z_arr.ndim != 1 or p_arr.ndim != 1 or z_arr.size != p_arr.size:
-        raise ValueError("z_arr and p_arr must be 1D arrays of the same length.")
-
-    if not np.all(np.diff(z_arr) > 0):
-        raise ValueError("z_arr must be strictly increasing.")
-
-    dz = np.diff(z_arr)
-    mass = 0.5 * (p_arr[:-1] + p_arr[1:]) * dz
-    return mass.astype(np.float64, copy=False)

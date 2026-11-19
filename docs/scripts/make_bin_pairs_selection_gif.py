@@ -7,11 +7,11 @@ from matplotlib.animation import FuncAnimation, PillowWriter
 from matplotlib.patches import Polygon, Rectangle
 
 from binny.nz import nz_model
-from binny.tomography import (
+from binny.analysis import (
     between_bin_overlap,
-    build_tomography_from_spec,
     make_bin_combo_filter,
 )
+from binny.tomography import build_tomography_from_spec
 
 DEFAULT_FONTSIZE = 19
 plt.rcParams.update(

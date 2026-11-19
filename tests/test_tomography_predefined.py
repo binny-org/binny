@@ -7,13 +7,16 @@ from pathlib import Path
 import numpy as np
 import pytest
 
-from binny import (
+from binny.analysis import (
+    population_stats,
+    shape_stats,
+)
+from binny.surveys import build_survey_tomography
+from binny.tomography import (
     Tomography,
     build_predefined_tomography,
     load_predefined_bins,
 )
-from binny.surveys import build_survey_tomography
-from binny.tomography import population_stats, shape_stats
 
 
 @pytest.fixture
@@ -88,12 +91,12 @@ def test_build_predefined_tomography_metadata(
     assert metadata["inputs"]["norm_method"] == "trapezoid"
 
     expected_norms = {key: float(np.trapezoid(curve, x=z)) for key, curve in bins.items()}
-    assert metadata["bins_norms"] == pytest.approx(expected_norms)
-    assert metadata["parent_norm"] == pytest.approx(np.trapezoid(result.nz, x=z))
-    assert metadata["frac_per_bin"] == pytest.approx(
-        {key: area / metadata["parent_norm"] for key, area in expected_norms.items()}
+    assert metadata["bins"]["bins_norms"] == pytest.approx(expected_norms)
+    assert metadata["parent_nz"]["norm"] == pytest.approx(np.trapezoid(result.nz, x=z))
+    assert metadata["bins"]["frac_per_bin"] == pytest.approx(
+        {key: area / metadata["parent_nz"]["norm"] for key, area in expected_norms.items()}
     )
-    assert sum(metadata["frac_per_bin"].values()) == pytest.approx(1.0)
+    assert sum(metadata["bins"]["frac_per_bin"].values()) == pytest.approx(1.0)
 
 
 @pytest.mark.parametrize("method", ["trapezoid", "simpson"])
@@ -107,7 +110,7 @@ def test_build_predefined_tomography_normalization(
     result = build_predefined_tomography(
         z,
         bins,
-        normalize=True,
+        normalize_bins=True,
         norm_method=method,
         include_metadata=True,
     )
@@ -152,7 +155,7 @@ def test_build_predefined_tomography_provided_parent(
     parent_norm = np.trapezoid(parent, x=z)
     for key, curve in bins.items():
         expected = np.trapezoid(curve, x=z) / parent_norm
-        assert result.metadata["frac_per_bin"][key] == pytest.approx(expected)
+        assert result.metadata["bins"]["frac_per_bin"][key] == pytest.approx(expected)
 
 
 def test_build_predefined_tomography_nonconsecutive_keys(
@@ -180,7 +183,7 @@ def test_build_predefined_tomography_does_not_modify_inputs(
     original_z = z.copy()
     original_bins = {key: curve.copy() for key, curve in bins.items()}
 
-    build_predefined_tomography(z, bins, normalize=True)
+    build_predefined_tomography(z, bins, normalize_bins=True)
 
     np.testing.assert_array_equal(z, original_z)
     for key in bins:
@@ -488,7 +491,7 @@ def test_predefined_numerical_regression(
     result = build_predefined_tomography(
         z,
         bins,
-        normalize=normalize,
+        normalize_bins=normalize,
         include_metadata=include_metadata,
     )
 
@@ -504,7 +507,7 @@ def test_predefined_numerical_regression(
 
     if include_metadata:
         assert result.metadata["kind"] == "predefined"
-        assert result.metadata["bins_norms"] == pytest.approx(raw_integrals)
+        assert result.metadata["bins"]["bins_norms"] == pytest.approx(raw_integrals)
         assert result.metadata["inputs"]["normalize_bins"] is normalize
     else:
         assert result.metadata == {}
@@ -640,3 +643,81 @@ def test_predefined_survey_config_applies_nested_overrides(
         assert np.trapezoid(curve, x=z) == pytest.approx(1.0)
 
     assert result.metadata["inputs"]["normalize_bins"] is True
+
+
+@pytest.mark.parametrize(
+    ("method", "expected_area"),
+    [("trapezoid", 0.375), ("simpson", 1.0 / 3.0)],
+)
+def test_predefined_tomography_consistent_quadrature(method, expected_area):
+    """Tests that predefined normalization and metadata use the same quadrature."""
+    z = np.array([0.0, 0.5, 1.0])
+    raw_bins = {0: z**2, 1: np.ones_like(z)}
+
+    result = build_predefined_tomography(
+        z,
+        raw_bins,
+        normalize_bins=True,
+        norm_method=method,
+        include_metadata=True,
+    )
+
+    metadata = result.metadata
+    expected_parent = expected_area + 1.0
+
+    assert metadata["parent_nz"]["norm"] == pytest.approx(expected_parent)
+    assert metadata["bins"]["bins_norms"][0] == pytest.approx(expected_area)
+    assert metadata["bins"]["bins_norms"][1] == pytest.approx(1.0)
+    assert metadata["bins"]["frac_per_bin"][0] == pytest.approx(expected_area / expected_parent)
+    assert metadata["bins"]["frac_per_bin"][1] == pytest.approx(1.0 / expected_parent)
+
+    np.testing.assert_allclose(result.bins[0], z**2 / expected_area)
+    np.testing.assert_allclose(result.bins[1], np.ones_like(z))
+    np.testing.assert_allclose(result.nz, raw_bins[0] + raw_bins[1])
+
+
+def test_predefined_tomography_normalizes_small_positive_mass():
+    """Tests that predefined bins preserve small positive population masses."""
+    z = np.array([0.0, 0.5, 1.0])
+
+    result = build_predefined_tomography(
+        z,
+        {0: 1e-15 * np.ones_like(z)},
+        normalize_bins=True,
+        include_metadata=True,
+    )
+
+    np.testing.assert_allclose(result.bins[0], np.ones_like(z))
+    assert result.metadata["parent_nz"]["norm"] == pytest.approx(1e-15, abs=0.0)
+    assert result.metadata["bins"]["frac_per_bin"][0] == pytest.approx(1.0)
+
+
+@pytest.mark.parametrize("normalize", [False, True])
+def test_predefined_canonical_metadata(synthetic_bins, normalize):
+    """Tests that predefined tomography uses the canonical metadata schema."""
+    z, bins = synthetic_bins
+
+    tomo = build_predefined_tomography(
+        z,
+        bins,
+        normalize_bins=normalize,
+        include_metadata=True,
+    )
+
+    metadata = tomo.metadata
+    bins_meta = metadata["bins"]
+
+    assert metadata["kind"] == "predefined"
+    assert bins_meta["bin_edges"] is None
+    assert bins_meta["indices"] == tomo.bin_indices
+    assert bins_meta["n_bins"] == tomo.n_bins
+    assert bins_meta["normalize_bins"] is normalize
+
+    np.testing.assert_allclose(
+        metadata["parent_nz"]["values"],
+        tomo.nz,
+    )
+
+    assert "parent_norm" not in metadata
+    assert "bins_norms" not in metadata
+    assert "frac_per_bin" not in metadata

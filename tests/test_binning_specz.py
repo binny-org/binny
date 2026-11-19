@@ -221,20 +221,19 @@ def test_gaussian_scatter_identity_when_sigma0_sigma1_zero():
 
 
 def test_gaussian_scatter_requires_sigma0_plus_sigma1_when_none():
-    """Tests that model must be supported when specz_scatter is None."""
+    """Tests that unsupported scatter parameterizations are rejected."""
     z, _ = _toy_z_nz()
     edges = _edges_4bins()
 
-    matrix = specz_gaussian_response_matrix(
-        z_arr=z,
-        bin_edges=edges,
-        specz_scatter=None,
-        model="const",
-        sigma0=1e-4,
-        sigma1=0.0,
-    )
-    assert matrix.shape == (4, 4)
-    _assert_col_stochastic(matrix)
+    with pytest.raises(ValueError, match="model must be"):
+        specz_gaussian_response_matrix(
+            z_arr=z,
+            bin_edges=edges,
+            specz_scatter=None,
+            model="const",
+            sigma0=1e-4,
+            sigma1=0.0,
+        )
 
 
 def test_gaussian_scatter_returns_col_stochastic_matrix():
@@ -253,19 +252,39 @@ def test_gaussian_scatter_returns_col_stochastic_matrix():
     assert np.all(matrix >= -1e-15)
 
 
-def test_gaussian_scatter_empty_bin_support_falls_back_to_identity_column():
-    """Tests that missing grid support for a true bin yields an identity
-    fallback column."""
-    z = np.concatenate([np.linspace(0.0, 0.99, 200), np.linspace(1.5, 2.0, 200)])
-    edges = _edges_4bins()
-    matrix = specz_gaussian_response_matrix(
-        z_arr=z,
-        bin_edges=edges,
-        specz_scatter=[5e-4, 5e-4, 5e-4, 5e-4],
-        model="const",
+def test_gaussian_scatter_independent_of_missing_grid_support():
+    """Tests that missing grid support does not alter the scatter response."""
+    z_full = np.linspace(0.0, 2.0, 2001)
+    z_missing = np.concatenate(
+        [
+            np.linspace(0.0, 0.99, 200),
+            np.linspace(1.5, 2.0, 200),
+        ]
     )
-    _assert_col_stochastic(matrix)
-    assert np.allclose(matrix[:, 2], np.array([0.0, 0.0, 1.0, 0.0]))
+    edges = _edges_4bins()
+
+    matrix_full = specz_gaussian_response_matrix(
+        z_arr=z_full,
+        bin_edges=edges,
+        specz_scatter=5e-4,
+    )
+
+    matrix_missing = specz_gaussian_response_matrix(
+        z_arr=z_missing,
+        bin_edges=edges,
+        specz_scatter=5e-4,
+    )
+
+    np.testing.assert_allclose(
+        matrix_missing,
+        matrix_full,
+        rtol=0.0,
+        atol=0.0,
+    )
+
+    assert matrix_missing[1, 2] > 0.0
+    assert matrix_missing[3, 2] > 0.0
+    _assert_col_stochastic(matrix_missing)
 
 
 def test_apply_response_matrix_requires_same_bin_shapes():
@@ -586,4 +605,100 @@ def test_specz_assignment_rejects_invalid_parameters(kwargs, message):
     edges = _edges_4bins()
 
     with pytest.raises(ValueError, match=message):
+        specz_assignment(z, edges, **kwargs)
+
+
+@pytest.mark.parametrize(
+    "scatter_kwargs",
+    [
+        {"specz_scatter": 1e-4},
+        {"specz_scatter": 0.03},
+        {"specz_scatter": [0.0, 1e-4, 0.01, 0.03]},
+        {"sigma0": 1e-4, "sigma1": 2e-4},
+        {"sigma0": 0.01, "sigma1": 0.02},
+    ],
+)
+def test_gaussian_scatter_grid_invariance(scatter_kwargs):
+    """Tests that Gaussian responses are independent of grid sampling."""
+    edges = _edges_4bins()
+
+    grids = [
+        np.linspace(0.0, 2.0, 11),
+        np.linspace(0.0, 2.0, 10001),
+        2.0 * np.linspace(0.0, 1.0, 1001) ** 3,
+    ]
+
+    matrices = [
+        specz_gaussian_response_matrix(
+            z_arr=z,
+            bin_edges=edges,
+            specz_scatter=scatter_kwargs.get("specz_scatter"),
+            sigma0=scatter_kwargs.get("sigma0", 0.0),
+            sigma1=scatter_kwargs.get("sigma1", 0.0),
+        )
+        for z in grids
+    ]
+
+    for matrix in matrices:
+        _assert_col_stochastic(matrix)
+        np.testing.assert_array_equal(matrix, matrices[0])
+
+
+@pytest.mark.parametrize("sigma", [1e-6, 1e-4, 1e-3])
+def test_gaussian_scatter_small_scatter_analytic_limit(sigma):
+    """Tests that narrow Gaussian scatter reproduces the analytic leakage limit."""
+    z = np.linspace(0.0, 2.0, 11)
+    edges = _edges_4bins()
+
+    matrix = specz_gaussian_response_matrix(
+        z_arr=z,
+        bin_edges=edges,
+        specz_scatter=sigma,
+    )
+
+    j = 1
+    width = edges[j + 1] - edges[j]
+    leakage = sigma / (width * np.sqrt(2.0 * np.pi))
+
+    np.testing.assert_allclose(
+        matrix[:, j],
+        [leakage, 1.0 - 2.0 * leakage, leakage, 0.0],
+        rtol=1e-7,
+        atol=1e-14,
+    )
+
+
+def test_gaussian_scatter_zero_per_bin_is_exact_identity():
+    """Tests that bins with exactly zero scatter retain identity columns."""
+    z, _ = _toy_z_nz()
+    edges = _edges_4bins()
+
+    matrix = specz_gaussian_response_matrix(
+        z_arr=z,
+        bin_edges=edges,
+        specz_scatter=[0.01, 0.0, 0.03, 0.0],
+    )
+
+    np.testing.assert_array_equal(matrix[:, 1], np.eye(4)[:, 1])
+    np.testing.assert_array_equal(matrix[:, 3], np.eye(4)[:, 3])
+
+
+@pytest.mark.parametrize(
+    "kwargs",
+    [
+        {"sigma0": -0.01},
+        {"sigma1": -0.01},
+        {"sigma0": np.nan},
+        {"sigma1": np.inf},
+        {"specz_scatter": np.nan},
+        {"specz_scatter": np.inf},
+        {"specz_scatter_model": "invalid"},
+    ],
+)
+def test_specz_assignment_rejects_invalid_scatter_settings(kwargs):
+    """Tests that invalid scatter settings cannot bypass validation."""
+    z, _ = _toy_z_nz()
+    edges = _edges_4bins()
+
+    with pytest.raises(ValueError):
         specz_assignment(z, edges, **kwargs)

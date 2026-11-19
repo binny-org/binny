@@ -2,22 +2,15 @@
 
 from __future__ import annotations
 
-from collections.abc import Mapping, Sequence
-from typing import Any, Literal
+from collections.abc import Sequence
 
 import numpy as np
 from scipy.special import erf
 
-from binny.binning.core import build_bins_on_edges
-from binny.binning.edges import resolve_bin_edges, validate_bin_edges
-from binny.tomography.metadata import finalize_tomo_metadata
 from binny.utils.broadcasting import as_per_bin
-from binny.utils.normalization import normalize_1d
 from binny.utils.types import FloatArray
-from binny.utils.validators import validate_axis_and_weights
 
 __all__ = [
-    "build_photoz_bins",
     "true_redshift_distribution",
     "photoz_assignment",
     "photoz_assignment_probability",
@@ -80,33 +73,6 @@ def _broadcast_photoz_params(
         }
         for i in range(n_bins)
     ]
-
-
-def _resolve_photoz_edges(
-    z: FloatArray,
-    nz: FloatArray,
-    bins: Mapping[str, Any],
-    z_ph: FloatArray | None,
-    nz_ph: FloatArray | None,
-    norm_method: Literal["trapezoid", "simpson"],
-) -> FloatArray:
-    """Resolve bin edges in observed photo-z space."""
-    edge_axis = z_ph if z_ph is not None else z
-    edge_weights = nz_ph if (z_ph is not None and nz_ph is not None) else nz
-
-    edges = resolve_bin_edges(
-        axis=np.asarray(edge_axis, dtype=float),
-        density=np.asarray(edge_weights, dtype=float),
-        bins=bins,
-        equal_number_axis=z_ph,
-        equal_number_weights=nz_ph,
-        selection_axis=z_ph,
-        selection_density=nz_ph,
-        norm_method=norm_method,
-        normalize_equal_number_weights=True,
-    )
-
-    return validate_bin_edges(edges, require_within=None)
 
 
 def photoz_assignment_probability(
@@ -290,161 +256,6 @@ def photoz_assignment(
         ],
         axis=0,
     )
-
-
-def build_photoz_bins(
-    z: FloatArray,
-    nz: FloatArray,
-    *,
-    bins: Mapping[str, Any],
-    scatter_scale: Sequence[float] | float = 0.0,
-    mean_offset: Sequence[float] | float = 0.0,
-    mean_scale: Sequence[float] | float = 1.0,
-    outlier_frac: Sequence[float] | float = 0.0,
-    outlier_scatter_scale: Sequence[float] | float | None = None,
-    outlier_mean_offset: Sequence[float] | float = 0.0,
-    outlier_mean_scale: Sequence[float] | float = 1.0,
-    z_ph: FloatArray | None = None,
-    nz_ph: FloatArray | None = None,
-    normalize_input: bool = True,
-    normalize_bins: bool = True,
-    norm_method: Literal["trapezoid", "simpson"] = "trapezoid",
-    include_metadata: bool = False,
-    include_photoz_diagnostics: bool = False,
-    save_metadata_path: str | None = None,
-) -> dict[int, FloatArray] | tuple[dict[int, FloatArray], dict[str, Any]]:
-    """Builds photo-z-selected true-redshift distributions per tomographic bin.
-
-    Args:
-        z: True-redshift grid.
-        nz: Parent distribution evaluated on ``z``.
-        bins: Dictionary specifying the observed photo-z bin edges or their
-            construction. Supports ``{"edges": [...]}``,
-            ``{"scheme": name, "n_bins": n, "range": (lo, hi),
-            "params": {...}}``, or ``{"segments": [...]}``.
-        scatter_scale: Per-bin (or constant scalar) photo-z scatter scale.
-        mean_offset: Per-bin (or constant scalar) photo-z mean offset.
-        mean_scale: Per-bin (or constant scalar) photo-z mean scale.
-        outlier_frac: Per-bin (or constant scalar) outlier mixture fraction.
-        outlier_scatter_scale: Per-bin (or scalar) outlier scatter scale. When
-            provided, enables an outlier component.
-        outlier_mean_offset: Per-bin (or constant scalar) outlier mean offset.
-        outlier_mean_scale: Per-bin (or constant scalar) outlier mean scale.
-        z_ph: Optional photo-z axis used for edge derivation in population-based
-            schemes.
-        nz_ph: Optional photo-z weights evaluated on ``z_ph``.
-        normalize_input: Whether to normalize ``nz`` before computing bins.
-        normalize_bins: Whether to normalize each returned bin curve.
-        norm_method: Integration method used for normalization.
-        include_metadata: Whether to return metadata alongside the bins.
-        include_photoz_diagnostics: Whether to include photo-z bin-assignment
-            diagnostics in the returned metadata.
-        save_metadata_path: Optional path for writing metadata.
-
-    Returns:
-        Mapping from bin index to ``n_bin(z)``. If ``include_metadata=True`` or
-        ``include_photoz_diagnostics=True``, returns ``(bins, metadata)``.
-
-    Raises:
-        ValueError: If edge inputs are inconsistent, the binning specification
-            is invalid, or photo-z model parameters are invalid.
-    """
-
-    z_arr, parent_arr = validate_axis_and_weights(z, nz)
-
-    return_metadata = include_metadata or include_photoz_diagnostics
-    need_meta = return_metadata or save_metadata_path is not None
-
-    if normalize_input:
-        parent_arr = normalize_1d(z_arr, parent_arr, method=norm_method)
-
-    # Resolve edges in observed photo-z space.
-    edges = _resolve_photoz_edges(z_arr, parent_arr, bins, z_ph, nz_ph, norm_method)
-
-    # Prepare one set of model parameters per tomographic bin.
-    params = _broadcast_photoz_params(
-        len(edges) - 1,
-        scatter_scale=scatter_scale,
-        mean_offset=mean_offset,
-        mean_scale=mean_scale,
-        outlier_frac=outlier_frac,
-        outlier_scatter_scale=outlier_scatter_scale,
-        outlier_mean_offset=outlier_mean_offset,
-        outlier_mean_scale=outlier_mean_scale,
-    )
-
-    assignment_probabilities: dict[int, FloatArray] = {}
-
-    def raw_bin_for_edge(i: int, zmin: float, zmax: float) -> FloatArray:
-        p_bin = photoz_assignment_probability(
-            z_arr,
-            bin_min=float(zmin),
-            bin_max=float(zmax),
-            **params[i],
-        )
-
-        if include_photoz_diagnostics:
-            assignment_probabilities[i] = p_bin.astype(np.float64, copy=True)
-
-        return (parent_arr * p_bin).astype(np.float64, copy=False)
-
-    # Construct and optionally normalize the true-redshift distributions.
-    tomo_bins, bins_norms, parent_norm = build_bins_on_edges(
-        z=z_arr,
-        nz_parent_for_meta=parent_arr,
-        bin_edges=edges,
-        raw_bin_for_edge=raw_bin_for_edge,
-        normalize_bins=normalize_bins,
-        norm_method=norm_method,
-        mixer=None,
-        need_meta=need_meta,
-    )
-
-    # Preserve the existing metadata schema and saving behavior.
-    meta = finalize_tomo_metadata(
-        kind="photoz",
-        z=z_arr,
-        parent_nz=parent_arr,
-        bin_edges=edges,
-        bins=tomo_bins,
-        inputs={
-            "bins": dict(bins),
-            "normalize_input": normalize_input,
-            "normalize_bins": normalize_bins,
-            "norm_method": norm_method,
-            "scatter_scale": scatter_scale,
-            "mean_offset": mean_offset,
-            "mean_scale": mean_scale,
-            "outlier_frac": outlier_frac,
-            "outlier_scatter_scale": outlier_scatter_scale,
-            "outlier_mean_offset": outlier_mean_offset,
-            "outlier_mean_scale": outlier_mean_scale,
-            "z_ph_provided": z_ph is not None,
-            "nz_ph_provided": nz_ph is not None,
-            "bin_edges_space": "photoz",
-        },
-        parent_norm=parent_norm,
-        bins_norms=bins_norms,
-        include_metadata=return_metadata,
-        save_metadata_path=save_metadata_path,
-    )
-
-    if include_photoz_diagnostics and meta is not None:
-        meta["photoz_diagnostics"] = {
-            "observed_bin_edges": edges.copy(),
-            "true_z": z_arr.copy(),
-            "assignment_probabilities": assignment_probabilities,
-            "description": (
-                "P(i | z) for each observed photo-z bin, evaluated on the true-z grid."
-            ),
-        }
-
-    if return_metadata:
-        if meta is None:
-            raise RuntimeError("Metadata was requested but not generated.")
-        return tomo_bins, meta
-
-    return tomo_bins
 
 
 def true_redshift_distribution(

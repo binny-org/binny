@@ -31,11 +31,11 @@ def test_build_deterministic_tomography():
     assert isinstance(tomo, Tomography)
     assert tomo.n_bins == 4
     assert tomo.bin_indices == [0, 1, 2, 3]
-    assert tomo.metadata["method"] == "deterministic"
+    assert tomo.metadata["kind"] == "deterministic"
 
     np.testing.assert_allclose(
-        tomo.metadata["parent_integral"],
-        np.trapezoid(nz, x=z),
+        tomo.metadata["parent_nz"]["norm"],
+        1.0,
     )
 
     for i in tomo.bin_indices:
@@ -45,7 +45,7 @@ def test_build_deterministic_tomography():
         )
 
     np.testing.assert_allclose(
-        sum(tomo.metadata["frac_per_bin"].values()),
+        sum(tomo.metadata["bins"]["frac_per_bin"].values()),
         1.0,
         atol=1e-3,
     )
@@ -70,11 +70,11 @@ def test_build_photoz_tomography():
     )
 
     assert tomo.n_bins == 5
-    assert tomo.metadata["method"] == "photoz"
+    assert tomo.metadata["kind"] == "photoz"
 
     for i in tomo.bin_indices:
-        assert tomo.metadata["bin_integrals"][i] > 0.0
-        assert 0.0 <= tomo.metadata["frac_per_bin"][i] <= 1.0
+        assert tomo.metadata["bins"]["bins_norms"][i] > 0.0
+        assert 0.0 <= tomo.metadata["bins"]["frac_per_bin"][i] <= 1.0
 
         np.testing.assert_allclose(
             np.trapezoid(tomo[i], x=z),
@@ -93,7 +93,7 @@ def test_population_fractions_independent_of_bin_normalization():
         nz,
         edges,
         method="deterministic",
-        normalize=False,
+        normalize_bins=False,
     )
 
     normalized = build_tomography(
@@ -101,14 +101,14 @@ def test_population_fractions_independent_of_bin_normalization():
         nz,
         edges,
         method="deterministic",
-        normalize=True,
+        normalize_bins=True,
     )
 
-    assert raw.metadata["frac_per_bin"] == normalized.metadata["frac_per_bin"]
+    assert raw.metadata["bins"]["frac_per_bin"] == normalized.metadata["bins"]["frac_per_bin"]
 
     for i in raw.bin_indices:
         np.testing.assert_allclose(
-            normalized.metadata["bin_integrals"][i],
+            normalized.metadata["bins"]["bins_norms"][i],
             np.trapezoid(raw[i], x=z),
         )
 
@@ -132,6 +132,7 @@ def test_photoz_population_fractions_match_independent_integrals():
         edges,
         method="photoz",
         params=params,
+        normalize_input=False,
     )
 
     from scipy.special import ndtr
@@ -163,13 +164,13 @@ def test_photoz_population_fractions_match_independent_integrals():
             atol=1e-12,
         )
         np.testing.assert_allclose(
-            functional.metadata["bin_integrals"][i],
+            functional.metadata["bins"]["bins_norms"][i],
             expected_integral,
             rtol=1e-12,
             atol=1e-12,
         )
         np.testing.assert_allclose(
-            functional.metadata["frac_per_bin"][i],
+            functional.metadata["bins"]["frac_per_bin"][i],
             expected_fraction,
             rtol=1e-12,
             atol=1e-12,
@@ -211,7 +212,7 @@ def test_specz_generic_construction_with_response():
             "specz_scatter": 0.03,
         },
         normalize_input=True,
-        normalize=False,
+        normalize_bins=False,
     )
 
     true_bins = np.stack(
@@ -237,7 +238,7 @@ def test_specz_generic_construction_with_response():
             atol=1e-14,
         )
         np.testing.assert_allclose(
-            tomo.metadata["bin_integrals"][i],
+            tomo.metadata["bins"]["bins_norms"][i],
             np.trapezoid(expected[i], x=z),
         )
 
@@ -268,7 +269,7 @@ def test_specz_population_fractions_with_completeness_and_response():
             "leakage_model": "neighbor",
         },
         normalize_input=False,
-        normalize=True,
+        normalize_bins=True,
     )
 
     parent_integral = np.trapezoid(nz, x=z)
@@ -294,16 +295,16 @@ def test_specz_population_fractions_with_completeness_and_response():
 
     for i in tomo.bin_indices:
         np.testing.assert_allclose(
-            tomo.metadata["bin_integrals"][i],
+            tomo.metadata["bins"]["bins_norms"][i],
             expected_integrals[i],
         )
         np.testing.assert_allclose(
-            tomo.metadata["frac_per_bin"][i],
+            tomo.metadata["bins"]["frac_per_bin"][i],
             expected_fractions[i],
         )
 
     np.testing.assert_allclose(
-        sum(tomo.metadata["frac_per_bin"].values()),
+        sum(tomo.metadata["bins"]["frac_per_bin"].values()),
         sum(true_integrals) / parent_integral,
     )
 
@@ -318,14 +319,15 @@ def test_build_tomography_default_deterministic():
         z,
         nz,
         edges,
-        normalize=False,
+        normalize_bins=False,
+        normalize_input=False,
     )
 
     expected = deterministic_assignment(z, edges)
 
     assert tomo.n_bins == 2
-    assert tomo.metadata["method"] == "deterministic"
-    assert tomo.metadata["params"] == {}
+    assert tomo.metadata["kind"] == "deterministic"
+    assert tomo.metadata["inputs"]["params"] == {}
 
     for i in tomo.bin_indices:
         np.testing.assert_array_equal(
@@ -354,7 +356,8 @@ def test_build_tomography_specz_method():
         edges,
         method="specz",
         params=params,
-        normalize=False,
+        normalize_bins=False,
+        normalize_input=False,
     )
 
     true_bins = np.stack(
@@ -392,11 +395,11 @@ def test_build_tomography_specz_method():
         )
 
         np.testing.assert_allclose(
-            tomo.metadata["bin_integrals"][i],
+            tomo.metadata["bins"]["bins_norms"][i],
             np.trapezoid(expected[i], x=z),
         )
 
-    assert tomo.metadata["method"] == "specz"
+    assert tomo.metadata["kind"] == "specz"
 
 
 def test_build_tomography_photoz_method():
@@ -418,7 +421,8 @@ def test_build_tomography_photoz_method():
         edges,
         method="photoz",
         params=params,
-        normalize=False,
+        normalize_bins=False,
+        normalize_input=False,
     )
 
     expected_selection = photoz_assignment(z, edges, **params)
@@ -429,8 +433,8 @@ def test_build_tomography_photoz_method():
             nz * expected_selection[i],
         )
 
-    assert tomo.metadata["method"] == "photoz"
-    assert tomo.metadata["params"] == params
+    assert tomo.metadata["kind"] == "photoz"
+    assert tomo.metadata["inputs"]["params"] == params
 
 
 def test_build_tomography_specz_population_conservation():
@@ -445,7 +449,7 @@ def test_build_tomography_specz_population_conservation():
         edges,
         method="specz",
         params={"completeness": 0.8},
-        normalize=False,
+        normalize_bins=False,
     )
 
     mixed = build_tomography(
@@ -458,12 +462,12 @@ def test_build_tomography_specz_population_conservation():
             "catastrophic_frac": 0.2,
             "specz_scatter": 0.03,
         },
-        normalize=False,
+        normalize_bins=False,
     )
 
     np.testing.assert_allclose(
-        sum(mixed.metadata["frac_per_bin"].values()),
-        sum(baseline.metadata["frac_per_bin"].values()),
+        sum(mixed.metadata["bins"]["frac_per_bin"].values()),
+        sum(baseline.metadata["bins"]["frac_per_bin"].values()),
         rtol=1e-12,
         atol=1e-14,
     )
@@ -480,7 +484,7 @@ def test_build_tomography_custom_assignment():
         nz,
         edges,
         deterministic_assignment,
-        normalize=False,
+        normalize_bins=False,
     )
 
     builtin = build_tomography(
@@ -488,10 +492,10 @@ def test_build_tomography_custom_assignment():
         nz,
         edges,
         method="deterministic",
-        normalize=False,
+        normalize_bins=False,
     )
 
-    assert custom.metadata["method"] == "custom"
+    assert custom.metadata["kind"] == "custom"
 
     for i in custom.bin_indices:
         np.testing.assert_allclose(custom[i], builtin[i])
@@ -575,3 +579,108 @@ def test_build_tomography_rejects_deterministic_params():
             method="deterministic",
             params={"scatter_scale": 0.05},
         )
+
+
+@pytest.mark.parametrize("method", ["deterministic", "photoz", "specz"])
+@pytest.mark.parametrize("normalize", [False, True])
+def test_tomography_canonical_metadata(method, normalize):
+    """Tests that built-in assignment methods use the canonical metadata schema."""
+    z = np.linspace(0.0, 2.0, 1001)
+    nz = 3.0 * np.exp(-z)
+    edges = np.linspace(0.0, 2.0, 5)
+
+    tomo = build_tomography(
+        z,
+        nz,
+        edges,
+        method=method,
+        normalize_bins=normalize,
+        include_metadata=True,
+    )
+
+    metadata = tomo.metadata
+    bins_meta = metadata["bins"]
+
+    assert metadata["kind"] == method
+    assert bins_meta["indices"] == tomo.bin_indices
+    assert bins_meta["n_bins"] == tomo.n_bins
+    assert bins_meta["normalize_bins"] is normalize
+    assert metadata["inputs"]["normalize_bins"] is normalize
+
+    np.testing.assert_allclose(bins_meta["bin_edges"], edges)
+    np.testing.assert_allclose(metadata["parent_nz"]["values"], tomo.nz)
+
+    assert metadata["parent_nz"]["norm"] == pytest.approx(np.trapezoid(tomo.nz, x=z))
+
+    assert set(bins_meta["bins_norms"]) == set(tomo.bin_indices)
+    assert set(bins_meta["frac_per_bin"]) == set(tomo.bin_indices)
+
+    for i in tomo.bin_indices:
+        assert bins_meta["frac_per_bin"][i] == pytest.approx(
+            bins_meta["bins_norms"][i] / metadata["parent_nz"]["norm"]
+        )
+
+    assert "bin_integrals" not in metadata
+    assert "parent_integral" not in metadata
+    assert "frac_per_bin" not in metadata
+
+
+@pytest.mark.parametrize("method", ["deterministic", "photoz", "specz"])
+def test_tomography_without_metadata(method):
+    """Tests that disabling metadata does not change numerical tomography results."""
+    z = np.linspace(0.0, 2.0, 1001)
+    nz = np.exp(-z)
+    edges = np.linspace(0.0, 2.0, 5)
+
+    with_metadata = build_tomography(
+        z,
+        nz,
+        edges,
+        method=method,
+        include_metadata=True,
+    )
+
+    without_metadata = build_tomography(
+        z,
+        nz,
+        edges,
+        method=method,
+        include_metadata=False,
+    )
+
+    assert without_metadata.metadata == {}
+
+    np.testing.assert_array_equal(without_metadata.z, with_metadata.z)
+    np.testing.assert_array_equal(without_metadata.nz, with_metadata.nz)
+
+    for i in with_metadata.bin_indices:
+        np.testing.assert_array_equal(
+            without_metadata[i],
+            with_metadata[i],
+        )
+
+
+@pytest.mark.parametrize("method", ["deterministic", "photoz", "specz"])
+def test_build_tomography_normalization_defaults(method):
+    """Tests that the parent and individual bins are normalized by default."""
+    z = np.linspace(0.0, 2.0, 1001)
+    nz = 5.0 * np.exp(-z)
+    edges = np.linspace(0.0, 2.0, 5)
+    original = nz.copy()
+
+    tomo = build_tomography(
+        z,
+        nz,
+        edges,
+        method=method,
+    )
+
+    assert np.trapezoid(tomo.nz, x=z) == pytest.approx(1.0)
+
+    for curve in tomo.bins.values():
+        assert np.trapezoid(curve, x=z) == pytest.approx(1.0)
+
+    assert tomo.metadata["inputs"]["normalize_input"] is True
+    assert tomo.metadata["inputs"]["normalize_bins"] is True
+
+    np.testing.assert_array_equal(nz, original)

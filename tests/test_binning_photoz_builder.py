@@ -1,4 +1,4 @@
-"""Tests for ``binny.binning.photoz`` builder."""
+"""Tests for photometric-redshift tomography."""
 
 from __future__ import annotations
 
@@ -6,8 +6,9 @@ import numpy as np
 import pytest
 
 from binny.axes.bin_edges import generalized_tomographic_edges
-from binny.binning.photoz import build_photoz_bins, photoz_assignment_probability
+from binny.binning.photoz import photoz_assignment_probability
 from binny.binning.scheme_registry import register_binning_scheme
+from binny.tomography.core import build_tomography
 
 
 @pytest.fixture
@@ -215,21 +216,25 @@ def test_photoz_assignment_probability_outlier_frac_zero_ignores_scatter(z_nz):
     assert np.allclose(a, b, rtol=0.0, atol=0.0)
 
 
-def test_build_photoz_bins_basic_shapes_and_keys(z_nz):
+def test_build_tomography_photoz_basic_shapes_and_keys(z_nz):
     """Tests that explicit edges return the expected keys and shapes."""
     z, nz = z_nz
     edges = [0.0, 0.5, 1.0, 1.5]
 
-    bins = build_photoz_bins(
+    bins = build_tomography(
         z,
         nz,
         bins={"edges": edges},
-        scatter_scale=0.05,
-        mean_offset=0.01,
-        mean_scale=1.0,
-        outlier_frac=0.0,
-        outlier_scatter_scale=None,
-    )
+        method="photoz",
+        include_metadata=False,
+        params={
+            "scatter_scale": 0.05,
+            "mean_offset": 0.01,
+            "mean_scale": 1.0,
+            "outlier_frac": 0.0,
+            "outlier_scatter_scale": None,
+        },
+    ).bins
 
     assert list(bins.keys()) == [0, 1, 2]
     for k, arr in bins.items():
@@ -238,23 +243,27 @@ def test_build_photoz_bins_basic_shapes_and_keys(z_nz):
         assert np.all(np.isfinite(arr))
 
 
-def test_build_photoz_bins_per_bin_parameters(z_nz):
+def test_build_tomography_photoz_per_bin_parameters(z_nz):
     """Tests that per-bin params broadcast and produce the right bin count."""
     z, nz = z_nz
     edges = [0.0, 0.4, 0.8, 1.2, 1.6]
 
-    bins = build_photoz_bins(
+    bins = build_tomography(
         z,
         nz,
         bins={"edges": edges},
-        scatter_scale=[0.04, 0.05, 0.06, 0.05],
-        mean_offset=[0.00, 0.01, 0.02, 0.02],
-        mean_scale=[1.00, 1.00, 0.98, 0.98],
-        outlier_frac=[0.00, 0.01, 0.02, 0.01],
-        outlier_scatter_scale=[0.20, 0.20, 0.20, 0.15],
-        outlier_mean_offset=[0.0, 0.1, 0.0, 0.0],
-        outlier_mean_scale=[1.0, 0.9, 1.0, 1.0],
-    )
+        method="photoz",
+        include_metadata=False,
+        params={
+            "scatter_scale": [0.04, 0.05, 0.06, 0.05],
+            "mean_offset": [0.0, 0.01, 0.02, 0.02],
+            "mean_scale": [1.0, 1.0, 0.98, 0.98],
+            "outlier_frac": [0.0, 0.01, 0.02, 0.01],
+            "outlier_scatter_scale": [0.2, 0.2, 0.2, 0.15],
+            "outlier_mean_offset": [0.0, 0.1, 0.0, 0.0],
+            "outlier_mean_scale": [1.0, 0.9, 1.0, 1.0],
+        },
+    ).bins
 
     assert list(bins.keys()) == [0, 1, 2, 3]
     for arr in bins.values():
@@ -262,41 +271,43 @@ def test_build_photoz_bins_per_bin_parameters(z_nz):
         assert np.all(np.isfinite(arr))
 
 
-def test_build_photoz_bins_broadcasting_wrong_length_raises(z_nz):
+def test_build_tomography_photoz_broadcasting_wrong_length_raises(z_nz):
     """Tests that wrong-length per-bin params raise ValueError."""
     z, nz = z_nz
     edges = [0.0, 0.5, 1.0, 1.5]
 
     with pytest.raises(ValueError):
-        build_photoz_bins(
+        build_tomography(
             z,
             nz,
             bins={"edges": edges},
-            scatter_scale=[0.05, 0.06],  # should be length 3
-            mean_offset=0.01,
+            method="photoz",
+            include_metadata=False,
+            params={"scatter_scale": [0.05, 0.06], "mean_offset": 0.01},
         )
 
 
-def test_build_photoz_bins_accepts_lists():
+def test_build_tomography_photoz_accepts_lists():
     """Tests that list inputs are accepted and return finite outputs."""
     z = [0.0, 0.5, 1.0, 1.5]
     nz = [1.0, 2.0, 1.0, 0.5]
     bin_edges = [0.0, 0.75, 1.5]
 
-    bins = build_photoz_bins(
+    bins = build_tomography(
         z,
         nz,
         bins={"edges": bin_edges},
-        scatter_scale=0.05,
-        mean_offset=0.01,
-    )
+        method="photoz",
+        include_metadata=False,
+        params={"scatter_scale": 0.05, "mean_offset": 0.01},
+    ).bins
 
     assert list(bins.keys()) == [0, 1]
     assert bins[0].shape == (len(z),)
     assert np.all(np.isfinite(bins[0]))
 
 
-def test_build_photoz_bins_list_vs_array_same():
+def test_build_tomography_photoz_list_vs_array_same():
     """Tests that list vs array inputs produce identical results."""
     z_list = [0.0, 0.5, 1.0, 1.5]
     nz_list = [1.0, 2.0, 1.0, 0.5]
@@ -306,281 +317,307 @@ def test_build_photoz_bins_list_vs_array_same():
     nz = np.asarray(nz_list)
     edges = np.asarray(edges_list)
 
-    bins_list = build_photoz_bins(
+    bins_list = build_tomography(
         z_list,
         nz_list,
         bins={"edges": edges_list},
-        scatter_scale=0.05,
-        mean_offset=0.01,
-    )
-    bins_arr = build_photoz_bins(z, nz, bins={"edges": edges}, scatter_scale=0.05, mean_offset=0.01)
+        method="photoz",
+        include_metadata=False,
+        params={"scatter_scale": 0.05, "mean_offset": 0.01},
+    ).bins
+    bins_arr = build_tomography(
+        z,
+        nz,
+        bins={"edges": edges},
+        method="photoz",
+        include_metadata=False,
+        params={"scatter_scale": 0.05, "mean_offset": 0.01},
+    ).bins
 
     assert np.allclose(bins_list[0], bins_arr[0])
     assert np.allclose(bins_list[1], bins_arr[1])
 
 
-def test_build_photoz_bins_invalid_bin_edges_raises(z_nz):
-    """Test that invalid explicit bin edges raise ValueError."""
+def test_build_tomography_photoz_invalid_bin_edges_raises(z_nz):
+    """Tests that invalid explicit bin edges raise ValueError."""
     z, nz = z_nz
 
     with pytest.raises(ValueError, match=r"at least two"):
-        build_photoz_bins(
+        build_tomography(
             z,
             nz,
             bins={"edges": [0.0]},
-            scatter_scale=0.05,
-            mean_offset=0.0,
+            method="photoz",
+            include_metadata=False,
+            params={"scatter_scale": 0.05, "mean_offset": 0.0},
         )
 
     with pytest.raises(ValueError, match=r"increasing"):
-        build_photoz_bins(
+        build_tomography(
             z,
             nz,
             bins={"edges": [0.0, 1.0, 1.0]},
-            scatter_scale=0.05,
-            mean_offset=0.0,
+            method="photoz",
+            include_metadata=False,
+            params={"scatter_scale": 0.05, "mean_offset": 0.0},
         )
 
 
-def test_build_photoz_bins_scheme_requires_n_bins(z_nz):
-    """Test that generated bin specifications require n_bins."""
+def test_build_tomography_photoz_scheme_requires_n_bins(z_nz):
+    """Tests that generated bin specifications require n_bins."""
     z, nz = z_nz
     with pytest.raises(ValueError, match=r"n_bins"):
-        build_photoz_bins(
+        build_tomography(
             z,
             nz,
             bins={"scheme": "equidistant"},
-            scatter_scale=0.05,
-            mean_offset=0.0,
+            method="photoz",
+            include_metadata=False,
+            params={"scatter_scale": 0.05, "mean_offset": 0.0},
         )
 
 
-def test_build_photoz_bins_requires_binning_scheme_when_no_edges(z_nz):
-    """Test that a bin specification must select a mode."""
+def test_build_tomography_photoz_requires_binning_scheme_when_no_edges(z_nz):
+    """Tests that a bin specification must select a mode."""
     z, nz = z_nz
     with pytest.raises(ValueError, match=r"exactly one"):
-        build_photoz_bins(
+        build_tomography(
             z,
             nz,
             bins={},
-            scatter_scale=0.05,
-            mean_offset=0.0,
+            method="photoz",
+            include_metadata=False,
+            params={"scatter_scale": 0.05, "mean_offset": 0.0},
         )
 
 
-def test_build_photoz_bins_bin_edges_mutually_exclusive_with_scheme(z_nz):
-    """Test that explicit and generated bin specifications cannot be combined."""
+def test_build_tomography_photoz_bin_edges_mutually_exclusive_with_scheme(z_nz):
+    """Tests that explicit and generated bin specifications cannot be combined."""
     z, nz = z_nz
     with pytest.raises(ValueError, match=r"exactly one"):
-        build_photoz_bins(
+        build_tomography(
             z,
             nz,
             bins={"edges": [0.0, 1.0], "scheme": "equidistant", "n_bins": 2},
-            scatter_scale=0.05,
-            mean_offset=0.0,
+            method="photoz",
+            include_metadata=False,
+            params={"scatter_scale": 0.05, "mean_offset": 0.0},
         )
 
 
-def test_build_photoz_bins_equal_number_requires_both_zph_and_nzph(z_nz):
+def test_build_tomography_photoz_equal_number_requires_both_zph_and_nzph(z_nz):
     """Tests that equal_number forbids providing only one of (z_ph, nz_ph)."""
     z, nz = z_nz
     with pytest.raises(
         ValueError,
         match=r"selection_axis.*selection_density|selection_density.*selection_axis|both",
     ):
-        build_photoz_bins(
+        build_tomography(
             z,
             nz,
             bins={"scheme": "equal_number", "n_bins": 3},
-            z_ph=z,  # selection_density missing
-            scatter_scale=0.05,
-            mean_offset=0.0,
+            z_ph=z,
+            method="photoz",
+            include_metadata=False,
+            params={"scatter_scale": 0.05, "mean_offset": 0.0},
         )
 
 
-def test_build_photoz_bins_normalize_bins_true_integrates_to_one(z_nz):
+def test_build_tomography_photoz_normalize_bins_true_integrates_to_one(z_nz):
     """Tests that normalize_bins=True returns per-bin unit integrals."""
     z, nz = z_nz
     edges = [0.0, 0.5, 1.0, 1.5]
 
-    bins = build_photoz_bins(
+    bins = build_tomography(
         z,
         nz,
         bins={"edges": edges},
-        scatter_scale=0.05,
-        mean_offset=0.01,
         normalize_bins=True,
-    )
+        method="photoz",
+        include_metadata=False,
+        params={"scatter_scale": 0.05, "mean_offset": 0.01},
+    ).bins
 
     for arr in bins.values():
         integ = np.trapezoid(arr, x=z)
         assert np.isclose(integ, 1.0, rtol=1e-6, atol=1e-8)
 
 
-def test_build_photoz_bins_normalize_bins_false_scales_with_parent(z_nz):
+def test_build_tomography_photoz_normalize_bins_false_scales_with_parent(z_nz):
     """Tests that normalize_bins=False scales with parent when normalize_input=False."""
     z, nz = z_nz
     edges = [0.0, 0.5, 1.0, 1.5]
 
-    bins_a = build_photoz_bins(
+    bins_a = build_tomography(
         z,
         nz,
         bins={"edges": edges},
-        scatter_scale=0.05,
-        mean_offset=0.01,
         normalize_input=False,
         normalize_bins=False,
-    )
-    bins_b = build_photoz_bins(
+        method="photoz",
+        include_metadata=False,
+        params={"scatter_scale": 0.05, "mean_offset": 0.01},
+    ).bins
+    bins_b = build_tomography(
         z,
         3.0 * nz,
         bins={"edges": edges},
-        scatter_scale=0.05,
-        mean_offset=0.01,
         normalize_input=False,
         normalize_bins=False,
-    )
+        method="photoz",
+        include_metadata=False,
+        params={"scatter_scale": 0.05, "mean_offset": 0.01},
+    ).bins
 
     for k in bins_a:
         assert np.allclose(bins_b[k], 3.0 * bins_a[k], rtol=1e-12, atol=0.0)
 
 
-def test_build_photoz_bins_equidistant_scheme_counts_bins(z_nz):
+def test_build_tomography_photoz_equidistant_scheme_counts_bins(z_nz):
     """Tests that equidistant scheme returns exactly n_bins bins."""
     z, nz = z_nz
-    bins = build_photoz_bins(
+    bins = build_tomography(
         z,
         nz,
         bins={"scheme": "equidistant", "n_bins": 4},
-        scatter_scale=0.05,
-        mean_offset=0.0,
-    )
+        method="photoz",
+        include_metadata=False,
+        params={"scatter_scale": 0.05, "mean_offset": 0.0},
+    ).bins
     assert list(bins.keys()) == [0, 1, 2, 3]
 
 
-def test_build_photoz_bins_equidistant_scheme_shapes(z_nz):
+def test_build_tomography_photoz_equidistant_scheme_shapes(z_nz):
     """Tests that equidistant scheme outputs are finite and match z shape."""
     z, nz = z_nz
-    bins = build_photoz_bins(
+    bins = build_tomography(
         z,
         nz,
         bins={"scheme": "equidistant", "n_bins": 3},
-        scatter_scale=0.05,
-        mean_offset=0.01,
-    )
+        method="photoz",
+        include_metadata=False,
+        params={"scatter_scale": 0.05, "mean_offset": 0.01},
+    ).bins
     for arr in bins.values():
         assert arr.shape == z.shape
         assert np.all(np.isfinite(arr))
 
 
-def test_build_photoz_bins_equal_number_with_observed_inputs(z_nz):
+def test_build_tomography_photoz_equal_number_with_observed_inputs(z_nz):
     """Tests that equal_number accepts explicit (z_ph, nz_ph) inputs."""
     z, nz = z_nz
-    bins = build_photoz_bins(
+    bins = build_tomography(
         z,
         nz,
         bins={"scheme": "equal_number", "n_bins": 3},
         z_ph=z,
         nz_ph=nz,
-        scatter_scale=0.05,
-        mean_offset=0.0,
-    )
+        method="photoz",
+        include_metadata=False,
+        params={"scatter_scale": 0.05, "mean_offset": 0.0},
+    ).bins
     assert list(bins.keys()) == [0, 1, 2]
 
 
-def test_build_photoz_bins_unsupported_scheme_raises(z_nz):
+def test_build_tomography_photoz_unsupported_scheme_raises(z_nz):
     """Tests that unsupported string scheme raises ValueError."""
     z, nz = z_nz
     with pytest.raises(ValueError, match=r"Unsupported|unsupported"):
-        build_photoz_bins(
+        build_tomography(
             z,
             nz,
             bins={"scheme": "banana", "n_bins": 3},
-            scatter_scale=0.05,
-            mean_offset=0.0,
+            method="photoz",
+            include_metadata=False,
+            params={"scatter_scale": 0.05, "mean_offset": 0.0},
         )
 
 
-def test_build_photoz_bins_mixed_requires_no_top_level_n_bins(z_nz):
-    """Test that mixed bin specifications reject top-level n_bins."""
+def test_build_tomography_photoz_mixed_requires_no_top_level_n_bins(z_nz):
+    """Tests that mixed bin specifications reject top-level n_bins."""
     z, nz = z_nz
     segs = [
         {"z_min": 0.0, "z_max": 1.0, "scheme": "eq_dist", "n_bins": 2},
         {"z_min": 1.0, "z_max": 2.0, "scheme": "eq_dist", "n_bins": 2},
     ]
     with pytest.raises(ValueError, match=r"unsupported"):
-        build_photoz_bins(
+        build_tomography(
             z,
             nz,
             bins={"segments": segs, "n_bins": 4},
-            scatter_scale=0.05,
-            mean_offset=0.0,
+            method="photoz",
+            include_metadata=False,
+            params={"scatter_scale": 0.05, "mean_offset": 0.0},
         )
 
 
-def test_build_photoz_bins_mixed_dict_requires_segments_key(z_nz):
-    """Test that an unrecognized bin specification is rejected."""
+def test_build_tomography_photoz_mixed_dict_requires_segments_key(z_nz):
+    """Tests that an unrecognized bin specification is rejected."""
     z, nz = z_nz
     with pytest.raises(ValueError, match=r"exactly one"):
-        build_photoz_bins(
+        build_tomography(
             z,
             nz,
             bins={"nope": []},
-            scatter_scale=0.05,
-            mean_offset=0.0,
+            method="photoz",
+            include_metadata=False,
+            params={"scatter_scale": 0.05, "mean_offset": 0.0},
         )
 
 
-def test_build_photoz_bins_mixed_sequence_builds_bins(z_nz):
+def test_build_tomography_photoz_mixed_sequence_builds_bins(z_nz):
     """Tests that mixed segments build the correct total bin count."""
     z, nz = z_nz
     segs = [
         {"z_min": 0.0, "z_max": 1.0, "scheme": "eq_dist", "n_bins": 2},
         {"z_min": 1.0, "z_max": 2.0, "scheme": "eq_dist", "n_bins": 3},
     ]
-    bins = build_photoz_bins(
+    bins = build_tomography(
         z,
         nz,
         bins={"segments": segs},
-        scatter_scale=0.05,
-        mean_offset=0.0,
-    )
+        method="photoz",
+        include_metadata=False,
+        params={"scatter_scale": 0.05, "mean_offset": 0.0},
+    ).bins
     assert list(bins.keys()) == [0, 1, 2, 3, 4]
 
 
-def test_build_photoz_bins_mixed_dict_builds_bins(z_nz):
+def test_build_tomography_photoz_mixed_dict_builds_bins(z_nz):
     """Tests that mixed dict form builds bins."""
     z, nz = z_nz
     segs = [
         {"z_min": 0.0, "z_max": 1.0, "scheme": "eq_dist", "n_bins": 2},
         {"z_min": 1.0, "z_max": 2.0, "scheme": "eq_dist", "n_bins": 1},
     ]
-    bins = build_photoz_bins(
+    bins = build_tomography(
         z,
         nz,
         bins={"segments": segs},
-        scatter_scale=0.05,
-        mean_offset=0.0,
-    )
+        method="photoz",
+        include_metadata=False,
+        params={"scatter_scale": 0.05, "mean_offset": 0.0},
+    ).bins
     assert list(bins.keys()) == [0, 1, 2]
 
 
-def test_build_photoz_bins_metadata_round_trip(z_nz, tmp_path):
+def test_build_tomography_photoz_metadata_round_trip(z_nz, tmp_path):
     """Tests that include_metadata returns expected fields and save works."""
     z, nz = z_nz
     edges = [0.0, 0.5, 1.0, 1.5]
     outpath = tmp_path / "photoz_meta.txt"
 
-    bins, meta = build_photoz_bins(
+    result = build_tomography(
         z,
         nz,
         bins={"edges": edges},
-        scatter_scale=0.05,
-        mean_offset=0.01,
         normalize_bins=True,
         include_metadata=True,
         save_metadata_path=str(outpath),
+        method="photoz",
+        params={"scatter_scale": 0.05, "mean_offset": 0.01},
     )
+    bins, meta = result.bins, result.metadata
 
     assert isinstance(bins, dict)
     assert isinstance(meta, dict)
@@ -601,20 +638,21 @@ def test_build_photoz_bins_metadata_round_trip(z_nz, tmp_path):
         assert np.isclose(np.trapezoid(arr, x=z), 1.0, rtol=1e-6, atol=1e-8)
 
 
-def test_build_photoz_bins_metadata_includes_truez_summary(z_nz):
+def test_build_tomography_photoz_metadata_includes_truez_summary(z_nz):
     """Tests that photo-z metadata includes per-bin true-z summary statistics."""
     z, nz = z_nz
     edges = [0.0, 0.5, 1.0, 1.5]
 
-    bins, meta = build_photoz_bins(
+    result = build_tomography(
         z,
         nz,
         bins={"edges": edges},
-        scatter_scale=0.05,
-        mean_offset=0.01,
         normalize_bins=True,
         include_metadata=True,
+        method="photoz",
+        params={"scatter_scale": 0.05, "mean_offset": 0.01},
     )
+    bins, meta = result.bins, result.metadata
 
     assert isinstance(bins, dict)
     assert isinstance(meta, dict)
@@ -644,20 +682,20 @@ def test_build_photoz_bins_metadata_includes_truez_summary(z_nz):
         assert set(summary[i].keys()) == expected_keys
 
 
-def test_build_photoz_bins_metadata_truez_summary_is_ordered(z_nz):
+def test_build_tomography_photoz_metadata_truez_summary_is_ordered(z_nz):
     """Tests that true-z summary quantiles are finite and ordered per bin."""
     z, nz = z_nz
     edges = [0.0, 0.5, 1.0, 1.5]
 
-    _, meta = build_photoz_bins(
+    meta = build_tomography(
         z,
         nz,
         bins={"edges": edges},
-        scatter_scale=0.05,
-        mean_offset=0.01,
         normalize_bins=True,
         include_metadata=True,
-    )
+        method="photoz",
+        params={"scatter_scale": 0.05, "mean_offset": 0.01},
+    ).metadata
 
     summary = meta["bins"]["truez_summary"]
 
@@ -698,8 +736,8 @@ def test_build_photoz_bins_metadata_truez_summary_is_ordered(z_nz):
         assert z[0] <= stats["z_mean"] <= z[-1]
 
 
-def test_build_photoz_bins_generalized(z_nz):
-    """Test generalized binning against explicitly supplied photo-z edges."""
+def test_build_tomography_photoz_generalized(z_nz):
+    """Tests that generalized binning against explicitly supplied photo-z edges."""
     z, nz = z_nz
     dchi_dz = 1.0 / np.sqrt(0.3 * (1.0 + z) ** 3 + 0.7)
     chi = np.zeros_like(z)
@@ -718,27 +756,27 @@ def test_build_photoz_bins_generalized(z_nz):
         comoving_distance=chi,
     )
 
-    bins_generalized = build_photoz_bins(
+    bins_generalized = build_tomography(
         z,
         nz,
         bins={
             "scheme": "generalized",
             "n_bins": n_bins,
-            "params": {
-                "alpha": alpha,
-                "beta": beta,
-                "comoving_distance": chi,
-            },
+            "params": {"alpha": alpha, "beta": beta, "comoving_distance": chi},
         },
-        scatter_scale=0.05,
-    )
+        method="photoz",
+        include_metadata=False,
+        params={"scatter_scale": 0.05},
+    ).bins
 
-    bins_explicit = build_photoz_bins(
+    bins_explicit = build_tomography(
         z,
         nz,
         bins={"edges": edges},
-        scatter_scale=0.05,
-    )
+        method="photoz",
+        include_metadata=False,
+        params={"scatter_scale": 0.05},
+    ).bins
 
     assert list(bins_generalized) == list(bins_explicit) == list(range(n_bins))
 
@@ -751,7 +789,7 @@ def test_build_photoz_bins_generalized(z_nz):
         )
 
 
-def test_build_photoz_bins_custom_scheme(z_nz) -> None:
+def test_build_tomography_photoz_custom_scheme(z_nz) -> None:
     """Tests that registered custom schemes generate the expected photo-z bins."""
     z, nz = z_nz
     n_bins = 4
@@ -763,23 +801,23 @@ def test_build_photoz_bins_custom_scheme(z_nz) -> None:
 
     edges = custom_scheme(z, nz, n_bins, power=2.0)
 
-    bins_custom = build_photoz_bins(
+    bins_custom = build_tomography(
         z,
         nz,
-        bins={
-            "scheme": "test_photoz_custom_power",
-            "n_bins": n_bins,
-            "params": {"power": 2.0},
-        },
-        scatter_scale=0.05,
-    )
+        bins={"scheme": "test_photoz_custom_power", "n_bins": n_bins, "params": {"power": 2.0}},
+        method="photoz",
+        include_metadata=False,
+        params={"scatter_scale": 0.05},
+    ).bins
 
-    bins_explicit = build_photoz_bins(
+    bins_explicit = build_tomography(
         z,
         nz,
         bins={"edges": edges},
-        scatter_scale=0.05,
-    )
+        method="photoz",
+        include_metadata=False,
+        params={"scatter_scale": 0.05},
+    ).bins
 
     assert list(bins_custom) == list(bins_explicit) == list(range(n_bins))
 

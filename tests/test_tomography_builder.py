@@ -2,10 +2,10 @@
 
 import numpy as np
 import pytest
+from scipy.integrate import simpson
 
-from binny.binning.photoz import build_photoz_bins
-from binny.binning.specz import build_specz_bins
 from binny.tomography.builders import build_tomography_from_spec
+from binny.tomography.core import build_tomography
 from binny.tomography.predefined import build_predefined_tomography
 
 
@@ -38,22 +38,21 @@ def test_matches_numerical_builder(sample, kind, include_metadata):
         include_tomo_metadata=include_metadata,
     )
 
-    builder = build_photoz_bins if kind == "photoz" else build_specz_bins
-
-    expected = builder(
+    expected = build_tomography(
         z=z,
         nz=nz,
         bins={"edges": edges},
+        method=kind,
         include_metadata=include_metadata,
     )
 
-    if include_metadata:
-        expected_bins, _ = expected
-    else:
-        expected_bins = expected
+    expected_bins = expected.bins
 
     np.testing.assert_allclose(result.z, z)
-    np.testing.assert_allclose(result.nz, nz)
+    np.testing.assert_allclose(
+        result.nz,
+        nz / np.trapezoid(nz, x=z),
+    )
 
     assert result.bins.keys() == expected_bins.keys()
 
@@ -106,7 +105,7 @@ def test_predefined_bins(sample, normalize):
     expected = build_predefined_tomography(
         z,
         bins,
-        normalize=normalize,
+        normalize_bins=normalize,
     )
 
     np.testing.assert_allclose(result.z, expected.z)
@@ -202,3 +201,86 @@ def test_missing_bins_specification(sample, kind):
             nz=nz,
             tomo_spec={"kind": kind},
         )
+
+
+@pytest.mark.parametrize("kind", ["photoz", "specz"])
+@pytest.mark.parametrize("normalize_input", [False, True])
+@pytest.mark.parametrize("norm_method", ["trapezoid", "simpson"])
+@pytest.mark.parametrize("include_metadata", [False, True])
+def test_stored_parent_normalization(
+    kind,
+    normalize_input,
+    norm_method,
+    include_metadata,
+):
+    """Tests that the stored parent matches the parent used for binning."""
+    z = np.linspace(0.0, 2.0, 101)
+    nz = 5.0 * (1.0 + z**2)
+    original_nz = nz.copy()
+
+    integrate = simpson if norm_method == "simpson" else np.trapezoid
+
+    area = integrate(nz, x=z)
+    expected = nz / area if normalize_input else nz
+
+    spec = {
+        "kind": kind,
+        "bins": {"edges": [0.0, 1.0, 2.0]},
+        "uncertainties": {
+            "normalize_input": normalize_input,
+            "normalize_bins": False,
+            "norm_method": norm_method,
+        },
+    }
+
+    result = build_tomography_from_spec(
+        z=z,
+        nz=nz,
+        tomo_spec=spec,
+        include_tomo_metadata=include_metadata,
+    )
+
+    np.testing.assert_allclose(result.nz, expected)
+    np.testing.assert_array_equal(nz, original_nz)
+
+    if include_metadata:
+        parent = result.metadata["parent_nz"]
+
+        np.testing.assert_allclose(
+            parent["values"],
+            result.nz,
+        )
+
+        assert parent["norm"] == pytest.approx(integrate(result.nz, x=z))
+    else:
+        assert result.metadata == {}
+
+
+@pytest.mark.parametrize("kind", ["photoz", "specz"])
+@pytest.mark.parametrize("normalize_bins", [False, True])
+def test_spec_bin_normalization(kind, normalize_bins):
+    """Tests that specification normalization controls returned bin amplitudes."""
+    z = np.linspace(0.0, 2.0, 1001)
+    nz = np.full_like(z, 5.0)
+
+    spec = {
+        "kind": kind,
+        "bins": {"edges": [0.0, 1.0, 2.0]},
+        "normalize_bins": normalize_bins,
+    }
+
+    result = build_tomography_from_spec(
+        z=z,
+        nz=nz,
+        tomo_spec=spec,
+        include_tomo_metadata=True,
+    )
+
+    assert np.trapezoid(result.nz, x=z) == pytest.approx(1.0)
+
+    for index, curve in result.bins.items():
+        expected = 1.0 if normalize_bins else result.metadata["bins"]["bins_norms"][index]
+
+        assert np.trapezoid(curve, x=z) == pytest.approx(expected)
+
+    assert result.metadata["inputs"]["normalize_bins"] is normalize_bins

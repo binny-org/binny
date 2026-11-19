@@ -10,7 +10,7 @@ import numpy as np
 import pytest
 import yaml
 
-from binny import build_survey_tomography
+from binny.surveys import build_survey_tomography
 from binny.surveys.survey_presets import load_survey_config
 from binny.tomography.core import Tomography
 
@@ -425,3 +425,27 @@ def test_invalid_configuration_sources(
     """Tests that exactly one configuration source must be supplied."""
     with pytest.raises(ValueError, match="exactly one"):
         build_survey_tomography(**kwargs)
+
+
+@pytest.mark.parametrize(
+    ("role", "expected_n_bins"),
+    [("lens", 4), ("source", 10)],
+)
+def test_euclid_nominal_tomography(role, expected_n_bins):
+    """Tests that the nominal Euclid preset builds for both sample roles."""
+    result = build_survey_tomography(
+        "euclid",
+        role=role,
+        year="nominal",
+        include_tomo_metadata=True,
+    )
+
+    assert result.n_bins == expected_n_bins
+    assert result.z.shape == result.nz.shape
+    assert result.metadata
+
+    for curve in result.bins.values():
+        assert curve.shape == result.z.shape
+        assert np.all(np.isfinite(curve))
+        assert np.all(curve >= 0.0)
+        assert np.isclose(np.trapezoid(curve, result.z), 1.0)

@@ -14,12 +14,15 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 from pathlib import Path
-from typing import Any, Literal
+from typing import Any
 
 import numpy as np
 
+from binny.utils.types import FloatArray
+
 __all__ = [
     "build_tomo_bins_metadata",
+    "finalize_tomo_metadata",
     "round_floats",
     "save_metadata_txt",
 ]
@@ -27,7 +30,7 @@ __all__ = [
 
 def build_tomo_bins_metadata(
     *,
-    kind: Literal["photoz", "specz"],
+    kind: str,
     z: Any,
     parent_nz: Any,
     bin_edges: Any,
@@ -53,11 +56,10 @@ def build_tomo_bins_metadata(
     what it is given.
 
     Args:
-        kind: Tomography mode. Use ``"photoz"`` for photo-z selected bins and
-            ``"specz"`` for spectroscopic/redshift-sharp bins.
+        kind: Tomography construction mode.
         z: Redshift grid shared by the parent distribution and all bin curves.
         parent_nz: Parent redshift distribution evaluated on ``z``.
-        bin_edges: Nominal tomographic bin edges.
+        bin_edges: Nominal tomographic bin edges, or None for predefined bins.
         bins_returned: Mapping from bin index to the returned per-bin curve
             ``n_i(z)`` evaluated on ``z``.
         inputs: User-facing configuration used to generate the bins.
@@ -80,7 +82,7 @@ def build_tomo_bins_metadata(
     """
     z_arr = np.asarray(z, dtype=float)
     parent_arr = np.asarray(parent_nz, dtype=float)
-    edges_arr = np.asarray(bin_edges, dtype=float)
+    edges_arr = None if bin_edges is None else np.asarray(bin_edges, dtype=float)
 
     bins_out: dict[int, list[float]] = {
         int(k): np.asarray(v, dtype=float).tolist() for k, v in bins_returned.items()
@@ -103,7 +105,7 @@ def build_tomo_bins_metadata(
         "bins": {
             "indices": sorted(int(i) for i in bins_returned.keys()),
             "n_bins": int(len(bins_returned)),
-            "bin_edges": edges_arr.tolist(),
+            "bin_edges": None if edges_arr is None else edges_arr.tolist(),
             "normalize_bins": normalize_bins,
             "bins_returned": bins_out,
             "bins_norms": None
@@ -135,7 +137,7 @@ def round_floats(obj: Any, decimal_places: int | None) -> Any:
 
     Args:
         obj: Metadata object to process. May be a scalar, mapping, list, tuple,
-            NumPy scalar, or nested combination of these.
+            NumPy scalar, NumPy array, or nested combination of these.
         decimal_places: Number of decimal places to keep. If None, ``obj`` is
             returned unchanged.
 
@@ -144,6 +146,9 @@ def round_floats(obj: Any, decimal_places: int | None) -> Any:
     """
     if decimal_places is None:
         return obj
+
+    if isinstance(obj, np.ndarray):
+        return round_floats(obj.tolist(), decimal_places)
 
     if isinstance(obj, float):
         return float(round(obj, decimal_places))
@@ -190,11 +195,14 @@ def _format(meta: Any, indent: int = 0) -> str:
     """Format nested metadata as deterministic, human-readable text."""
     pad = "  " * indent
 
+    if isinstance(meta, np.ndarray):
+        return _format(meta.tolist(), indent)
+
     if isinstance(meta, Mapping):
         lines: list[str] = []
         for key in sorted(meta):
             value = meta[key]
-            if isinstance(value, Mapping | list | tuple):
+            if isinstance(value, Mapping | list | tuple | np.ndarray):
                 lines.append(f"{pad}{key}:")
                 lines.append(_format(value, indent + 1))
             else:
@@ -204,7 +212,7 @@ def _format(meta: Any, indent: int = 0) -> str:
     if isinstance(meta, list | tuple):
         lines = []
         for item in meta:
-            if isinstance(item, Mapping | list | tuple):
+            if isinstance(item, Mapping | list | tuple | np.ndarray):
                 lines.append(f"{pad}-")
                 lines.append(_format(item, indent + 1))
             else:
@@ -328,7 +336,7 @@ def _empty_truez_summary() -> dict[str, float | None]:
 def _metadata_description() -> dict[str, Any]:
     """Return descriptions of the metadata fields."""
     return {
-        "kind": "Tomography type: 'photoz' or 'specz'.",
+        "kind": "Tomography construction mode.",
         "grid": {
             "z": "Redshift grid used for all distributions.",
             "z_min": "Minimum redshift of the grid.",
@@ -337,18 +345,18 @@ def _metadata_description() -> dict[str, Any]:
         },
         "parent_nz": {
             "values": "Parent redshift distribution evaluated on z.",
-            "norm": "Optional normalization of the parent distribution.",
+            "norm": "Integral of the parent distribution used for binning.",
         },
         "bins": {
             "indices": "Indices of tomographic bins.",
             "n_bins": "Total number of bins.",
-            "bin_edges": "Nominal bin edges.",
+            "bin_edges": "Nominal bin edges, if available.",
             "normalize_bins": (
                 "Whether returned per-bin curves were normalized to unit integral. "
                 "None means the convention was not recorded."
             ),
             "bins_returned": "Per-bin distributions n_i(z) evaluated on z.",
-            "bins_norms": "Optional per-bin normalization values.",
+            "bins_norms": "Integrals of raw bin curves before per-bin normalization.",
             "frac_per_bin": "Optional fraction of galaxies per bin.",
             "density_per_bin": (
                 "Optional number density per bin. The unit convention should "
@@ -370,3 +378,62 @@ def _metadata_description() -> dict[str, Any]:
         },
         "notes": "Optional user-provided annotations.",
     }
+
+
+def finalize_tomo_metadata(
+    *,
+    kind: str,
+    z: FloatArray,
+    parent_nz: FloatArray,
+    bin_edges: FloatArray | None,
+    bins: Mapping[int, FloatArray],
+    inputs: Mapping[str, Any],
+    parent_norm: float | None,
+    bins_norms: Mapping[int, float] | None,
+    include_metadata: bool,
+    save_metadata_path: str | None,
+) -> dict[str, Any] | None:
+    """Builds tomography metadata and optionally writes it to disk.
+
+    Args:
+        kind: Tomography kind label (e.g. ``"photoz"``, ``"specz"``).
+        z: Redshift grid.
+        parent_nz: Parent redshift distribution.
+        bin_edges: Bin-edge array used to construct the bins, if available.
+        bins: Mapping of bin index to bin curve.
+        inputs: Input settings to record in the metadata.
+        parent_norm: Integral of the parent distribution, if available.
+        bins_norms: Per-bin integrals, if available.
+        include_metadata: Whether to return the metadata dictionary.
+        save_metadata_path: Optional path for writing a text metadata file.
+
+    Returns:
+        Metadata dictionary if requested, otherwise ``None``.
+    """
+    need_meta = include_metadata or (save_metadata_path is not None)
+    if not need_meta:
+        return None
+
+    frac_per_bin: dict[int, float] | None
+    if parent_norm is None or parent_norm == 0.0 or bins_norms is None:
+        frac_per_bin = None
+    else:
+        frac_per_bin = {i: float(bins_norms[i] / parent_norm) for i in bins_norms}
+
+    meta = build_tomo_bins_metadata(
+        kind=kind,
+        z=np.asarray(z, dtype=float),
+        parent_nz=np.asarray(parent_nz, dtype=float),
+        bin_edges=bin_edges,
+        bins_returned=dict(bins),
+        inputs=dict(inputs),
+        parent_norm=parent_norm,
+        bins_norms=dict(bins_norms) if bins_norms is not None else None,
+        frac_per_bin=frac_per_bin,
+        normalize_bins=inputs.get("normalize_bins"),
+    )
+
+    if save_metadata_path is not None:
+        save_metadata_txt(meta, save_metadata_path)
+
+    return meta if include_metadata else None

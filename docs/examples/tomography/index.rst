@@ -1,15 +1,11 @@
-Tomographic binning
-===================
+Tomography
+==========
 
-Examples for building and manipulating tomographic samples.
+Examples for constructing photometric, spectroscopic, and predefined tomography.
 
 .. toctree::
    :maxdepth: 1
 
-   binning_schemes
    photoz_bins
    specz_bins
    predefined_bins
-   selections
-   sample_composition
-   photoz_fitting

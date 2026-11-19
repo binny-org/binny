@@ -8,7 +8,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 from binny.binning.photoz import photoz_assignment_probability
-from binny.binning.photoz_fitting import (
+from binny.calibration.photoz_fitting import (
     fit_photoz_errors,
     to_binny_photoz_params,
 )

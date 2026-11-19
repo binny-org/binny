@@ -5,22 +5,21 @@ from __future__ import annotations
 import numpy as np
 import pytest
 
-from binny.binning.photoz import build_photoz_bins
-from binny.binning.specz import build_specz_bins
+from binny.tomography.core import build_tomography
 
 
 @pytest.mark.parametrize(
-    "builder, kwargs",
+    "method, params",
     [
-        (build_photoz_bins, {"scatter_scale": 0.05}),
-        (build_specz_bins, {}),
+        ("photoz", {"scatter_scale": 0.05}),
+        ("specz", {}),
     ],
     ids=["photoz", "specz"],
 )
 @pytest.mark.parametrize("normalize_bins", [False, True])
 def test_metadata_normalization_consistency(
-    builder,
-    kwargs,
+    method,
+    params,
     normalize_bins,
 ):
     """Tests that parent normalization and population fractions are consistent."""
@@ -33,16 +32,18 @@ def test_metadata_normalization_consistency(
     results = {}
 
     for normalize_input in (False, True):
-        _, meta = builder(
+        result = build_tomography(
             z=z,
             nz=nz,
             bins={"edges": edges},
             normalize_input=normalize_input,
             normalize_bins=normalize_bins,
             include_metadata=True,
-            **kwargs,
+            method=method,
+            params=params,
         )
 
+        meta = result.metadata
         parent = meta["parent_nz"]
         bins_meta = meta["bins"]
 

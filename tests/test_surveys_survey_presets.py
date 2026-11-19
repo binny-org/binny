@@ -12,6 +12,10 @@ import numpy as np
 import pytest
 import yaml
 
+from binny.analysis import (
+    population_stats,
+    shape_stats,
+)
 from binny.surveys import survey_presets
 from binny.surveys.survey_presets import (
     build_survey_tomography,
@@ -19,7 +23,6 @@ from binny.surveys.survey_presets import (
     load_survey_config,
     show_survey_config,
 )
-from binny.tomography import population_stats, shape_stats
 
 
 def test_load_survey_config_normalizes_name(monkeypatch) -> None:

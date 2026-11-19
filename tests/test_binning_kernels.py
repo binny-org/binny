@@ -5,9 +5,9 @@ from __future__ import annotations
 import numpy as np
 import pytest
 
-from binny.binning.core import build_bins_on_edges
+from binny.binning.core import build_bins
 from binny.binning.edges import resolve_bin_edges, validate_bin_edges
-from binny.tomography.metadata import finalize_tomo_metadata
+from binny.utils.metadata import finalize_tomo_metadata
 
 
 def _toy_z_nz(*, n: int = 501):
@@ -22,16 +22,9 @@ def _edges_4bins():
     return np.array([0.0, 0.5, 1.0, 1.5, 2.0], dtype=float)
 
 
-def _raw_bin_tophat(z: np.ndarray):
-    """Tests that helper returns a raw-bin callback for top-hat selection."""
-    z_arr = np.asarray(z, dtype=float)
-
-    def raw_bin_for_edge(i: int, zmin: float, zmax: float) -> np.ndarray:
-        _ = i
-        mask = (z_arr >= zmin) & (z_arr < zmax)
-        return mask.astype(np.float64)
-
-    return raw_bin_for_edge
+def _tophat_assignment(z: np.ndarray, edges: np.ndarray) -> np.ndarray:
+    """Returns half-open top-hat selection probabilities."""
+    return ((z[None, :] >= edges[:-1, None]) & (z[None, :] < edges[1:, None])).astype(np.float64)
 
 
 def test_validate_bin_edges_accepts_basic_edges():
@@ -86,7 +79,7 @@ def test_validate_bin_edges_require_within_accepts_boundary():
 
 
 def test_resolve_bin_edges_rejects_edges_and_scheme_together():
-    """Test that explicit edges cannot be combined with a scheme."""
+    """Tests that explicit edges cannot be combined with a scheme."""
     z, nz = _toy_z_nz()
     edges = _edges_4bins()
 
@@ -103,7 +96,7 @@ def test_resolve_bin_edges_rejects_edges_and_scheme_together():
 
 
 def test_resolve_bin_edges_requires_binning_specification():
-    """Test that an empty bin specification is rejected."""
+    """Tests that an empty bin specification is rejected."""
     z, nz = _toy_z_nz()
 
     with pytest.raises(ValueError, match="Specify exactly one"):
@@ -115,7 +108,7 @@ def test_resolve_bin_edges_requires_binning_specification():
 
 
 def test_resolve_bin_edges_string_scheme_requires_n_bins():
-    """Test that a generating scheme requires a bin count."""
+    """Tests that a generating scheme requires a bin count."""
     z, nz = _toy_z_nz()
 
     with pytest.raises(ValueError, match="n_bins"):
@@ -127,7 +120,7 @@ def test_resolve_bin_edges_string_scheme_requires_n_bins():
 
 
 def test_resolve_bin_edges_equidistant_defaults_to_z_range():
-    """Test that equidistant edges span the parent redshift grid."""
+    """Tests that equidistant edges span the parent redshift grid."""
     z, nz = _toy_z_nz()
 
     edges = resolve_bin_edges(
@@ -142,7 +135,7 @@ def test_resolve_bin_edges_equidistant_defaults_to_z_range():
 
 
 def test_resolve_bin_edges_equidistant_aliases_work():
-    """Test that equidistant aliases are accepted."""
+    """Tests that equidistant aliases are accepted."""
     z, nz = _toy_z_nz()
 
     for scheme in ["eq", "linear"]:
@@ -155,7 +148,7 @@ def test_resolve_bin_edges_equidistant_aliases_work():
 
 
 def test_resolve_bin_edges_equidistant_bin_range_used():
-    """Test that the configured range determines equidistant edges."""
+    """Tests that the configured range determines equidistant edges."""
     z, nz = _toy_z_nz()
 
     edges = resolve_bin_edges(
@@ -172,7 +165,7 @@ def test_resolve_bin_edges_equidistant_bin_range_used():
 
 
 def test_resolve_bin_edges_equidistant_invalid_bin_range():
-    """Test rejection of an invalid binning range."""
+    """Tests rejection of an invalid binning range."""
     z, nz = _toy_z_nz()
 
     with pytest.raises(ValueError, match=r"bins\.range must contain two finite"):
@@ -188,7 +181,7 @@ def test_resolve_bin_edges_equidistant_invalid_bin_range():
 
 
 def test_resolve_bin_edges_equal_number_requires_axis_and_weights_both_or_neither():
-    """Test that an alternative equal-number axis requires its weights."""
+    """Tests that an alternative equal-number axis requires its weights."""
     z, nz = _toy_z_nz()
 
     with pytest.raises(ValueError, match="Provide both equal_number_axis"):
@@ -202,7 +195,7 @@ def test_resolve_bin_edges_equal_number_requires_axis_and_weights_both_or_neithe
 
 
 def test_resolve_bin_edges_equal_number_aliases_work():
-    """Test that equal-number aliases are accepted."""
+    """Tests that equal-number aliases are accepted."""
     z, nz = _toy_z_nz()
 
     for scheme in ["equipopulated", "en"]:
@@ -216,7 +209,7 @@ def test_resolve_bin_edges_equal_number_aliases_work():
 
 
 def test_resolve_bin_edges_equal_number_returns_valid_edges():
-    """Test that equal-number binning returns increasing finite edges."""
+    """Tests that equal-number binning returns increasing finite edges."""
     z, nz = _toy_z_nz()
 
     edges = resolve_bin_edges(
@@ -231,7 +224,7 @@ def test_resolve_bin_edges_equal_number_returns_valid_edges():
 
 
 def test_resolve_bin_edges_equal_number_invariant_to_global_weight_scaling():
-    """Test invariance of equal-number edges to global weight scaling."""
+    """Tests invariance of equal-number edges to global weight scaling."""
     z, nz = _toy_z_nz()
 
     e1 = resolve_bin_edges(
@@ -251,7 +244,7 @@ def test_resolve_bin_edges_equal_number_invariant_to_global_weight_scaling():
 
 
 def test_resolve_bin_edges_unsupported_string_scheme():
-    """Test rejection of unsupported binning schemes."""
+    """Tests rejection of unsupported binning schemes."""
     z, nz = _toy_z_nz()
 
     with pytest.raises(ValueError, match="Unsupported binning_scheme"):
@@ -263,7 +256,7 @@ def test_resolve_bin_edges_unsupported_string_scheme():
 
 
 def test_resolve_bin_edges_mixed_mode_rejects_global_n_bins():
-    """Test that mixed binning does not accept a global bin count."""
+    """Tests that mixed binning does not accept a global bin count."""
     z, nz = _toy_z_nz()
     segments = [{"scheme": "equidistant", "n_bins": 2, "z_min": 0.0, "z_max": 2.0}]
 
@@ -276,7 +269,7 @@ def test_resolve_bin_edges_mixed_mode_rejects_global_n_bins():
 
 
 def test_resolve_bin_edges_mixed_dict_requires_segments_key():
-    """Test rejection of an invalid mixed-binning specification."""
+    """Tests rejection of an invalid mixed-binning specification."""
     z, nz = _toy_z_nz()
 
     with pytest.raises(ValueError):
@@ -288,7 +281,7 @@ def test_resolve_bin_edges_mixed_dict_requires_segments_key():
 
 
 def test_resolve_bin_edges_mixed_requires_sequence_of_segments():
-    """Test that mixed segments must be a sequence."""
+    """Tests that mixed segments must be a sequence."""
     z, nz = _toy_z_nz()
 
     with pytest.raises(ValueError, match=r"bins\.segments must be a sequence"):
@@ -299,165 +292,127 @@ def test_resolve_bin_edges_mixed_requires_sequence_of_segments():
         )
 
 
-def test_build_bins_on_edges_basic_no_normalization_no_meta():
-    """Tests that build_bins_on_edges builds bins on edges without normalization."""
+def test_build_bins_basic_no_normalization_no_meta():
+    """Tests that build_bins returns raw distributions without metadata."""
     z, nz = _toy_z_nz()
     edges = _edges_4bins()
-    raw_cb = _raw_bin_tophat(z)
 
-    bins, bins_norms, parent_norm = build_bins_on_edges(
-        z=z,
-        nz_parent_for_meta=nz,
-        bin_edges=edges,
-        raw_bin_for_edge=raw_cb,
-        normalize_bins=False,
-        norm_method="trapezoid",
-        mixer=None,
-        need_meta=False,
-    )
+    bins = build_bins(z, nz, edges, _tophat_assignment)
 
-    assert bins_norms is None
-    assert parent_norm is None
-    assert list(bins.keys()) == [0, 1, 2, 3]
+    assert isinstance(bins, dict)
+    assert list(bins) == [0, 1, 2, 3]
+
+    selection = _tophat_assignment(z, edges)
+
     for i in range(4):
         assert bins[i].shape == z.shape
         assert bins[i].dtype == np.float64
+        np.testing.assert_array_equal(bins[i], nz * selection[i])
 
 
-def test_build_bins_on_edges_rejects_raw_callback_shape_mismatch():
-    """Tests that build_bins_on_edges errors if raw callback returns wrong shape."""
+def test_build_bins_rejects_assignment_shape_mismatch():
+    """Tests that build_bins rejects incorrectly shaped selections."""
     z, nz = _toy_z_nz()
     edges = _edges_4bins()
 
-    def bad_raw(_i: int, _a: float, _b: float) -> np.ndarray:
-        return np.zeros(z.size - 1, dtype=float)
+    def bad_assignment(axis, boundaries):
+        return np.zeros((len(boundaries) - 1, axis.size - 1))
 
-    with pytest.raises(ValueError, match=r"returned shape"):
-        build_bins_on_edges(
-            z=z,
-            nz_parent_for_meta=nz,
-            bin_edges=edges,
-            raw_bin_for_edge=bad_raw,
-            normalize_bins=False,
-            norm_method="trapezoid",
-            mixer=None,
-            need_meta=False,
-        )
+    with pytest.raises(ValueError, match="returned shape"):
+        build_bins(z, nz, edges, bad_assignment)
 
 
-def test_build_bins_on_edges_need_meta_returns_norms_and_parent_norm():
-    """Tests that need_meta=True returns bins_norms and parent_norm."""
+def test_build_bins_returns_raw_integrals():
+    """Tests that build_bins returns raw bin and parent integrals."""
     z, nz = _toy_z_nz()
     edges = _edges_4bins()
-    raw_cb = _raw_bin_tophat(z)
 
-    bins, bins_norms, parent_norm = build_bins_on_edges(
-        z=z,
-        nz_parent_for_meta=nz,
-        bin_edges=edges,
-        raw_bin_for_edge=raw_cb,
-        normalize_bins=False,
-        norm_method="trapezoid",
-        mixer=None,
-        need_meta=True,
+    bins, integrals, parent_integral = build_bins(
+        z, nz, edges, _tophat_assignment, return_integrals=True
     )
 
-    assert isinstance(bins_norms, dict)
-    assert parent_norm is not None
-    assert np.isfinite(parent_norm)
-    assert set(bins_norms.keys()) == {0, 1, 2, 3}
+    assert isinstance(integrals, dict)
+    assert set(integrals) == {0, 1, 2, 3}
+    assert parent_integral == pytest.approx(np.trapezoid(nz, x=z))
+
     for i in range(4):
-        assert np.isfinite(bins_norms[i])
+        assert integrals[i] == pytest.approx(np.trapezoid(bins[i], x=z))
 
 
-def test_build_bins_on_edges_normalize_bins_yields_unit_integrals_for_nonempty():
-    """Tests that normalize_bins=True yields unit integrals for non-empty bins."""
+def test_build_bins_normalizes_nonempty_bins():
+    """Tests that normalization produces unit integrals for nonempty bins."""
     z, nz = _toy_z_nz()
     edges = _edges_4bins()
 
-    def raw_cb(i: int, a: float, b: float) -> np.ndarray:
-        _ = i
-        mask = (z >= a) & (z < b)
-        return (nz * mask.astype(float)).astype(np.float64)
+    bins = build_bins(z, nz, edges, _tophat_assignment, normalize_bins=True)
 
-    bins, _, _ = build_bins_on_edges(
-        z=z,
-        nz_parent_for_meta=nz,
-        bin_edges=edges,
-        raw_bin_for_edge=raw_cb,
-        normalize_bins=True,
-        norm_method="trapezoid",
-        mixer=None,
-        need_meta=False,
-    )
     for i in range(4):
-        area = float(np.trapezoid(bins[i], x=z))
-        assert np.isclose(area, 1.0, rtol=1e-6, atol=1e-10)
+        assert np.trapezoid(bins[i], x=z) == pytest.approx(1.0)
 
 
-def test_build_bins_on_edges_normalize_bins_keeps_zero_bins_unchanged():
-    """Tests that normalize_bins=True leaves all-zero bins unchanged."""
+def test_build_bins_preserves_zero_bins():
+    """Tests that normalization leaves zero-mass bins unchanged."""
     z, nz = _toy_z_nz()
     edges = _edges_4bins()
 
-    def raw_cb(i: int, a: float, b: float) -> np.ndarray:
-        if i == 2:
-            return np.zeros_like(z, dtype=np.float64)
-        mask = (z >= a) & (z < b)
-        return (nz * mask.astype(float)).astype(np.float64)
+    def assignment(axis, boundaries):
+        selection = _tophat_assignment(axis, boundaries)
+        selection[2] = 0.0
+        return selection
 
-    bins, _, _ = build_bins_on_edges(
-        z=z,
-        nz_parent_for_meta=nz,
-        bin_edges=edges,
-        raw_bin_for_edge=raw_cb,
+    bins, integrals, _ = build_bins(
+        z,
+        nz,
+        edges,
+        assignment,
         normalize_bins=True,
-        norm_method="trapezoid",
-        mixer=None,
-        need_meta=False,
+        return_integrals=True,
     )
-    assert np.allclose(bins[2], 0.0, atol=0.0, rtol=0.0)
+
+    np.testing.assert_array_equal(bins[2], np.zeros_like(z))
+    assert integrals[2] == 0.0
 
 
-def test_build_bins_on_edges_mixer_is_applied_before_norms_and_normalization():
-    """Tests that mixer is applied to raw bins before norms and normalization."""
+def test_build_bins_weights_applied_before_normalization():
+    """Tests that selection weights modify raw distributions and integrals."""
     z, nz = _toy_z_nz()
     edges = _edges_4bins()
 
-    def raw_cb(i: int, a: float, b: float) -> np.ndarray:
-        _ = i
-        mask = (z >= a) & (z < b)
-        return (nz * mask.astype(float)).astype(np.float64)
+    def weighted_assignment(axis, boundaries):
+        selection = _tophat_assignment(axis, boundaries)
+        selection[0] *= 2.0
+        return selection
 
-    def mixer(raw_bins: dict[int, np.ndarray]) -> dict[int, np.ndarray]:
-        out = dict(raw_bins)
-        out[0] = 2.0 * out[0]
-        return out
+    bins0, norms0, _ = build_bins(z, nz, edges, _tophat_assignment, return_integrals=True)
 
-    bins0, norms0, _ = build_bins_on_edges(
-        z=z,
-        nz_parent_for_meta=nz,
-        bin_edges=edges,
-        raw_bin_for_edge=raw_cb,
-        normalize_bins=False,
-        norm_method="trapezoid",
-        mixer=None,
-        need_meta=True,
-    )
-    bins1, norms1, _ = build_bins_on_edges(
-        z=z,
-        nz_parent_for_meta=nz,
-        bin_edges=edges,
-        raw_bin_for_edge=raw_cb,
-        normalize_bins=False,
-        norm_method="trapezoid",
-        mixer=mixer,
-        need_meta=True,
+    bins1, norms1, _ = build_bins(
+        z,
+        nz,
+        edges,
+        weighted_assignment,
+        selection_kind="weight",
+        return_integrals=True,
     )
 
-    assert norms0 is not None and norms1 is not None
+    normalized, norms2, _ = build_bins(
+        z,
+        nz,
+        edges,
+        weighted_assignment,
+        selection_kind="weight",
+        normalize_bins=True,
+        return_integrals=True,
+    )
+
     assert norms1[0] == pytest.approx(2.0 * norms0[0])
-    assert np.allclose(bins1[0], 2.0 * bins0[0])
+    assert norms2 == pytest.approx(norms1)
+
+    np.testing.assert_allclose(bins1[0], 2.0 * bins0[0])
+    np.testing.assert_allclose(normalized[0], bins1[0] / norms1[0])
+
+    for i in range(1, 4):
+        np.testing.assert_array_equal(bins1[i], bins0[i])
+        assert norms1[i] == pytest.approx(norms0[i])
 
 
 def test_finalize_tomo_metadata_returns_none_when_not_requested():
@@ -626,17 +581,13 @@ def test_finalize_tomo_metadata_uniform_parent_tophat_bins_gives_uniform_frac_pe
     n_bins = 4
     edges = np.linspace(0.0, 2.0, n_bins + 1)
 
-    raw_cb = _raw_bin_tophat(z)
-
-    bins, bins_norms, parent_norm = build_bins_on_edges(
-        z=z,
-        nz_parent_for_meta=nz,
-        bin_edges=edges,
-        raw_bin_for_edge=raw_cb,
+    bins, bins_norms, parent_norm = build_bins(
+        z,
+        nz,
+        edges,
+        _tophat_assignment,
         normalize_bins=True,
-        norm_method="trapezoid",
-        mixer=None,
-        need_meta=True,
+        return_integrals=True,
     )
 
     meta = finalize_tomo_metadata(
@@ -658,6 +609,7 @@ def test_finalize_tomo_metadata_uniform_parent_tophat_bins_gives_uniform_frac_pe
 
 
 def test_resolve_bin_edges_mixed_eq_then_equal_number_segment_properties():
+    """Tests that equidistant and equal-number segments retain their properties."""
     z, nz = _toy_z_nz(n=6001)
 
     segments = [
@@ -699,6 +651,7 @@ def test_resolve_bin_edges_mixed_eq_then_equal_number_segment_properties():
 
 
 def test_resolve_bin_edges_mixed_equal_number_then_eq_segment_properties():
+    """Tests that reversed mixed segments retain their properties."""
     z, nz = _toy_z_nz(n=6001)
 
     segments = [
@@ -737,3 +690,49 @@ def test_resolve_bin_edges_mixed_equal_number_then_eq_segment_properties():
     ints = [seg_int(edges[i], edges[i + 1]) for i in range(3)]
     for Ii in ints:
         assert Ii / Iseg == pytest.approx(1.0 / 3.0, rel=0.0, abs=2e-3)
+
+
+@pytest.mark.parametrize(
+    ("method", "expected_parent"),
+    [("trapezoid", 0.375), ("simpson", 1.0 / 3.0)],
+)
+def test_build_bins_consistent_quadrature(method, expected_parent):
+    """Tests that bin normalization and metadata use the same quadrature."""
+    z = np.array([0.0, 0.5, 1.0])
+    parent = z**2
+    edges = np.array([0.0, 0.5, 1.0])
+
+    bins, integrals, parent_integral = build_bins(
+        z,
+        parent,
+        edges,
+        lambda axis, boundaries: np.vstack((np.full_like(axis, 0.25), np.full_like(axis, 0.75))),
+        normalize_bins=True,
+        norm_method=method,
+        return_integrals=True,
+    )
+
+    assert parent_integral == pytest.approx(expected_parent)
+    assert integrals[0] == pytest.approx(0.25 * expected_parent)
+    assert integrals[1] == pytest.approx(0.75 * expected_parent)
+    np.testing.assert_allclose(bins[0], parent / expected_parent)
+    np.testing.assert_allclose(bins[1], parent / expected_parent)
+
+
+def test_build_bins_normalizes_small_positive_mass():
+    """Tests that small positive bin masses are not treated as empty."""
+    z = np.array([0.0, 0.5, 1.0])
+    parent = 1e-15 * np.ones_like(z)
+
+    bins, integrals, parent_integral = build_bins(
+        z,
+        parent,
+        np.array([0.0, 1.0]),
+        lambda axis, boundaries: np.ones((1, axis.size)),
+        normalize_bins=True,
+        return_integrals=True,
+    )
+
+    np.testing.assert_allclose(bins[0], np.ones_like(z))
+    assert integrals[0] == pytest.approx(1e-15, abs=0.0)
+    assert parent_integral == pytest.approx(1e-15, abs=0.0)

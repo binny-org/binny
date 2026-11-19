@@ -83,7 +83,10 @@ standalone functions:
 
 .. code-block:: python
 
-   from binny.tomography import shape_stats, population_stats
+   from binny.analysis import (
+       shape_stats,
+       population_stats,
+   )
 
    shape_statistics = shape_stats(result.z, result.bins)
    population_statistics = population_stats(result.bins, result.metadata)
@@ -144,7 +147,7 @@ configuration file:
    result = build_predefined_tomography(
        z=z,
        bins=bins,
-       normalize=False,
+       normalize_bins=False,
        include_metadata=True,
    )
 
@@ -152,6 +155,108 @@ configuration file:
 
    for bin_index, curve in result.bins.items():
        print(bin_index, curve.shape)
+
+
+Visualizing predefined bins
+---------------------------
+
+The example below constructs three externally supplied tomographic
+redshift distributions and compares the original curves with their
+independently normalized counterparts.
+
+Without normalization, the curves retain their original amplitudes and
+relative integrated populations. With normalization enabled, each bin
+has unit integral while preserving its redshift distribution shape.
+
+.. plot::
+   :include-source: True
+   :width: 760
+
+   import matplotlib.pyplot as plt
+   import numpy as np
+
+   from binny.style import palette
+   from binny.tomography import build_predefined_tomography
+
+
+   z = np.linspace(0.0, 2.0, 500)
+
+   bins = {
+       0: 1.4 * np.exp(-0.5 * ((z - 0.45) / 0.18) ** 2),
+       1: 0.9 * np.exp(-0.5 * ((z - 1.05) / 0.24) ** 2),
+       2: 0.6 * np.exp(-0.5 * ((z - 1.60) / 0.20) ** 2),
+   }
+
+   original = build_predefined_tomography(
+       z=z,
+       bins=bins,
+       normalize_bins=False,
+       include_metadata=True,
+   )
+
+   normalized = build_predefined_tomography(
+       z=z,
+       bins=bins,
+       normalize_bins=True,
+       include_metadata=True,
+   )
+
+
+   def plot_bins(ax, result, title):
+       keys = sorted(result.bins)
+       colors = palette[::2]
+
+       for i, (color, key) in enumerate(zip(colors, keys, strict=True)):
+           curve = result.bins[key]
+
+           ax.fill_between(
+               result.z,
+               0.0,
+               curve,
+               color=color,
+               alpha=0.65,
+               linewidth=0.0,
+               zorder=10 + i,
+           )
+
+           ax.plot(
+               result.z,
+               curve,
+               color="k",
+               linewidth=1.5,
+               zorder=20 + i,
+           )
+
+       ax.plot(
+           result.z,
+           np.zeros_like(result.z),
+           color="k",
+           linewidth=1.5,
+           zorder=1000,
+       )
+
+       ax.set_title(title)
+       ax.set_xlabel("Redshift $z$")
+       ax.set_xlim(0.0, 2.0)
+       ax.set_ylim(bottom=0.0)
+
+
+   fig, axes = plt.subplots(1, 2, figsize=(11.0, 4.6))
+
+   plot_bins(axes[0], original, "Original predefined bins")
+   plot_bins(axes[1], normalized, "Normalized predefined bins")
+
+   axes[0].set_ylabel(r"$n_i(z)$")
+   axes[1].set_ylabel(r"Normalized $n_i(z)$")
+
+   plt.tight_layout()
+
+The original curves retain their relative integrated populations,
+whereas the normalized curves describe only the redshift distribution
+shape within each bin.
+
+When population information is needed alongside normalized curves,
+retain the tomography metadata by setting ``include_metadata=True``.
 
 File format requirements
 ------------------------
