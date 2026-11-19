@@ -30,3 +30,6 @@ def make_bin_combo_filter(
     }
 
     return BinComboFilter(z=z_common, curves=[bins_a, bins_b])
+
+
+__all__ = ["make_bin_combo_filter"]

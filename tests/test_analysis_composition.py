@@ -5,7 +5,7 @@ from __future__ import annotations
 import numpy as np
 import pytest
 
-from binny.tomography.composition import (
+from binny.analysis.composition import (
     align_bin_grids,
     combine_parent_nz,
     combine_tomographies,

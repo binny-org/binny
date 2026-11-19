@@ -89,7 +89,7 @@ tomography:
       leakage_sigma: [1.0, 1.0, 1.0, 1.0]
 
       specz_scatter: null
-      specz_scatter_model: z_dependent
+      specz_scatter_model: sigma0_plus_sigma1_1pz
       sigma0: 0.001
       sigma1: 0.001
 

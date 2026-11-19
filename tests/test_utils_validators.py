@@ -4,6 +4,7 @@ import numpy as np
 import pytest
 
 from binny.utils.validators import (
+    _require_mapping,
     edge_coercion,
     resolve_binning_method,
     validate_axis_and_weights,
@@ -506,3 +507,16 @@ def test_validate_positive_integer_custom_name():
 
     with pytest.raises(TypeError, match="n_samples must be a positive integer"):
         validate_positive_integer(1.5, name="n_samples")
+
+
+def test_require_mapping_accepts_mapping() -> None:
+    """Tests that _require_mapping returns mappings unchanged."""
+    m = {"a": 1}
+    out = _require_mapping(m, what="x")
+    assert out is m
+
+
+def test_require_mapping_rejects_non_mapping() -> None:
+    """Tests that _require_mapping raises for non-mappings."""
+    with pytest.raises(ValueError, match="must be a mapping"):
+        _require_mapping(3, what="x")

@@ -1,11 +1,11 @@
-"""Unit tests for `binny.nz.calibration`."""
+"""Unit tests for `binny.calibration.depth`."""
 
 from __future__ import annotations
 
 import numpy as np
 import pytest
 
-from binny.nz.calibration import (
+from binny.calibration.depth import (
     _smail_logpdf,
     calibrate_depth_smail_from_mock,
     eval_ngal_of_maglim,

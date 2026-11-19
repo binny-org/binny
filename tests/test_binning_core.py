@@ -220,7 +220,7 @@ def test_photoz_normalized_matches_independent_integrals():
         nz,
         edges,
         lambda z, edges: photoz_assignment(z, edges, **params),
-        normalize=True,
+        normalize_bins=True,
     )
 
     expected = {}
@@ -303,7 +303,7 @@ def test_return_integrals_preserves_population():
         nz,
         edges,
         deterministic_assignment,
-        normalize=True,
+        normalize_bins=True,
         return_integrals=True,
     )
 

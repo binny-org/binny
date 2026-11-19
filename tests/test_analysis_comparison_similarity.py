@@ -3,7 +3,7 @@
 import numpy as np
 import pytest
 
-from binny.tomography.comparison import (
+from binny.analysis.comparison import (
     bin_overlap,
     leakage_matrix,
     overlap_pairs,

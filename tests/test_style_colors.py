@@ -1,16 +1,16 @@
-"""Tests for the ``binny.utils.colors.py``."""
+"""Tests for the ``binny.style``."""
 
 import numpy as np
 import pytest
 from matplotlib import colormaps
 from matplotlib.colors import BoundaryNorm, ListedColormap, to_hex, to_rgba
 
-from binny.utils.colors import (
-    BINNY_CMAP,
-    BINNY_CMAP_DISCRETE,
-    BINNY_COLORS,
-    BINNY_NORM,
-    get_binny_colors,
+from binny.style import (
+    cmap,
+    cmap_discrete,
+    get_colors,
+    norm,
+    palette,
     pastelize,
 )
 
@@ -31,18 +31,18 @@ def test_pastelize_invalid_amount(amount):
 
 
 @pytest.mark.parametrize("n", [1, 2, 5, 10])
-def test_get_binny_colors(n):
+def test_get_colors(n):
     """Tests that the requested number of valid colors is returned."""
-    colors = get_binny_colors(n)
+    colors = get_colors(n)
 
     assert len(colors) == n
     assert all(isinstance(color, str) for color in colors)
     assert all(color.startswith("#") for color in colors)
 
 
-def test_get_binny_colors_viridis():
+def test_get_colors_viridis():
     """Tests that zero pastelization reproduces the viridis palette."""
-    colors = get_binny_colors(5, pastel_amount=0.0)
+    colors = get_colors(5, pastel_amount=0.0)
     viridis = colormaps["viridis"]
 
     expected = [to_hex(viridis(x)) for x in np.linspace(0.0, 1.0, 5)]
@@ -50,10 +50,10 @@ def test_get_binny_colors_viridis():
     assert colors == expected
 
 
-def test_get_binny_colors_alpha():
+def test_get_colors_alpha():
     """Tests that transparent colors preserve RGB values and set alpha."""
-    colors = get_binny_colors(5, alpha=0.5)
-    opaque = get_binny_colors(5)
+    colors = get_colors(5, alpha=0.5)
+    opaque = get_colors(5)
 
     assert len(colors) == 5
 
@@ -62,49 +62,49 @@ def test_get_binny_colors_alpha():
 
 
 @pytest.mark.parametrize("n", [0, -1])
-def test_get_binny_colors_invalid_n(n):
+def test_get_colors_invalid_n(n):
     """Tests that nonpositive color counts raise an error."""
     with pytest.raises(ValueError, match="n must be positive"):
-        get_binny_colors(n)
+        get_colors(n)
 
 
 @pytest.mark.parametrize("amount", [-0.1, 1.1])
-def test_get_binny_colors_invalid_pastel_amount(amount):
+def test_get_colors_invalid_pastel_amount(amount):
     """Tests that invalid pastel amounts raise an error."""
     with pytest.raises(ValueError, match="pastel_amount"):
-        get_binny_colors(5, pastel_amount=amount)
+        get_colors(5, pastel_amount=amount)
 
 
 @pytest.mark.parametrize("alpha", [-0.1, 1.1])
-def test_get_binny_colors_invalid_alpha(alpha):
+def test_get_colors_invalid_alpha(alpha):
     """Tests that alpha values outside the unit interval raise an error."""
     with pytest.raises(ValueError, match="alpha"):
-        get_binny_colors(5, alpha=alpha)
+        get_colors(5, alpha=alpha)
 
 
-def test_binny_palette():
+def test_palette():
     """Tests that the default palette contains five generated colors."""
-    assert len(BINNY_COLORS) == 5
-    assert BINNY_COLORS == get_binny_colors(5)
+    assert len(palette) == 5
+    assert palette == get_colors(5)
 
 
-def test_binny_colormaps():
+def test_colormaps():
     """Tests that continuous and discrete colormaps have the correct colors."""
-    assert isinstance(BINNY_CMAP, ListedColormap)
-    assert isinstance(BINNY_CMAP_DISCRETE, ListedColormap)
+    assert isinstance(cmap, ListedColormap)
+    assert isinstance(cmap_discrete, ListedColormap)
 
-    assert BINNY_CMAP.N == 256
-    assert BINNY_CMAP_DISCRETE.N == 5
+    assert cmap.N == 256
+    assert cmap_discrete.N == 5
 
-    for i, color in enumerate(BINNY_COLORS):
-        assert to_hex(BINNY_CMAP_DISCRETE(i)) == color
+    for i, color in enumerate(palette):
+        assert to_hex(cmap_discrete(i)) == color
 
 
-def test_binny_norm():
+def test_norm():
     """Tests that the discrete normalization maps values to bin indices."""
-    assert isinstance(BINNY_NORM, BoundaryNorm)
+    assert isinstance(norm, BoundaryNorm)
 
     np.testing.assert_array_equal(
-        BINNY_NORM(np.arange(5) + 0.5),
+        norm(np.arange(5) + 0.5),
         np.arange(5),
     )

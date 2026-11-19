@@ -7,7 +7,7 @@ from typing import Any, Literal
 
 import numpy as np
 
-from binny.tomography.composition import align_bin_grids
+from binny.analysis.composition import align_bin_grids
 from binny.utils.metadata import round_floats
 from binny.utils.normalization import (
     normalize_edges,

@@ -36,7 +36,6 @@ __all__ = [
     "resolve_bin_edges",
     "validate_bin_edges",
     "segments_to_axes",
-    "photoz_segments_to_axes",
     "mixed_edges_from_segments",
 ]
 
@@ -508,27 +507,6 @@ def segments_to_axes(
         )
 
     return result
-
-
-def photoz_segments_to_axes(
-    segments: Sequence[Mapping[str, Any]],
-) -> list[dict[str, Any]]:
-    """Convert legacy photo-z segments to generic axis descriptions.
-
-    This compatibility function accepts the same segment specifications
-    as :func:`segments_to_axes`. New code should call that function
-    directly.
-
-    Args:
-        segments: Ordered segment specifications.
-
-    Returns:
-        List of generic axis-level segment descriptions.
-
-    Raises:
-        ValueError: If a segment specification is invalid.
-    """
-    return segments_to_axes(segments)
 
 
 def mixed_edges_from_segments(

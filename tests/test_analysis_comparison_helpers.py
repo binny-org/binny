@@ -1,11 +1,11 @@
-"""Tests for internal helpers in ``binny.tomography.comparison``."""
+"""Tests for internal helpers in ``binny.analysis.comparison``."""
 
 from __future__ import annotations
 
 import numpy as np
 import pytest
 
-from binny.tomography.comparison import (
+from binny.analysis.comparison import (
     _curve_norm_mode,
     _pair_cosine_between,
     _pair_hellinger_between,

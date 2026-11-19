@@ -11,6 +11,9 @@ The mixture consists of a zero-mean Gaussian core and a displaced Gaussian
 tail. Multiple random initializations are used, and the solution with the
 highest log-likelihood is retained.
 
+The module also evaluates residual PDFs and CDFs and samples observed
+redshifts from the same Gaussian mixture.
+
 The fitted parameters use Binny's photometric-redshift naming conventions.
 The fitted tail displacement can be converted to Binny's mean scale and
 offset using ``to_binny_photoz_params``.
@@ -21,7 +24,13 @@ from __future__ import annotations
 import numpy as np
 from scipy.special import logsumexp, ndtr
 
-__all__ = ["fit_photoz_errors", "to_binny_photoz_params"]
+__all__ = [
+    "fit_photoz_errors",
+    "photoz_residual_cdf",
+    "photoz_residual_pdf",
+    "sample_photoz_errors",
+    "to_binny_photoz_params",
+]
 
 
 def _log_component_probability(
@@ -42,11 +51,14 @@ def _log_component_probability(
         Array of weighted log probability densities with shape
         (n_samples, n_components).
     """
+    log_weights = np.full_like(weights, -np.inf, dtype=float)
+    np.log(weights, out=log_weights, where=weights > 0.0)
+
     return (
         -0.5 * ((x[:, None] - mu) / sigma) ** 2
         - np.log(sigma)
         - 0.5 * np.log(2.0 * np.pi)
-        + np.log(weights)
+        + log_weights
     )
 
 
@@ -75,6 +87,72 @@ def _log_probability(
         _log_component_probability(x, sigma, mu, weights),
         axis=1,
     )
+
+
+def _mixture_cdf(
+    x: np.ndarray,
+    sigma: np.ndarray,
+    mu: np.ndarray,
+    weights: np.ndarray,
+) -> np.ndarray:
+    """Evaluate the cumulative probability of a Gaussian mixture.
+
+    Args:
+        x: One-dimensional array of residual values.
+        sigma: Component standard deviations.
+        mu: Component means.
+        weights: Component mixture weights.
+
+    Returns:
+        Array of mixture cumulative probabilities.
+    """
+    return np.sum(
+        weights * ndtr((x[:, None] - mu) / sigma),
+        axis=1,
+    )
+
+
+def _photoz_mixture_parameters(
+    scatter_scale: float,
+    outlier_scatter_scale: float,
+    outlier_mean_shift: float,
+    outlier_frac: float,
+) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
+    """Validate and construct Gaussian-mixture parameter arrays.
+
+    Args:
+        scatter_scale: Positive, finite core standard deviation.
+        outlier_scatter_scale: Positive, finite tail standard deviation.
+        outlier_mean_shift: Finite tail mean displacement.
+        outlier_frac: Tail mixture fraction between zero and one.
+
+    Returns:
+        Tuple of component standard deviations, means, and weights.
+
+    Raises:
+        ValueError: If the mixture parameters are invalid.
+    """
+    sigma = np.array(
+        [scatter_scale, outlier_scatter_scale],
+        dtype=float,
+    )
+    mu = np.array([0.0, outlier_mean_shift], dtype=float)
+
+    if not np.all(np.isfinite(sigma)) or np.any(sigma <= 0.0):
+        raise ValueError("Scatter scales must be positive and finite.")
+
+    if not np.all(np.isfinite(mu)):
+        raise ValueError("Component means must be finite.")
+
+    if not 0.0 <= outlier_frac <= 1.0:
+        raise ValueError("outlier_frac must lie between 0 and 1.")
+
+    weights = np.array(
+        [1.0 - outlier_frac, outlier_frac],
+        dtype=float,
+    )
+
+    return sigma, mu, weights
 
 
 def _fit_gaussian_mixture(
@@ -226,10 +304,7 @@ def _ks_statistic(
         significance probabilities are therefore not directly applicable.
     """
     sorted_x = np.sort(x)
-    model_cdf = np.sum(
-        weights * ndtr((sorted_x[:, None] - mu) / sigma),
-        axis=1,
-    )
+    model_cdf = _mixture_cdf(sorted_x, sigma, mu, weights)
 
     n = sorted_x.size
     empirical_upper = np.arange(1, n + 1) / n
@@ -284,7 +359,7 @@ def fit_photoz_errors(
     standard deviations, and the mixture fraction are fitted.
 
     The fit uses expectation-maximization with multiple random
-    initializations. All finite catalogue residuals are included;
+    initializations. All catalogue residuals must be finite;
     no histogram binning or residual-range truncation is applied.
 
     Args:
@@ -384,9 +459,6 @@ def fit_photoz_errors(
         tol=tol,
     )
 
-    n = eps.size
-    k = 4
-
     params = {
         "scatter_scale": float(sigma[0]),
         "outlier_scatter_scale": float(sigma[1]),
@@ -412,6 +484,171 @@ def fit_photoz_errors(
     }
 
     return params, metadata
+
+
+def photoz_residual_pdf(
+    x: np.ndarray,
+    *,
+    scatter_scale: float,
+    outlier_scatter_scale: float,
+    outlier_mean_shift: float,
+    outlier_frac: float,
+    return_components: bool = False,
+) -> np.ndarray | tuple[np.ndarray, dict[str, np.ndarray]]:
+    """Evaluate the photometric-redshift residual probability density.
+
+    Evaluates an analytically normalized Gaussian mixture consisting
+    of a zero-mean core and a displaced outlier component.
+
+    Args:
+        x: One-dimensional array of normalized residual values.
+        scatter_scale: Standard deviation of the core component.
+        outlier_scatter_scale: Standard deviation of the outlier component.
+        outlier_mean_shift: Mean displacement of the outlier component.
+        outlier_frac: Outlier mixture fraction between zero and one.
+        return_components: Whether to return the individual weighted
+            component densities alongside the total density.
+
+    Returns:
+        Mixture probability density evaluated at the supplied residuals.
+        If return_components is True, also returns a dictionary containing
+        the weighted core and outlier densities.
+
+    Raises:
+        ValueError: If the residuals or mixture parameters are invalid.
+    """
+    x = np.asarray(x, dtype=float)
+
+    if x.ndim != 1 or not np.all(np.isfinite(x)):
+        raise ValueError("Residuals must be a finite 1D array.")
+
+    sigma, mu, weights = _photoz_mixture_parameters(
+        scatter_scale,
+        outlier_scatter_scale,
+        outlier_mean_shift,
+        outlier_frac,
+    )
+
+    components = np.exp(_log_component_probability(x, sigma, mu, weights))
+
+    pdf = components.sum(axis=1)
+
+    if return_components:
+        return pdf, {
+            "core": components[:, 0],
+            "outlier": components[:, 1],
+        }
+
+    return pdf
+
+
+def photoz_residual_cdf(
+    x: np.ndarray,
+    *,
+    scatter_scale: float,
+    outlier_scatter_scale: float,
+    outlier_mean_shift: float,
+    outlier_frac: float,
+) -> np.ndarray:
+    """Evaluate the photometric-redshift residual cumulative distribution.
+
+    Args:
+        x: One-dimensional array of normalized residual values.
+        scatter_scale: Standard deviation of the core component.
+        outlier_scatter_scale: Standard deviation of the outlier component.
+        outlier_mean_shift: Mean displacement of the outlier component.
+        outlier_frac: Outlier mixture fraction between zero and one.
+
+    Returns:
+        Mixture cumulative probability evaluated at each residual value.
+
+    Raises:
+        ValueError: If the residuals or mixture parameters are invalid.
+    """
+    x = np.asarray(x, dtype=float)
+
+    if x.ndim != 1 or np.any(np.isnan(x)):
+        raise ValueError("Residuals must be a 1D array without NaN values.")
+
+    sigma, mu, weights = _photoz_mixture_parameters(
+        scatter_scale,
+        outlier_scatter_scale,
+        outlier_mean_shift,
+        outlier_frac,
+    )
+
+    return _mixture_cdf(x, sigma, mu, weights)
+
+
+def sample_photoz_errors(
+    z_true: np.ndarray,
+    *,
+    scatter_scale: float,
+    outlier_scatter_scale: float,
+    outlier_mean_shift: float,
+    outlier_frac: float,
+    seed: int | None = None,
+    rng: np.random.Generator | None = None,
+) -> np.ndarray:
+    """Sample observed redshifts from a Gaussian photo-z error model.
+
+    Draw normalized residuals from the core and outlier mixture and
+    convert them into observed redshifts.
+
+    Args:
+        z_true: One-dimensional array of finite true redshifts greater
+            than -1.
+        scatter_scale: Positive, finite core standard deviation.
+        outlier_scatter_scale: Positive, finite tail standard deviation.
+        outlier_mean_shift: Finite tail mean displacement.
+        outlier_frac: Tail mixture fraction between zero and one.
+        seed: Optional random seed.
+        rng: Optional NumPy random number generator. Cannot be supplied
+            together with seed.
+
+    Returns:
+        Sampled observed redshifts with the same shape as z_true.
+
+    Raises:
+        ValueError: If redshifts, mixture parameters, or random number
+            generator arguments are invalid.
+
+    Notes:
+        Outlier membership is sampled independently for each galaxy.
+        Observed redshifts are not clipped or truncated.
+    """
+    z_true = np.asarray(z_true, dtype=float)
+
+    if z_true.ndim != 1 or not np.all(np.isfinite(z_true)):
+        raise ValueError("z_true must be a finite 1D array.")
+
+    if np.any(z_true <= -1.0):
+        raise ValueError("z_true must be greater than -1.")
+
+    if seed is not None and rng is not None:
+        raise ValueError("Specify either seed or rng, not both.")
+
+    if rng is None:
+        rng = np.random.default_rng(seed)
+    elif not isinstance(rng, np.random.Generator):
+        raise ValueError("rng must be a NumPy random number generator.")
+
+    sigma, mu, weights = _photoz_mixture_parameters(
+        scatter_scale,
+        outlier_scatter_scale,
+        outlier_mean_shift,
+        outlier_frac,
+    )
+
+    is_outlier = rng.random(z_true.size) < weights[1]
+    residual = rng.normal(mu[0], sigma[0], z_true.size)
+    residual[is_outlier] = rng.normal(
+        mu[1],
+        sigma[1],
+        np.count_nonzero(is_outlier),
+    )
+
+    return z_true + (1.0 + z_true) * residual
 
 
 def to_binny_photoz_params(fit: dict) -> dict[str, float]:

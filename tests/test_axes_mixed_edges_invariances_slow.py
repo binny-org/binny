@@ -14,9 +14,9 @@ from typing import Any
 import numpy as np
 import pytest
 
+from binny.analysis.stats import bin_centers
 from binny.axes.mixed_edges import mixed_edges
 from binny.binning.edges import resolve_bin_edges
-from binny.tomography.stats import bin_centers
 
 pytestmark = pytest.mark.slow
 

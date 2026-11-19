@@ -5,7 +5,7 @@ from __future__ import annotations
 import numpy as np
 import pytest
 
-from binny.tomography.comparison import (
+from binny.analysis.comparison import (
     between_bin_overlap,
     between_interval_mass_matrix,
     between_overlap_pairs,

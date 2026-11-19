@@ -9,7 +9,8 @@ from typing import Any, Literal
 import numpy as np
 
 from binny.tomography.core import Tomography
-from binny.utils.normalization import normalize_1d
+from binny.utils.metadata import finalize_tomo_metadata
+from binny.utils.normalization import integrate_1d
 from binny.utils.types import FloatArray
 from binny.utils.validators import validate_axis_and_weights
 
@@ -117,7 +118,7 @@ def build_predefined_tomography(
     bins: Mapping[int, Any],
     *,
     nz: Any | None = None,
-    normalize: bool = False,
+    normalize_bins: bool = False,
     norm_method: Literal["trapezoid", "simpson"] = "trapezoid",
     include_metadata: bool = False,
 ) -> Tomography:
@@ -149,8 +150,8 @@ def build_predefined_tomography(
         _, values = validate_axis_and_weights(z, curve)
         values = values.astype(np.float64, copy=True)
 
-        area = float(np.trapezoid(values, x=z))
-        if np.isclose(area, 0.0, atol=1e-12):
+        area = integrate_1d(z, values, method=norm_method)
+        if area == 0.0:
             raise ValueError(f"Predefined bin {index} has zero integral.")
 
         raw_bins[index] = values
@@ -168,33 +169,35 @@ def build_predefined_tomography(
         parent_source = "provided"
 
     output_bins = {
-        index: (normalize_1d(z, curve, method=norm_method) if normalize else curve.copy())
+        index: (curve / bin_norms[index] if normalize_bins else curve.copy())
         for index, curve in raw_bins.items()
     }
 
     metadata: dict[str, Any] = {}
     if include_metadata:
-        parent_norm = float(np.trapezoid(parent, x=z))
-        fractions = (
-            None
-            if np.isclose(parent_norm, 0.0, atol=1e-12)
-            else {index: float(area / parent_norm) for index, area in bin_norms.items()}
-        )
-        metadata = {
-            "kind": "predefined",
-            "parent_norm": parent_norm,
-            "bins_norms": bin_norms,
-            "frac_per_bin": fractions,
-            "inputs": {
-                "normalize_bins": normalize,
+        parent_norm = integrate_1d(z, parent, method=norm_method)
+
+        metadata = finalize_tomo_metadata(
+            kind="predefined",
+            z=z,
+            parent_nz=parent,
+            bin_edges=None,
+            bins=output_bins,
+            inputs={
+                "normalize_input": False,
+                "normalize_bins": normalize_bins,
                 "norm_method": norm_method,
                 "parent_source": parent_source,
             },
-        }
+            parent_norm=parent_norm,
+            bins_norms=bin_norms,
+            include_metadata=True,
+            save_metadata_path=None,
+        )
 
     return Tomography(
         z=z,
         nz=parent,
         bins=output_bins,
-        metadata=metadata,
+        metadata=metadata if metadata is not None else {},
     )

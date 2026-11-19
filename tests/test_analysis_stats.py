@@ -5,8 +5,7 @@ from __future__ import annotations
 import numpy as np
 import pytest
 
-from binny.tomography.predefined import build_predefined_tomography
-from binny.tomography.stats import (
+from binny.analysis.stats import (
     bin_centers,
     bin_moments,
     bin_quantiles,
@@ -22,6 +21,7 @@ from binny.tomography.stats import (
     population_stats,
     shape_stats,
 )
+from binny.tomography.predefined import build_predefined_tomography
 
 
 def _toy_grid() -> np.ndarray:
@@ -180,7 +180,7 @@ def test_shape_stats_includes_in_range_fraction_when_edges_given() -> None:
 
 def test_galaxy_fraction_per_bin_normalizes_and_casts_keys() -> None:
     """Tests that galaxy_fraction_per_bin normalizes and casts keys to int."""
-    meta = {"frac_per_bin": {"0": 2.0, 1: 6.0}}
+    meta = {"bins": {"frac_per_bin": {"0": 2.0, 1: 6.0}}}
 
     fracs = galaxy_fraction_per_bin(meta)
 
@@ -191,15 +191,18 @@ def test_galaxy_fraction_per_bin_normalizes_and_casts_keys() -> None:
 
 def test_galaxy_fraction_per_bin_raises_if_missing_or_bad() -> None:
     """Tests that galaxy_fraction_per_bin raises on missing/invalid metadata."""
-    with pytest.raises(ValueError, match="must contain a mapping 'frac_per_bin'"):
+    with pytest.raises(ValueError, match="must contain a mapping 'bins'"):
         galaxy_fraction_per_bin({})
 
-    with pytest.raises(ValueError, match="must contain a mapping 'frac_per_bin'"):
-        galaxy_fraction_per_bin({"frac_per_bin": 123})
+    with pytest.raises(ValueError, match="must contain a mapping 'bins'"):
+        galaxy_fraction_per_bin({"bins": 123})
+
+    with pytest.raises(ValueError, match=r"must contain a mapping 'bins\.frac_per_bin'"):
+        galaxy_fraction_per_bin({"bins": {"frac_per_bin": 123}})
 
     msg = "Sum of metadata frac_per_bin must be positive"
     with pytest.raises(ValueError, match=msg):
-        galaxy_fraction_per_bin({"frac_per_bin": {0: 0.0, 1: 0.0}})
+        galaxy_fraction_per_bin({"bins": {"frac_per_bin": {0: 0.0, 1: 0.0}}})
 
 
 def test_population_stats_uses_metadata_fractions_and_normalizes_default() -> None:
@@ -209,7 +212,7 @@ def test_population_stats_uses_metadata_fractions_and_normalizes_default() -> No
         0: _normalize_pdf(z, _gaussian(z, 0.6, 0.1)),
         1: _normalize_pdf(z, _gaussian(z, 1.2, 0.2)),
     }
-    meta = {"frac_per_bin": {0: 0.25, 1: 0.75}}
+    meta = {"bins": {"frac_per_bin": {0: 0.25, 1: 0.75}}}
 
     out = population_stats(bins, meta)
 
@@ -222,7 +225,7 @@ def test_population_stats_density_and_counts_allocation() -> None:
     """Tests that population_stats allocates densities and counts from fractions."""
     z = _toy_grid()
     bins = {0: _gaussian(z, 0.6, 0.1), 1: _gaussian(z, 1.2, 0.2)}
-    meta = {"frac_per_bin": {0: 1.0, 1: 3.0}}
+    meta = {"bins": {"frac_per_bin": {0: 1.0, 1: 3.0}}}
 
     out = population_stats(bins, meta, density_total=40.0, survey_area=100.0)
 
@@ -238,7 +241,7 @@ def test_population_stats_survey_area_requires_density_total() -> None:
     """Tests that population_stats rejects survey_area without density_total."""
     z = _toy_grid()
     bins = {0: _gaussian(z, 0.6, 0.1)}
-    meta = {"frac_per_bin": {0: 1.0}}
+    meta = {"bins": {"frac_per_bin": {0: 1.0}}}
 
     with pytest.raises(ValueError, match="survey_area requires density_total"):
         population_stats(bins, meta, survey_area=100.0)
@@ -248,7 +251,7 @@ def test_population_stats_missing_bin_index_raises() -> None:
     """Tests that population_stats raises if metadata is missing a bin index."""
     z = _toy_grid()
     bins = {0: _gaussian(z, 0.6, 0.1), 1: _gaussian(z, 1.2, 0.2)}
-    meta = {"frac_per_bin": {0: 1.0}}
+    meta = {"bins": {"frac_per_bin": {0: 1.0}}}
 
     with pytest.raises(ValueError, match="missing bin index 1"):
         population_stats(bins, meta)
@@ -455,7 +458,7 @@ def test_population_stats_normalize_frac_false_rejects_not_sum_one(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """Tests that population_stats rejects non-unit sums when normalize_frac is False."""
-    import binny.tomography.stats as bsmod
+    import binny.analysis.stats as bsmod
 
     def _fake_frac(_meta):
         return {0: 0.2, 1: 0.2}  # sum = 0.4
@@ -464,7 +467,7 @@ def test_population_stats_normalize_frac_false_rejects_not_sum_one(
 
     z = _toy_grid()
     bins = {0: _gaussian(z, 0.6, 0.1), 1: _gaussian(z, 1.2, 0.2)}
-    meta = {"frac_per_bin": {0: 1.0, 1: 1.0}}  # doesn't matter now
+    meta = {"bins": {"frac_per_bin": {0: 1.0, 1: 1.0}}}  # doesn't matter now
 
     with pytest.raises(
         ValueError, match=r"normalize_frac=False requires" r" fractions to sum to 1"
@@ -554,7 +557,7 @@ def test_population_stats_normalize_frac_false_accepts_sum_one() -> None:
     """Tests that population_stats accepts fractions that sum to 1 when normalize_frac is False."""
     z = _toy_grid()
     bins = {0: _gaussian(z, 0.6, 0.1), 1: _gaussian(z, 1.2, 0.2)}
-    meta = {"frac_per_bin": {0: 0.4, 1: 0.6}}  # already sums to 1
+    meta = {"bins": {"frac_per_bin": {0: 0.4, 1: 0.6}}}  # already sums to 1
 
     out = population_stats(bins, meta, normalize_frac=False, rtol=0.0, atol=0.0)
 
@@ -566,7 +569,7 @@ def test_population_stats_density_only_no_counts() -> None:
     """Tests that population_stats returns only density when no counts are provided."""
     z = _toy_grid()
     bins = {0: _gaussian(z, 0.6, 0.1), 1: _gaussian(z, 1.2, 0.2)}
-    meta = {"frac_per_bin": {0: 1.0, 1: 3.0}}
+    meta = {"bins": {"frac_per_bin": {0: 1.0, 1: 3.0}}}
 
     out = population_stats(bins, meta, density_total=40.0)
 
@@ -592,7 +595,7 @@ def test_galaxy_fraction_per_bin_reads_nested_bins_block() -> None:
 
 def test__equidistant_score_returns_zero_if_mean_width_nonpositive() -> None:
     """Tests that _equidistant_score returns zero if mean width is nonpositive."""
-    import binny.tomography.stats as bs
+    import binny.analysis.stats as bs
 
     assert bs._equidistant_score([0.0, 0.0]) == pytest.approx(0.0)  # mean = 0
     assert bs._equidistant_score([-1.0, 1.0]) == pytest.approx(0.0)  # mean = 0
@@ -658,7 +661,7 @@ def _dummy_bins(n_bins: int = 5) -> dict[int, np.ndarray]:
 
 def test_galaxy_fraction_per_bin_equipopulated_known() -> None:
     """Test that galaxy_fraction_per_bin returns known values for equipopulated bins."""
-    meta = {"frac_per_bin": {0: 1.0, 1: 1.0, 2: 1.0, 3: 1.0, 4: 1.0}}
+    meta = {"bins": {"frac_per_bin": {0: 1.0, 1: 1.0, 2: 1.0, 3: 1.0, 4: 1.0}}}
     fr = galaxy_fraction_per_bin(meta)
 
     assert set(fr) == {0, 1, 2, 3, 4}
@@ -670,7 +673,7 @@ def test_galaxy_fraction_per_bin_equipopulated_known() -> None:
 def test_population_stats_counts_known_500_over_5_bins() -> None:
     """Test that population_stats returns known values for known counts."""
     bins = _dummy_bins(5)
-    meta = {"frac_per_bin": {i: 1.0 for i in range(5)}}
+    meta = {"bins": {"frac_per_bin": {i: 1.0 for i in range(5)}}}
 
     N_total = 500.0
     survey_area = 1.0
@@ -691,7 +694,7 @@ def test_population_stats_counts_known_500_over_5_bins() -> None:
 def test_population_stats_weighted_known_split() -> None:
     """Tests that population_stats returns known values for known counts and weights."""
     bins = _dummy_bins(2)
-    meta = {"frac_per_bin": {0: 1.0, 1: 3.0}}
+    meta = {"bins": {"frac_per_bin": {0: 1.0, 1: 3.0}}}
 
     N_total = 400.0
     survey_area = 2.0
@@ -707,7 +710,7 @@ def test_population_stats_weighted_known_split() -> None:
 
 def test_galaxy_density_and_count_helpers_known_numbers() -> None:
     """Tests that galaxy_density_per_bin and galaxy_count_per_bin return known values."""
-    meta = {"frac_per_bin": {0: 1.0, 1: 3.0}}  # normalized -> 0.25, 0.75
+    meta = {"bins": {"frac_per_bin": {0: 1.0, 1: 3.0}}}  # normalized -> 0.25, 0.75
 
     dens = galaxy_density_per_bin(meta, density_total=40.0)
     assert dens[0] == pytest.approx(10.0)
@@ -731,7 +734,7 @@ def test_galaxy_fraction_per_bin_reads_nested_bins_block_known() -> None:
 def test_population_stats_density_matches_galaxy_density_helper() -> None:
     """Tests that population_stats uses the same density allocation as the helper."""
     bins = _dummy_bins(2)
-    meta = {"frac_per_bin": {0: 1.0, 1: 3.0}}
+    meta = {"bins": {"frac_per_bin": {0: 1.0, 1: 3.0}}}
 
     out = population_stats(bins, meta, density_total=40.0)
     expected = galaxy_density_per_bin(meta, density_total=40.0)
@@ -743,13 +746,13 @@ def test_population_stats_density_uses_galaxy_density_helper(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """Tests that population_stats routes density allocation through the helper."""
-    import binny.tomography.stats as bs
+    import binny.analysis.stats as bs
 
     called = {"value": False}
 
     def fake_galaxy_density_per_bin(metadata, density_total):
         called["value"] = True
-        assert metadata == {"frac_per_bin": {0: 1.0, 1: 3.0}}
+        assert metadata == {"bins": {"frac_per_bin": {0: 1.0, 1: 3.0}}}
         assert density_total == pytest.approx(40.0)
         return {0: 10.0, 1: 30.0}
 
@@ -760,7 +763,7 @@ def test_population_stats_density_uses_galaxy_density_helper(
     )
 
     bins = _dummy_bins(2)
-    meta = {"frac_per_bin": {0: 1.0, 1: 3.0}}
+    meta = {"bins": {"frac_per_bin": {0: 1.0, 1: 3.0}}}
 
     out = bs.population_stats(bins, meta, density_total=40.0)
 
@@ -771,7 +774,7 @@ def test_population_stats_density_uses_galaxy_density_helper(
 def test_population_stats_density_helper_output_is_restricted_to_bins() -> None:
     """Tests that population_stats only returns densities for requested bins."""
     bins = _dummy_bins(2)
-    meta = {"frac_per_bin": {0: 1.0, 1: 3.0, 2: 6.0}}
+    meta = {"bins": {"frac_per_bin": {0: 1.0, 1: 3.0, 2: 6.0}}}
 
     out = population_stats(bins, meta, density_total=100.0)
 
@@ -801,7 +804,7 @@ def test_comoving_density_per_bin_rejects_nonpositive_volume() -> None:
 def test_population_stats_accepts_count_and_volume_per_bin() -> None:
     """Tests population stats with externally supplied counts and volumes."""
     bins = _dummy_bins(2)
-    meta = {"frac_per_bin": {0: 1.0, 1: 3.0}}
+    meta = {"bins": {"frac_per_bin": {0: 1.0, 1: 3.0}}}
 
     out = population_stats(
         bins,
@@ -828,7 +831,7 @@ def test_population_stats_accepts_count_and_volume_per_bin() -> None:
 def test_population_stats_count_and_volume_inputs_must_be_paired() -> None:
     """Tests that count and volume inputs must be supplied together."""
     bins = _dummy_bins(2)
-    meta = {"frac_per_bin": {0: 1.0, 1: 1.0}}
+    meta = {"bins": {"frac_per_bin": {0: 1.0, 1: 1.0}}}
 
     with pytest.raises(
         ValueError,
@@ -854,7 +857,7 @@ def test_population_stats_count_and_volume_inputs_must_be_paired() -> None:
 def test_population_stats_count_volume_output_restricted_to_requested_bins() -> None:
     """Tests that count, volume, and density outputs follow the requested bins."""
     bins = _dummy_bins(2)
-    meta = {"frac_per_bin": {0: 1.0, 1: 1.0, 2: 1.0}}
+    meta = {"bins": {"frac_per_bin": {0: 1.0, 1: 1.0, 2: 1.0}}}
 
     out = population_stats(
         bins,
@@ -872,7 +875,7 @@ def test_population_stats_count_volume_output_restricted_to_requested_bins() -> 
 def test_population_stats_count_volume_branch_rejects_bad_volume() -> None:
     """Tests that population_stats propagates invalid volume checks."""
     bins = _dummy_bins(1)
-    meta = {"frac_per_bin": {0: 1.0}}
+    meta = {"bins": {"frac_per_bin": {0: 1.0}}}
 
     with pytest.raises(ValueError, match=r"volume_per_bin\[0\] must be positive"):
         population_stats(

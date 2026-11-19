@@ -413,18 +413,22 @@ def peak_flags_per_bin(
 
 def galaxy_fraction_per_bin(meta: Mapping[str, Any]) -> dict[int, float]:
     """Extract and normalize per-bin population fractions from tomo metadata."""
-    frac = meta.get("frac_per_bin", None)
+    bins_meta = meta.get("bins")
 
-    if frac is None and isinstance(meta.get("bins"), Mapping):
-        frac = meta["bins"].get("frac_per_bin", None)
+    if not isinstance(bins_meta, Mapping):
+        raise ValueError("metadata must contain a mapping 'bins'.")
 
-    if frac is None or not isinstance(frac, Mapping):
-        raise ValueError("metadata must contain a mapping 'frac_per_bin'.")
+    frac = bins_meta.get("frac_per_bin")
+
+    if not isinstance(frac, Mapping):
+        raise ValueError("metadata must contain a mapping 'bins.frac_per_bin'.")
 
     out: dict[int, float] = {int(k): float(v) for k, v in frac.items()}
     s = float(sum(out.values()))
+
     if s <= 0.0:
         raise ValueError("Sum of metadata frac_per_bin must be positive.")
+
     return {i: f / s for i, f in out.items()}
 
 
@@ -470,7 +474,7 @@ def galaxy_density_per_bin(
     effective density..
 
     Args:
-        metadata: Tomography metadata containing ``"frac_per_bin"``.
+        metadata: Tomography metadata containing ``metadata["bins"]["frac_per_bin"]``.
         density_total: Total effective surface density (gal/arcmin^2).
 
     Returns:
@@ -630,7 +634,7 @@ def population_stats(
     This function computes quantities that depend on relative bin populations,
     using metadata produced by Binny's tomo builders.
 
-    The primary input is ``metadata["frac_per_bin"]`` (mapping bin index to
+    The primary input is ``metadata["bins"]["frac_per_bin"]`` (mapping bin index to
     fraction). Fractions are checked against the bin indices present in
     ``bins``.
 
@@ -645,7 +649,7 @@ def population_stats(
 
     Args:
         bins: Mapping from bin index to bin curves.
-        metadata: Tomography metadata containing ``"frac_per_bin"``.
+        metadata: Tomography metadata containing ``metadata["bins"]["frac_per_bin"]``.
         density_total: Optional total effective surface density in
             galaxies per square arcminute.
         survey_area: Optional survey area in square arcminutes. Requires
@@ -670,7 +674,7 @@ def population_stats(
 
     Raises:
         ValueError: If bins is empty.
-        ValueError: If metadata does not contain ``"frac_per_bin"``.
+        ValueError: If metadata does not contain valid per-bin population fractions.
         ValueError: If metadata fractions are missing any bin index.
         ValueError: If ``survey_area`` is provided without ``density_total``.
         ValueError: If only one of ``total_count_per_bin`` and

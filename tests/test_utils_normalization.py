@@ -9,7 +9,9 @@ import binny.axes.bin_edges as bemod
 from binny.utils.normalization import (
     cdf_from_curve,
     curve_norm_mode,
+    integrate_1d,
     integrate_bins,
+    mass_per_segment,
     normalize_1d,
     normalize_edges,
     normalize_or_check_curves,
@@ -557,3 +559,152 @@ def test_trapz_weights_empty_grid_returns_empty():
     w = trapz_weights(z)
     assert w.shape == (0,)
     assert w.dtype == np.float64
+
+
+def test_prepare_metric_inputs_normalize_rejects_non_positive_integral() -> None:
+    """Tests that prepare_metric_inputs raises in normalize mode for non-positive area."""
+    z = np.array([0.0, 1.0, 2.0])
+    p = {0: np.zeros_like(z)}
+
+    with pytest.raises(ValueError, match=r"non-positive or non-finite integral"):
+        prepare_metric_inputs(z, p, mode="curves", curve_norm="normalize")
+
+
+def test_prepare_metric_inputs_check_rejects_non_positive_integral() -> None:
+    """Tests that prepare_metric_inputs raises in check mode for non-positive area."""
+    z = np.array([0.0, 1.0, 2.0])
+    p = {0: np.zeros_like(z)}
+
+    with pytest.raises(ValueError, match=r"non-positive or non-finite integral"):
+        prepare_metric_inputs(z, p, mode="curves", curve_norm="check")
+
+
+def test_prepare_metric_inputs_segments_prob_returns_probs() -> None:
+    """Tests that prepare_metric_inputs returns per-segment probabilities in segments_prob mode."""
+    z = np.array([0.0, 1.0, 2.0])
+    p = {
+        0: np.array([0.0, 2.0, 0.0]),
+        1: np.array([0.0, 1.0, 0.0]),
+    }
+
+    z_out, probs = prepare_metric_inputs(z, p, mode="segments_prob", curve_norm="none")
+    assert z_out.dtype == np.float64
+    assert set(probs.keys()) == {0, 1}
+    for k, v in probs.items():
+        assert isinstance(k, int)
+        assert v.dtype == np.float64
+        assert v.shape == (z.size - 1,)
+        assert np.isclose(np.sum(v), 1.0, rtol=0.0, atol=1e-12)
+
+
+def test_mass_per_segment_returns_expected_values() -> None:
+    """Tests that mass_per_segment returns trapezoid masses per segment."""
+    z = np.array([0.0, 1.0, 3.0])
+    p = np.array([0.0, 2.0, 0.0])
+    # dz = [1, 2]
+    # mass = 0.5*(0+2)*1 = 1
+    # mass = 0.5*(2+0)*2 = 2
+    m = mass_per_segment(z, p)
+    np.testing.assert_allclose(m, np.array([1.0, 2.0]), rtol=0.0, atol=1e-12)
+    assert m.dtype == np.float64
+
+
+def test_mass_per_segment_rejects_shape_mismatch_or_not_1d() -> None:
+    """Tests that mass_per_segment raises for non-1D inputs or length mismatch."""
+    z = np.array([0.0, 1.0, 2.0])
+    p_bad_len = np.array([0.0, 1.0])
+    with pytest.raises(ValueError, match=r"must be 1D arrays of the same length"):
+        mass_per_segment(z, p_bad_len)
+
+    z2 = np.array([[0.0, 1.0, 2.0]])
+    p2 = np.array([[0.0, 1.0, 0.0]])
+    with pytest.raises(ValueError, match=r"must be 1D arrays of the same length"):
+        mass_per_segment(z2, p2)
+
+
+def test_mass_per_segment_rejects_non_increasing_grid() -> None:
+    """Tests that mass_per_segment raises when z_arr is not strictly increasing."""
+    z = np.array([0.0, 1.0, 1.0])
+    p = np.array([0.0, 1.0, 0.0])
+    with pytest.raises(ValueError, match=r"strictly increasing"):
+        mass_per_segment(z, p)
+
+
+@pytest.mark.parametrize("bins", [{}, {0: np.ones(2)}])
+def test_prepare_metric_inputs_rejects_unknown_curve_norm(bins):
+    """Tests that prepare_metric_inputs rejects unknown normalization modes."""
+    z = np.array([0.0, 1.0])
+
+    with pytest.raises(ValueError, match=r"curve_norm must be"):
+        prepare_metric_inputs(
+            z,
+            bins,
+            mode="curves",
+            curve_norm="invalid",
+        )
+
+
+def test_prepare_metric_inputs_rejects_unknown_mode_with_empty_bins():
+    """Tests that prepare_metric_inputs validates mode even with empty bins."""
+    z = np.array([0.0, 1.0])
+
+    with pytest.raises(ValueError, match=r"mode must be"):
+        prepare_metric_inputs(z, {}, mode="invalid")
+
+
+@pytest.mark.parametrize("method", ["trapezoid", "simpson"])
+def test_normalize_1d_rejects_nonfinite_integral(method):
+    """Tests that normalize_1d rejects overflowing normalization integrals."""
+    z = np.array([0.0, 1.0, 2.0])
+    y = np.full(3, 1e308)
+
+    with np.errstate(over="ignore", invalid="ignore"):
+        with pytest.raises(ValueError, match=r"non-negative and finite"):
+            normalize_1d(z, y, method=method)
+
+
+@pytest.mark.parametrize(
+    ("method", "expected"),
+    [("trapezoid", 0.375), ("simpson", 1.0 / 3.0)],
+)
+def test_integrate_1d_respects_method(method, expected):
+    """Tests that integrate_1d respects the requested quadrature method."""
+    z = np.array([0.0, 0.5, 1.0])
+    assert integrate_1d(z, z**2, method=method) == pytest.approx(expected)
+
+
+def test_integrate_1d_accepts_zero_curve():
+    """Tests that integrate_1d accepts a zero-mass curve."""
+    z = np.array([0.0, 0.5, 1.0])
+    assert integrate_1d(z, np.zeros_like(z)) == 0.0
+
+
+def test_integrate_1d_rejects_invalid_method():
+    """Tests that integrate_1d rejects an unsupported quadrature method."""
+    z = np.array([0.0, 0.5, 1.0])
+    with pytest.raises(ValueError, match="method must be"):
+        integrate_1d(z, z**2, method="invalid")
+
+
+def test_integrate_1d_rejects_negative_simpson_integral():
+    """Tests that integrate_1d rejects negative Simpson integrals."""
+    z = np.array([0.0, 0.1, 1.0])
+    y = np.array([1.0, 0.0, 0.0])
+
+    with pytest.raises(ValueError, match="non-negative and finite"):
+        integrate_1d(z, y, method="simpson")
+
+
+@pytest.mark.parametrize(
+    ("method", "expected"),
+    [("trapezoid", 0.375), ("simpson", 1.0 / 3.0)],
+)
+def test_integrate_bins_respects_method(method, expected):
+    """Tests that integrate_bins respects the requested quadrature method."""
+    z = np.array([0.0, 0.5, 1.0])
+    bins = {0: z**2, 1: 2.0 * z**2}
+
+    result = integrate_bins(z, bins, method=method)
+
+    assert result[0] == pytest.approx(expected)
+    assert result[1] == pytest.approx(2.0 * expected)

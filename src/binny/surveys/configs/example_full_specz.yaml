@@ -51,7 +51,7 @@ tomography:
       # Optional measurement scatter in observed redshift z_hat | z_true.
       # If enabled, a Gaussian scatter response is applied after catastrophic mixing.
       specz_scatter: [0.001, 0.001, 0.0015, 0.002]  # per-true-bin sigma in z
-      specz_scatter_model: const  # used only when specz_scatter is null
+      specz_scatter_model: sigma0_plus_sigma1_1pz  # used only when specz_scatter is null
       sigma0: 0.0
       sigma1: 0.0
 

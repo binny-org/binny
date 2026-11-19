@@ -2,7 +2,7 @@
 
 All functions here return *shapes* by default (unnormalized). If ``normalize=True``,
 the returned curve is normalized to integrate to 1 over the provided redshift
-grid ``z`` using :func:`binny.utils.normalization.normalize_over_z`.
+grid ``z`` using :func:`binny.utils.normalization.normalize_1d`.
 
 Notes:
     - Normalization requires a 1D, strictly increasing ``z`` grid with at least
@@ -17,7 +17,7 @@ from numpy import exp
 from scipy.special import erf
 
 from binny.nz.luminosity_function_distribution import luminosity_function_distribution
-from binny.utils.normalization import normalize_over_z
+from binny.utils.normalization import normalize_1d
 from binny.utils.types import FloatArray
 
 __all__ = [
@@ -40,7 +40,7 @@ def _maybe_normalize(z: FloatArray, nz: FloatArray, normalize: bool) -> FloatArr
     """Optionally normalizes ``nz`` to integrate to 1 over ``z``."""
     if not normalize:
         return nz
-    return normalize_over_z(z, nz)
+    return normalize_1d(z, nz)
 
 
 def smail_like_distribution(

@@ -1,4 +1,4 @@
-"""High-level functional tomography builders."""
+"""Construction of tomography from declarative specifications."""
 
 from __future__ import annotations
 
@@ -7,10 +7,8 @@ from typing import Any
 
 import numpy as np
 
-import binny.surveys.config_utils as cu
-from binny.binning.photoz import build_photoz_bins
-from binny.binning.specz import build_specz_bins
-from binny.tomography.core import Tomography
+import binny.tomography.specs as ts
+from binny.tomography.core import Tomography, build_tomography
 from binny.tomography.predefined import build_predefined_tomography
 
 __all__ = ["build_tomography_from_spec"]
@@ -49,13 +47,13 @@ def build_tomography_from_spec(
     """
     spec_in = dict(tomo_spec)
     spec_in.setdefault("nz", {"model": "arrays"})
-    spec = cu._parse_entry(spec_in)
+    spec = ts._parse_entry(spec_in)
 
     kind = spec["kind"]
 
     if kind == "predefined":
         if predefined_bins is None:
-            z_arr, predefined_bins = cu._load_predefined_bin_source(spec["bins"])
+            z_arr, predefined_bins = ts._load_predefined_bin_source(spec["bins"])
         else:
             if z is None:
                 raise ValueError("z is required when predefined_bins is provided.")
@@ -65,7 +63,7 @@ def build_tomography_from_spec(
             z_arr,
             predefined_bins,
             nz=nz,
-            normalize=spec["bins"].get("normalize_bins", False),
+            normalize_bins=spec["bins"].get("normalize_bins", False),
             norm_method=spec["bins"].get("norm_method", "trapezoid"),
             include_metadata=include_tomo_metadata,
         )
@@ -73,42 +71,15 @@ def build_tomography_from_spec(
         if z is None or nz is None:
             raise ValueError("z and nz are required for photoz/specz tomography.")
 
-        if kind == "photoz":
-            builder = build_photoz_bins
-        elif kind == "specz":
-            builder = build_specz_bins
-        else:
-            raise ValueError(f"Unknown tomography kind {kind!r}.")
-
-        kwargs = cu._builder_kwargs_from_spec(spec)
-
-        if kind == "photoz":
-            kwargs["include_photoz_diagnostics"] = include_photoz_diagnostics
-
-        metadata_requested = include_tomo_metadata or (
-            kind == "photoz" and include_photoz_diagnostics
+        result = build_tomography(
+            z,
+            nz,
+            method=kind,
+            include_metadata=include_tomo_metadata,
+            include_photoz_diagnostics=(kind == "photoz" and include_photoz_diagnostics),
+            **ts._builder_kwargs_from_spec(spec),
         )
 
-        output = builder(
-            z=z,
-            nz=nz,
-            include_metadata=metadata_requested,
-            **kwargs,
-        )
-
-        if metadata_requested:
-            bins, metadata = output
-        else:
-            bins, metadata = output, {}
-
-        result = Tomography(
-            z=np.asarray(z, dtype=float),
-            nz=np.asarray(nz, dtype=float),
-            bins=bins,
-            metadata=metadata if metadata is not None else {},
-        )
-
-    result.metadata = result.metadata if result.metadata is not None else {}
     result.spec = dict(spec)
 
     return result

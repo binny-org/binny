@@ -1,4 +1,4 @@
-"""Tests for ``binny.tomography.stats.bin_centers`` invariance with fixed edges.
+"""Tests for ``binny.analysis.stats.bin_centers`` invariance with fixed edges.
 
 This module runs in slow mode due to its large parameter sweeps.
 """
@@ -10,6 +10,7 @@ from functools import cache
 import numpy as np
 import pytest
 
+from binny.analysis.stats import bin_centers
 from binny.axes.bin_edges import (
     equal_information_edges,
     equal_number_edges,
@@ -30,7 +31,6 @@ from binny.nz.models import (
     student_t_distribution,
     tophat_distribution,
 )
-from binny.tomography.stats import bin_centers
 
 pytestmark = pytest.mark.slow
 

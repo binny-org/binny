@@ -5,7 +5,7 @@ from __future__ import annotations
 import numpy as np
 import pytest
 
-from binny.nz.psf_selection import (
+from binny.calibration.psf_selection import (
     calibrate_psf_depth_from_mock,
     resolution_factor,
     selected_number_density_from_mock,

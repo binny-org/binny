@@ -21,6 +21,7 @@ import binny.surveys.config_utils as cu
 from binny.surveys.config_utils import list_configs, load_config
 from binny.tomography.builders import build_tomography_from_spec
 from binny.tomography.core import Tomography
+from binny.tomography.specs import _parse_entry
 
 
 def load_survey_config(survey: str) -> dict[str, Any]:
@@ -146,7 +147,7 @@ def build_survey_tomography(
             else:
                 spec[key] = value
 
-    spec = cu._parse_entry(spec)
+    spec = _parse_entry(spec)
 
     if spec["kind"] == "predefined":
         z_arr = None

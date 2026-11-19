@@ -1,4 +1,4 @@
-"""Tests for ``binny.tomography.stats`` invariances and API behavior."""
+"""Tests for ``binny.analysis.stats`` invariances and API behavior."""
 
 from __future__ import annotations
 
@@ -7,7 +7,7 @@ from typing import Any
 import numpy as np
 import pytest
 
-from binny.tomography.stats import (
+from binny.analysis.stats import (
     bin_centers,
     bin_moments,
     bin_quantiles,
@@ -207,7 +207,7 @@ def test_population_stats_uses_metadata_not_bin_integrals() -> None:
     b1 = 10.0 * _gaussian(z, 1.2, 0.2)
     bins = {0: b0, 1: b1}
 
-    meta: dict[str, Any] = {"frac_per_bin": {0: 0.8, 1: 0.2}}
+    meta: dict[str, Any] = {"bins": {"frac_per_bin": {0: 0.8, 1: 0.2}}}
     out = population_stats(bins, meta, normalize_frac=False, decimal_places=16)
 
     assert out["fractions"][0] == pytest.approx(0.8, rel=0.0, abs=1e-12)
@@ -219,7 +219,7 @@ def test_population_stats_normalizes_frac_when_requested() -> None:
     z = _toy_grid()
     bins = {0: _gaussian(z, 0.6, 0.1), 1: _gaussian(z, 1.2, 0.2)}
 
-    meta: dict[str, Any] = {"frac_per_bin": {0: 2.0, 1: 1.0}}
+    meta: dict[str, Any] = {"bins": {"frac_per_bin": {0: 2.0, 1: 1.0}}}
     out = population_stats(bins, meta, normalize_frac=True, decimal_places=16)
 
     assert out["fractions"][0] == pytest.approx(2.0 / 3.0, rel=0.0, abs=1e-12)
@@ -232,7 +232,7 @@ def test_population_stats_normalize_false_still_returns_normalized() -> None:
     z = _toy_grid()
     bins = {0: _gaussian(z, 0.6, 0.1), 1: _gaussian(z, 1.2, 0.2)}
 
-    meta: dict[str, Any] = {"frac_per_bin": {0: 0.2, 1: 0.2}}
+    meta: dict[str, Any] = {"bins": {"frac_per_bin": {0: 0.2, 1: 0.2}}}
     out = population_stats(bins, meta, normalize_frac=False, rtol=0.0, atol=0.0, decimal_places=16)
 
     assert sum(out["fractions"].values()) == pytest.approx(1.0, rel=0.0, abs=1e-12)
@@ -244,7 +244,7 @@ def test_population_stats_density_allocation_matches_fractions() -> None:
     """Tests that population_stats allocates density per bin using fractions."""
     z = _toy_grid()
     bins = {0: _gaussian(z, 0.6, 0.1), 1: 10.0 * _gaussian(z, 1.2, 0.2)}
-    meta: dict[str, Any] = {"frac_per_bin": {0: 0.25, 1: 0.75}}
+    meta: dict[str, Any] = {"bins": {"frac_per_bin": {0: 0.25, 1: 0.75}}}
 
     out = population_stats(bins, meta, density_total=40.0, normalize_frac=False, decimal_places=16)
 
@@ -257,7 +257,7 @@ def test_population_stats_count_allocation_matches_density_and_area() -> None:
     """Tests that population_stats count_per_bin matches density times area."""
     z = _toy_grid()
     bins = {0: _gaussian(z, 0.6, 0.1), 1: _gaussian(z, 1.2, 0.2)}
-    meta: dict[str, Any] = {"frac_per_bin": {"0": 0.4, "1": 0.6}}
+    meta: dict[str, Any] = {"bins": {"frac_per_bin": {"0": 0.4, "1": 0.6}}}
 
     out = population_stats(
         bins, meta, density_total=10.0, survey_area=100.0, normalize_frac=False, decimal_places=16
@@ -271,7 +271,7 @@ def test_population_stats_raises_on_missing_bin_index_in_metadata() -> None:
     """Tests that population_stats raises if metadata is missing a bin index."""
     z = _toy_grid()
     bins = {0: _gaussian(z, 0.6, 0.1), 1: _gaussian(z, 1.2, 0.2)}
-    meta: dict[str, Any] = {"frac_per_bin": {0: 1.0}}
+    meta: dict[str, Any] = {"bins": {"frac_per_bin": {0: 1.0}}}
 
     with pytest.raises(ValueError, match="missing bin index"):
         population_stats(bins, meta)
@@ -281,7 +281,7 @@ def test_population_stats_raises_if_survey_area_without_density_total() -> None:
     """Tests that population_stats raises if survey_area is set without density_total."""
     z = _toy_grid()
     bins = {0: _gaussian(z, 0.6, 0.1)}
-    meta: dict[str, Any] = {"frac_per_bin": {0: 1.0}}
+    meta: dict[str, Any] = {"bins": {"frac_per_bin": {0: 1.0}}}
 
     with pytest.raises(ValueError, match="survey_area requires density_total"):
         population_stats(bins, meta, survey_area=100.0, decimal_places=16)
@@ -289,7 +289,7 @@ def test_population_stats_raises_if_survey_area_without_density_total() -> None:
 
 def test_galaxy_fraction_per_bin_normalizes_and_casts_keys() -> None:
     """Tests that galaxy_fraction_per_bin normalizes and casts str keys to int."""
-    meta: dict[str, Any] = {"frac_per_bin": {"0": 2.0, 1: 1.0}}
+    meta: dict[str, Any] = {"bins": {"frac_per_bin": {"0": 2.0, 1: 1.0}}}
     out = galaxy_fraction_per_bin(meta)
 
     assert set(out.keys()) == {0, 1}
@@ -299,14 +299,14 @@ def test_galaxy_fraction_per_bin_normalizes_and_casts_keys() -> None:
 
 def test_galaxy_fraction_per_bin_raises_on_missing_frac_per_bin() -> None:
     """Tests that galaxy_fraction_per_bin raises if frac_per_bin is missing."""
-    meta: dict[str, Any] = {}
-    with pytest.raises(ValueError, match="must contain a mapping 'frac_per_bin'"):
+    meta: dict[str, Any] = {"bins": {}}
+    with pytest.raises(ValueError, match=r"must contain a mapping 'bins\.frac_per_bin'"):
         galaxy_fraction_per_bin(meta)
 
 
 def test_galaxy_density_per_bin_raises_on_negative_total_density() -> None:
     """Tests that galaxy_density_per_bin raises when density_total is negative."""
-    meta: dict[str, Any] = {"frac_per_bin": {0: 1.0}}
+    meta: dict[str, Any] = {"bins": {"frac_per_bin": {0: 1.0}}}
     with pytest.raises(ValueError, match="density_total must be non-negative"):
         galaxy_density_per_bin(meta, density_total=-1.0)
 
@@ -389,4 +389,4 @@ def test_shape_stats_raises_on_empty_bins() -> None:
 def test_population_stats_raises_on_empty_bins() -> None:
     """Tests that population_stats raises on empty bins."""
     with pytest.raises(ValueError, match="bins must not be empty"):
-        population_stats({}, {"frac_per_bin": {}})
+        population_stats({}, {"bins": {"frac_per_bin": {}}})

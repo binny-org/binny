@@ -11,17 +11,16 @@ from matplotlib.colors import (
 )
 
 __all__ = [
-    "BINNY_COLORS",
-    "BINNY_CMAP",
-    "BINNY_CMAP_DISCRETE",
-    "BINNY_NORM",
-    "get_binny_colors",
+    "cmap",
+    "cmap_discrete",
+    "get_colors",
+    "norm",
+    "palette",
     "pastelize",
 ]
 
-PASTEL_AMOUNT = 0.25
-N_COLORS = 5
-
+_PASTEL_AMOUNT = 0.25
+_N_COLORS = 5
 _BASE_CMAP = colormaps["viridis"]
 
 
@@ -43,10 +42,10 @@ def pastelize(color: str, amount: float) -> str:
     return to_hex(pastel)
 
 
-def get_binny_colors(
+def get_colors(
     n: int,
     *,
-    pastel_amount: float = PASTEL_AMOUNT,
+    pastel_amount: float = _PASTEL_AMOUNT,
     alpha: float = 1.0,
 ) -> list[str] | list[tuple[float, float, float, float]]:
     """Sample colors from the Binny palette.
@@ -76,19 +75,19 @@ def get_binny_colors(
     return [to_rgba(color, alpha) for color in colors]
 
 
-BINNY_COLORS = get_binny_colors(N_COLORS)
+palette = get_colors(_N_COLORS)
 
-BINNY_CMAP = ListedColormap(
-    get_binny_colors(256),
+cmap = ListedColormap(
+    get_colors(256),
     name="binny_colors",
 )
 
-BINNY_CMAP_DISCRETE = ListedColormap(
-    BINNY_COLORS,
+cmap_discrete = ListedColormap(
+    palette,
     name="binny_colors_discrete",
 )
 
-BINNY_NORM = BoundaryNorm(
-    np.arange(len(BINNY_COLORS) + 1),
-    BINNY_CMAP_DISCRETE.N,
+norm = BoundaryNorm(
+    np.arange(len(palette) + 1),
+    cmap_discrete.N,
 )

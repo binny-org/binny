@@ -6,8 +6,8 @@ import numpy as np
 import pytest
 from numpy.testing import assert_allclose, assert_array_equal
 
+from binny.analysis.combinations import make_bin_combo_filter
 from binny.correlations.bin_combo_filter import BinComboFilter
-from binny.tomography.combinations import make_bin_combo_filter
 from binny.tomography.core import Tomography, build_tomography
 
 
@@ -41,7 +41,7 @@ def tomo(
         nz,
         edges,
         method="deterministic",
-        normalize=False,
+        normalize_bins=False,
     )
 
 
@@ -56,7 +56,7 @@ def other_tomo() -> Tomography:
         nz,
         np.array([0.0, 1.5, 3.0]),
         method="deterministic",
-        normalize=False,
+        normalize_bins=False,
     )
 
 
@@ -111,7 +111,7 @@ def test_same_grid_two_tomographies(
         np.exp(-z),
         edges,
         method="deterministic",
-        normalize=False,
+        normalize_bins=False,
     )
 
     result = make_bin_combo_filter(tomo, other)
@@ -132,7 +132,7 @@ def test_same_grid_preserves_distinct_samples(
         np.exp(-z),
         edges,
         method="deterministic",
-        normalize=False,
+        normalize_bins=False,
     )
 
     result = make_bin_combo_filter(tomo, other)
@@ -213,14 +213,14 @@ def test_interpolation_outside_support_is_zero() -> None:
         np.exp(-z_a),
         np.array([0.0, 1.0, 2.0]),
         method="deterministic",
-        normalize=False,
+        normalize_bins=False,
     )
     tomo_b = build_tomography(
         z_b,
         np.exp(-z_b),
         np.array([1.0, 2.0, 3.0]),
         method="deterministic",
-        normalize=False,
+        normalize_bins=False,
     )
 
     result = make_bin_combo_filter(tomo_a, tomo_b)
@@ -246,7 +246,7 @@ def test_identical_grid_values_do_not_require_same_object(
         np.exp(-z),
         edges,
         method="deterministic",
-        normalize=False,
+        normalize_bins=False,
     )
 
     result = make_bin_combo_filter(tomo, other)

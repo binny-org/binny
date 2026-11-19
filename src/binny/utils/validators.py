@@ -533,3 +533,38 @@ def validate_positive_integer(value: int, *, name: str = "value") -> int:
         raise ValueError(f"{name} must be positive.")
 
     return int(value)
+
+
+def _require_mapping(obj: Any, *, what: str) -> Mapping[Any, Any]:
+    """Require an object to be a mapping.
+
+    Args:
+        obj: Object to validate.
+        what: Human-readable field name for error messages.
+
+    Returns:
+        ``obj`` typed as a mapping.
+
+    Raises:
+        ValueError: If ``obj`` is not a mapping.
+    """
+    if not isinstance(obj, Mapping):
+        raise ValueError(f"{what} must be a mapping.")
+
+    return obj
+
+
+def _normalize_label(x: Any | None) -> str | None:
+    """Normalize optional selector labels.
+
+    Args:
+        x: Label-like value from the config.
+
+    Returns:
+        Stripped string, or None if the value is missing or empty.
+    """
+    if x is None:
+        return None
+
+    s = str(x).strip()
+    return s if s else None

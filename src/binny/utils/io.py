@@ -36,7 +36,7 @@ def load_nz(
                          control which columns to use.
 
     The function does NOT normalise n(z); normalisation is handled later by
-    ``build_photoz_bins`` / ``build_specz_bins`` via the ``normalize_input`` flag.
+    ``build_tomography`` via the ``normalize_input`` flag.
 
     Args:
         filename:
