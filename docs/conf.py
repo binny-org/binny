@@ -4,16 +4,16 @@ from pathlib import Path
 
 from matplotlib.colors import to_hex
 
-from binny import BINNY_CMAP, pastelize
+from binny.style import cmap, pastelize
 
 
 HERE = Path(__file__).resolve().parent
 
-BINNY_PURPLE = to_hex(BINNY_CMAP(0.00))
-BINNY_VIOLET = to_hex(BINNY_CMAP(0.10))
-BINNY_BLUE = to_hex(BINNY_CMAP(0.25))
-BINNY_LIGHT_BLUE = to_hex(BINNY_CMAP(0.40))
-BINNY_GREEN = to_hex(BINNY_CMAP(0.65))
+BINNY_PURPLE = to_hex(cmap(0.00))
+BINNY_VIOLET = to_hex(cmap(0.10))
+BINNY_BLUE = to_hex(cmap(0.25))
+BINNY_LIGHT_BLUE = to_hex(cmap(0.40))
+BINNY_GREEN = to_hex(cmap(0.65))
 
 BINNY_DARK_PURPLE = pastelize(BINNY_PURPLE, 0.25)
 BINNY_DARK_VIOLET = pastelize(BINNY_VIOLET, 0.25)

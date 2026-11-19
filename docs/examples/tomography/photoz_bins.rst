@@ -36,21 +36,16 @@ scatter term.
    :include-source: True
    :width: 640
 
-   import cmasher as cmr
    import matplotlib.pyplot as plt
    import numpy as np
 
+   from binny.style import palette
    from binny.nz import nz_model
-   from binny.tomography.builders import build_tomography_from_spec
+   from binny.tomography import build_tomography_from_spec
 
-   def plot_bins(ax, z, bin_dict, title, cmap="viridis", cmap_range=(0.0, 1.0)):
+   def plot_bins(ax, z, bin_dict, title):
        keys = sorted(bin_dict.keys())
-       colors = cmr.take_cmap_colors(
-           cmap,
-           len(keys),
-           cmap_range=cmap_range,
-           return_fmt="hex",
-       )
+       colors = palette[:len(keys)]
 
        for i, (color, key) in enumerate(zip(colors, keys, strict=True)):
            curve = np.asarray(bin_dict[key], dtype=float)
@@ -71,7 +66,7 @@ scatter term.
                zorder=20 + i,
            )
 
-       ax.plot(z, np.zeros_like(z), color="k", linewidth=2.2, zorder=1000)
+       ax.plot(z, np.zeros_like(z), color="k", linewidth=1.5, zorder=1000)
        ax.set_title(title)
        ax.set_xlabel("Redshift $z$")
        ax.set_ylabel(r"Normalized $n_i(z)$")
@@ -125,28 +120,23 @@ using the same parent distribution and photo-z uncertainty model.
    :include-source: True
    :width: 760
 
-   import cmasher as cmr
    import matplotlib.pyplot as plt
    import numpy as np
 
+   from binny.style import palette
    from binny.nz import nz_model
-   from binny.tomography.builders import build_tomography_from_spec
+   from binny.tomography import build_tomography_from_spec
 
-   def plot_bins(ax, z, bin_dict, title, cmap="viridis", cmap_range=(0.0, 1.0)):
+   def plot_bins(ax, z, bin_dict, title):
        keys = sorted(bin_dict.keys())
-       colors = cmr.take_cmap_colors(
-           cmap,
-           len(keys),
-           cmap_range=cmap_range,
-           return_fmt="hex",
-       )
+       colors = palette[:len(keys)]
 
        for i, (color, key) in enumerate(zip(colors, keys, strict=True)):
            curve = np.asarray(bin_dict[key], dtype=float)
            ax.fill_between(z, 0.0, curve, color=color, alpha=0.65, linewidth=0.0, zorder=10 + i)
-           ax.plot(z, curve, color="k", linewidth=2.2, zorder=20 + i)
+           ax.plot(z, curve, color="k", linewidth=1.5, zorder=20 + i)
 
-       ax.plot(z, np.zeros_like(z), color="k", linewidth=2.2, zorder=1000)
+       ax.plot(z, np.zeros_like(z), color="k", linewidth=1.5, zorder=1000)
        ax.set_title(title)
        ax.set_xlabel("Redshift $z$")
 
@@ -208,28 +198,23 @@ keeping the parent distribution and uncertainty model fixed.
    :include-source: True
    :width: 760
 
-   import cmasher as cmr
    import matplotlib.pyplot as plt
    import numpy as np
 
+   from binny.style import palette
    from binny.nz import nz_model
-   from binny.tomography.builders import build_tomography_from_spec
+   from binny.tomography import build_tomography_from_spec
 
-   def plot_bins(ax, z, bin_dict, title, cmap="viridis", cmap_range=(0.0, 1.0)):
+   def plot_bins(ax, z, bin_dict, title):
        keys = sorted(bin_dict.keys())
-       colors = cmr.take_cmap_colors(
-           cmap,
-           len(keys),
-           cmap_range=cmap_range,
-           return_fmt="hex",
-       )
+       colors = palette[:len(keys)]
 
        for i, (color, key) in enumerate(zip(colors, keys, strict=True)):
            curve = np.asarray(bin_dict[key], dtype=float)
            ax.fill_between(z, 0.0, curve, color=color, alpha=0.65, linewidth=0.0, zorder=10 + i)
-           ax.plot(z, curve, color="k", linewidth=2.2, zorder=20 + i)
+           ax.plot(z, curve, color="k", linewidth=1.5, zorder=20 + i)
 
-       ax.plot(z, np.zeros_like(z), color="k", linewidth=2.2, zorder=1000)
+       ax.plot(z, np.zeros_like(z), color="k", linewidth=1.5, zorder=1000)
        ax.set_title(title)
        ax.set_xlabel("Redshift $z$")
 
@@ -298,28 +283,23 @@ edges look less sharp.
    :include-source: True
    :width: 760
 
-   import cmasher as cmr
    import matplotlib.pyplot as plt
    import numpy as np
 
+   from binny.style import palette
    from binny.nz import nz_model
-   from binny.tomography.builders import build_tomography_from_spec
+   from binny.tomography import build_tomography_from_spec
 
-   def plot_bins(ax, z, bin_dict, title, cmap="viridis", cmap_range=(0.0, 1.0)):
+   def plot_bins(ax, z, bin_dict, title):
        keys = sorted(bin_dict.keys())
-       colors = cmr.take_cmap_colors(
-           cmap,
-           len(keys),
-           cmap_range=cmap_range,
-           return_fmt="hex",
-       )
+       colors = palette[:len(keys)]
 
        for i, (color, key) in enumerate(zip(colors, keys, strict=True)):
            curve = np.asarray(bin_dict[key], dtype=float)
            ax.fill_between(z, 0.0, curve, color=color, alpha=0.6, linewidth=0.0, zorder=10 + i)
-           ax.plot(z, curve, color="k", linewidth=2.2, zorder=20 + i)
+           ax.plot(z, curve, color="k", linewidth=1.5, zorder=20 + i)
 
-       ax.plot(z, np.zeros_like(z), color="k", linewidth=2.2, zorder=1000)
+       ax.plot(z, np.zeros_like(z), color="k", linewidth=1.5, zorder=1000)
        ax.set_title(title)
        ax.set_xlabel("Redshift $z$")
 
@@ -373,28 +353,23 @@ move them lower.
    :include-source: True
    :width: 760
 
-   import cmasher as cmr
    import matplotlib.pyplot as plt
    import numpy as np
 
+   from binny.style import palette
    from binny.nz import nz_model
-   from binny.tomography.builders import build_tomography_from_spec
+   from binny.tomography import build_tomography_from_spec
 
-   def plot_bins(ax, z, bin_dict, title, cmap="viridis", cmap_range=(0.0, 1.0)):
+   def plot_bins(ax, z, bin_dict, title):
        keys = sorted(bin_dict.keys())
-       colors = cmr.take_cmap_colors(
-           cmap,
-           len(keys),
-           cmap_range=cmap_range,
-           return_fmt="hex",
-       )
+       colors = palette[:len(keys)]
 
        for i, (color, key) in enumerate(zip(colors, keys, strict=True)):
            curve = np.asarray(bin_dict[key], dtype=float)
            ax.fill_between(z, 0.0, curve, color=color, alpha=0.65, linewidth=0.0, zorder=10 + i)
-           ax.plot(z, curve, color="k", linewidth=2.2, zorder=20 + i)
+           ax.plot(z, curve, color="k", linewidth=1.5, zorder=20 + i)
 
-       ax.plot(z, np.zeros_like(z), color="k", linewidth=2.2, zorder=1000)
+       ax.plot(z, np.zeros_like(z), color="k", linewidth=1.5, zorder=1000)
        ax.set_title(title)
        ax.set_xlabel("Redshift $z$")
 
@@ -453,28 +428,23 @@ with true redshift, while values below ``1`` make that increase weaker.
    :include-source: True
    :width: 760
 
-   import cmasher as cmr
    import matplotlib.pyplot as plt
    import numpy as np
 
+   from binny.style import palette
    from binny.nz import nz_model
-   from binny.tomography.builders import build_tomography_from_spec
+   from binny.tomography import build_tomography_from_spec
 
-   def plot_bins(ax, z, bin_dict, title, cmap="viridis", cmap_range=(0.0, 1.0)):
+   def plot_bins(ax, z, bin_dict, title):
        keys = sorted(bin_dict.keys())
-       colors = cmr.take_cmap_colors(
-           cmap,
-           len(keys),
-           cmap_range=cmap_range,
-           return_fmt="hex",
-       )
+       colors = palette[:len(keys)]
 
        for i, (color, key) in enumerate(zip(colors, keys, strict=True)):
            curve = np.asarray(bin_dict[key], dtype=float)
            ax.fill_between(z, 0.0, curve, color=color, alpha=0.65, linewidth=0.0, zorder=10 + i)
-           ax.plot(z, curve, color="k", linewidth=2.2, zorder=20 + i)
+           ax.plot(z, curve, color="k", linewidth=1.5, zorder=20 + i)
 
-       ax.plot(z, np.zeros_like(z), color="k", linewidth=2.2, zorder=1000)
+       ax.plot(z, np.zeros_like(z), color="k", linewidth=1.5, zorder=1000)
        ax.set_title(title)
        ax.set_xlabel("Redshift $z$")
 
@@ -534,28 +504,23 @@ which creates broader tails and stronger leakage between bins.
    :include-source: True
    :width: 760
 
-   import cmasher as cmr
    import matplotlib.pyplot as plt
    import numpy as np
 
+   from binny.style import palette
    from binny.nz import nz_model
-   from binny.tomography.builders import build_tomography_from_spec
+   from binny.tomography import build_tomography_from_spec
 
-   def plot_bins(ax, z, bin_dict, title, cmap="viridis", cmap_range=(0.0, 1.0)):
+   def plot_bins(ax, z, bin_dict, title):
        keys = sorted(bin_dict.keys())
-       colors = cmr.take_cmap_colors(
-           cmap,
-           len(keys),
-           cmap_range=cmap_range,
-           return_fmt="hex",
-       )
+       colors = palette[:len(keys)]
 
        for i, (color, key) in enumerate(zip(colors, keys, strict=True)):
            curve = np.asarray(bin_dict[key], dtype=float)
            ax.fill_between(z, 0.0, curve, color=color, alpha=0.65, linewidth=0.0, zorder=10 + i)
-           ax.plot(z, curve, color="k", linewidth=2.2, zorder=20 + i)
+           ax.plot(z, curve, color="k", linewidth=1.5, zorder=20 + i)
 
-       ax.plot(z, np.zeros_like(z), color="k", linewidth=2.2, zorder=1000)
+       ax.plot(z, np.zeros_like(z), color="k", linewidth=1.5, zorder=1000)
        ax.set_title(title)
        ax.set_xlabel("Redshift $z$")
 
@@ -617,28 +582,23 @@ contaminates more bins.
    :include-source: True
    :width: 760
 
-   import cmasher as cmr
    import matplotlib.pyplot as plt
    import numpy as np
 
+   from binny.style import palette
    from binny.nz import nz_model
-   from binny.tomography.builders import build_tomography_from_spec
+   from binny.tomography import build_tomography_from_spec
 
-   def plot_bins(ax, z, bin_dict, title, cmap="viridis", cmap_range=(0.0, 1.0)):
+   def plot_bins(ax, z, bin_dict, title):
        keys = sorted(bin_dict.keys())
-       colors = cmr.take_cmap_colors(
-           cmap,
-           len(keys),
-           cmap_range=cmap_range,
-           return_fmt="hex",
-       )
+       colors = palette[:len(keys)]
 
        for i, (color, key) in enumerate(zip(colors, keys, strict=True)):
            curve = np.asarray(bin_dict[key], dtype=float)
            ax.fill_between(z, 0.0, curve, color=color, alpha=0.65, linewidth=0.0, zorder=10 + i)
-           ax.plot(z, curve, color="k", linewidth=2.2, zorder=20 + i)
+           ax.plot(z, curve, color="k", linewidth=1.5, zorder=20 + i)
 
-       ax.plot(z, np.zeros_like(z), color="k", linewidth=2.2, zorder=1000)
+       ax.plot(z, np.zeros_like(z), color="k", linewidth=1.5, zorder=1000)
        ax.set_title(title)
        ax.set_xlabel("Redshift $z$")
 
@@ -704,28 +664,23 @@ from the redshift range occupied by the main population.
    :include-source: True
    :width: 760
 
-   import cmasher as cmr
    import matplotlib.pyplot as plt
    import numpy as np
 
+   from binny.style import palette
    from binny.nz import nz_model
-   from binny.tomography.builders import build_tomography_from_spec
+   from binny.tomography import build_tomography_from_spec
 
-   def plot_bins(ax, z, bin_dict, title, cmap="viridis", cmap_range=(0.0, 1.0)):
+   def plot_bins(ax, z, bin_dict, title):
        keys = sorted(bin_dict.keys())
-       colors = cmr.take_cmap_colors(
-           cmap,
-           len(keys),
-           cmap_range=cmap_range,
-           return_fmt="hex",
-       )
+       colors = palette[:len(keys)]
 
        for i, (color, key) in enumerate(zip(colors, keys, strict=True)):
            curve = np.asarray(bin_dict[key], dtype=float)
            ax.fill_between(z, 0.0, curve, color=color, alpha=0.65, linewidth=0.0, zorder=10 + i)
-           ax.plot(z, curve, color="k", linewidth=2.2, zorder=20 + i)
+           ax.plot(z, curve, color="k", linewidth=1.5, zorder=20 + i)
 
-       ax.plot(z, np.zeros_like(z), color="k", linewidth=2.2, zorder=1000)
+       ax.plot(z, np.zeros_like(z), color="k", linewidth=1.5, zorder=1000)
        ax.set_title(title)
        ax.set_xlabel("Redshift $z$")
 
@@ -791,28 +746,23 @@ more quickly or more slowly with redshift.
    :include-source: True
    :width: 760
 
-   import cmasher as cmr
    import matplotlib.pyplot as plt
    import numpy as np
 
+   from binny.style import palette
    from binny.nz import nz_model
-   from binny.tomography.builders import build_tomography_from_spec
+   from binny.tomography import build_tomography_from_spec
 
-   def plot_bins(ax, z, bin_dict, title, cmap="viridis", cmap_range=(0.0, 1.0)):
+   def plot_bins(ax, z, bin_dict, title):
        keys = sorted(bin_dict.keys())
-       colors = cmr.take_cmap_colors(
-           cmap,
-           len(keys),
-           cmap_range=cmap_range,
-           return_fmt="hex",
-       )
+       colors = palette[:len(keys)]
 
        for i, (color, key) in enumerate(zip(colors, keys, strict=True)):
            curve = np.asarray(bin_dict[key], dtype=float)
            ax.fill_between(z, 0.0, curve, color=color, alpha=0.65, linewidth=0.0, zorder=10 + i)
-           ax.plot(z, curve, color="k", linewidth=2.2, zorder=20 + i)
+           ax.plot(z, curve, color="k", linewidth=1.5, zorder=20 + i)
 
-       ax.plot(z, np.zeros_like(z), color="k", linewidth=2.2, zorder=1000)
+       ax.plot(z, np.zeros_like(z), color="k", linewidth=1.5, zorder=1000)
        ax.set_title(title)
        ax.set_xlabel("Redshift $z$")
 
@@ -883,12 +833,12 @@ assigned its own scatter level.
    :include-source: True
    :width: 760
 
-   import cmasher as cmr
    import matplotlib.pyplot as plt
    import numpy as np
 
+   from binny.style import palette
    from binny.nz import nz_model
-   from binny.tomography.builders import build_tomography_from_spec
+   from binny.tomography import build_tomography_from_spec
 
    def plot_bins(
        ax,
@@ -896,16 +846,9 @@ assigned its own scatter level.
        bin_dict,
        title,
        scatter_text,
-       cmap="viridis",
-       cmap_range=(0.0, 1.0),
    ):
        keys = sorted(bin_dict.keys())
-       colors = cmr.take_cmap_colors(
-           cmap,
-           len(keys),
-           cmap_range=cmap_range,
-           return_fmt="hex",
-       )
+       colors = palette[:len(keys)]
 
        for i, (color, key) in enumerate(zip(colors, keys, strict=True)):
            curve = np.asarray(bin_dict[key], dtype=float)
@@ -922,11 +865,11 @@ assigned its own scatter level.
                z,
                curve,
                color="k",
-               linewidth=2.2,
+               linewidth=1.5,
                zorder=20 + i,
            )
 
-       ax.plot(z, np.zeros_like(z), color="k", linewidth=2.2, zorder=1000)
+       ax.plot(z, np.zeros_like(z), color="k", linewidth=1.5, zorder=1000)
        ax.set_title(title)
        ax.set_xlabel("Redshift $z$")
 
@@ -1028,21 +971,16 @@ for all uncertainty ingredients.
    :include-source: True
    :width: 700
 
-   import cmasher as cmr
    import matplotlib.pyplot as plt
    import numpy as np
 
+   from binny.style import palette
    from binny.nz import nz_model
-   from binny.tomography.builders import build_tomography_from_spec
+   from binny.tomography import build_tomography_from_spec
 
-   def plot_bins(ax, z, bin_dict, title, cmap="viridis", cmap_range=(0.0, 1.0)):
+   def plot_bins(ax, z, bin_dict, title):
        keys = sorted(bin_dict.keys())
-       colors = cmr.take_cmap_colors(
-           cmap,
-           len(keys),
-           cmap_range=cmap_range,
-           return_fmt="hex",
-       )
+       colors = palette[:len(keys)]
 
        for i, (color, key) in enumerate(zip(colors, keys, strict=True)):
            curve = np.asarray(bin_dict[key], dtype=float)
@@ -1128,7 +1066,7 @@ programmatically.
 
    import numpy as np
    from binny.nz import nz_model
-   from binny.tomography.builders import build_tomography_from_spec
+   from binny.tomography import build_tomography_from_spec
 
 
    z = np.linspace(0.0, 2.0, 500)

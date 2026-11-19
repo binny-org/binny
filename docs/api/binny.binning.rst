@@ -16,7 +16,6 @@ Submodules
    binny.binning.core
    binny.binning.edges
    binny.binning.photoz
-   binny.binning.photoz_fitting
    binny.binning.scheme_registry
    binny.binning.specs
    binny.binning.specz

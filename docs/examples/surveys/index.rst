@@ -1,7 +1,7 @@
-Survey presets
-==============
+Surveys
+=======
 
-Examples for working with built-in survey configurations.
+Examples for working with survey configurations and presets.
 
 .. toctree::
    :maxdepth: 1

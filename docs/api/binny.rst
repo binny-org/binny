@@ -6,17 +6,34 @@ binny package
    :show-inheritance:
    :undoc-members:
 
-Subpackages
------------
+Primary namespaces
+------------------
 
 .. toctree::
-   :maxdepth: 4
+   :maxdepth: 2
+
+   binny.nz
+   binny.binning
+   binny.tomography
+   binny.calibration
+   binny.analysis
+   binny.surveys
+   binny.style
+
+Specialized namespaces
+----------------------
+
+.. toctree::
+   :maxdepth: 2
 
    binny.axes
-   binny.binning
    binny.correlations
    binny.cosmology
-   binny.nz
-   binny.surveys
-   binny.tomography
+
+Supporting utilities
+--------------------
+
+.. toctree::
+   :maxdepth: 2
+
    binny.utils

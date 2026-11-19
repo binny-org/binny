@@ -8,7 +8,7 @@
 Binny allows survey configurations to be stored as YAML **survey
 presets**. A preset groups together the parent redshift distribution,
 tomographic binning scheme, uncertainty model, and optional survey
-metadata such as footprint or galaxy density.
+metadata such as survey area or galaxy number density.
 
 Using a YAML preset makes it easier to keep survey configurations
 consistent across forecasts, examples, and analyses.
@@ -76,10 +76,10 @@ distributions for lens and source samples in years 1 and 10.
    :include-source: False
    :width: 900
 
-   import cmasher as cmr
    import matplotlib.pyplot as plt
    import numpy as np
 
+   from binny.style import get_colors
    from binny.surveys import build_survey_tomography
 
 
@@ -88,12 +88,7 @@ distributions for lens and source samples in years 1 and 10.
        bin_dict = result.bins
        keys = sorted(bin_dict.keys())
 
-       colors = cmr.take_cmap_colors(
-           "viridis",
-           len(keys),
-           cmap_range=(0.1, 0.9),
-           return_fmt="hex",
-       )
+       colors = get_colors(len(keys))
 
        for i, (color, key) in enumerate(zip(colors, keys, strict=True)):
            curve = np.asarray(bin_dict[key], dtype=float)
@@ -161,6 +156,92 @@ distributions for lens and source samples in years 1 and 10.
 
    plt.tight_layout(rect=(0, 0, 1, 0.97))
 
+.. dropdown:: Show LSST plotting code
+   :icon: code
+   :animate: fade-in-slide-down
+
+   .. code-block:: python
+
+      import matplotlib.pyplot as plt
+      import numpy as np
+
+      from binny.style import get_colors
+      from binny.surveys import build_survey_tomography
+
+
+      def plot_bins(ax, result, title):
+          z = result.z
+          bin_dict = result.bins
+          keys = sorted(bin_dict.keys())
+
+          colors = get_colors(len(keys))
+
+          for i, (color, key) in enumerate(zip(colors, keys, strict=True)):
+              curve = np.asarray(bin_dict[key], dtype=float)
+
+              ax.fill_between(
+                  z,
+                  0.0,
+                  curve,
+                  color=color,
+                  alpha=0.65,
+                  linewidth=0.0,
+                  zorder=10 + i,
+              )
+
+              ax.plot(
+                  z,
+                  curve,
+                  color="k",
+                  linewidth=1.8,
+                  zorder=20 + i,
+              )
+
+          ax.plot(z, np.zeros_like(z), color="k", linewidth=2.0, zorder=1000)
+
+          ax.set_title(title)
+          ax.set_xlabel("Redshift $z$")
+
+
+      results = {}
+
+      for role in ["lens", "source"]:
+          for year in ["1", "10"]:
+              results[(role, year)] = build_survey_tomography(
+                  "lsst",
+                  role=role,
+                  year=year,
+                  include_tomo_metadata=True,
+              )
+
+
+      fig, axes = plt.subplots(
+          2,
+          2,
+          figsize=(11.5, 8.0),
+      )
+
+      panel_order = [
+          (("lens", "1"), "Lens bins Y1"),
+          (("source", "1"), "Source bins Y1"),
+          (("lens", "10"), "Lens bins Y10"),
+          (("source", "10"), "Source bins Y10"),
+      ]
+
+      for ax, (key, title) in zip(axes.ravel(), panel_order, strict=True):
+          plot_bins(ax, results[key], title)
+
+          role, year = key
+          if role == "lens":
+              ax.set_xlim(0.0, 1.5)
+
+      axes[0, 0].set_ylabel(r"Normalized $n_i(z)$")
+      axes[1, 0].set_ylabel(r"Normalized $n_i(z)$")
+
+      plt.suptitle("LSST survey preset tomography", fontsize=16)
+
+      plt.tight_layout(rect=(0, 0, 1, 0.97))
+
 
 Euclid survey preset
 --------------------
@@ -193,10 +274,10 @@ bins.
    :include-source: False
    :width: 900
 
-   import cmasher as cmr
    import matplotlib.pyplot as plt
    import numpy as np
 
+   from binny.style import get_colors
    from binny.surveys import build_survey_tomography
 
 
@@ -205,12 +286,7 @@ bins.
        bin_dict = result.bins
        keys = sorted(bin_dict.keys())
 
-       colors = cmr.take_cmap_colors(
-           "viridis",
-           len(keys),
-           cmap_range=(0.1, 0.9),
-           return_fmt="hex",
-       )
+       colors = get_colors(len(keys))
 
        for i, (color, key) in enumerate(zip(colors, keys, strict=True)):
            curve = np.asarray(bin_dict[key], dtype=float)
@@ -271,6 +347,85 @@ bins.
 
    plt.tight_layout()
 
+.. dropdown:: Show Euclid plotting code
+   :icon: code
+   :animate: fade-in-slide-down
+
+   .. code-block:: python
+
+      import matplotlib.pyplot as plt
+      import numpy as np
+
+      from binny.style import get_colors
+      from binny.surveys import build_survey_tomography
+
+
+      def plot_bins(ax, result, title):
+          z = result.z
+          bin_dict = result.bins
+          keys = sorted(bin_dict.keys())
+
+          colors = get_colors(len(keys))
+
+          for i, (color, key) in enumerate(zip(colors, keys, strict=True)):
+              curve = np.asarray(bin_dict[key], dtype=float)
+
+              ax.fill_between(
+                  z,
+                  0.0,
+                  curve,
+                  color=color,
+                  alpha=0.65,
+                  linewidth=0.0,
+                  zorder=10 + i,
+              )
+
+              ax.plot(
+                  z,
+                  curve,
+                  color="k",
+                  linewidth=1.8,
+                  zorder=20 + i,
+              )
+
+          ax.plot(z, np.zeros_like(z), color="k", linewidth=2.0, zorder=1000)
+
+          ax.set_title(title)
+          ax.set_xlabel("Redshift $z$")
+
+
+      results = {}
+
+      for role in ["lens", "source"]:
+          results[role] = build_survey_tomography(
+              "euclid",
+              role=role,
+              year="nominal",
+              include_tomo_metadata=True,
+          )
+
+
+      fig, axes = plt.subplots(
+          1,
+          2,
+          figsize=(11.5, 4.8),
+      )
+
+      panel_order = [
+          ("lens", "Euclid lens bins"),
+          ("source", "Euclid source bins"),
+      ]
+
+      for ax, (role, title) in zip(axes, panel_order, strict=True):
+          plot_bins(ax, results[role], title)
+
+      axes[0].set_xlim(0.75, 1.9)
+      axes[1].set_xlim(0.0, 2.6)
+
+      axes[0].set_ylabel(r"Normalized $n_i(z)$")
+
+      plt.tight_layout()
+
 
 DES survey preset
 -----------------
@@ -301,10 +456,10 @@ visualizes the resulting lens and source tomographic bins.
    :include-source: False
    :width: 850
 
-   import cmasher as cmr
    import matplotlib.pyplot as plt
    import numpy as np
 
+   from binny.style import get_colors
    from binny.surveys import build_survey_tomography
 
 
@@ -313,12 +468,7 @@ visualizes the resulting lens and source tomographic bins.
        bin_dict = result.bins
        keys = sorted(bin_dict.keys())
 
-       colors = cmr.take_cmap_colors(
-           "viridis",
-           len(keys),
-           cmap_range=(0.1, 0.9),
-           return_fmt="hex",
-       )
+       colors = get_colors(len(keys))
 
        for i, (color, key) in enumerate(zip(colors, keys, strict=True)):
            curve = np.asarray(bin_dict[key], dtype=float)
@@ -379,6 +529,85 @@ visualizes the resulting lens and source tomographic bins.
 
    plt.tight_layout()
 
+.. dropdown:: Show DES plotting code
+   :icon: code
+   :animate: fade-in-slide-down
+
+   .. code-block:: python
+
+      import matplotlib.pyplot as plt
+      import numpy as np
+
+      from binny.style import get_colors
+      from binny.surveys import build_survey_tomography
+
+
+      def plot_bins(ax, result, title):
+          z = result.z
+          bin_dict = result.bins
+          keys = sorted(bin_dict.keys())
+
+          colors = get_colors(len(keys))
+
+          for i, (color, key) in enumerate(zip(colors, keys, strict=True)):
+              curve = np.asarray(bin_dict[key], dtype=float)
+
+              ax.fill_between(
+                  z,
+                  0.0,
+                  curve,
+                  color=color,
+                  alpha=0.65,
+                  linewidth=0.0,
+                  zorder=10 + i,
+              )
+
+              ax.plot(
+                  z,
+                  curve,
+                  color="k",
+                  linewidth=1.8,
+                  zorder=20 + i,
+              )
+
+          ax.plot(z, np.zeros_like(z), color="k", linewidth=2.0)
+
+          ax.set_title(title)
+          ax.set_xlabel("Redshift $z$")
+
+
+      results = {}
+
+      for role in ["lens", "source"]:
+          results[role] = build_survey_tomography(
+              "des",
+              role=role,
+              year="y1",
+              include_tomo_metadata=True,
+          )
+
+
+      fig, axes = plt.subplots(
+          1,
+          2,
+          figsize=(10.5, 4.8),
+      )
+
+      panel_order = [
+          ("lens", "DES lens bins"),
+          ("source", "DES source bins"),
+      ]
+
+      for ax, (role, title) in zip(axes, panel_order, strict=True):
+          plot_bins(ax, results[role], title)
+
+          if role == "lens":
+              ax.set_xlim(0.0, 1.0)
+
+      axes[0].set_ylabel(r"Normalized $n_i(z)$")
+
+      plt.tight_layout()
+
 
 Roman survey preset
 -------------------
@@ -411,22 +640,17 @@ bottom row shows the wide survey configuration.
    :include-source: False
    :width: 900
 
-   import cmasher as cmr
    import matplotlib.pyplot as plt
    import numpy as np
 
+   from binny.style import get_colors
    from binny.surveys import build_survey_tomography
 
 
    def get_bin_colors(bin_dict):
        keys = sorted(bin_dict.keys())
 
-       colors = cmr.take_cmap_colors(
-           "viridis",
-           len(keys),
-           cmap_range=(0.1, 0.9),
-           return_fmt="hex",
-       )
+       colors = get_colors(len(keys))
 
        return keys, colors
 
@@ -554,6 +778,150 @@ bottom row shows the wide survey configuration.
 
    plt.tight_layout(rect=(0, 0, 1, 0.97))
 
+.. dropdown:: Show Roman plotting code
+   :icon: code
+   :animate: fade-in-slide-down
+
+   .. code-block:: python
+
+      import matplotlib.pyplot as plt
+      import numpy as np
+
+      from binny.style import get_colors
+      from binny.surveys import build_survey_tomography
+
+
+      def get_bin_colors(bin_dict):
+          keys = sorted(bin_dict.keys())
+
+          colors = get_colors(len(keys))
+
+          return keys, colors
+
+
+      def plot_bins(ax, result, title):
+          z = result.z
+          bin_dict = result.bins
+          keys, colors = get_bin_colors(bin_dict)
+
+          for i, (color, key) in enumerate(zip(colors, keys, strict=True)):
+              curve = np.asarray(bin_dict[key], dtype=float)
+
+              ax.fill_between(
+                  z,
+                  0.0,
+                  curve,
+                  color=color,
+                  alpha=0.65,
+                  linewidth=0.0,
+                  zorder=10 + i,
+              )
+
+              ax.plot(
+                  z,
+                  curve,
+                  color="k",
+                  linewidth=1.8,
+                  zorder=20 + i,
+              )
+
+          ax.plot(z, np.zeros_like(z), color="k", linewidth=2.0, zorder=1000)
+
+          ax.set_title(title)
+          ax.set_xlabel("Redshift $z$")
+
+
+      def plot_bins_dashed(ax, result):
+          z = result.z
+          bin_dict = result.bins
+          keys, colors = get_bin_colors(bin_dict)
+
+          for i, key in enumerate(keys):
+              curve = np.asarray(bin_dict[key], dtype=float)
+
+              ax.plot(
+                  z,
+                  curve,
+                  color="k",
+                  linewidth=1.8,
+                  linestyle="--",
+                  zorder=120 + i,
+              )
+
+
+      results = {}
+
+      for scenario in ["hls_optimistic", "hls_conservative", "wide"]:
+          for role in ["lens", "source"]:
+              results[(role, scenario)] = build_survey_tomography(
+                  "roman",
+                  role=role,
+                  scenario=scenario,
+                  include_tomo_metadata=True,
+              )
+
+
+      fig, axes = plt.subplots(
+          2,
+          2,
+          figsize=(11.5, 8.0),
+      )
+
+      plot_bins(
+          axes[0, 0],
+          results[("lens", "hls_optimistic")],
+          "Roman HLS lens bins",
+      )
+      plot_bins_dashed(
+          axes[0, 0],
+          results[("lens", "hls_conservative")],
+      )
+
+      plot_bins(
+          axes[0, 1],
+          results[("source", "hls_optimistic")],
+          "Roman HLS source bins",
+      )
+      plot_bins_dashed(
+          axes[0, 1],
+          results[("source", "hls_conservative")],
+      )
+
+      plot_bins(
+          axes[1, 0],
+          results[("lens", "wide")],
+          "Roman wide lens bins",
+      )
+
+      plot_bins(
+          axes[1, 1],
+          results[("source", "wide")],
+          "Roman wide source bins",
+      )
+
+      axes[0, 0].set_xlim(0.0, 4.0)
+      axes[0, 1].set_xlim(0.0, 4.0)
+      axes[1, 0].set_xlim(0.0, 4.0)
+      axes[1, 1].set_xlim(0.0, 4.0)
+
+      axes[0, 0].set_ylabel(r"Normalized $n_i(z)$")
+      axes[1, 0].set_ylabel(r"Normalized $n_i(z)$")
+
+      axes[0, 0].plot([], [], color="k", linewidth=1.8, label="HLS optimistic")
+      axes[0, 0].plot(
+          [],
+          [],
+          color="k",
+          linewidth=1.8,
+          linestyle="--",
+          label="HLS conservative",
+      )
+      axes[0, 0].legend(frameon=False)
+
+      plt.suptitle("Roman survey preset tomography", fontsize=16)
+
+      plt.tight_layout(rect=(0, 0, 1, 0.97))
+
 
 DESI survey preset
 ------------------
@@ -587,11 +955,10 @@ equal-width tomographic bins.
    :include-source: False
    :width: 900
 
-   import cmasher as cmr
-   import cmasher as cmr
    import matplotlib.pyplot as plt
    import numpy as np
 
+   from binny.style import get_colors
    from binny.surveys import build_survey_tomography
 
 
@@ -600,12 +967,7 @@ equal-width tomographic bins.
        bin_dict = result.bins
        keys = sorted(bin_dict.keys())
 
-       colors = cmr.take_cmap_colors(
-           "viridis",
-           len(keys),
-           cmap_range=(0.1, 0.9),
-           return_fmt="hex",
-       )
+       colors = get_colors(len(keys))
 
        for i, (color, key) in enumerate(zip(colors, keys, strict=True)):
            curve = np.asarray(bin_dict[key], dtype=float)
@@ -691,3 +1053,110 @@ equal-width tomographic bins.
    plt.suptitle("DESI survey preset tomography", fontsize=16)
 
    plt.tight_layout(rect=(0, 0, 1, 0.97))
+
+.. dropdown:: Show DESI plotting code
+   :icon: code
+   :animate: fade-in-slide-down
+
+   .. code-block:: python
+
+      import matplotlib.pyplot as plt
+      import numpy as np
+
+      from binny.style import get_colors
+      from binny.surveys import build_survey_tomography
+
+
+      def plot_bins(ax, result, title):
+          z = result.z
+          bin_dict = result.bins
+          keys = sorted(bin_dict.keys())
+
+          colors = get_colors(len(keys))
+
+          for i, (color, key) in enumerate(zip(colors, keys, strict=True)):
+              curve = np.asarray(bin_dict[key], dtype=float)
+
+              ax.fill_between(
+                  z,
+                  0.0,
+                  curve,
+                  color=color,
+                  alpha=0.65,
+                  linewidth=0.0,
+                  zorder=10 + i,
+              )
+
+              ax.plot(
+                  z,
+                  curve,
+                  color="k",
+                  linewidth=1.8,
+                  zorder=20 + i,
+              )
+
+          ax.plot(z, np.zeros_like(z), color="k", linewidth=2.0, zorder=1000)
+
+          ax.set_title(title)
+          ax.set_xlabel("Redshift $z$")
+
+
+      edges = {
+          ("lrg", "one_bin"): [0.4, 1.0],
+          ("lrg", "three_bins"): [0.4, 0.6, 0.8, 1.0],
+          ("lrg", "five_bins"): [0.4, 0.52, 0.64, 0.76, 0.88, 1.0],
+          ("elg", "one_bin"): [0.6, 1.5],
+          ("elg", "three_bins"): [0.6, 0.9, 1.2, 1.5],
+          ("elg", "five_bins"): [0.6, 0.78, 0.96, 1.14, 1.32, 1.5],
+      }
+
+
+      results = {}
+
+      for key, bin_edges in edges.items():
+          sample, _ = key
+
+          results[key] = build_survey_tomography(
+              "desi",
+              role="lens",
+              sample=sample,
+              overrides={"bins": {"edges": bin_edges}},
+              include_tomo_metadata=True,
+          )
+
+
+      fig, axes = plt.subplots(
+          3,
+          2,
+          figsize=(11.5, 11.0),
+      )
+
+      panel_order = [
+          (("lrg", "one_bin"), "DESI LRG: one bin"),
+          (("elg", "one_bin"), "DESI ELG: one bin"),
+          (("lrg", "three_bins"), "DESI LRG: three bins"),
+          (("elg", "three_bins"), "DESI ELG: three bins"),
+          (("lrg", "five_bins"), "DESI LRG: five bins"),
+          (("elg", "five_bins"), "DESI ELG: five bins"),
+      ]
+
+      for ax, (key, title) in zip(axes.ravel(), panel_order, strict=True):
+          plot_bins(ax, results[key], title)
+
+      axes[0, 0].set_xlim(0.35, 1.05)
+      axes[1, 0].set_xlim(0.35, 1.05)
+      axes[2, 0].set_xlim(0.35, 1.05)
+
+      axes[0, 1].set_xlim(0.55, 1.55)
+      axes[1, 1].set_xlim(0.55, 1.55)
+      axes[2, 1].set_xlim(0.55, 1.55)
+
+      axes[0, 0].set_ylabel(r"Normalized $n_i(z)$")
+      axes[1, 0].set_ylabel(r"Normalized $n_i(z)$")
+      axes[2, 0].set_ylabel(r"Normalized $n_i(z)$")
+
+      plt.suptitle("DESI survey preset tomography", fontsize=16)
+
+      plt.tight_layout(rect=(0, 0, 1, 0.97))
+
+

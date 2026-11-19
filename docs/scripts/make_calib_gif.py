@@ -6,7 +6,8 @@ import numpy as np
 from matplotlib.animation import FuncAnimation, PillowWriter
 from matplotlib.colors import to_rgba
 
-from binny.nz import calibrate_depth_smail_from_mock, nz_model
+from binny.calibration import calibrate_depth_smail_from_mock
+from binny.nz import nz_model
 
 DEFAULT_FONTSIZE = 19
 plt.rcParams.update(

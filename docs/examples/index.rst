@@ -5,40 +5,26 @@
 |logo| Examples
 ===============
 
-These examples show how to use Binny to construct parent redshift
-distributions, build tomographic samples, inspect binning diagnostics,
-and work with survey presets.
+This section provides executable examples organized around the six
+primary API namespaces of Binny.
 
-Parent redshift distributions
------------------------------
+The examples demonstrate how to model galaxy redshift distributions,
+configure binning prescriptions, construct tomographic samples,
+calibrate observational models, analyze distributions, and work with
+survey configurations.
 
-Examples in this section show how to define, calibrate, and modify parent
-redshift distributions before tomographic binning.
+Each component can be used independently or as part of a larger
+scientific workflow.
 
-Tomographic binning
--------------------
-
-Examples in this section show how to build photometric and spectroscopic
-tomographic bins and how to combine or select samples.
-
-Diagnostics
------------
-
-Examples in this section show how to summarize, inspect, and compare
-tomographic binning schemes.
-
-
-Survey presets
---------------
-
-Examples in this section show how to use built-in survey configurations.
-
-
+See :doc:`../architecture` for an overview of the package organization
+and :doc:`../theory/index` for the underlying mathematical definitions.
 
 .. toctree::
    :maxdepth: 2
 
-   parent_nz/index
+   nz/index
+   binning/index
    tomography/index
-   diagnostics/index
+   calibration/index
+   analysis/index
    surveys/index

@@ -5,19 +5,21 @@
 |logo| Theory
 =============
 
-This section documents the mathematical definitions and assumptions underlying
-the tomographic binning utilities provided by Binny.
+This section describes the mathematical definitions, assumptions,
+and numerical prescriptions underlying the functionality of Binny.
 
-It is intended to make binning choices explicit and reproducible, and to
-clarify how different schemes relate to common formulations used in cosmology.
+The material is organized around the scientific components of
+the package: redshift distribution modeling, binning, tomography,
+calibration, and statistical analysis.
 
-The pages in this section describe the theoretical ingredients involved in
-constructing tomographic bins, including the parent redshift distribution,
-tomographic binning schemes, redshift uncertainty models, and statistical
-summaries of the resulting bins.
+The goal is to make the implemented prescriptions explicit,
+transparent, and reproducible.
 
-For worked demonstrations of these concepts and visualizations of binning
-behavior, see the :doc:`Examples <../examples/index>` section.
+For an overview of the package organization, see
+:doc:`../architecture`.
+
+For executable demonstrations and visualizations, see
+:doc:`../examples/index`.
 
 Table of contents
 -----------------
@@ -28,17 +30,14 @@ Table of contents
    .. grid-item::
 
       .. toctree::
-         :maxdepth: 1
+         :maxdepth: 2
 
-         nz/index
-         binning_schemes
-         tomography
-         photoz_fitting
-         uncertainties/index
-         statistics
-         diagnostics
-         bin_combos
          conventions
+         nz/index
+         binning/index
+         tomography/index
+         calibration/index
+         analysis/index
 
    .. grid-item::
       :class: sd-text-center hero-logo

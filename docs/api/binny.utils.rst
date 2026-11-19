@@ -13,7 +13,6 @@ Submodules
    :maxdepth: 4
 
    binny.utils.broadcasting
-   binny.utils.colors
    binny.utils.io
    binny.utils.metadata
    binny.utils.normalization

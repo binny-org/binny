@@ -7,7 +7,8 @@ from matplotlib.animation import FuncAnimation, PillowWriter
 from matplotlib.colors import ListedColormap, to_rgba
 
 from binny.nz import nz_model
-from binny.tomography import build_tomography_from_spec, leakage_matrix
+from binny.analysis import leakage_matrix
+from binny.tomography import build_tomography_from_spec
 
 DEFAULT_FONTSIZE = 19
 plt.rcParams.update(
