@@ -1,0 +1,14 @@
+:root {
+  color-scheme: light dark;
+  --binny-purple: light-dark(#73407f, #96709f);
+  --binny-violet: light-dark(#765b98, #9884b2);
+  --binny-blue: light-dark(#6c7da8, #919ebe);
+  --binny-light-blue: light-dark(#5f9aaa, #87b3bf);
+  --binny-green: light-dark(#63c79d, #8ad5b6);
+}
+[data-theme='light'] {
+  color-scheme: light;
+}
+[data-theme='dark'] {
+  color-scheme: dark;
+}
